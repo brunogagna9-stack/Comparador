@@ -63,3 +63,27 @@ def test_history_and_changes():
     assert canon_category("Fuente X-Micro 550W OEM") == "fuentes"
     assert canon_category("Micro AMD Ryzen 5 5500") == "procesadores"
     assert canon_category("ARMADO ITEM 6302 GTX 1050 Ti ATHLON 950 8GB") == "pcs-armadas"
+
+
+def test_servicios():
+    from scrapers.common import is_service
+    for n in ["ARMADO DE PC FM2+ A8 A10", "ARMADO ITEM 6302 GTX 1050 Ti ATHLON 950 8GB", "Armado de PC item 5104",
+              "ARMADO EXPRESS DE PC", "ARMADO DE BRIX/NOTEBOOK Y AFINES", "ARMADO DE PC ASUS"]:
+        assert is_service(n), n
+    for n in ["PC Armada Gamer Ryzen 5 5600 RTX 4060", "Procesador AMD Ryzen 5 5500", "Gabinete con fuente"]:
+        assert not is_service(n), n
+
+
+def test_hardware_json():
+    import re, subprocess, sys
+    import make_hardware as mh
+    ids = [g[0] for g in mh.G] + [c[0] for c in mh.C]
+    assert len(ids) == len(set(ids))
+    for g in mh.G:
+        assert g[4] > 0 and g[5] >= g[4] and all(x > 0 for x in g[6]), g[0]   # la fuente nunca es menor al consumo
+        re.compile(g[9]); re.compile(g[10] or "x")
+    for c in mh.C:
+        assert c[6] >= c[5] and c[3] in ("AM4", "AM5", "LGA1700", "LGA1851"), c[0]
+        re.compile(c[9])
+        # el tipo de memoria debe ser coherente con el socket
+        assert (c[3] in ("AM5", "LGA1851")) == (c[4] == "DDR5") or c[3] == "LGA1700", c[0]

@@ -81,6 +81,13 @@ CG_SUBCATS = {
 }
 
 
+def is_service(name):
+    """Servicios que no son productos comparables (p. ej. el 'ARMADO DE PC' de Compragamer)."""
+    n = (name or "").lower().strip()
+    return bool(re.match(r"^(armado|servicio|instalaci[oó]n|mano de obra)\b", n)
+                or re.search(r"armado (de|express|item|ítem)|armado item|\bitem \d{3,4}\b.*armado", n))
+
+
 def canon_category(*texts):
     blob = " ".join(t for t in texts if t).lower()
     for slug, pat in CATEGORIES:

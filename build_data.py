@@ -109,8 +109,9 @@ def gid(offers):
 
 
 def build(all_items):
+    from scrapers.common import is_service
     groups = []
-    for offers in group([i for i in all_items if price_of(i)]):
+    for offers in group([i for i in all_items if price_of(i) and not is_service(i["name"])]):
         best = {}  # una oferta por tienda: la más barata
         for o in offers:
             cur = best.get(o["store"])
