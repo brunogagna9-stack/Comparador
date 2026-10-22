@@ -1,6 +1,6 @@
 """Compragamer: usa los mismos archivos JSON públicos que carga su propio sitio."""
 import re
-from .common import get, product, canon_category
+from .common import get, product, canon_category, CG_SUBCATS
 
 STORE = "Compragamer"
 BASE = "https://static.compragamer.com"
@@ -10,28 +10,40 @@ def slug(name, pid):
     return "https://compragamer.com/producto/" + re.sub(r"[^A-Za-z0-9]+", "_", name).strip("_") + f"_{pid}"
 
 
+IMG = "https://imagenes.compragamer.com/productos/compragamer_Imganen_general_{}-mini.jpg"
+
+
+def cat_from_subcat(txt, name):
+    t = (txt or "").strip().lower()
+    for key, slug in CG_SUBCATS.items():
+        if t.startswith(key):
+            return slug
+    return canon_category(name)
+
+
 def parse(items, subcats=None, brands=None):
     subcats = subcats or {}
     out = []
     for it in items:
         name = it.get("nombre")
         pid = it.get("id_producto")
-        if not name or pid is None:
+        if not name or pid is None or it.get("visible_solo_en_combo"):
             continue
         cash, lst = it.get("precioEspecial"), it.get("precioLista")
         codes = it.get("codigo_principal") or []
         sku = codes[0] if isinstance(codes, list) and codes else (codes or None)
-        cat_txt = subcats.get(it.get("id_subcategoria"))
+        if sku:
+            sku = re.sub(r"^\s*SKU:\s*", "", sku).strip()
+        imgs = it.get("imagenes") or []
         img = None
-        imgs = it.get("imagenes")
-        if isinstance(imgs, list) and imgs:
-            first = imgs[0]
-            first = first.get("nombre") if isinstance(first, dict) else first
-            if first and str(first).startswith("http"):
-                img = first
+        if imgs and isinstance(imgs[0], dict) and imgs[0].get("nombre"):
+            img = IMG.format(imgs[0]["nombre"])
+        prev = it.get("precioEspecialAnterior")
         out.append(product(STORE, name, slug(name, pid), cash, lst,
-                           stock=(it.get("stock") or 0) > 0, sku=sku, pn=sku, image=img,
-                           category=canon_category(cat_txt, name)))
+                           stock=(it.get("stock") or 0) > 0 and bool(it.get("vendible", 1)),
+                           sku=sku, pn=sku, image=img,
+                           category=cat_from_subcat(subcats.get(it.get("id_subcategoria")), name),
+                           prev_cash=prev if prev and prev != cash else None))
     return out
 
 

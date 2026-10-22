@@ -33,7 +33,33 @@ def test_parsers_and_matching():
     assert items[2]["price_cash"] == 119000 and items[2]["price_list"] == 131000
     assert items[3]["price_cash"] == 118920.08
     assert all(i["category"] == "procesadores" for i in items), [i["category"] for i in items]
-    groups = bd.build(items, "2026-10-21")
+    groups = bd.build(items)
     # MEXX, Maximus y Compragamer comparten PN; Gezatek/Fullh4rd/Logg se cruzan por nombre (modelo 5500 + am4)
     print(json.dumps([(g["name"], [(o["store"], o["price_cash"]) for o in g["offers"]]) for g in groups], ensure_ascii=False))
     assert len(groups) <= 2
+
+
+def test_history_and_changes():
+    import datetime as dt
+    today = "2026-10-22"
+    items = (compragamer.parse([{"id_producto": 1, "nombre": "Procesador AMD Ryzen 5 5500 AM4 Box", "precioEspecial": 100000,
+                                 "precioEspecialAnterior": 120000, "stock": 2, "vendible": 1,
+                                 "codigo_principal": ["SKU: 100-100000457BOX"], "id_subcategoria": 27,
+                                 "imagenes": [{"nombre": "1_x_abc"}]}], {27: "Procesadores AMD"}))
+    assert items[0]["pn"] == "100-100000457BOX" and items[0]["image"].endswith("1_x_abc-mini.jpg")
+    groups = bd.build(items)
+    hist = {"_v": 2}
+    bd.update_history(groups, hist, today)
+    bd.annotate_changes(groups, hist, today)
+    assert groups[0]["chg"]["pct"] == -16.7 and groups[0]["brand"] == "AMD"
+    # sube mañana
+    items[0]["price_cash"] = 110000
+    g2 = bd.build(items); bd.update_history(g2, hist, "2026-10-23"); bd.annotate_changes(g2, hist, "2026-10-23")
+    assert g2[0]["chg"]["pct"] == 10.0
+    # categorías
+    from scrapers.common import canon_category
+    assert canon_category("Cable Premium Micro Hdmi A Hdmi") == "accesorios"
+    assert canon_category("Memoria Micro SDHC Team 16GB") == "almacenamiento"
+    assert canon_category("Fuente X-Micro 550W OEM") == "fuentes"
+    assert canon_category("Micro AMD Ryzen 5 5500") == "procesadores"
+    assert canon_category("ARMADO ITEM 6302 GTX 1050 Ti ATHLON 950 8GB") == "pcs-armadas"

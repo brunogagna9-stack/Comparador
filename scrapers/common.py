@@ -6,6 +6,8 @@ import requests
 UA = "ComparadorARBot/0.1 (proyecto personal sin fines de lucro; respeta robots.txt)"
 DELAY = 1.5  # segundos entre pedidos a una misma tienda (para no molestar)
 
+LOG = []  # mensajes de error de la corrida actual (los lee build_data.py)
+
 _session = requests.Session()
 _session.headers.update({"User-Agent": UA, "Accept-Language": "es-AR,es;q=0.9"})
 
@@ -25,6 +27,7 @@ def get(url, as_json=False, retries=3):
         except Exception as e:  # red caída, timeout, etc.
             last = str(e)
         time.sleep(2 * (i + 1))
+    LOG.append(f"{url} -> {last}")
     raise RuntimeError(f"No se pudo leer {url}: {last}")
 
 
@@ -47,17 +50,35 @@ def parse_ars(text):
         return None
 
 
-CATEGORIES = [
-    ("procesadores", r"procesador|micro\b|ryzen|core i[3579]|core ultra|athlon"),
-    ("placas-de-video", r"placa de video|geforce|radeon|\brtx\b|\bgtx\b|\brx ?\d{4}|video card|gpu"),
-    ("memorias-ram", r"memoria ram|\bddr[345]\b|sodimm|udimm"),
-    ("motherboards", r"mother|motherboard|placa madre|\blga ?\d{4}\b.*\b(b|h|z|x)\d{3}"),
-    ("almacenamiento", r"\bssd\b|disco|nvme|m\.2|hdd|pendrive|micro ?sd"),
-    ("fuentes", r"\bfuente\b|power supply|80 ?plus"),
-    ("gabinetes", r"gabinete|case\b"),
-    ("monitores", r"monitor"),
-    ("refrigeracion", r"cooler|refrigeraci|watercooling|water cooling|fan\b"),
+CATEGORIES = [  # el orden importa: la primera regla que coincide gana
+    ("accesorios", r"\bcable\b|adaptador|conversor|\bhdmi\b|hub usb|alargue"),
+    ("almacenamiento", r"micro ?sd|sdhc|sdxc|pendrive|tarjeta de memoria|memoria flash"),
+    ("pcs-armadas", r"armado|pc de escritorio|pc gamer|all in one|kit de actualizaci"),
+    ("notebooks", r"notebook|laptop|netbook"),
+    ("monitores", r"monitor|pantalla"),
+    ("fuentes", r"\bfuente\b|fuentes de alimentaci|power supply"),
+    ("gabinetes", r"gabinete"),
+    ("refrigeracion", r"cooler|refrigeraci|disipador|water ?cooling|pasta t[eé]rmica|\bfan\b|ventilador"),
+    ("placas-de-video", r"placa de video|geforce|radeon|\brtx ?\d|\bgtx ?\d|\brx ?\d{3,4}|\barc ?[ab]\d|video card"),
+    ("motherboards", r"\bmother|motherboard|placa madre|mainboard"),
+    ("procesadores", r"procesador|ryzen|core i[3579]\b|core ultra|athlon|pentium|celeron|xeon|\bcpu\b"),
+    ("memorias-ram", r"memoria ram|\bddr[2345]\b|sodimm|\bdimm\b|memorias?\b(?!.*(sd|flash))"),
+    ("almacenamiento", r"\bssd\b|nvme|m\.2|\bhdd\b|disco"),
+    ("perifericos", r"teclado|mouse|auricular|headset|joystick|gamepad|webcam|parlante|micr[oó]fono|\bpad\b|silla|volante"),
+    ("redes", r"router|placa de red|wifi|wi-fi|access point|\bswitch\b|repetidor"),
 ]
+
+# Subcategorías de Compragamer -> categoría propia (ver scrapers/compragamer.py)
+CG_SUBCATS = {
+    "procesadores": "procesadores", "mothers": "motherboards", "placas de video": "placas-de-video",
+    "memorias notebook": "memorias-ram", "memorias": "memorias-ram", "discos": "almacenamiento",
+    "tarjetas de memorias": "almacenamiento", "fuentes": "fuentes", "gabinetes": "gabinetes",
+    "monitores": "monitores", "coolers": "refrigeracion", "pasta": "refrigeracion", "notebooks": "notebooks",
+    "armados": "pcs-armadas", "pc de escritorio": "pcs-armadas", "kits de actualiz": "pcs-armadas",
+    "mouses": "perifericos", "teclados": "perifericos", "auriculares": "perifericos", "joysticks": "perifericos",
+    "webcam": "perifericos", "parlantes": "perifericos", "sillas": "perifericos", "micr": "perifericos",
+    "routers": "redes", "placas de red": "redes", "cables": "accesorios",
+}
 
 
 def canon_category(*texts):
@@ -69,11 +90,11 @@ def canon_category(*texts):
 
 
 def product(store, name, url, price_cash=None, price_list=None, stock=None,
-            sku=None, pn=None, image=None, category=None, cuotas=None, rating=None):
+            sku=None, pn=None, image=None, category=None, cuotas=None, rating=None, prev_cash=None):
     return {
         "store": store, "name": " ".join((name or "").split()), "url": url,
         "price_cash": price_cash, "price_list": price_list, "stock": stock,
         "sku": sku, "pn": pn, "image": image,
         "category": category or canon_category(name),
-        "cuotas": cuotas, "rating": rating,
+        "cuotas": cuotas, "rating": rating, "prev_cash": prev_cash,
     }
