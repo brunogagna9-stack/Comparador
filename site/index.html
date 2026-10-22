@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Comparador de Tiendas</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#14181f;--mut:#667085;--line:#e4e7ec;--acc:#1f6feb;--ok:#12805c;--bad:#b42318;--best:#e7f6ef}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1318;--card:#171c23;--tx:#e8ecf2;--mut:#98a2b3;--line:#262d37;--acc:#6aa5ff;--ok:#4cc29a;--bad:#ff8a80;--best:#12302a}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,sans-serif}
+header{padding:16px;max-width:1000px;margin:auto}h1{margin:0 0 4px;font-size:22px}
+.sub{color:var(--mut);font-size:13px}.demo{background:#fff3cd;color:#6b4e00;padding:8px 12px;border-radius:8px;margin-top:10px;font-size:13px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+input,select{padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--tx);font:inherit}
+input[type=search]{flex:1;min-width:200px}label.chk{display:flex;align-items:center;gap:6px;color:var(--mut)}
+main{max-width:1000px;margin:auto;padding:0 16px 60px}
+.p{background:var(--card);border:1px solid var(--line);border-radius:12px;margin:10px 0;overflow:hidden}
+.ph{display:flex;gap:12px;padding:12px;cursor:pointer;align-items:center}
+.ph img{width:56px;height:56px;object-fit:contain;border-radius:6px;background:#fff}
+.ph .n{flex:1;min-width:0}.ph .n b{display:block}.tag{font-size:12px;color:var(--mut)}
+.best{text-align:right;white-space:nowrap}.best .pr{font-size:18px;font-weight:700}
+.offers{display:none;border-top:1px solid var(--line)}.p.open .offers{display:block}
+table{width:100%;border-collapse:collapse}th,td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--line);font-size:14px}
+th{color:var(--mut);font-weight:500;font-size:12px}tr.top td{background:var(--best)}
+.num{text-align:right;white-space:nowrap}.in{color:var(--ok)}.out{color:var(--bad)}
+a{color:var(--acc);text-decoration:none}.hist{padding:10px 12px;font-size:12px;color:var(--mut)}
+svg.sp{width:100%;max-width:420px;height:46px;display:block}
+footer{max-width:1000px;margin:auto;padding:0 16px 40px;color:var(--mut);font-size:12px}
+.stores{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.stores span{border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12px}
+@media(max-width:600px){th:nth-child(4),td:nth-child(4){display:none}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Comparador de Tiendas</h1>
+  <div class="sub" id="meta">Cargando…</div>
+  <div id="demo"></div>
+  <div class="bar">
+    <input type="search" id="q" placeholder="Buscar: ryzen 5 5500, rtx 4060, ddr5 32gb…">
+    <select id="cat"></select>
+    <select id="sort"><option value="price">Menor precio</option><option value="save">Mayor diferencia entre tiendas</option><option value="stores">Más tiendas</option></select>
+    <label class="chk"><input type="checkbox" id="stock"> Solo con stock</label>
+  </div>
+  <div class="stores" id="stores"></div>
+</header>
+<main id="list"></main>
+<footer id="foot"></footer>
+<script>
+const $=s=>document.querySelector(s), ARS=n=>n==null?"—":"$ "+Math.round(n).toLocaleString("es-AR");
+const CATS={"":"Todas las categorías","procesadores":"Procesadores","placas-de-video":"Placas de video","memorias-ram":"Memorias RAM","motherboards":"Motherboards","almacenamiento":"Almacenamiento","fuentes":"Fuentes","gabinetes":"Gabinetes","monitores":"Monitores","refrigeracion":"Refrigeración","otros":"Otros"};
+let DATA=[],HIST={},CFG={stores:{}},META={};
+const price=o=>o.price_cash??o.price_list;
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+async function j(u,d){try{const r=await fetch(u);if(!r.ok)throw 0;return await r.json()}catch{return d}}
+function spark(series){ // series: [[fecha,precio],...]
+  if(!series||series.length<2)return "";
+  const v=series.map(x=>x[1]),mn=Math.min(...v),mx=Math.max(...v),w=400,h=40;
+  const pts=v.map((p,i)=>`${(i/(v.length-1))*w},${mx===mn?h/2:h-4-((p-mn)/(mx-mn))*(h-8)}`).join(" ");
+  return `<svg class="sp" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><polyline fill="none" stroke="currentColor" stroke-width="2" points="${pts}"/></svg>`;
+}
+function cuotasTxt(o){
+  const c=CFG.stores[o.store]?.cuotas; const parts=[];
+  if(o.cuotas)parts.push(esc(o.cuotas));
+  else if(c&&o.price_list)parts.push(`${c.n} cuotas ${c.sin_interes?"sin interés ":""}de ${ARS(o.price_list/c.n)}`);
+  return parts.join(" · ")||'<span class="tag">consultar en la tienda</span>';
+}
+function render(){
+  const q=$("#q").value.toLowerCase().split(/\s+/).filter(Boolean),cat=$("#cat").value,onlyStock=$("#stock").checked;
+  let rows=DATA.filter(g=>(!cat||g.category===cat)&&q.every(t=>g.name.toLowerCase().includes(t)));
+  rows=rows.map(g=>({...g,offers:g.offers.filter(o=>!onlyStock||o.stock!==false)})).filter(g=>g.offers.length);
+  const spread=g=>{const p=g.offers.map(price);return Math.max(...p)-Math.min(...p)};
+  const best=g=>Math.min(...g.offers.map(price));
+  const s=$("#sort").value;
+  rows.sort(s==="save"?(a,b)=>spread(b)-spread(a):s==="stores"?(a,b)=>b.offers.length-a.offers.length||best(a)-best(b):(a,b)=>best(a)-best(b));
+  $("#list").innerHTML=rows.slice(0,200).map((g,i)=>{
+    const b=g.offers[0];
+    const trs=g.offers.map((o,k)=>{
+      const st=o.stock===true?'<span class="in">● Con stock</span>':o.stock===false?'<span class="out">● Sin stock</span>':'<span class="tag">stock a confirmar</span>';
+      const rt=o.rating?` · ⭐ ${o.rating.score}${o.rating.count?" ("+o.rating.count+")":""}`:"";
+      return `<tr class="${k===0?"top":""}"><td><b>${esc(o.store)}</b>${rt}</td><td class="num">${ARS(o.price_cash)}</td><td class="num">${ARS(o.price_list)}</td><td>${cuotasTxt(o)}</td><td>${st}</td><td><a href="${esc(o.url)}" target="_blank" rel="noopener nofollow">Ver</a></td></tr>`}).join("");
+    const h=HIST[g.id]?Object.entries(HIST[g.id]).filter(([,s])=>s.length>1).map(([st,s])=>`<div>${esc(st)} ${spark(s)}</div>`).join(""):"";
+    return `<div class="p" data-i="${i}"><div class="ph"><img loading="lazy" src="${esc(g.image||"")}" alt="" onerror="this.style.visibility='hidden'"><div class="n"><b>${esc(g.name)}</b><span class="tag">${esc(CATS[g.category]||g.category)} · ${g.offers.length} tienda${g.offers.length>1?"s":""}</span></div><div class="best"><div class="pr">${ARS(price(b))}</div><span class="tag">en ${esc(b.store)}</span></div></div>
+    <div class="offers"><table><tr><th>Tienda</th><th class="num">Efectivo/transf.</th><th class="num">Lista/tarjeta</th><th>Cuotas</th><th>Stock</th><th></th></tr>${trs}</table>${h?`<div class="hist"><b>Historial de precio</b>${h}</div>`:""}</div></div>`}).join("")||'<p class="sub">Sin resultados.</p>';
+  document.querySelectorAll(".ph").forEach(e=>e.onclick=()=>e.parentElement.classList.toggle("open"));
+}
+(async()=>{
+  [DATA,HIST,CFG,META]=await Promise.all([j("data/products.json",[]),j("data/history.json",{}),j("data/config.json",{stores:{}}),j("data/meta.json",{})]);
+  $("#cat").innerHTML=Object.entries(CATS).map(([k,v])=>`<option value="${k}">${v}</option>`).join("");
+  const d=META.updated?new Date(META.updated).toLocaleString("es-AR"):"—";
+  $("#meta").textContent=`${DATA.length} productos · actualizado ${d}. Los precios pueden cambiar: verificá en la tienda antes de comprar.`;
+  if(META.demo)$("#demo").innerHTML='<div class="demo">Datos de ejemplo: la página real se llena sola cuando se activa la actualización automática.</div>';
+  $("#stores").innerHTML=Object.entries(META.stores||{}).map(([s,v])=>`<span title="${esc(v.error||"")}">${v.ok?"✅":"⚠️"} ${esc(s)} (${v.count})</span>`).join("");
+  $("#foot").innerHTML="Precio y stock se leen de cada tienda de forma automática, sin garantía. Este sitio no vende nada. Para reseñas de vendedores consultá Google Maps / Mercado Libre; las reseñas propias llegarán en una próxima etapa.";
+  ["q","cat","sort","stock"].forEach(id=>$("#"+id).addEventListener("input",render));
+  render();
+})();
+</script>
+</body>
+</html>

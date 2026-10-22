@@ -1,0 +1,39 @@
+import json, sys
+sys.path.insert(0, ".")
+from scrapers.common import parse_ars, canon_category
+from scrapers import mexx, maximus, gezatek, fullh4rd, logg, compragamer
+import build_data as bd
+
+def test_ars():
+    assert parse_ars("$49.899") == 49899
+    assert parse_ars("$270.920,08") == 270920.08
+    assert parse_ars("") is None
+
+MEXX = '''<div class="productos"><h4 class="card-title"><a href="/producto/x">Micro AMD Ryzen 5 5500 AM4</a></h4>
+<div class="card-description"><span>Art: 100-100000457BOX</span><span>AMD</span></div>
+<span class="enstocklistado">EN STOCK</span><div class="price"><h4><b>$129.900</b></h4></div></div>'''
+MAX = '''<article class="mxCardProduct" id="card-55"><a class="mxCardProduct__link" href="/Producto/x.aspx?ITEM=55/PN=100-100000457BOX/"></a>
+<div class="mxCardProduct__title">Procesador AMD Ryzen 5 5500 Box</div><div class="mxCardProduct__price">$124.500</div>
+<div class="mxCardProduct__oldPrice">$140.000</div><div class="mxCardProduct__installments">3 cuotas sin interés</div>
+<span class="mxCardProduct__ratingScore">4,8</span><span class="mxCardProduct__ratingCount">(12)</span></article>'''
+GEZA = '''<div class="prod-cat" data-id="7891" data-nombre="Micro AMD Ryzen 5 5500 - 6 Nucleos 12 Threads 4.2Ghz AM4" data-precio="119000">
+<h4 class="card-title"><a href="/procesadores/procesadores-amd/micro-7891.html">x</a></h4><font class="et">En stock</font>
+<h6 class="precio_mp">$131.000</h6><h4 class="pecio_final"><b>$119.000</b></h4></div>'''
+FULL = '''<article class="results-card"><a class="results-card__title-link" href="/prod/123/ryzen-5-5500">Procesador AMD Ryzen 5 5500 AM4</a>
+<div class="results-card__meta">Procesadores</div><div class="results-card__price-current">$118.920,08</div><div class="results-card__price-list">$130.000,00</div></article>'''
+LOGG = '''<a class="product-card" href="/Products/9"><h5 class="card-title">Micro AMD Ryzen 5 5500 AM4</h5><h5 class="card-price">$127.000</h5>¡Quedan pocas!</a>'''
+CG = [{"id_producto": 1, "nombre": "Procesador AMD Ryzen 5 5500 AM4 Box", "precioEspecial": 121000, "precioLista": 133000,
+       "stock": 3, "codigo_principal": ["100-100000457BOX"], "id_subcategoria": 5}]
+
+def test_parsers_and_matching():
+    items = (mexx.parse(MEXX) + maximus.parse(MAX) + gezatek.parse(GEZA) + fullh4rd.parse(FULL)
+             + logg.parse(LOGG) + compragamer.parse(CG, {5: "Procesadores"}))
+    assert len(items) == 6 and all(i["price_cash"] for i in items)
+    assert items[1]["rating"] == {"score": 4.8, "count": 12}
+    assert items[2]["price_cash"] == 119000 and items[2]["price_list"] == 131000
+    assert items[3]["price_cash"] == 118920.08
+    assert all(i["category"] == "procesadores" for i in items), [i["category"] for i in items]
+    groups = bd.build(items, "2026-10-21")
+    # MEXX, Maximus y Compragamer comparten PN; Gezatek/Fullh4rd/Logg se cruzan por nombre (modelo 5500 + am4)
+    print(json.dumps([(g["name"], [(o["store"], o["price_cash"]) for o in g["offers"]]) for g in groups], ensure_ascii=False))
+    assert len(groups) <= 2
