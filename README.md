@@ -1,0 +1,2 @@
+# Comparador
+Compara hardware
