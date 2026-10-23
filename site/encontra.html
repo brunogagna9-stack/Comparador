@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Encontrá tu equipo · ComparáTech</title>
+<link rel="stylesheet" href="css/shared.css">
+<style>
+.wiz{max-width:760px;margin:0 auto}
+.prog{height:6px;background:var(--soft);border-radius:99px;overflow:hidden;margin:6px 0 16px}.prog i{display:block;height:100%;background:var(--acc);transition:width .2s}
+.q h2{margin:0 0 4px;font-size:20px}.q .hint{color:var(--mut);margin:0 0 12px}
+.opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.opt{display:flex;gap:10px;align-items:flex-start;text-align:left;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--tx);cursor:pointer;font:inherit;width:100%}
+.opt:hover{border-color:var(--acc)}.opt.on{border-color:var(--acc);background:var(--soft);box-shadow:inset 0 0 0 1px var(--acc)}
+.opt .bx{flex:none;width:18px;height:18px;border:2px solid var(--mut);border-radius:5px;margin-top:2px}.opt.rad .bx{border-radius:50%}.opt.on .bx{background:var(--acc);border-color:var(--acc)}
+.opt small{display:block;color:var(--mut)}
+.grp{font-size:12px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin:14px 0 6px}
+.nav2{display:flex;justify-content:space-between;gap:8px;margin-top:18px;flex-wrap:wrap}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.chips button{padding:6px 11px;border:1px solid var(--line);border-radius:99px;background:var(--card);color:var(--tx);cursor:pointer;font:inherit}
+.rc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.rc .lab{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--acc)}
+.rc h3{margin:0;font-size:16px;line-height:1.3}.rc .pr{font-size:22px;font-weight:800}
+.rc ul{margin:2px 0;padding-left:18px}.rc li{margin:2px 0}.rc .pro li::marker{color:var(--ok)}.rc .con li::marker{color:var(--warn)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13px}.kv dt{color:var(--mut)}.kv dd{margin:0}
+.sec{font-size:12px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;margin-top:6px}
+details summary{cursor:pointer;color:var(--acc);font-size:13px}
+.okx{color:var(--ok);font-weight:700}.wx{color:var(--warn);font-weight:700}.bx2{color:var(--bad);font-weight:700}.ux{color:var(--mut);font-weight:700}
+.rrow{display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:2px 0}
+</style>
+</head>
+<body>
+<header><div class="top"><a class="logo" href="index.html">Compará<span>Tech</span></a>
+<nav class="nav"><a href="index.html">Comparador de precios</a><a href="armado.html">Armado de PC</a><a class="on" href="encontra.html">Encontrá tu equipo</a><a href="comparar.html">Comparar hardware</a></nav></div></header>
+<main>
+<h1>Encontrá tu equipo</h1>
+<p class="lead">Respondé unas preguntas simples (podés saltear las que no sepas) y te mostramos productos reales de las tiendas que se ajustan a tu uso y presupuesto.</p>
+<div id="app" class="wiz"></div>
+<div id="out"></div>
+</main>
+<footer class="fine" id="fine"></footer>
+<script src="js/lib.js"></script><script src="js/compare.js"></script><script src="js/finder.js"></script>
+<script>
+const $=s=>document.querySelector(s),{ARS,esc,RES}=CT;
+let HW,PR=[],META={},C;
+const A={usos:[],tipo:null,budget:null,res:null,portable:null,enfoque:null,perifericos:null,juegos:"",prior:[],have:{tiene:null,cpu:null,gpu:null,psu:null,ddr:null,goal:null}};
+let step=0,showBudgetTxt="";
+const fdate=iso=>{try{return new Date(iso).toLocaleString("es-AR",{timeZone:"America/Argentina/Buenos_Aires",day:"numeric",month:"long",hour:"2-digit",minute:"2-digit",hour12:false})}catch{return ""}};
+const isGame=()=>A.usos.some(u=>u.startsWith("gaming")||["video","render3d","streaming"].includes(u));
+const tagH=t=>{const [l,h]=CT.TAGS[t]||CT.TAGS.nd;return `<span class="tag t-${t}" title="${esc(h)}">${l}</span>`};
+
+/* ---------- preguntas (solo se muestran las relevantes) ---------- */
+const STEPS=[
+ {id:"usos",show:()=>true,ok:()=>A.usos.length>0,
+  render:()=>{const groups=[...new Set(CT.USOS.map(u=>u.g))];
+    return `<div class="q"><h2>¿Para qué vas a usar el equipo?</h2><p class="hint">Podés elegir más de uno.</p>`+groups.map(g=>`<div class="grp">${g}</div><div class="opts">${CT.USOS.filter(u=>u.g===g).map(u=>`<button class="opt ${A.usos.includes(u.id)?"on":""}" data-u="${u.id}"><span class="bx"></span><span>${esc(u.label)}</span></button>`).join("")}</div>`).join("")+"</div>"},
+  bind:()=>document.querySelectorAll("[data-u]").forEach(b=>b.onclick=()=>{const u=b.dataset.u,i=A.usos.indexOf(u);i<0?A.usos.push(u):A.usos.splice(i,1);draw()})},
+ {id:"have",show:()=>true,ok:()=>true,skip:true,
+  render:()=>choice("¿Ya tenés una computadora que querés mejorar?","Si podés reutilizar piezas, te evitamos comprar de más.","have.tiene",[[true,"Sí, quiero mejorarla","Te preguntamos qué tenés"],[false,"No, quiero comprar un equipo",""]],"tiene"),
+  bind:()=>bindChoice("have.tiene")},
+ {id:"have2",show:()=>A.have.tiene===true,ok:()=>!!A.have.goal,skip:true,
+  render:()=>{const opt=(v,l,sel)=>`<option value="${v}" ${String(sel)===String(v)?"selected":""}>${l}</option>`;
+   return `<div class="q"><h2>¿Qué tenés ahora?</h2><p class="hint">Elegí lo que sepas. Lo que no, dejalo en “No sé”: te avisamos qué conviene verificar.</p>
+   <div class="row" style="align-items:stretch">
+   <div class="f"><label>Procesador</label><select id="h_cpu">${opt("","No sé / otro",A.have.cpu)}${HW.cpus.map(c=>opt(c.id,c.name,A.have.cpu)).join("")}</select></div>
+   <div class="f"><label>Placa de video</label><select id="h_gpu">${opt("","No sé / otra",A.have.gpu)}${opt("none","No tiene (usa gráficos integrados)",A.have.gpu)}${HW.gpus.map(g=>opt(g.id,g.name,A.have.gpu)).join("")}</select></div>
+   <div class="f"><label>Fuente de poder</label><select id="h_psu">${opt("","No sé",A.have.psu)}${[350,400,450,500,550,600,650,700,750,800,850,1000].map(w=>opt(w,w+" W",A.have.psu)).join("")}</select></div>
+   <div class="f"><label>Memoria</label><select id="h_ddr">${opt("","No sé",A.have.ddr)}${opt("DDR4","DDR4",A.have.ddr)}${opt("DDR5","DDR5",A.have.ddr)}</select></div></div>
+   <div class="grp">¿Qué querés mejorar?</div><div class="opts">${[["gpu","La placa de video","Para jugar o crear con más potencia"],["cpu","El procesador","Te decimos qué entra en tu placa madre"],["todo","Ambos",""]].map(([v,l,s])=>`<button class="opt rad ${A.have.goal===v?"on":""}" data-goal="${v}"><span class="bx"></span><span>${l}<small>${s}</small></span></button>`).join("")}</div></div>`},
+  bind:()=>{[["cpu","h_cpu"],["gpu","h_gpu"],["psu","h_psu"],["ddr","h_ddr"]].forEach(([k,id])=>$("#"+id).onchange=e=>{A.have[k]=e.target.value||null});
+   document.querySelectorAll("[data-goal]").forEach(b=>b.onclick=()=>{A.have.goal=b.dataset.goal;draw()})}},
+ {id:"tipo",show:()=>A.have.tiene!==true,ok:()=>true,skip:true,
+  render:()=>choice("¿Qué querés comprar?","Si no sabés, elegí “No sé” y te mostramos las opciones más comunes para tu uso.","tipo",[
+   ["pc","PC de escritorio","Te mostramos PC armadas y también armarla por componentes"],["armada","Solo una PC armada","Viene lista para usar"],["componentes","Armarla por componentes","Más control y mejor precio, requiere más cuidado"],["notebook","Notebook","Portátil, con pantalla y batería"],["nose","No sé",""]]),
+  bind:()=>bindChoice("tipo")},
+ {id:"budget",show:()=>true,ok:()=>true,skip:true,
+  render:()=>`<div class="q"><h2>¿Cuál es tu presupuesto máximo?</h2><p class="hint">En pesos argentinos. ${A.have.tiene?"Para las piezas que quieras comprar.":"Es el tope para el equipo completo."} Si no lo sabés, saltealo.</p>
+   <input id="bud" type="text" inputmode="numeric" placeholder="Ej: 1.500.000" value="${A.budget?A.budget.toLocaleString("es-AR"):""}">
+   <div class="chips">${[600000,1000000,1500000,2500000,4000000].map(v=>`<button data-b="${v}">${ARS(v)}</button>`).join("")}</div></div>`,
+  bind:()=>{const inp=$("#bud");inp.oninput=()=>{const n=+inp.value.replace(/\D/g,"");A.budget=n>0?n:null};
+   document.querySelectorAll("[data-b]").forEach(b=>b.onclick=()=>{A.budget=+b.dataset.b;inp.value=A.budget.toLocaleString("es-AR")})}},
+ {id:"res",show:()=>isGame(),ok:()=>true,skip:true,
+  render:()=>choice("¿En qué resolución vas a usar el monitor?","Más resolución exige una placa de video más potente. Si no sabés, 1080p es lo más común.","res",[["1080","1080p (Full HD)","La más común"],["1440","1440p (2K / QHD)","Más nitidez"],["4k","4K","Muy exigente"],[null,"No sé",""]]),
+  bind:()=>bindChoice("res")},
+ {id:"portable",show:()=>A.have.tiene!==true&&(A.tipo==="notebook"||A.tipo==="nose"||!A.tipo),ok:()=>true,skip:true,
+  render:()=>choice("¿Necesitás llevar el equipo de un lugar a otro?","","portable",[["si","Sí, con frecuencia","Una notebook es lo indicado"],["no","No, queda en un lugar",""],[null,"No sé",""]]),
+  bind:()=>bindChoice("portable")},
+ {id:"enfoque",show:()=>true,ok:()=>true,skip:true,
+  render:()=>choice("¿Qué preferís?","","enfoque",[["barato","Lo más económico que cumpla","Gastar lo mínimo necesario"],["equilibrado","Equilibrio entre precio y rendimiento","La opción más conveniente"],["rendimiento","Pagar más por mayor rendimiento y vida útil","Para que dure más años"],[null,"No sé",""]]),
+  bind:()=>bindChoice("enfoque")},
+ {id:"extra",show:()=>true,ok:()=>true,skip:true,
+  render:()=>`<div class="q"><h2>Últimos detalles (opcionales)</h2>
+   <div class="grp">¿Necesitás monitor, teclado y mouse?</div><div class="opts">${[[true,"Sí, mostrame opciones"],[false,"No, ya los tengo"]].map(([v,l])=>`<button class="opt rad ${A.perifericos===v?"on":""}" data-per="${v}"><span class="bx"></span><span>${l}</span></button>`).join("")}</div>
+   <div class="grp">¿Qué juegos o programas usás? (opcional)</div><input id="jg" type="text" placeholder="Ej: Cyberpunk 2077, Counter-Strike 2, Photoshop…" value="${esc(A.juegos)}"></div>`,
+  bind:()=>{document.querySelectorAll("[data-per]").forEach(b=>b.onclick=()=>{A.perifericos=b.dataset.per==="true";draw()});$("#jg").oninput=e=>{A.juegos=e.target.value}}},
+];
+function getp(p){return p.split(".").reduce((o,k)=>o[k],A)}
+const ANS={};
+function setp(p,v){ANS[p]=true;const k=p.split(".");let o=A;k.slice(0,-1).forEach(x=>o=o[x]);o[k[k.length-1]]=v}
+function choice(t,h,key,opts){const cur=getp(key);return `<div class="q"><h2>${t}</h2>${h?`<p class="hint">${h}</p>`:""}<div class="opts">${opts.map(([v,l,s],i)=>`<button class="opt rad ${ANS[key]&&cur===v?"on":""}" data-k="${key}" data-i="${i}"><span class="bx"></span><span>${l}${s?`<small>${s}</small>`:""}</span></button>`).join("")}</div></div>`}
+function bindChoice(key){document.querySelectorAll(`[data-k="${key}"]`).forEach(b=>b.onclick=()=>{const o=CHOICES[key][+b.dataset.i];setp(key,o);draw()})}
+const CHOICES={tipo:["pc","armada","componentes","notebook",null].map(x=>x),"have.tiene":[true,false],res:["1080","1440","4k",null],portable:["si","no",null],enfoque:["barato","equilibrado","rendimiento",null]};
+
+function visible(){return STEPS.filter(s=>s.show())}
+function draw(){
+  const vs=visible();if(step>=vs.length)step=vs.length-1;
+  const s=vs[step];
+  $("#out").innerHTML="";$("#app").style.display="";
+  $("#app").innerHTML=`<div class="prog"><i style="width:${Math.round((step+1)/(vs.length+1)*100)}%"></i></div><div class="panel">${s.render()}
+   <div class="nav2"><button class="btn" id="bk" ${step?"":"disabled"}>← Atrás</button><span>${s.skip?'<button class="btn" id="sk">No sé / omitir</button> ':''}<button class="btn pri" id="nx" ${s.ok()?"":"disabled"}>${step===vs.length-1?"Ver recomendaciones":"Siguiente →"}</button></span></div></div>`;
+  s.bind();
+  $("#bk").onclick=()=>{step--;draw()};
+  $("#nx").onclick=()=>next();
+  if($("#sk"))$("#sk").onclick=()=>{if(s.id==="budget")A.budget=null;if(s.id==="have2")A.have.goal="gpu";next()};
+}
+function next(){const vs=visible();if(step<vs.length-1){step++;draw()}else showResults()}
+
+/* ---------- resultados ---------- */
+const stockTxt=o=>o.stock===true?'<span class="okx">Con stock</span>':'<span class="ux">Stock sin confirmar</span>';
+const dateTxt=()=>META.updated?`Precio verificado en la tienda · actualizado el ${esc(fdate(META.updated))}`:"Fecha de actualización no disponible";
+function specsH(sp){return `<dl class="kv">${sp.map(([k,v,t])=>`<dt>${esc(k)}</dt><dd>${esc(v)} ${tagH(t||"pend")}</dd>`).join("")}</dl>`}
+function li(a){return a.length?`<ul>${a.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}
+function whyTxt(p,n){
+  const total=p.c.total,names=A.usos.map(u=>CT.USOS.find(x=>x.id===u).label.toLowerCase());
+  let t=`Sirve para ${names.slice(0,3).join(", ")}${names.length>3?" y más":""}`;
+  if(A.budget)t+=`, entra en tu presupuesto (${ARS(total)} de ${ARS(A.budget)})`;
+  t+=". "+({eco:"Es la alternativa de menor costo que cumple lo que pediste.",bal:"Busca la mejor relación entre lo que rinde y lo que cuesta dentro de las opciones válidas.",perf:"Es la de mayor rendimiento dentro de tu presupuesto.",one:"Es la única que cumple todo lo que pediste con stock."})[p.k];
+  if(n.gaming&&p.c.fps)t+=` Para tu resolución (${RES[n.res]}) estimamos ~${Math.round(p.c.fps)} FPS promedio en juegos exigentes.`;
+  return t;
+}
+function simH(p){return p.similar&&p.similar.length?`<details><summary>Opciones similares (${p.similar.length})</summary>${p.similar.map(c=>`<div class="rrow"><span>${c.kind==="build"?esc(buildName(c)):`<a href="${esc(c.o.url)}" target="_blank" rel="noopener nofollow">${esc(c.g.name.slice(0,60))}</a>`}</span><b>${ARS(c.total)}</b></div>`).join("")}</details>`:""}
+const buildName=c=>c.g?`${c.g.name} + ${c.c.name}`:c.c.name;
+function partsH(parts){return parts.map(pt=>{const [b,...rest]=pt.shop||[];
+  return `<div class="rrow"><span>${esc(pt.label)}: ${b?`<a href="${esc(b.o.url)}" target="_blank" rel="noopener nofollow">${esc(b.g.name.slice(0,58))}</a> <span class="note">· ${esc(b.o.store)}</span>`:'<span class="ux">sin precio en el comparador</span>'}</span><b>${b?ARS(b.p):"—"}</b></div>${rest.length?`<details style="margin:-2px 0 4px 8px"><summary>${rest.length} alternativa${rest.length>1?"s":""}</summary>${rest.map(r=>`<div class="rrow"><span><a href="${esc(r.o.url)}" target="_blank" rel="noopener nofollow">${esc(r.g.name.slice(0,58))}</a> <span class="note">· ${esc(r.o.store)}</span></span><b>${ARS(r.p)}</b></div>`).join("")}</details>`:""}`}).join("")}
+function cardH(p,n){
+  const c=p.c,isB=c.kind==="build";
+  const head=isB?`PC por componentes · ${esc(buildName(c))}`:esc(c.g.name);
+  const kindTxt={build:"Componentes individuales (armado por tu cuenta)",pc:"PC armada",notebook:"Notebook"}[c.kind];
+  let h=`<div class="rc"><div class="lab">${p.label}</div><h3>${isB?head:`<a href="${esc(c.o.url)}" target="_blank" rel="noopener nofollow">${head}</a>`}</h3>
+   <div><span class="pr">${ARS(c.total)}${isB&&c.missing.length?"+":""}</span> ${tagH("ver")}<div class="note">${kindTxt} · ${isB?"suma de las opciones más baratas con stock":esc(c.o.store)+" · "+stockTxt(c.o)} · ARS</div><div class="note">${dateTxt()}</div></div>`;
+  if(isB){h+=`<div class="sec">Piezas, especificaciones y precios</div>${partsH(c.parts)}${c.missing.length?`<div class="stale">Sin precio en el comparador: ${c.missing.map(esc).join(", ")}. El total es parcial.</div>`:""}`;
+    h+=`<div class="note">No incluye gabinete, refrigeración extra ni periféricos. Antes de comprar, revisá compatibilidad en <a href="armado.html">Armado de PC</a>.</div>`}
+  if(p.specs.length)h+=`<div class="sec">Especificaciones principales</div>${specsH(p.specs)}`;
+  if(p.pros.length)h+=`<div class="sec">Ventajas</div><div class="pro">${li(p.pros)}</div>`;
+  if(p.cons.length)h+=`<div class="sec">Desventajas</div><div class="con">${li(p.cons)}</div>`;
+  if(p.does.length)h+=`<div class="sec">Qué puede hacer bien</div>${li(p.does)}`;
+  if(p.limits.length)h+=`<div class="sec">Limitaciones para tu uso</div>${li(p.limits)}`;
+  h+=`<div class="sec">Por qué te lo recomendamos</div><div>${esc(whyTxt(p,n))}</div>`;
+  h+=simH(p);
+  h+=`<div class="sec">Posibles mejoras a futuro</div><div class="note">${c.kind==="notebook"?"En muchas notebooks se puede ampliar la memoria y el SSD, pero no lo sabemos de este modelo: consultalo en la tienda.":isB?"Podés cambiar la placa de video más adelante: la fuente sugerida deja margen. Verificá la BIOS y los slots libres.":"Consultá a la tienda qué componentes se pueden ampliar (memoria, SSD) y qué fuente trae."}</div></div>`;
+  return h;
+}
+function statusH(c){const m={ok:["okx","✔"],warn:["wx","⚠"],bad:["bx2","✖"],unk:["ux","?"]}[c.s];return `<div style="font-size:13px"><span class="${m[0]}">${m[1]}</span> ${esc(c.t)}</div>`}
+function upgradeH(u,n){
+  let h="";
+  if(u.notes.length)h+=`<div class="warn">${u.notes.map(esc).join("<br>")}</div>`;
+  if(A.have.goal==="gpu"||A.have.goal==="todo"){
+    h+=`<h2>Placas de video para tu equipo</h2>`;
+    if(!u.gpus.length)h+=`<div class="panel">No encontramos placas con stock que mejoren al menos un 25 % lo que tenés${A.budget?" dentro de tu presupuesto":""}${A.have.gpu&&A.have.gpu!=="none"?"":""}. Probá subir el presupuesto.</div>`;
+    else h+=`<div class="grid2">${u.gpus.slice(0,6).map(x=>{const b=x.shop[0];return `<div class="rc"><h3><a href="${esc(b.o.url)}" target="_blank" rel="noopener nofollow">${esc(b.g.name.slice(0,70))}</a></h3><div><span class="pr">${ARS(b.p)}</span> ${tagH("ver")}<div class="note">${esc(b.o.store)} · ${stockTxt(b.o)} · ~${Math.round(x.g.p[n.res])} FPS a ${RES[n.res]} ${tagH("bench")}</div></div><div class="sec">Compatibilidad con tu equipo</div>${x.compat.map(statusH).join("")}</div>`}).join("")}</div>`;
+  }
+  if((A.have.goal==="cpu"||A.have.goal==="todo")&&u.cpus.length){
+    h+=`<h2>Procesadores para tu equipo</h2><div class="grid2">${u.cpus.slice(0,6).map(x=>{const b=x.shop[0];return `<div class="rc"><h3><a href="${esc(b.o.url)}" target="_blank" rel="noopener nofollow">${esc(b.g.name.slice(0,70))}</a></h3><div><span class="pr">${ARS(x.total)}</span> ${tagH("ver")}<div class="note">Costo: ${x.cost} · ${esc(b.o.store)} · puntaje de juegos ${x.c.s}/100 ${tagH("bench")}</div></div><div class="sec">Compatibilidad con tu equipo</div>${x.compat.map(statusH).join("")}</div>`}).join("")}</div>`;
+  }
+  return h;
+}
+function extrasH(n){
+  if(!A.perifericos)return"";
+  const mon=C.inCat("monitores").filter(g=>{const s=CT.parse(g.name,"monitores");const want={0:"FHD",1:"QHD",2:"4K"}[n.res];return s.res&&s.res.startsWith(want)&&(!A.usos.includes("gaming_comp")||(s.hz||0)>=144)});
+  const kb=C.inCat("perifericos").filter(g=>/combo/i.test(g.name)&&/teclado/i.test(g.name)&&/mouse/i.test(g.name));
+  const row=(t,l)=>l.length?`<div class="sec">${t}</div>${l.map(x=>`<div class="rrow"><span><a href="${esc(x.o.url)}" target="_blank" rel="noopener nofollow">${esc(x.g.name.slice(0,64))}</a> <span class="note">· ${esc(x.o.store)}</span></span><b>${ARS(x.p)}</b></div>`).join("")}`:`<div class="sec">${t}</div><div class="note">No encontramos opciones con stock que cumplan lo que elegiste.</div>`;
+  return `<h2>Periféricos</h2><div class="panel">${row("Monitores ("+RES[n.res]+(A.usos.includes("gaming_comp")?", 144 Hz o más":"")+")",C.cheapest(mon,3))}${row("Combos de teclado y mouse",C.cheapest(kb,3))}<div class="note">No están incluidos en los totales de arriba.</div></div>`;
+}
+function gamesNote(){
+  const t=A.juegos.toLowerCase().trim();if(!t)return"";
+  const hit=HW.games.filter(g=>t.includes(g.name.toLowerCase().split(":")[0].split(" ")[0])||t.includes(g.id));
+  let h=`<h2>Lo que escribiste: “${esc(A.juegos)}”</h2><div class="panel">`;
+  h+=hit.length?hit.map(g=>`<div><b>${esc(g.name)}</b> · Mínimo: ${esc(g.min)} <span class="note">· <a href="${esc(g.src)}" target="_blank" rel="noopener">fuente</a></span></div>`).join(""):`No tenemos requisitos cargados de esos juegos o programas ${tagH("nd")}. Mirá los requisitos oficiales y compará con las especificaciones de cada resultado.`;
+  return h+`<div class="note">Conocemos los requisitos oficiales de: ${HW.games.map(g=>esc(g.name)).join(", ")}. Para el resto, usamos solo tus usos.</div></div>`;
+}
+function showResults(){
+  const n0=CT.needs(A);
+  const R=C.recommend({...A,usos:A.usos,have:A.have.tiene?A.have:null,tipo:A.tipo||"nose"});
+  const n=R.n;let h=`<div class="panel"><b>Tu resumen:</b> ${A.usos.map(u=>esc(CT.USOS.find(x=>x.id===u).label)).join(" · ")}${A.budget?` · presupuesto ${ARS(A.budget)}`:" · sin tope de presupuesto"}${n.gaming?` · ${RES[n.res]}`:""}.<br>
+   <span class="note">Para eso buscamos: ${n.gaming?"placa de video dedicada, ":"gráficos integrados alcanzan, "}RAM de al menos ${n.ram.min} GB (ideal ${n.ram.rec} GB) y SSD de ${n.ssd>=1000?"1 TB":n.ssd+" GB"} o más. Son criterios de ComparáTech ${tagH("est")}.</span>
+   <div style="margin-top:8px"><button class="btn" id="redo">← Cambiar respuestas</button></div></div>`;
+  if(R.upgrade)h+=upgradeH(R.upgrade,n);
+  else{
+    R.sections.forEach(s=>{
+      if(!s.picks.length)return;
+      h+=`<h2>${s.title}</h2><div class="grid3">${s.picks.map(p=>cardH(p,n)).join("")}</div>`;
+      if(s.excl&&Object.values(s.excl).some(x=>x))h+=`<p class="note">Se descartaron productos sin stock, sin datos suficientes en el título o que no cumplen lo pedido; no completamos datos que faltan.</p>`;
+    });
+    if(R.insufficient){const i=R.insufficient;
+      h+=`<div class="warn"><b>Con tu presupuesto no alcanza para lo que pediste.</b> ${i.minTotal?`Lo más barato que encontramos que cumple tus requisitos cuesta ${ARS(i.minTotal)}${i.budget?` (te faltan ${ARS(i.minTotal-i.budget)})`:""}.`:esc(i.reason)}`;
+      if(i.alt.length){const c=i.alt[0].c;h+=`<br><br><b>Alternativa realista con ${ARS(i.budget)}:</b> bajar la exigencia a juego casual en 1080p. ${c.kind==="build"?esc(buildName(c)):esc(c.g.name)} a ${ARS(c.total)} rendiría ~${Math.round(c.fps||c.score)} FPS promedio en juegos exigentes (estimado).`}
+      h+=`<br><br>Otras opciones: subir el presupuesto, apuntar a una resolución menor, o comprar usado/por etapas (empezar por procesador y memoria y sumar la placa de video después).</div>`}
+    if(R.sections.every(s=>!s.picks.length)&&!R.insufficient)h+=`<div class="warn">No encontramos productos con stock que cumplan lo que pediste.</div>`;
+  }
+  h+=extrasH(n)+gamesNote();
+  h+=`<div class="legend" style="margin-top:14px">${["ver","bench","est","pend","nd"].map(tagH).join(" ")}</div>`;
+  $("#app").style.display="none";$("#out").innerHTML=h;
+  $("#redo").onclick=()=>{draw();window.scrollTo(0,0)};
+  window.scrollTo(0,0);
+}
+(async()=>{
+  const j=async(u,d)=>{try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw 0;return await r.json()}catch{return d}};
+  let m;[HW,PR,m]=await Promise.all([j("data/hardware.json",null),j("data/products.json",[]),j("data/meta.json",{})]);META=m;
+  if(!HW||!PR.length){$("#app").innerHTML='<div class="panel">No se pudieron cargar los datos de productos. Probá recargar la página.</div>';return}
+  C=CT.makeFinder(CT.create(HW,PR,META));
+  $("#fine").textContent="Las recomendaciones usan solo productos y precios reales del comparador. Las especificaciones de PC armadas y notebooks se leen del título de la tienda y están pendientes de verificar. No es asesoramiento profesional: confirmá siempre con la tienda antes de comprar.";
+  draw();
+})();
+</script>
+</body>
+</html>

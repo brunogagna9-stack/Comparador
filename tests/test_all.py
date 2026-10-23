@@ -87,3 +87,32 @@ def test_hardware_json():
         re.compile(c[9])
         # el tipo de memoria debe ser coherente con el socket
         assert (c[3] in ("AM5", "LGA1851")) == (c[4] == "DDR5") or c[3] == "LGA1700", c[0]
+
+
+def test_categorias_pc_armadas():
+    from scrapers.common import canon_category, is_service
+    for n in ["PC Armada AMD Ryzen 5 5500 RTX 3050 16GB 512GB", "PC Powered by MSI Ultimate Intel Ultra 5 245KF B860 RTX 5060",
+              "PC Gamer R7-7700X 32GB RAM SSD 1TB RX 9070 XT 16GB WIFI"]:
+        assert canon_category(n) == "pcs-armadas", n   # antes caían en "placas de video"
+    assert canon_category("Placa de Video MSI GeForce RTX 5070 Ti 16GB") == "placas-de-video"
+    assert is_service("Service Instalación Cooler CPU en equipos armados")
+
+
+def test_hardware_especificaciones():
+    import json, re
+    from pathlib import Path
+    hw = json.loads((Path("site/data/hardware.json")).read_text())
+    for g in hw["gpus"]:
+        sp = g["spec"]
+        assert sp["bw"] == round(sp["bus"] / 8 * sp["gbps"]), g["id"]
+        assert set(g["ver"]) <= set(sp) , g["id"]
+        re.compile(g["m"])
+    for c in hw["cpus"]:
+        sp = c["spec"]
+        assert sp["threads"] >= sp["cores"] and sp["boost"] > 3, c["id"]
+        assert set(c["ver"]) <= set(sp), c["id"]
+        assert not re.search(c["m"], "placa de video rx 7600 8gb", re.I), c["id"]   # "RX 7600" no es el Ryzen 5 7600
+    # Intel F no trae gráficos integrados
+    for c in hw["cpus"]:
+        if c["id"].endswith("f") and c["vendor"] == "Intel":
+            assert c["spec"]["igpu"] is False, c["id"]

@@ -4,41 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Armado de PC · ComparáTech</title>
-<style>
-:root{--bg:#f4f5f7;--card:#fff;--tx:#16191f;--mut:#6a7280;--line:#e3e6ea;--acc:#1f6feb;--ok:#12805c;--warn:#b7791f;--bad:#c4301f;--soft:#eef0f3;--okbg:#e2f6ec;--warnbg:#fff4d6;--badbg:#ffe2de}
-@media (prefers-color-scheme:dark){:root{--bg:#0e1217;--card:#161b22;--tx:#e8ecf2;--mut:#98a2b3;--line:#262d37;--acc:#6aa5ff;--ok:#4cc29a;--warn:#e6b450;--bad:#ff8a80;--soft:#1e252e;--okbg:#12302a;--warnbg:#332a12;--badbg:#3a1d1a}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
-a{color:var(--acc);text-decoration:none}
-header{background:var(--card);border-bottom:1px solid var(--line)}
-.top{max-width:1100px;margin:auto;padding:12px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
-.logo{font-weight:800;font-size:19px;color:var(--tx)}.logo span{color:var(--acc)}.nav a{margin-right:14px;font-weight:600}.nav a.on{color:var(--tx)}
-main{max-width:1100px;margin:auto;padding:16px 16px 60px}
-h1{margin:6px 0 4px;font-size:24px}h2{font-size:17px;margin:22px 0 8px}
-.lead{color:var(--mut);margin:0 0 14px}
-.panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}
-.row{display:flex;gap:12px;flex-wrap:wrap;align-items:end}.f{display:flex;flex-direction:column;gap:4px;flex:1;min-width:200px}
-label{font-size:12px;color:var(--mut);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
-select{padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--tx);font:inherit;width:100%}
-.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}.seg button{flex:1;padding:10px;border:0;background:var(--card);color:var(--tx);cursor:pointer;font:inherit}.seg button.on{background:var(--tx);color:var(--bg)}
-.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.col{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
-.col h3{margin:0 0 2px;font-size:16px}.col .tg{color:var(--mut);font-size:12px;margin-bottom:10px}
-.part{padding:10px 0;border-top:1px solid var(--line)}.part:first-of-type{border-top:0}
-.part b{display:block}.why{color:var(--mut);font-size:12.5px}
-.chip{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700}
-.c-ok{background:var(--okbg);color:var(--ok)}.c-warn{background:var(--warnbg);color:var(--warn)}.c-bad{background:var(--badbg);color:var(--bad)}.c-n{background:var(--soft);color:var(--mut)}
-.shop{margin-top:6px;font-size:13px}.shop div{display:flex;justify-content:space-between;gap:8px;padding:2px 0}
-table{width:100%;border-collapse:collapse}th,td{padding:8px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}th{font-size:12px;color:var(--mut);font-weight:600}
-.warn{background:var(--warnbg);color:var(--tx);border-left:4px solid var(--warn);padding:10px 12px;border-radius:8px;margin:10px 0}
-.note{color:var(--mut);font-size:12.5px}
-ul.chk{margin:6px 0 0;padding-left:18px}ul.chk li{margin:3px 0}
-.pick{cursor:pointer;color:var(--acc);text-decoration:underline}
-@media(max-width:760px){.cols{grid-template-columns:1fr}}
-</style>
+<link rel="stylesheet" href="css/shared.css">
+
 </head>
 <body>
 <header><div class="top"><a class="logo" href="index.html">Compará<span>Tech</span></a>
-<div class="nav"><a href="index.html">Comparador de precios</a><a class="on" href="armado.html">Armado de PC</a></div></div></header>
+<nav class="nav"><a href="index.html">Comparador de precios</a><a class="on" href="armado.html">Armado de PC</a><a href="encontra.html">Encontrá tu equipo</a><a href="comparar.html">Comparar hardware</a></nav></div></header>
 <main>
 <h1>Armado de PC</h1>
 <p class="lead">Elegí una placa de video o un procesador y te decimos qué hardware acompañarlo (mínimo y sugerido), qué fuente necesitás y cómo rendiría en juegos.</p>
@@ -63,97 +34,63 @@ ul.chk{margin:6px 0 0;padding-left:18px}ul.chk li{margin:3px 0}
 <h2>De dónde salen los datos</h2>
 <div class="panel note" id="src"></div>
 </main>
+<script src="js/lib.js"></script>
 <script>
-const $=s=>document.querySelector(s),ARS=n=>"$"+Math.round(n).toLocaleString("es-AR"),up50=x=>Math.ceil(x/50)*50;
-let HW,PR=[],S={mode:"gpu",res:0,id:null,cpu:null};
-const RES=["1080p","1440p","4K"];
-const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const cpuFps=c=>c.s?HW.ref.gpu_fps_ref*c.s/HW.ref.cpu_score_ref:null;
-const gFps=(g,r)=>g.p[r];
+const $=s=>document.querySelector(s),{ARS,esc,RES}=CT;
+let HW,PR=[],META={},C,S={mode:"gpu",res:0,id:null};
+const fdate=iso=>{try{return new Date(iso).toLocaleString("es-AR",{timeZone:"America/Argentina/Buenos_Aires",day:"numeric",month:"long",hour:"2-digit",minute:"2-digit",hour12:false})}catch{return ""}};
 
-/* ---------- búsqueda de precios en el comparador ---------- */
-const price=o=>o.price_cash??o.price_list;
-function cheapest(list,n=3){ // list: productos; devuelve los n más baratos con stock (o sin dato)
-  return list.map(g=>{const o=g.offers.find(o=>o.stock!==false);return o?{g,o,p:price(o)}:null}).filter(Boolean).sort((a,b)=>a.p-b.p).slice(0,n);
-}
 function shopHtml(items,extra){
   if(!PR.length)return '<div class="note">Sin datos de precios cargados.</div>';
   if(!items.length)return '<div class="note">No encontré opciones con stock ahora mismo en el comparador.</div>';
-  return '<div class="shop">'+items.map(x=>`<div><span><a href="${esc(x.o.url)}" target="_blank" rel="noopener nofollow">${esc(x.g.name.slice(0,70))}</a> <span class="note">· ${esc(x.o.store)}${extra?extra(x):""}</span></span><b>${ARS(x.p)}</b></div>`).join("")+'</div>';
+  return '<div class="shop">'+items.map(x=>`<div><span><a href="${esc(x.o.url)}" target="_blank" rel="noopener nofollow">${esc(x.g.name.slice(0,70))}</a> <span class="note">· ${esc(x.o.store)}${x.o.stock===true?"":" · stock sin confirmar"}${extra?extra(x):""}</span></span><b>${ARS(x.p)}</b></div>`).join("")+'</div>';
 }
-const inCat=c=>PR.filter(g=>g.category===c);
-const rx=(m,x)=>{const a=new RegExp(m,"i"),b=x?new RegExp(x,"i"):null;return n=>a.test(n)&&!(b&&b.test(n))};
-function findGpu(g){const t=rx(g.m,g.x);return cheapest(inCat("placas-de-video").filter(p=>t(p.name)))}
-function findCpu(c){const t=rx(c.m);return cheapest(inCat("procesadores").filter(p=>t(p.name)&&!/cooler|disipador|fan/i.test(p.name)))}
-function findPsu(w){return cheapest(inCat("fuentes").filter(p=>{const m=p.name.match(/(\d{3,4})\s?w\b/i);return m&&+m[1]>=w&&+m[1]<=w+250&&/80 ?plus|bronze|gold|silver|platinum/i.test(p.name)}))}
-function findMobo(c){
-  const sk={AM5:/am5/i,AM4:/am4/i,LGA1700:/1700/,LGA1851:/1851/}[c.socket];
-  return cheapest(inCat("motherboards").filter(p=>sk.test(p.name)))}
-function findRam(c,gb){
-  const ddr=c.mem==="DDR5"?/ddr5/i:c.mem==="DDR4"?/ddr4/i:/ddr[45]/i;
-  return cheapest(inCat("memorias-ram").filter(p=>{const m=p.name.match(/(\d+)\s?gb/i);return ddr.test(p.name)&&!/sodimm|notebook|laptop/i.test(p.name)&&m&&+m[1]>=gb&&+m[1]<=gb*2}))}
-
-/* ---------- lógica de recomendación ---------- */
-function pickCpu(Gv,factor,vendor){
-  const l=HW.cpus.filter(c=>c.s&&(!vendor||c.vendor===vendor)).sort((a,b)=>a.s-b.s);
-  const ok=l.find(c=>cpuFps(c)>=factor*Gv);
-  return ok?{c:ok,short:false}:{c:l[l.length-1],short:true};
+const partHtml=p=>`<div class="part"><b>${esc(p.title)}</b><div class="why">${esc(p.why)}</div>${shopHtml(p.shop,p.slot==="psu"?x=>{const m=x.g.name.match(/(\d{3,4})\s?w/i);return m?" · "+m[1]+" W":""}:null)}</div>`;
+function totalHtml(t){
+  if(!PR.length)return"";
+  const faltan=t.missing.length?`<small>Sin precio en el comparador: ${t.missing.map(esc).join(", ")}. El total es parcial.</small>`:`<small>Suma la opción más barata con stock de cada parte (${t.priced} de ${t.count}).</small>`;
+  return `<div class="tot"><span>Total estimado de esta configuración${faltan}</span><span>${ARS(t.total)}${t.missing.length?"+":""}</span></div>`;
 }
-function psuFor(g,c){
-  const base=c.maxp+g.tgp+100; // CPU a máxima potencia + placa + resto del equipo (~100 W)
-  const min=Math.max(g.psu,up50(base)), sug=Math.max(min,up50(base*1.25));
-  return {min,sug,base};
+function build(g,A){
+  const r=S.res;
+  const col=(title,tag,own,tot,cpu)=>`<div class="col"><h3>${title}</h3><div class="tg">${tag}</div>
+    ${own.length?own.map(partHtml).join(""):'<div class="note">No hay diferencias: esta configuración usa solo los componentes compartidos.</div>'}
+    ${A.shared.length?`<div class="note up">+ los ${A.shared.length} componentes compartidos (arriba), ya incluidos en el total.</div>`:""}
+    ${totalHtml(tot)}</div>`;
+  let h="";
+  if(A.shared.length)h+=`<div class="col shared" style="margin-bottom:14px"><h3>Componentes compartidos por ambas configuraciones</h3><div class="tg">Son idénticos en el mínimo y en el sugerido: aparecen una sola vez. Cada configuración los cuenta en su propio total.</div>${A.shared.map(partHtml).join("")}</div>`;
+  h+=`<div class="cols">${col("Hardware mínimo","Sin cuello de botella importante a "+RES[r],A.onlyMin,A.totalMin)}${col("Hardware sugerido","Equilibrado y con margen a "+RES[r],A.onlySug,A.totalSug)}</div>`;
+  if(META.updated)h+=`<p class="note">Precios del comparador, actualizados el ${esc(fdate(META.updated))} h. Pueden cambiar en la tienda.</p>`;
+  return h;
 }
-function bucket(fps){
-  if(fps>=100)return["c-ok","Excelente"];if(fps>=60)return["c-ok","Muy bueno"];
-  if(fps>=45)return["c-warn","Jugable"];return["c-bad","Justo"]}
 function gameRow(gm,g,c){
-  const r=S.res,G=gFps(g,r),cf=c.s?cpuFps(c):null,est=cf?Math.min(G,cf):G;
+  const r=S.res,G=g.p[r],cf=c.s?C.cpuFps(c):null,est=cf?Math.min(G,cf):G;
   let chip,txt;
   if(gm.kind==="ligero"){chip=["c-ok","Excelente"];txt=`Esta placa supera por mucho los requisitos oficiales (son de la era GeForce 400–500). Con cualquier placa de esta lista juega fluido; los FPS altos dependen sobre todo del procesador.`}
   else if(gm.kind==="cpu"){chip=["c-ok","Excelente"];txt=`La placa no es el límite: supera ampliamente lo oficial. En este juego los FPS los define el procesador${c.s?` (puntaje de juegos de tu CPU: ${c.s}/100)`:` (sin dato de rendimiento comparable para este CPU)`}.`}
   else if(gm.kind==="mmo"){
-    const g1080=gFps(g,0);
-    if(g1080>=50){chip=["c-ok","Cumple lo recomendado"];txt=`Placa por encima de la recomendada oficial (RTX 2070 / RX 5700 XT, de nivel aproximado a una RX 6600 o RTX 3060). Promedio estimado de juegos exigentes: ~${Math.round(est)} FPS a ${RES[r]}.`}
+    if(g.p[0]>=50){chip=["c-ok","Cumple lo recomendado"];txt=`Placa por encima de la recomendada oficial (RTX 2070 / RX 5700 XT, de nivel aproximado a una RX 6600 o RTX 3060). Promedio estimado de juegos exigentes: ~${Math.round(est)} FPS a ${RES[r]}.`}
     else{chip=["c-warn","Cumple lo mínimo"];txt=`Supera la mínima (GTX 1050 Ti / RX 470) pero queda por debajo de la recomendada (RTX 2070 / RX 5700 XT). Podría requerir bajar ajustes.`}
   }else{
-    const [cl,lb]=bucket(est);chip=[cl,lb];
+    const [cl,lb]=C.bucket(est);chip=[cl,lb];
     txt=`~${Math.round(est)} FPS promedio estimado a ${RES[r]} con ajustes Ultra y sin DLSS/FSR (promedio de 11 juegos exigentes, entre ellos Cyberpunk 2077).`;
-    if(g.rt&&r<2){const rt=g.rt[r],rtE=cf?Math.min(rt,cf):rt,[c2,l2]=bucket(rtE);txt+=` Con ray tracing: ~${Math.round(rtE)} FPS (${l2.toLowerCase()}).`}
+    if(g.rt&&r<2){const rt=g.rt[r],rtE=cf?Math.min(rt,cf):rt,[,l2]=C.bucket(rtE);txt+=` Con ray tracing: ~${Math.round(rtE)} FPS (${l2.toLowerCase()}).`}
     else if(!g.rt&&r<2)txt+=` Sin dato de ray tracing para esta placa.`;
     if(cf&&cf<G*.9)txt+=` <b>Ojo:</b> el procesador limitaría a la placa (cuello de botella).`;
   }
   return `<tr><td><b>${esc(gm.name)}</b><div class="note">Mínimo: ${esc(gm.min)}<br>Recomendado: ${esc(gm.rec)}${gm.note?`<br><i>${esc(gm.note)}</i>`:""} · <a href="${esc(gm.src)}" target="_blank" rel="noopener">fuente</a></div></td><td><span class="chip ${chip[0]}">${chip[1]}</span></td><td>${txt}</td></tr>`;
 }
-function build(g,cMin,cSug){
-  const r=S.res,Gv=gFps(g,r);
-  const colHtml=(title,tag,c,short,ramGb,psu,kind)=>{
-    const ddr=c.mem,gpuShop=findGpu(g);
-    return `<div class="col"><h3>${title}</h3><div class="tg">${tag}</div>
-    <div class="part"><b>Placa de video: ${esc(g.name)}</b><div class="why">${g.vram} GB de VRAM · consumo ${g.tgp} W (${esc(g.vendor)}).</div>${kind==="sug"?shopHtml(gpuShop):""}</div>
-    <div class="part"><b>Procesador: ${esc(c.name)}</b><div class="why">${c.socket} · ${ddr} · ${c.tdp} W base, hasta ~${c.maxp} W${c.vendor==="AMD"?" (estimado)":""}.${c.s?` Puntaje de juegos ${c.s}/100 (≈${Math.round(cpuFps(c))} FPS máx. en el suite).`:""}${short?" <b>Es el más potente de la lista y aun así podría limitar a esta placa.</b>":""}</div>${shopHtml(findCpu(c))}</div>
-    <div class="part"><b>Fuente de poder: ${psu} W o más</b><div class="why">Incluye procesador al máximo + placa + ~100 W del resto. ${kind==="min"?"Es el piso: no bajes de este valor.":"Con ~25 % de margen para que trabaje holgada y dure más."} Debe tener los conectores de la placa y certificación 80 Plus.</div>${shopHtml(findPsu(psu),x=>{const m=x.g.name.match(/(\d{3,4})\s?w/i);return m?` · ${m[1]} W`:""})}</div>
-    <div class="part"><b>Placa madre (socket ${c.socket})</b><div class="why">${c.socket==="AM5"?"Chipset A620 (básico) o B650/B850 (recomendado). Solo DDR5.":c.socket==="AM4"?"Chipset A520/B450 (básico) o B550 (recomendado). Solo DDR4; verificá la BIOS para el modelo exacto.":c.socket==="LGA1851"?"Chipset B860 (recomendado) o Z890 (para overclock). Solo DDR5.":"Chipset B660/B760 (recomendado) o Z690/Z790 (para overclock). Acepta DDR4 o DDR5 según la placa: la memoria debe coincidir con ella."}</div>${shopHtml(findMobo(c))}</div>
-    <div class="part"><b>Memoria RAM: ${ramGb} GB ${c.mem==="DDR4/DDR5"?"(DDR4 o DDR5 según la placa)":c.mem}</b><div class="why">En dos módulos (dual channel). ${kind==="min"?"16 GB es lo que piden hoy los juegos exigentes.":"32 GB da margen para juegos nuevos y varias aplicaciones a la vez."}</div>${shopHtml(findRam(c,ramGb))}</div>
-    <div class="part"><b>Almacenamiento: SSD ${kind==="min"?"500 GB":"1 TB"} (NVMe preferido)</b><div class="why">Cyberpunk 2077 y Black Myth: Wukong exigen SSD; ocupan 70 y 130 GB.</div></div>
-    </div>`};
-  const pMin=psuFor(g,cMin.c),pSug=psuFor(g,cSug.c);
-  return `<div class="cols">${colHtml("Hardware mínimo","Sin cuello de botella importante a "+RES[r],cMin.c,cMin.short,16,pMin.min,"min")}${colHtml("Hardware sugerido","Equilibrado y con margen a "+RES[r],cSug.c,cSug.short,32,pSug.sug,"sug")}</div>`;
-}
 function render(){
   let h="";
   if(S.mode==="gpu"){
-    const g=HW.gpus.find(x=>x.id===S.id),Gv=gFps(g,S.res);
-    // un CPU AMD y uno Intel para cada nivel; se muestra el de menor potencia que cumple
-    const mk=(f)=>{const a=pickCpu(Gv,f,"AMD"),b=pickCpu(Gv,f,"Intel");return !a.short&&!b.short?(a.c.s<=b.c.s?a:b):(a.short?b:a)};
-    const cMin=mk(.8),cSug=mk(1.0);
+    const g=HW.gpus.find(x=>x.id===S.id),Gv=g.p[S.res],A=C.armado(g,S.res);
     h+=`<div class="panel"><b>${esc(g.name)}</b> a ${RES[S.res]}: promedio de ~${Math.round(Gv)} FPS en juegos exigentes (Ultra, sin DLSS/FSR). Consumo ${g.tgp} W; el fabricante pide una fuente de al menos <b>${g.psu} W</b> para todo el equipo.</div>`;
     h+=`<div class="warn"><b>Importante:</b> este es un cálculo orientativo. Antes de comprar, revisá el checklist de abajo y los manuales del fabricante.</div>`;
-    h+=build(g,cMin,cSug);
-    h+=`<h2>Rendimiento estimado en juegos</h2><div class="panel" style="padding:0;overflow:auto"><table><tr><th>Juego y requisitos oficiales</th><th>Veredicto</th><th>Detalle (hardware sugerido: ${esc(cSug.c.name)})</th></tr>${HW.games.map(gm=>gameRow(gm,g,cSug.c)).join("")}</table></div>
+    h+=build(g,A);
+    h+=`<h2>Rendimiento estimado en juegos</h2><div class="panel" style="padding:0;overflow:auto"><table><tr><th>Juego y requisitos oficiales</th><th>Veredicto</th><th>Detalle (hardware sugerido: ${esc(A.cSug.c.name)})</th></tr>${HW.games.map(gm=>gameRow(gm,g,A.cSug.c)).join("")}</table></div>
     <p class="note">Cómo se estima: el FPS de la placa sale del promedio de 11 juegos (incluye CS2 y Cyberpunk 2077) de Tom's Hardware (junio 2026); el del procesador se escala desde su puntaje en juegos. El rendimiento real en cada juego puede variar. Para los juegos livianos solo comparamos contra sus requisitos oficiales.</p>`;
   }else{
-    const c=HW.cpus.find(x=>x.id===S.id),cf=cpuFps(c);
+    const c=HW.cpus.find(x=>x.id===S.id),cf=C.cpuFps(c);
     h+=`<div class="panel"><b>${esc(c.name)}</b> (${c.socket}, ${c.mem}, hasta ~${c.maxp} W).`;
     if(!cf){h+=` No tenemos un puntaje de rendimiento en juegos comparable para este procesador, por lo que no podemos decir qué placa de video es la ideal. Elegí otro procesador o empezá por la placa de video.</div>`;}
     else{
@@ -177,9 +114,9 @@ function setMode(){
 }
 (async()=>{
   const j=async(u,d)=>{try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw 0;return await r.json()}catch{return d}};
-  [HW,PR]=await Promise.all([j("data/hardware.json",null),j("data/products.json",[])]);
+  let m;[HW,PR,m]=await Promise.all([j("data/hardware.json",null),j("data/products.json",[]),j("data/meta.json",{})]);META=m;
   if(!HW){$("#out").textContent="No se pudieron cargar los datos de hardware.";return}
-  S.id="rtx-5070";
+  C=CT.create(HW,PR,META);S.id="rtx-5070";
   $("#src").innerHTML=`Consumos y fuentes requeridas: <a href="${HW.sources.nvidia}">NVIDIA</a>, <a href="${HW.sources.amd_gpu}">AMD</a>, <a href="${HW.sources.intel_gpu}">Intel</a>. Procesadores: <a href="${HW.sources.amd_cpu}">AMD</a> e <a href="${HW.sources.intel_cpu}">Intel ARK</a> (la potencia máxima de AMD es el TDP × 1,35, un valor estimado). Rendimiento de placas: <a href="${HW.sources.tom_gpu}">Tom's Hardware (jerarquía de GPU, jun 2026)</a>. Procesadores: <a href="${HW.sources.tom_cpu}">Tom's Hardware (jerarquía de CPU, oct 2026)</a>. Requisitos de juegos: enlaces en cada fila. Precios: los mismos del comparador.`;
   document.querySelectorAll("#mode button").forEach(b=>b.onclick=()=>{S.mode=b.dataset.v;S.id=null;setMode()});
   document.querySelectorAll("#res button").forEach(b=>b.onclick=()=>{S.res=+b.dataset.v;document.querySelectorAll("#res button").forEach(x=>x.classList.toggle("on",x===b));render()});

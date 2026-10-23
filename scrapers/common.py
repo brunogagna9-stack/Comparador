@@ -53,7 +53,7 @@ def parse_ars(text):
 CATEGORIES = [  # el orden importa: la primera regla que coincide gana
     ("accesorios", r"\bcable\b|adaptador|conversor|\bhdmi\b|hub usb|alargue"),
     ("almacenamiento", r"micro ?sd|sdhc|sdxc|pendrive|tarjeta de memoria|memoria flash"),
-    ("pcs-armadas", r"armado|pc de escritorio|pc gamer|all in one|kit de actualizaci"),
+    ("pcs-armadas", r"armad[oa]|^pc\b|\bpc (de escritorio|gamer|powered)|powered by|all in one|kit de actualizaci"),
     ("notebooks", r"notebook|laptop|netbook"),
     ("monitores", r"monitor|pantalla"),
     ("fuentes", r"\bfuente\b|fuentes de alimentaci|power supply"),
@@ -84,7 +84,7 @@ CG_SUBCATS = {
 def is_service(name):
     """Servicios que no son productos comparables (p. ej. el 'ARMADO DE PC' de Compragamer)."""
     n = (name or "").lower().strip()
-    return bool(re.match(r"^(armado|servicio|instalaci[oó]n|mano de obra)\b", n)
+    return bool(re.match(r"^(armado|servic(io|e)|instalaci[oó]n|mano de obra)\b", n)
                 or re.search(r"armado (de|express|item|ítem)|armado item|\bitem \d{3,4}\b.*armado", n))
 
 

@@ -74,10 +74,10 @@ C = [
     ("r7-9700x", "Ryzen 7 9700X", "AMD", "AM5", "DDR5", 65, 88, None, "amd_cpu", r"9700x"),
     ("r5-9600x", "Ryzen 5 9600X", "AMD", "AM5", "DDR5", 65, 88, 72.6, "amd_cpu", r"9600x"),
     ("r7-7800x3d", "Ryzen 7 7800X3D", "AMD", "AM5", "DDR5", 120, 162, 85.6, "amd_cpu", r"7800x3d"),
-    ("r5-7600", "Ryzen 5 7600", "AMD", "AM5", "DDR5", 65, 88, None, "amd_cpu", r"ryzen 5 7600(?!x)|\b7600\b(?!x)"),
+    ("r5-7600", "Ryzen 5 7600", "AMD", "AM5", "DDR5", 65, 88, None, "amd_cpu", r"(ryzen 5|\br5)[ -]?7600(?![x0-9])"),
     ("r7-5800x3d", "Ryzen 7 5800X3D", "AMD", "AM4", "DDR4", 105, 142, None, "amd_cpu", r"5800x3d"),
-    ("r5-5600", "Ryzen 5 5600", "AMD", "AM4", "DDR4", 65, 88, None, "amd_cpu", r"ryzen 5 5600(?![a-z0-9])"),
-    ("r5-5500", "Ryzen 5 5500", "AMD", "AM4", "DDR4", 65, 88, None, "amd_cpu", r"ryzen 5 5500(?![a-z0-9])"),
+    ("r5-5600", "Ryzen 5 5600", "AMD", "AM4", "DDR4", 65, 88, None, "amd_cpu", r"(ryzen 5|\br5)[ -]?5600(?![a-z0-9])"),
+    ("r5-5500", "Ryzen 5 5500", "AMD", "AM4", "DDR4", 65, 88, None, "amd_cpu", r"(ryzen 5|\br5)[ -]?5500(?![a-z0-9])"),
     ("u9-285k", "Core Ultra 9 285K", "Intel", "LGA1851", "DDR5", 125, 250, 71.8, "intel_cpu", r"285kf?\b"),
     ("u7-265k", "Core Ultra 7 265K", "Intel", "LGA1851", "DDR5", 125, 250, 70.3, "intel_cpu", r"265kf?\b"),
     ("u5-245k", "Core Ultra 5 245K", "Intel", "LGA1851", "DDR5", 125, 159, 67.1, "intel_cpu", r"245kf?\b"),
@@ -119,12 +119,61 @@ GAMES = [
      "src": "https://store.steampowered.com/app/2358720/Black_Myth_Wukong/"},
 ]
 
+# ---- Especificaciones ampliadas (para "Comparar hardware") ----
+# GPU: arq = arquitectura, sp = procesadores de sombreado (CUDA / stream), mt = tipo de memoria,
+#      bus = ancho de bus (bits), gbps = velocidad de memoria (Gbps por pin). Ancho de banda = bus/8 x gbps.
+GS = {
+    "rtx-5090": ("Blackwell", 21760, "GDDR7", 512, 28), "rtx-5080": ("Blackwell", 10752, "GDDR7", 256, 30),
+    "rtx-5070ti": ("Blackwell", 8960, "GDDR7", 256, 28), "rtx-5070": ("Blackwell", 6144, "GDDR7", 192, 28),
+    "rtx-5060ti-16": ("Blackwell", 4608, "GDDR7", 128, 28), "rtx-5060ti-8": ("Blackwell", 4608, "GDDR7", 128, 28),
+    "rtx-5060": ("Blackwell", 3840, "GDDR7", 128, 28), "rtx-5050": ("Blackwell", 2560, "GDDR6", 128, 20),
+    "rtx-4090": ("Ada Lovelace", 16384, "GDDR6X", 384, 21), "rtx-4080s": ("Ada Lovelace", 10240, "GDDR6X", 256, 23),
+    "rtx-4080": ("Ada Lovelace", 9728, "GDDR6X", 256, 22.4), "rtx-4070tis": ("Ada Lovelace", 8448, "GDDR6X", 256, 21),
+    "rtx-4070ti": ("Ada Lovelace", 7680, "GDDR6X", 192, 21), "rtx-4070s": ("Ada Lovelace", 7168, "GDDR6X", 192, 21),
+    "rtx-4070": ("Ada Lovelace", 5888, "GDDR6X", 192, 21), "rtx-4060ti": ("Ada Lovelace", 4352, "GDDR6", 128, 18),
+    "rtx-4060": ("Ada Lovelace", 3072, "GDDR6", 128, 17),
+    "rtx-3090ti": ("Ampere", 10752, "GDDR6X", 384, 21), "rtx-3090": ("Ampere", 10496, "GDDR6X", 384, 19.5),
+    "rtx-3080ti": ("Ampere", 10240, "GDDR6X", 384, 19), "rtx-3080": ("Ampere", 8704, "GDDR6X", 320, 19),
+    "rtx-3070ti": ("Ampere", 6144, "GDDR6X", 256, 19), "rtx-3070": ("Ampere", 5888, "GDDR6", 256, 14),
+    "rtx-3060ti": ("Ampere", 4864, "GDDR6", 256, 14), "rtx-3060": ("Ampere", 3584, "GDDR6", 192, 15),
+    "rtx-3050": ("Ampere", 2560, "GDDR6", 128, 14),
+    "rx-9070xt": ("RDNA 4", 4096, "GDDR6", 256, 20), "rx-9070": ("RDNA 4", 3584, "GDDR6", 256, 20),
+    "rx-9060xt-16": ("RDNA 4", 2048, "GDDR6", 128, 20), "rx-9060xt-8": ("RDNA 4", 2048, "GDDR6", 128, 20),
+    "rx-7900xtx": ("RDNA 3", 6144, "GDDR6", 384, 20), "rx-7900xt": ("RDNA 3", 5376, "GDDR6", 320, 20),
+    "rx-7800xt": ("RDNA 3", 3840, "GDDR6", 256, 19.5), "rx-7700xt": ("RDNA 3", 3456, "GDDR6", 192, 18),
+    "rx-7600": ("RDNA 3", 2048, "GDDR6", 128, 18), "rx-6600": ("RDNA 2", 1792, "GDDR6", 128, 14),
+    "arc-b580": ("Xe2 (Battlemage)", 2560, "GDDR6", 192, 19),
+}
+# CPU: (nucleos, hilos, boost GHz, caché L3 MB, gráficos integrados)
+CS = {
+    "r9-9950x3d": (16, 32, 5.7, 128, True), "r7-9800x3d": (8, 16, 5.2, 96, True), "r7-9700x": (8, 16, 5.5, 32, True),
+    "r5-9600x": (6, 12, 5.4, 32, True), "r7-7800x3d": (8, 16, 5.0, 96, True), "r5-7600": (6, 12, 5.1, 32, True),
+    "r7-5800x3d": (8, 16, 4.5, 96, False), "r5-5600": (6, 12, 4.4, 32, False), "r5-5500": (6, 12, 4.2, 16, False),
+    "u9-285k": (24, 24, 5.7, 36, True), "u7-265k": (20, 20, 5.5, 30, True), "u5-245k": (14, 14, 5.2, 24, True),
+    "i7-14700k": (20, 28, 5.6, 33, True), "i5-14600k": (14, 20, 5.3, 24, True), "i5-13600k": (14, 20, 5.1, 24, True),
+    "i5-14400f": (10, 16, 4.7, 20, False), "i5-13400f": (10, 16, 4.6, 20, False), "i5-12400f": (6, 12, 4.4, 18, False),
+    "i3-12100f": (4, 8, 4.3, 12, False),
+}
+# Campos comprobados contra la ficha oficial del fabricante (resto = "pendiente de verificar").
+# Última comprobación: 22-oct-2026 (NVIDIA compare, AMD RX 9070 XT, AMD Ryzen 5 9600X).
+VERIFIED = {i: ["arq", "sp", "mt", "bus"] for i in GS if i.startswith(("rtx-50", "rtx-40"))}
+VERIFIED["rx-9070xt"] = ["sp", "mt", "bus", "gbps"]
+VERIFIED["r5-9600x"] = ["cores", "threads", "boost", "l3", "igpu"]
+
 
 def build():
     gpus = [dict(id=i, name=n, vendor=v, vram=vr, tgp=t, psu=p, p=list(perf), rt=list(rt) if rt else None, src=s, m=m, x=x)
             for i, n, v, vr, t, p, perf, rt, s, m, x in G]
     cpus = [dict(id=i, name=n, vendor=v, socket=so, mem=me, tdp=td, maxp=mp, s=sc, src=s, m=m)
             for i, n, v, so, me, td, mp, sc, s, m in C]
+    for g in gpus:
+        a, sp, mt, bus, gb = GS[g["id"]]
+        g["spec"] = dict(arq=a, sp=sp, mt=mt, bus=bus, gbps=gb, bw=round(bus / 8 * gb))
+        g["ver"] = VERIFIED.get(g["id"], [])
+    for c in cpus:
+        n, t, b, l3, ig = CS[c["id"]]
+        c["spec"] = dict(cores=n, threads=t, boost=b, l3=l3, igpu=ig)
+        c["ver"] = VERIFIED.get(c["id"], [])
     out = {"sources": SOURCES, "gpus": gpus, "cpus": cpus, "games": GAMES,
            "ref": {"gpu_fps_ref": 203.8, "cpu_score_ref": 97.0,
                    "notas": "FPS de CPU estimado = 203,8 x (puntaje del CPU / 97). Ver README."}}

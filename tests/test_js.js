@@ -1,0 +1,220 @@
+// Pruebas de la lógica compartida (armado, buscador, comparador). Se ejecutan con: node tests/test_js.js
+const assert = require("assert");
+const path = require("path");
+const CT = require("../site/js/lib.js");
+require("../site/js/finder.js");
+const HW = require("../site/data/hardware.json");
+const PR = require("./fixtures/catalog.json");
+const META = { updated: "2026-10-23T01:13+00:00" };
+const mkCtx = (pr = PR) => CT.makeFinder(CT.create(HW, pr, META));
+const C = mkCtx();
+let n = 0;
+const t = (name, fn) => { try { fn(); n++; } catch (e) { console.error("FALLÓ:", name, "\n ", e.message); process.exitCode = 1; } };
+const best = p => p.shop && p.shop[0] ? p.shop[0].p : 0;
+const sum = l => l.reduce((a, p) => a + best(p), 0);
+const gpu = id => HW.gpus.find(g => g.id === id);
+
+/* ---------- Armado: componentes compartidos ---------- */
+t("detecta componentes compartidos entre mínimo y sugerido", () => {
+  const A = C.armado(gpu("rtx-5070ti"), 2);
+  assert.deepStrictEqual(A.shared.map(p => p.slot), ["gpu", "cpu", "psu", "mobo"]);
+  assert.deepStrictEqual(A.onlyMin.map(p => p.slot), ["ram", "ssd"]);
+  assert.deepStrictEqual(A.onlySug.map(p => p.slot), ["ram", "ssd"]);
+});
+t("cada componente compartido aparece una sola vez (no está en las listas propias)", () => {
+  const A = C.armado(gpu("rtx-5070ti"), 2), sk = new Set(A.shared.map(p => p.key));
+  [...A.onlyMin, ...A.onlySug].forEach(p => assert(!sk.has(p.key), "repetido: " + p.key));
+  assert.strictEqual(new Set(A.shared.map(p => p.slot)).size, A.shared.length);
+});
+t("modelos distintos no se agrupan como si fueran el mismo", () => {
+  const g = gpu("rtx-5090"), A = C.armado(g, 0);
+  if (A.cMin.c.id !== A.cSug.c.id) { assert(!A.shared.find(p => p.slot === "cpu")); assert(A.onlyMin.find(p => p.slot === "cpu")); }
+  const a = C.parts(g, HW.cpus.find(c => c.id === "r5-9600x"), false, "min", 0), b = C.parts(g, HW.cpus.find(c => c.id === "r7-9800x3d"), false, "min", 0);
+  const sp = C.split(a, b); assert(!sp.shared.find(p => p.slot === "cpu")); assert(sp.shared.find(p => p.slot === "gpu"));
+});
+t("los totales cuentan lo compartido en CADA configuración y no suman ambas como una sola PC", () => {
+  const A = C.armado(gpu("rtx-5070ti"), 2);
+  assert.strictEqual(A.totalMin.total, sum(A.min)); assert.strictEqual(A.totalSug.total, sum(A.sug));
+  assert.strictEqual(A.totalMin.total, sum(A.shared) + sum(A.onlyMin));
+  assert.strictEqual(A.totalSug.total, sum(A.shared) + sum(A.onlySug));
+  assert(A.totalMin.total + A.totalSug.total > A.totalMin.total && A.totalMin.total !== A.totalMin.total + A.totalSug.total);
+  assert.strictEqual(A.totalMin.count, 6); assert.strictEqual(A.totalMin.priced, 6);
+});
+t("no se pierden opciones, precios ni enlaces de los productos", () => {
+  const A = C.armado(gpu("rtx-5070ti"), 2), urls = new Set(PR.flatMap(g => g.offers.map(o => o.url)));
+  [...A.min, ...A.sug].forEach(p => (p.shop || []).forEach(x => { assert(urls.has(x.o.url)); assert.strictEqual(x.p, CT.price(x.o)); }));
+  const gp = A.shared.find(p => p.slot === "gpu"); assert.strictEqual(gp.shop.length, 2); assert(gp.shop[0].p <= gp.shop[1].p);
+});
+t("sin duplicados de filas/enlaces dentro de cada lista", () => {
+  [gpu("rtx-5070ti"), gpu("rtx-4060"), gpu("rx-9070xt")].forEach(g => [0, 1, 2].forEach(r => { const A = C.armado(g, r);
+    [...A.min, ...A.sug].forEach(p => { const k = p.shop.map(x => x.g.id + "|" + x.o.url); assert.strictEqual(new Set(k).size, k.length); }); }));
+});
+t("una PC completa no se lista como placa de video (captura del usuario)", () => {
+  const A = C.armado(gpu("rtx-5070ti"), 2); A.shared.find(p => p.slot === "gpu").shop.forEach(x => assert(!/\bpc\b|powered/i.test(x.g.name), x.g.name));
+});
+t("una variante de VRAM distinta no se asigna a otra placa (RTX 3060 8GB ≠ 12GB)", () => {
+  const l = C.findGpu(gpu("rtx-3060")); assert(l.length === 1 && /12GB/.test(l[0].g.name));
+});
+t("componentes sin precio: total parcial y se informa cuáles faltan", () => {
+  const pr = PR.filter(g => g.category !== "fuentes"), c2 = mkCtx(pr), A = c2.armado(gpu("rtx-5070ti"), 2);
+  assert(A.totalMin.missing.includes("Fuente de poder")); assert.strictEqual(A.totalMin.priced, 5);
+  assert.strictEqual(A.totalMin.total, sum(A.min));
+});
+t("sin ninguna coincidencia: no rompe y no inventa precios", () => {
+  const c2 = mkCtx([]), A = c2.armado(gpu("rtx-5070ti"), 2);
+  assert.strictEqual(A.totalMin.total, 0); assert.strictEqual(A.totalMin.missing.length, 6); assert(A.shared.length > 0);
+});
+t("productos sin stock no se ofrecen", () => { assert.strictEqual(C.findGpu(gpu("rtx-5090")).length, 0); });
+
+/* ---------- Especificaciones leídas de los títulos ---------- */
+t("parseo de RAM, SSD, fuente, placa, monitor y sistemas", () => {
+  assert.deepStrictEqual([CT.parse("Memoria G.Skill DDR4 16GB (2x8GB) 3200MHz CL16", "memorias-ram")].map(s => [s.ddr, s.gb, s.mods, s.mhz, s.cl, s.lat])[0], ["DDR4", 16, 2, 3200, 16, 10]);
+  const ss = CT.parse("Disco Solido SSD M.2 WD 4TB Black SN850X 7300MB/s NVMe PCIe Gen4 x4", "almacenamiento"); assert.strictEqual(ss.gb, 4000); assert.strictEqual(ss.gen, "PCIe 4.0");
+  assert.strictEqual(CT.parse("Disco Rigido WD 8TB Red Plus NAS 256MB SATA 5640RPM", "almacenamiento").kind, "HDD");
+  const f = CT.parse("Fuente ADATA XPG 750W 80 Plus Bronze PYLON", "fuentes"); assert.strictEqual(f.w, 750); assert.strictEqual(f.cert, "bronze");
+  const m = CT.parse("Mother Asrock H610M-HDV/M2+ DDR5 S1700 BULK", "motherboards"); assert.deepStrictEqual([m.socket, m.chipset, m.ddr, m.form], ["LGA1700", "H610", "DDR5", "Micro-ATX"]);
+  const mo = CT.parse('Monitor Gamer AsRock 31.5" VA QHD 1440p 165Hz', "monitores"); assert.deepStrictEqual([mo.inch, mo.hz, mo.panel, mo.px], [31.5, 165, "VA", 2560 * 1440]);
+  const nb = CT.parse('Notebook HP 15 15.6" Intel Core i3 N305 8GB SSD 256GB FreeDOS', "notebooks"); assert.deepStrictEqual([nb.ram, nb.ssd, nb.gpu], [8, 256, null]);
+  const pc = CT.parse("PC Gamer AMD Ryzen 7 9800X3D RTX 5080 16GB 32GB RAM 2TB NVMe WATER", "pcs-armadas"); assert.deepStrictEqual([pc.ram, pc.ssd, pc.gpu, pc.vram], [32, 2000, "RTX 5080", 16]);
+});
+t("nombres reales de la tienda: Core 5 210H, Ryzen 7 260, B650 sin socket, ITX, Full HD", () => {
+  assert.strictEqual(CT.parse('Notebook ASUS Vivobook 16 16" Intel Core 5 210H 16GB DDR5 SSD 1TB RTX 5060 8GB Free DOS', "notebooks").cpu, "Core 5 210H");
+  assert.strictEqual(CT.parse('Notebook Gamer ASUS TUF A16 16" AMD Ryzen 7 260 16GB DDR5 SSD 1TB RTX 5050 8GB', "notebooks").cpu, "Ryzen 7 260");
+  const m = CT.parse("Mother ASUS TUF B650M-PLUS WIFI", "motherboards"); assert.deepStrictEqual([m.socket, m.chipset, m.form], ["AM5", "B650", "Micro-ATX"]);
+  const i = CT.parse("Mother Asrock Z790I Lightning WIFI ITX DDR5 S1700", "motherboards"); assert.deepStrictEqual([i.socket, i.chipset, i.form], ["LGA1700", "Z790", "Mini-ITX"]);
+  assert.strictEqual(CT.parse('Monitor Curvo Samsung 24" F390 Full HD FreeSync', "monitores").res, "FHD 1080p");
+});
+t("gráficos integrados: modelos con F no los traen; no se inventa si no se sabe", () => {
+  assert.strictEqual(CT.hasIgpu("Intel Core i5 14400F"), false); assert.strictEqual(CT.hasIgpu("Intel Core i5 14400"), true);
+  assert.strictEqual(CT.hasIgpu("Ryzen 5 5600"), false); assert.strictEqual(CT.hasIgpu("Ryzen 5 5600GT"), true); assert.strictEqual(CT.hasIgpu("Ryzen 7 7700X"), true);
+  assert.strictEqual(CT.hasIgpu("Memoria DDR4"), null);
+});
+t("las placas del catálogo se ligan solo al modelo exacto", () => {
+  assert.strictEqual(C.hwGpu("Placa de Video RTX 5070 TI 16GB").id, "rtx-5070ti"); assert.strictEqual(C.hwGpu("Placa de Video RTX 5070 12GB").id, "rtx-5070");
+  assert.strictEqual(C.hwGpu("PC Gamer RX 7600 Ryzen 5 4500 16GB 512GB", null).id, "rx-7600");
+  assert.strictEqual(C.hwCpu("PC Gamer RX 7600 Ryzen 5 4500"), null); // RX 7600 NO es el Ryzen 5 7600
+  assert.strictEqual(C.hwCpu("Procesador AMD Ryzen 5 5600GT AM4"), null);
+});
+
+/* ---------- Buscador inteligente ---------- */
+const urls = new Set(PR.flatMap(g => g.offers.map(o => o.url))), priceByUrl = Object.fromEntries(PR.flatMap(g => g.offers.map(o => [o.url, CT.price(o)])));
+const allCards = R => R.sections.flatMap(s => s.picks);
+t("requisitos según el uso (varios usos se combinan)", () => {
+  const n1 = CT.needs({ usos: ["oficina"] }); assert.strictEqual(n1.gaming, false); assert.strictEqual(n1.ram.min, 8);
+  const n2 = CT.needs({ usos: ["oficina", "gaming_pesado"], res: "1440" }); assert.strictEqual(n2.gaming, true); assert.deepStrictEqual(n2.gpuReq, [{ res: 1, fps: 60 }]);
+  const n3 = CT.needs({ usos: ["video", "programacion"] }); assert(n3.ram.min >= 16 && n3.ssd >= 1000);
+});
+t("cuestionario: los resultados respetan presupuesto, tipo y resolución", () => {
+  const R = C.recommend({ usos: ["gaming_pesado"], tipo: "pc", budget: 3500000, res: "1440" });
+  allCards(R).forEach(p => { assert(p.c.total <= 3500000, "excede presupuesto"); if (p.c.kind === "build") assert(p.c.g.p[1] >= 60); });
+  assert(R.sections.find(s => s.key === "build").picks.length >= 2);
+});
+t("recomendaciones: solo productos reales, con precio y enlace del catálogo", () => {
+  [{ usos: ["oficina"], tipo: "nose", budget: 1500000 }, { usos: ["gaming_casual"], tipo: "pc", budget: 2000000, res: "1080" }, { usos: ["estudio", "programacion"], tipo: "notebook", budget: 2000000 }].forEach(a => {
+    allCards(C.recommend(a)).forEach(p => { const c = p.c;
+      if (c.kind === "build") c.parts.forEach(pt => pt.shop.forEach(x => { assert(urls.has(x.o.url)); assert.strictEqual(x.p, priceByUrl[x.o.url]); }));
+      else { assert(urls.has(c.o.url)); assert.strictEqual(c.total, priceByUrl[c.o.url]); assert(c.o.stock !== false); } }); });
+});
+t("cada recomendación trae explicación, especificaciones y limitaciones", () => {
+  const R = C.recommend({ usos: ["gaming_pesado", "streaming"], tipo: "nose", budget: 4000000, res: "1080" }), cards = allCards(R); assert(cards.length > 0);
+  cards.forEach(p => { assert(p.label); assert(Array.isArray(p.specs)); assert(p.c.kind === "build" ? p.c.parts.length >= 5 : p.specs.length >= 3); assert(Array.isArray(p.pros) && Array.isArray(p.cons) && Array.isArray(p.limits) && Array.isArray(p.does)); assert(p.pros.length + p.does.length > 0); });
+});
+t("se puede omitir todo salvo el uso (respuestas 'No sé')", () => {
+  const R = C.recommend({ usos: ["oficina"] }); assert(R.sections.length > 0); assert(allCards(R).length > 0);
+  const R2 = C.recommend({ usos: ["gaming_casual"], tipo: null, budget: null, res: null, enfoque: null, portable: null });
+  assert(allCards(R2).length > 0);
+});
+t("alternativas: económica ≤ equilibrada ≤ mayor rendimiento en puntaje", () => {
+  const s = C.recommend({ usos: ["gaming_pesado"], tipo: "componentes", budget: 4000000, res: "1080" }).sections[0], p = s.picks;
+  const eco = p.find(x => x.k === "eco"), perf = p.find(x => x.k === "perf"); assert(eco && perf); assert(eco.c.total <= perf.c.total); assert(eco.c.score <= perf.c.score);
+});
+t("presupuesto insuficiente: lo dice y no inventa productos", () => {
+  const R = C.recommend({ usos: ["gaming_pesado"], tipo: "pc", budget: 300000, res: "1440" });
+  assert.strictEqual(allCards(R).length, 0); assert(R.insufficient && R.insufficient.minTotal > 300000);
+});
+t("sin datos suficientes en el título, el producto se descarta (no se completan datos)", () => {
+  const pr = JSON.parse(JSON.stringify(PR)); pr.push({ id: "x1", name: "Notebook Misteriosa 15.6 pulgadas", category: "notebooks", offers: [{ store: "MEXX", url: "https://ejemplo.invalid/x1", price_cash: 100000, stock: true, k: "zz" }] });
+  const r = mkCtx(pr).recNotebooks({}, CT.needs({ usos: ["oficina"] })); assert(!r.cands.find(c => c.g.id === "x1")); assert(r.excl.datos >= 1);
+});
+t("mejorar la PC actual: compatibilidad real, 'no sé' no se da por compatible", () => {
+  const base = { usos: ["gaming_pesado"], res: "1080", budget: 3000000 };
+  const mal = C.upgrade({ ...base, have: { tiene: true, cpu: "r5-5500", gpu: "rtx-3050", psu: "450", ddr: "DDR4", goal: "gpu" } }, CT.needs(base));
+  const g70 = mal.gpus.find(x => x.g.id === "rtx-5070ti"); assert(g70, "5070 Ti debería listarse"); assert(g70.compat.some(c => c.s === "bad"), "fuente de 450 W insuficiente");
+  assert(g70.bad);
+  const unk = C.upgrade({ ...base, have: { tiene: true, cpu: null, gpu: null, psu: null, ddr: null, goal: "gpu" } }, CT.needs(base));
+  unk.gpus.forEach(x => { assert(!x.compat.some(c => c.s === "ok"), "no puede haber 'ok' sin datos"); assert(x.compat.some(c => c.s === "unk")); });
+  const lim = C.upgrade({ ...base, have: { tiene: true, cpu: "r5-9600x", gpu: "rtx-3050", psu: "850", goal: "gpu" } }, CT.needs(base)).gpus.find(x => x.g.id === "rtx-5070ti");
+  assert(lim.compat.some(c => c.s === "ok" && /fuente/i.test(c.t)));
+});
+t("mejorar el procesador: mismo socket vs. cambio de socket", () => {
+  const base = { usos: ["gaming_pesado"], res: "1080", budget: 5000000 };
+  const u = C.upgrade({ ...base, have: { tiene: true, cpu: "i5-14400f", gpu: "rtx-3060", psu: "650", goal: "cpu" } }, CT.needs(base));
+  const same = u.cpus.find(x => x.c.socket === "LGA1700"), other = u.cpus.find(x => x.c.socket === "AM5");
+  assert(same && same.compat[0].s === "ok"); assert(other && other.compat[0].s === "warn" && other.mobo.length > 0);
+});
+
+t("las piezas de una PC por componentes cumplen RAM y SSD pedidos", () => {
+  const a = { usos: ["gaming_pesado"], tipo: "componentes", budget: 6000000, res: "1080" }, n0 = CT.needs(a);
+  C.recommend(a).sections[0].picks.forEach(p => { const gb = x => +(p.c.parts.find(q => q.slot === x).title.match(/(\d+(?:\.\d+)?) (GB|TB)/)[0].split(" ")[0]);
+    const ram = gb("ram"), ssd = p.c.parts.find(q => q.slot === "ssd").title.includes("TB") ? 1000 * gb("ssd") : gb("ssd"); assert(ram >= n0.ram.min, "RAM"); assert(ssd >= n0.ssd, "SSD " + ssd); });
+});
+
+/* ---------- Comparador ---------- */
+const byName = re => PR.find(g => re.test(g.name));
+const items = (...res) => res.map(r => C.item(byName(r)));
+t("compara dos placas de la misma categoría: datos coinciden con el origen", () => {
+  const its = items(/RTX 5070 TI Ventus/i, /RX 9070 XT/i), cmp = C.compare(its, { res: 2 }), fps = cmp.rows.find(r => r.id === "fps");
+  assert.strictEqual(fps.cells[0].v, gpu("rtx-5070ti").p[2]); assert.strictEqual(fps.cells[1].v, gpu("rx-9070xt").p[2]); assert.strictEqual(fps.cells[0].tag, "bench");
+  assert.strictEqual(cmp.rows.find(r => r.id === "bw").cells[0].v, 896); assert.strictEqual(cmp.rows.find(r => r.id === "sp").cells[0].disp, "8.960");
+  const pr = cmp.rows.find(r => r.id === "price"); assert.strictEqual(pr.cells[0].v, 2322350);
+});
+t("etiquetas de fiabilidad: verificado / benchmark / estimado / pendiente / sin datos", () => {
+  const cmp = C.compare(items(/RTX 5070 TI Ventus/i, /RX 9070 XT/i), { res: 1 }), tag = (id, i) => cmp.rows.find(r => r.id === id).cells[i].tag;
+  assert.strictEqual(tag("sp", 0), "ver"); assert.strictEqual(tag("sp", 1), "ver"); assert.strictEqual(tag("tgp", 0), "ver");
+  assert.strictEqual(tag("fpsw", 0), "est"); assert.strictEqual(tag("fps", 0), "bench"); assert.strictEqual(tag("rt", 0), "bench");
+  const c2 = C.compare(items(/RTX 3060 12GB/i, /RTX 4060 8GB/i), { res: 1 }); assert.strictEqual(c2.rows.find(r => r.id === "sp").cells[0].tag, "pend"); // 30xx: pendiente de verificar
+  assert.strictEqual(c2.rows.find(r => r.id === "bw").cells[1].tag, "pend");
+});
+t("ganador justificado y reproducible; el 'valor' y el 'consumo' pueden dar otro ganador", () => {
+  const cmp = C.compare(items(/RTX 5070 TI Ventus/i, /RTX 5060 8GB/i), { res: 1 }), gm = cmp.uses.find(u => u.use.id === "gaming");
+  assert.strictEqual(gm.winner, 0); assert(gm.scores[0] > gm.scores[1]); assert(gm.why.length > 0); assert(gm.used.length >= 2);
+  const again = C.compare(items(/RTX 5070 TI Ventus/i, /RTX 5060 8GB/i), { res: 1 }).uses.find(u => u.use.id === "gaming"); assert.deepStrictEqual(again.scores, gm.scores);
+});
+t("agregar y quitar productos de la comparación", () => {
+  const three = C.compare(items(/RTX 5070 TI Ventus/i, /RX 9070 XT/i, /RTX 4060 8GB/i), { res: 1 });
+  assert.strictEqual(three.rows[0].cells.length, 3); assert(three.uses.every(u => u.scores == null || u.scores.length === 3));
+  const two = C.compare(items(/RTX 5070 TI Ventus/i, /RTX 4060 8GB/i), { res: 1 }); assert.strictEqual(two.rows[0].cells.length, 2);
+});
+t("productos con información incompleta: 'Sin datos', sin NaN y sin ganador inventado", () => {
+  const cmp = C.compare(items(/Mancer DDR4 16GB/i, /KingDian DDR4 16GB/i), { res: 1 });
+  assert(cmp.rows.find(r => r.id === "cl").cells.some(c => c.disp === "Sin datos")); assert(JSON.stringify(cmp).indexOf("NaN") < 0);
+  const vel = cmp.uses.find(u => u.use.id === "vel"); assert.strictEqual(vel.winner, null); assert(vel.reason);
+  const g = C.compare(items(/RTX 5070 TI Ventus/i, /Radeon RX 6600/i), { res: 1 }); assert(g.uses.length > 0);
+});
+t("categorías distintas: solo precio/tienda/stock y aviso explicativo", () => {
+  const cmp = C.compare(items(/RTX 5070 TI Ventus/i, /Ryzen 5 9600X/i), { res: 1 });
+  assert.strictEqual(cmp.mixed, true); assert.deepStrictEqual(cmp.rows.map(r => r.id), ["name", "price", "store", "stock"]); assert.strictEqual(cmp.uses.length, 0); assert(C.notes(cmp)[0].includes("categorías distintas"));
+});
+t("empate técnico: sin ganador", () => {
+  const a = C.item(byName(/RTX 5070 TI Ventus/i)), b = C.item(byName(/RTX 5070 TI Ventus/i)), cmp = C.compare([a, b], { res: 1 });
+  cmp.uses.forEach(u => assert.strictEqual(u.winner, null));
+});
+t("distintas categorías con métricas diferentes", () => {
+  [[/Ryzen 5 9600X/i, /Ryzen 7 9800X3D/i], [/Corsair DDR5 32GB/i, /Kingston DDR5 16GB/i], [/Kingston 1TB NV3/i, /WD 2TB Black/i], [/Seasonic 850W/i, /Corsair 1000W/i], [/LG UltraGear/i, /VY229HF/i], [/Nitro Lite 16/i, /MSI Thin 15/i], [/Ryzen 7 9800X3D RTX 5080/i, /R7-7700X/i], [/B650M/i, /A620M/i]].forEach(([a, b]) => {
+    const cmp = C.compare(items(a, b), { res: 1 }); assert(!cmp.mixed); assert(cmp.rows.length > 4); assert(JSON.stringify(cmp).indexOf("NaN") < 0);
+    cmp.uses.forEach(u => { if (u.winner != null) { assert(u.scores.length === 2 && u.used.length >= 1 && u.why.length >= 1); } else assert(u.reason); }); });
+  const cpu = C.compare(items(/Ryzen 5 9600X/i, /Ryzen 7 9800X3D/i), { res: 1 }); assert.strictEqual(cpu.uses.find(u => u.use.id === "gaming").winner, 1);
+  const ram = C.compare(items(/Corsair DDR5 32GB/i, /Kingston DDR5 16GB/i), { res: 1 }); assert.strictEqual(ram.uses.find(u => u.use.id === "cap").winner, 0);
+});
+t("notas prácticas: fuente, VRAM y datos faltantes", () => {
+  const cmp = C.compare(items(/RTX 5070 TI Ventus/i, /RTX 4060 8GB/i), { res: 1 }), notes = C.notes(cmp).join(" ");
+  assert(/fuente/i.test(notes)); assert(/VRAM/.test(notes));
+});
+t("radar y valores relativos entre 0 y 100", () => {
+  const cmp = C.compare(items(/RTX 5070 TI Ventus/i, /RX 9070 XT/i), { res: 1 }), ax = C.radar(cmp); assert(ax.length >= 3); ax.forEach(a => a.vals.forEach(v => assert(v > 0 && v <= 100)));
+});
+t("cada producto del catálogo se puede comparar sin errores", () => {
+  const byCat = {}; PR.forEach(g => (byCat[g.category] = byCat[g.category] || []).push(g));
+  Object.values(byCat).forEach(l => { if (l.length >= 2) { const cmp = C.compare([C.item(l[0]), C.item(l[1])], { res: 1 }); C.notes(cmp); assert(JSON.stringify(cmp).indexOf("NaN") < 0); } });
+});
+console.log(n + " pruebas de JavaScript OK");
