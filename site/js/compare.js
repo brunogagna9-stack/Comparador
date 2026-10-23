@@ -12,6 +12,7 @@
     pend: ["Pendiente de verificar", "Tomado del título de la tienda o cargado sin comprobarlo todavía contra la ficha del fabricante."],
     nd: ["Sin datos", "No tenemos este dato: no lo inventamos."],
   };
+  const spNote = r => `${r.src}${r.sku ? " · SKU " + r.sku : ""} · ${r.date}` + (r.note ? " · " + r.note : "");
   const ND = { v: null, disp: "Sin datos", tag: "nd" };
   const fmt = (n, d = 0) => n == null ? null : Number(n).toLocaleString("es-AR", { maximumFractionDigits: d, minimumFractionDigits: 0 });
   const mk = (v, disp, tag) => v == null ? ND : { v, disp: disp ?? String(v), tag };
@@ -125,6 +126,15 @@
         { id: "inch", label: "Pantalla", help: "Diagonal.", get: it => it.sp.inch ? mk(it.sp.inch, fmt(it.sp.inch, 1) + '"', "pend") : ND },
         { id: "hz", label: "Tasa de refresco", help: "Hz de la pantalla.", dir: "max", chart: " Hz", get: it => it.sp.hz ? mk(it.sp.hz, it.sp.hz + " Hz", "pend") : ND },
         { id: "os", label: "Sistema operativo", help: "Sin sistema operativo hay que comprar Windows aparte.", get: it => txt(it.sp.os, "pend") },
+        { id: "peso", label: "Peso", help: "Dato de la ficha de la tienda para este modelo exacto (SKU). Menos peso = más cómoda para llevar.", dir: "min", chart: " kg",
+          get: it => { const r = C.sf(it.g, "peso"); return r ? Object.assign(mk(r.v, fmt(r.v, 2) + " kg", r.tag), { note: spNote(r) }) : ND; } },
+        { id: "dim", label: "Medidas", help: "Ancho × profundidad × alto, en milímetros (ficha de la tienda).",
+          get: it => { const a = C.sf(it.g, "ancho"), b = C.sf(it.g, "prof"), c = C.sf(it.g, "alto"); return a && b ? { v: null, text: `${a.v} × ${b.v}` + (c ? ` × ${c.v}` : "") + " mm", disp: `${a.v} × ${b.v}` + (c ? ` × ${c.v}` : "") + " mm", tag: a.tag, note: spNote(a) } : ND; } },
+        { id: "ramamp", label: "RAM ampliable", help: "Indica si tiene un slot libre para sumar memoria. Si la RAM está soldada, no se puede ampliar.",
+          get: it => { const r = C.sf(it.g, "ram_ampliable"); return r ? { v: null, text: r.v ? "Sí (" + r.note + ")" : "No (" + r.note + ")", disp: r.v ? "Sí (" + r.note + ")" : "No (" + r.note + ")", tag: r.tag, note: spNote(r) } : ND; } },
+        { id: "panel", label: "Panel de pantalla", help: "IPS: buenos colores y ángulos. TN/VA: más básicos. OLED: máximo contraste.", get: it => { const r = C.sf(it.g, "panel"); return r ? Object.assign(txt(r.v, r.tag), { note: spNote(r) }) : ND; } },
+        { id: "gar", label: "Garantía de la tienda", help: "Meses informados por la tienda. Confirmá si es garantía oficial del fabricante.", dir: "max", chart: " meses", get: it => { const r = C.sf(it.g, "garantia"); return r ? Object.assign(mk(r.v, r.v + " meses", r.tag), { note: spNote(r) }) : ND; } },
+        { id: "bat", label: "Batería y autonomía", help: "Ni Compragamer ni las otras tiendas conectadas publican la capacidad (Wh) en su ficha. No usamos la autonomía de marketing como si fuera real: confirmala en la hoja técnica del fabricante.", get: () => ND },
       ],
       "pcs-armadas": res => [
         { id: "cpu", label: "Procesador", help: "Leído del título de la tienda.", get: it => txt(it.sp.cpu, "pend") },
@@ -173,6 +183,7 @@
       ],
       notebooks: [
         { id: "multi", label: "Multitarea y almacenamiento", w: [["ram", .5], ["ssd", .5]] },
+        { id: "port", label: "Más liviana", w: [["peso", 1]] },
         { id: "valor", label: "Menor precio", w: [["price", 1]] },
       ],
       "pcs-armadas": [
@@ -249,7 +260,7 @@
         out.push("Los FPS son un promedio de 11 juegos con un procesador de gama alta: en tu juego favorito la diferencia puede ser mayor o menor, y con DLSS/FSR cambia.");
       }
       if (cat === "procesadores") out.push("El puntaje de juegos se midió con una RTX 5090 a 1080p para destacar al procesador; con una placa de video más modesta, la diferencia entre procesadores se achica o desaparece.");
-      if (cat === "notebooks") out.push("Los datos salen del título de la tienda: el rendimiento real depende de la refrigeración y de los vatios que el fabricante le dé a cada chip, que no figuran.");
+      if (cat === "notebooks") out.push("Procesador, memoria y almacenamiento se leen del título de la tienda; peso, medidas, panel y garantía, de la ficha técnica de la tienda para ese SKU cuando existe. La capacidad de batería no la publica ninguna tienda conectada. El rendimiento real depende de la refrigeración y de los vatios que el fabricante le dé a cada chip.");
       if (cat === "pcs-armadas") out.push("El rendimiento es una estimación a partir de la placa y el procesador del título; confirmá con la tienda la versión exacta y la fuente incluida.");
       if (cat === "almacenamiento" || cat === "memorias-ram") out.push("Las velocidades son las anunciadas por la tienda o el fabricante (picos teóricos); en el uso diario una diferencia grande de cifras suele sentirse poco.");
       if (cat === "fuentes") out.push("La potencia y la certificación 80 Plus no garantizan calidad de componentes ni protecciones: priorizá marcas con reseñas independientes.");

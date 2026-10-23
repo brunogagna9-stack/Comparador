@@ -139,8 +139,15 @@
   };
 
   /* ---------- contexto con el catálogo y la base de hardware ---------- */
-  CT.create = function (HW, PR, meta) {
-    const C = { HW, PR, meta: meta || {} };
+  CT.create = function (HW, PR, meta, SPECS) {
+    const C = { HW, PR, meta: meta || {}, SPECS: SPECS && SPECS.items ? SPECS : null };
+    /* ficha técnica verificada de un notebook (specs.json); devuelve null si la tienda no la publica */
+    C.spec = g => (g && g.spec && C.SPECS && C.SPECS.items[g.spec]) || null;
+    C.sf = (g, field) => {
+      const it = C.spec(g), r = it && it.f[field]; if (!r) return null;
+      return { v: r.v, u: r.u || "", tag: r.l || "ver", note: r.n || "", src: it.s, url: it.url, date: it.d, sku: it.sku };
+    };
+    C.specMissing = (g, field) => { const it = C.spec(g); return !it ? "sin ficha" : (it.miss || []).includes(field) ? "no publicado" : null; };
     const inCat = c => PR.filter(g => g.category === c);
     C.inCat = inCat;
     C.updated = (meta && meta.updated) || null;

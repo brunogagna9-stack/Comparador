@@ -30,7 +30,7 @@ details summary{cursor:pointer;color:var(--acc);font-size:13px}
 </head>
 <body>
 <header><div class="top"><a class="logo" href="index.html">Compará<span>Tech</span></a>
-<nav class="nav"><a href="index.html">Comparador de precios</a><a href="armado.html">Armado de PC</a><a class="on" href="encontra.html">Encontrá tu equipo</a><a href="comparar.html">Comparar hardware</a></nav></div></header>
+<nav class="nav"><a href="index.html">Comparador de precios</a><a href="armado.html">Armado de PC</a><a class="on" href="encontra.html">Encontrá tu equipo</a><a href="comparar.html">Comparar hardware</a><a href="tiendas.html">Tiendas</a></nav></div></header>
 <main>
 <h1>Encontrá tu equipo</h1>
 <p class="lead">Respondé unas preguntas simples (podés saltear las que no sepas) y te mostramos productos reales de las tiendas que se ajustan a tu uso y presupuesto.</p>
@@ -204,12 +204,14 @@ function showResults(){
 }
 (async()=>{
   const j=async(u,d)=>{try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw 0;return await r.json()}catch{return d}};
-  let m;[HW,PR,m]=await Promise.all([j("data/hardware.json",null),j("data/products.json",[]),j("data/meta.json",{})]);META=m;
+  let m,SP;[HW,PR,m,SP]=await Promise.all([j("data/hardware.json",null),j("data/products.json",[]),j("data/meta.json",{}),j("data/specs.json",null)]);META=m;
   if(!HW||!PR.length){$("#app").innerHTML='<div class="panel">No se pudieron cargar los datos de productos. Probá recargar la página.</div>';return}
-  C=CT.makeFinder(CT.create(HW,PR,META));
+  C=CT.makeFinder(CT.create(HW,PR,META,SP));
   $("#fine").textContent="Las recomendaciones usan solo productos y precios reales del comparador. Las especificaciones de PC armadas y notebooks se leen del título de la tienda y están pendientes de verificar. No es asesoramiento profesional: confirmá siempre con la tienda antes de comprar.";
   draw();
 })();
 </script>
+<script src="js/assistant.js"></script>
+<script>CT.CTAssistant.mount({section:"encontra",context:()=>({answers:A,step})});</script>
 </body>
 </html>

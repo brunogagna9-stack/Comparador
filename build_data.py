@@ -112,6 +112,7 @@ def build(all_items):
     from scrapers.common import is_service
     groups = []
     for offers in group([i for i in all_items if price_of(i) and not is_service(i["name"])]):
+        offers_all = offers
         best = {}  # una oferta por tienda: la más barata
         for o in offers:
             cur = best.get(o["store"])
@@ -121,6 +122,7 @@ def build(all_items):
         main = max(offers, key=lambda o: len(o["name"]))
         brand = next((b for b in (brand_of(o["name"]) for o in offers) if b), None)
         groups.append({
+            "_pns": sorted(set().union(*[pn_tokens(o) for o in offers_all])),
             "id": gid(offers), "name": main["name"], "category": main["category"], "brand": brand,
             "image": next((o["image"] for o in offers if o.get("image")), None),
             "offers": [dict({k: o.get(k) for k in ("store", "url", "price_cash", "price_list", "stock",
@@ -231,13 +233,26 @@ def main(only):
         all_items += items
     today = dt.date.today().isoformat()
     groups = build(all_items)
+    from scrapers import specs
+    try:
+        spec_items, spec_status = specs.refresh(all_items, RAW, only or None)
+    except Exception as e:  # las fichas nunca deben romper la actualización de precios
+        spec_items, spec_status = {}, {"ok": False, "error": str(e)[:300]}
+    spec_status["vinculadas"] = specs.attach(groups, spec_items)
+    for g in groups:
+        g.pop("_pns", None)
+    (DATA / "specs.json").write_text(json.dumps({
+        "v": 1, "updated": dt.datetime.now(dt.timezone.utc).isoformat(timespec="minutes"),
+        "sources": {"Compragamer": "https://static.compragamer.com/productos_caracteristicas"},
+        "items": {k: v for k, v in spec_items.items() if k in {g.get("spec") for g in groups}}},
+        ensure_ascii=False, separators=(",", ":")))
     update_history(groups, hist, today)
     annotate_changes(groups, hist, today)
     (DATA / "products.json").write_text(json.dumps(groups, ensure_ascii=False, separators=(",", ":")))
     (DATA / "history.json").write_text(json.dumps(hist, separators=(",", ":")))
     (DATA / "meta.json").write_text(json.dumps({
         "updated": dt.datetime.now(dt.timezone.utc).isoformat(timespec="minutes"),
-        "stores": status, "groups": len(groups), "demo": False}, ensure_ascii=False))
+        "stores": status, "specs": spec_status, "groups": len(groups), "demo": False}, ensure_ascii=False))
     print(json.dumps(status, ensure_ascii=False, indent=1))
 
 

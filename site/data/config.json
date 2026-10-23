@@ -6,6 +6,12 @@
     "Maximus": {},
     "Gezatek": {},
     "Fullh4rd": {},
-    "Logg": {}
+    "Logg": {},
+    "GoldenTech": {},
+    "Armytech": {}
+  },
+  "assistant": {
+    "_ayuda": "Opcional. Poné aquí la URL de tu proxy de IA (ver worker/LEEME). Dejalo en null para usar solo el asistente local. NUNCA pegues claves en este archivo: es público.",
+    "endpoint": null
   }
 }

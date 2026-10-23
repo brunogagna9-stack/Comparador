@@ -1,0 +1,74 @@
+{
+  "v": 1,
+  "_ayuda": "Información verificada de cada tienda. Cada dato lleva fecha de verificación. La reputación se muestra SOLO si hay una fuente pública concreta (puntaje, cantidad de opiniones, enlace y fecha); nunca se promedian plataformas distintas ni se copian opiniones. Si no se pudo verificar algo, el campo queda vacío y la app lo muestra como 'Sin datos'.",
+  "stores": {
+    "Compragamer": {
+      "site": "https://compragamer.com",
+      "integration": "completa",
+      "how": "Archivos JSON públicos que carga el propio sitio de la tienda.",
+      "contact": {"address": "Av. Dr. Honorio Pueyrredón 1841, CABA (ficha de Google: «Compra Gamer, Centro de Servicio Postventa»)"},
+      "checked": "2026-10-23",
+      "reputation": [{"source": "Google Maps", "listing": "Compra Gamer, Centro de Servicio Postventa.", "score": 4.4, "count": 18129, "url": "https://www.google.com/maps/search/compragamer.com", "date": "2026-10-23"}],
+      "notes": ["La ficha de Google corresponde al centro de servicio postventa; no es la puntuación de toda la tienda online."]
+    },
+    "MEXX": {
+      "site": "https://www.mexx.com.ar",
+      "integration": "parcial",
+      "how": "Listados de categoría. Las fichas individuales están detrás de un desafío anti-bots de Cloudflare: no se leen ni se intentan saltear.",
+      "contact": {"address": "Av. Juan Bautista Alberdi 1233, CABA"},
+      "checked": "2026-10-23",
+      "reputation": [{"source": "Google Maps", "listing": "Mexx", "score": 4.4, "count": 12528, "url": "https://www.google.com/maps/search/mexx.com.ar", "date": "2026-10-23"}],
+      "notes": []
+    },
+    "Maximus": {
+      "site": "https://www.maximus.com.ar",
+      "integration": "completa",
+      "how": "Listados de categoría (HTML).",
+      "contact": {},
+      "checked": "2026-10-23",
+      "reputation": [],
+      "notes": ["No encontramos una ficha pública verificable (con el mismo sitio web) para mostrar su reputación."]
+    },
+    "GoldenTech": {
+      "site": "https://goldentechstore.com.ar",
+      "integration": "completa",
+      "how": "API pública de catálogo de WooCommerce (la misma que usa el sitio). Su robots.txt no la prohíbe. Los precios se verificaron contra lo que muestra la página.",
+      "contact": {"address": "Av. San Martín 1758, Local 2, CABA", "phone": "011 7164-4521", "whatsapp": "https://web.whatsapp.com/send?phone=5491171644521", "instagram": "https://www.instagram.com/goldentechstore/"},
+      "warranty": "Garantía oficial del fabricante en todos los productos; además la tienda ofrece 6 meses propios en varias categorías (con excepciones por marca). Detalle en su política.",
+      "warranty_url": "https://goldentechstore.com.ar/politicas-de-garantia-y-devolucion/",
+      "checked": "2026-10-23",
+      "reputation": [{"source": "Google Maps", "listing": "GoldenTech Store", "score": 4.9, "count": 677, "url": "https://www.google.com/maps/place/GoldenTech+Store/@-34.6059142,-58.4561697,17z/data=!3m1!4b1!4m6!3m5!1s0x95bccb2e39c8b38f:0xf8b5a3d68d5a4be7!8m2!3d-34.6059186!4d-58.4535948!16s%2Fg%2F11np13n6l9", "date": "2026-10-23"}],
+      "notes": ["Trustpilot: no se pudo consultar (la página pide una verificación anti-bots que no se intenta saltear).", "Su SKU es un código interno de la tienda, así que los productos se cruzan con otras tiendas por nombre y no por número de parte."]
+    },
+    "Armytech": {
+      "site": "https://www.armytech.com.ar",
+      "integration": "parcial",
+      "how": "Listados de categoría paginados (?page=N). Su robots.txt prohíbe los filtros (?q=), el orden y ?n=: no se usan. El listado no informa stock: queda como «stock sin confirmar».",
+      "contact": {"address": "Av. de los Constituyentes 2985, CABA", "phone": "(011) 6040-2020", "email": "ventas@armytech.com.ar", "whatsapp": "https://api.whatsapp.com/send?phone=541160402020", "instagram": "https://www.instagram.com/armytech_hardware"},
+      "about": "Según la propia tienda («Quiénes somos»), Army Technologies SA fue creada en marzo de 2006. Es un dato declarado por la tienda, no verificado por ComparáTech.",
+      "shipping": "La tienda informa «Envíos a todo el país». El costo se calcula en su carrito: no está incluido en el precio que mostramos.",
+      "payments": "Muestra cuotas sin interés en muchos productos (cantidad y valor de cuota según el listado).",
+      "checked": "2026-10-23",
+      "reputation": [{"source": "Google Maps", "listing": "ARMYTECH", "score": 4.4, "count": 877, "url": "https://www.google.com/maps/search/Armytech+Av.+de+los+Constituyentes+2985+CABA", "date": "2026-10-23"}],
+      "notes": ["Trustpilot: no se pudo consultar.", "Sin notebooks publicadas en el catálogo al momento de la verificación (la categoría figura vacía)."]
+    },
+    "Gezatek": {
+      "site": "https://gezatek.com.ar",
+      "integration": "no disponible",
+      "how": "La tienda respondió HTTP 429 (demasiadas consultas) a las lecturas automáticas. No se insiste ni se intenta evitar el límite.",
+      "contact": {}, "checked": "2026-10-23", "reputation": [], "notes": []
+    },
+    "Fullh4rd": {
+      "site": "https://fullh4rd.com.ar",
+      "integration": "no disponible",
+      "how": "La tienda respondió HTTP 403 (acceso denegado) a las lecturas automáticas. No se intenta evitar el bloqueo.",
+      "contact": {}, "checked": "2026-10-23", "reputation": [], "notes": []
+    },
+    "Logg": {
+      "site": "https://logg.com.ar",
+      "integration": "no disponible",
+      "how": "El lector no obtiene productos (0 resultados); hace falta revisar el sitio de la tienda.",
+      "contact": {}, "checked": "2026-10-23", "reputation": [], "notes": []
+    }
+  }
+}

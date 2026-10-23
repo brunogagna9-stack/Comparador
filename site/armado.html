@@ -9,7 +9,7 @@
 </head>
 <body>
 <header><div class="top"><a class="logo" href="index.html">Compará<span>Tech</span></a>
-<nav class="nav"><a href="index.html">Comparador de precios</a><a class="on" href="armado.html">Armado de PC</a><a href="encontra.html">Encontrá tu equipo</a><a href="comparar.html">Comparar hardware</a></nav></div></header>
+<nav class="nav"><a href="index.html">Comparador de precios</a><a class="on" href="armado.html">Armado de PC</a><a href="encontra.html">Encontrá tu equipo</a><a href="comparar.html">Comparar hardware</a><a href="tiendas.html">Tiendas</a></nav></div></header>
 <main>
 <h1>Armado de PC</h1>
 <p class="lead">Elegí una placa de video o un procesador y te decimos qué hardware acompañarlo (mínimo y sugerido), qué fuente necesitás y cómo rendiría en juegos.</p>
@@ -124,5 +124,7 @@ function setMode(){
   setMode();
 })();
 </script>
+<script src="js/assistant.js"></script>
+<script>CT.CTAssistant.mount({section:"armado",context:()=>({gpuId:S.mode==="gpu"?S.id:null,res:S.res})});</script>
 </body>
 </html>

@@ -39,11 +39,14 @@ def parse(items, subcats=None, brands=None):
         if imgs and isinstance(imgs[0], dict) and imgs[0].get("nombre"):
             img = IMG.format(imgs[0]["nombre"])
         prev = it.get("precioEspecialAnterior")
-        out.append(product(STORE, name, slug(name, pid), cash, lst,
+        pr = (product(STORE, name, slug(name, pid), cash, lst,
                            stock=(it.get("stock") or 0) > 0 and bool(it.get("vendible", 1)),
                            sku=sku, pn=sku, image=img,
                            category=cat_from_subcat(subcats.get(it.get("id_subcategoria")), name),
                            prev_cash=prev if prev and prev != cash else None))
+        pr["pid"] = pid
+        pr["warranty_months"] = it.get("garantia") or None
+        out.append(pr)
     return out
 
 

@@ -116,3 +116,115 @@ def test_hardware_especificaciones():
     for c in hw["cpus"]:
         if c["id"].endswith("f") and c["vendor"] == "Intel":
             assert c["spec"]["igpu"] is False, c["id"]
+
+
+# ---------- fichas técnicas (actualización 4) ----------
+import tempfile, datetime as _dt
+from scrapers import specs as _sp
+
+_CHARS = json.load(open("tests/fixtures/specs_cg.json"))
+_NB = [
+    {"store": "Compragamer", "category": "notebooks", "pid": 17501, "sku": "83DK006HAR", "pn": "83DK006HAR", "warranty_months": 12,
+     "name": 'Notebook Lenovo Yoga 7 14" AMD Ryzen 5 8640HS 8GB DDR5 SSD 512GB', "url": "https://compragamer.com/producto/x_17501"},
+    {"store": "Compragamer", "category": "notebooks", "pid": 20131, "sku": "ANV15-41-R6NM", "pn": "ANV15-41-R6NM", "warranty_months": 12,
+     "name": 'Notebook Gamer Acer Nitro V 15 Ryzen 5 7535HS 8GB RTX 3050', "url": "https://compragamer.com/producto/y_20131"},
+    {"store": "Compragamer", "category": "notebooks", "pid": 21080, "sku": "83GS00VXAR", "pn": "83GS00VXAR", "warranty_months": 6,
+     "name": "Notebook Gamer Lenovo LOQ 15IAX9 i5 12450HX", "url": "https://compragamer.com/producto/z_21080"},
+]
+
+
+def test_specs_normalize_units_and_provenance():
+    items = _sp.build_items(_CHARS, _NB, "2026-10-23")
+    a = items["83dk006har"]
+    assert a["f"]["peso"] == {"v": 1.61, "u": "kg"}
+    assert a["f"]["pantalla"]["v"] == 14 and a["f"]["hz"]["u"] == "Hz"
+    assert a["f"]["ram_ampliable"]["v"] is False and a["f"]["ram_instalada"]["v"] == 8
+    assert a["f"]["garantia"] == {"v": 12, "u": "meses", "n": "Garantía informada por la tienda."}
+    assert a["s"] == "Compragamer" and a["d"] == "2026-10-23" and a["sku"] == "83DK006HAR" and a["url"].endswith("_17501")
+    assert "bateria_wh" in a["miss"], "la batería no la publica la fuente: tiene que figurar como sin datos, no inventarse"
+    assert "bateria_wh" not in a["f"] and "autonomia_h" not in a["f"]
+
+
+def test_specs_variants_and_contradictions():
+    items = _sp.build_items(_CHARS, _NB, "2026-10-23")
+    b = items["anv1541r6nm"]
+    assert b["f"]["ram_ampliable"]["v"] is True and b["f"]["ram_instalada"]["v"] == 8
+    assert b["f"]["cpu"]["l"] == "pend" and "7535HS" in b["f"]["cpu"]["n"]   # título y ficha se contradicen
+    assert "l" not in items["83dk006har"]["f"]["cpu"]                          # sin contradicción: nivel por defecto
+    c = items["83gs00vxar"]            # sin ficha en la tienda: solo queda la garantía
+    assert c["sheet"] is False and "peso" in c["miss"] and "peso" not in c["f"]
+
+
+def test_specs_attach_only_exact_sku():
+    items = _sp.build_items(_CHARS, _NB, "2026-10-23")
+    groups = [{"category": "notebooks", "offers": [], "_pns": ["83dk006har", "otro123abc"]},
+              {"category": "notebooks", "offers": [], "_pns": ["anv1541r6nm", "83dk006har"]},   # ambiguo: dos fichas → no se adjunta
+              {"category": "notebooks", "offers": [], "_pns": ["zzz999zzz"]},
+              {"category": "gpu", "offers": [], "_pns": ["83dk006har"]}]
+    assert _sp.attach(groups, items) == 1
+    assert groups[0]["spec"] == "83dk006har" and "spec" not in groups[1] and "spec" not in groups[2] and "spec" not in groups[3]
+
+
+def test_specs_cache_ttl_and_blocked_source():
+    d = tempfile.mkdtemp()
+    now = _dt.datetime(2026, 10, 23, 12, tzinfo=_dt.timezone.utc)
+    calls = []
+    def ok():
+        calls.append(1); return _CHARS
+    it, st = _sp.refresh(_NB, d, fetch=ok, now=now)
+    assert st["ok"] and len(calls) == 1 and len(it) == 3
+    it, st = _sp.refresh(_NB, d, fetch=ok, now=now + _dt.timedelta(hours=3))      # dentro del TTL: no consulta de nuevo
+    assert st.get("cached") and len(calls) == 1
+    def blocked():
+        raise RuntimeError("HTTP 403")
+    it, st = _sp.refresh(_NB, d, fetch=blocked, now=now + _dt.timedelta(hours=30))  # vencido y bloqueado: conserva y avisa
+    assert st["ok"] is False and st["stale"] is True and len(it) == 3
+    it, st = _sp.refresh(_NB, tempfile.mkdtemp(), fetch=blocked, now=now)         # sin caché: vacío, sin inventar
+    assert it == {} and st["ok"] is False
+
+
+# ---------- tiendas nuevas (actualización 4) ----------
+from scrapers import goldentech as _gt, armytech as _at
+
+
+def test_goldentech_parse():
+    items = _gt.parse(json.load(open("tests/fixtures/goldentech.json")))
+    assert len(items) == 2, "se descartan las variables y las que no están en pesos"
+    a, b = items
+    assert a["price_cash"] == 997269.24, "el precio viene en centavos: 99726924 → $997.269,24"
+    assert a["category"] == "placas-de-video" and a["stock"] is True and a["store"] == "GoldenTech"
+    assert a["sku"] is None and a["pn"] is None and a["store_sku"] == "EL_ASUPDV90YV0GB2X", "el SKU interno no se usa para cruzar"
+    assert b["price_cash"] == 87713.35 and b["price_list"] == 95000 and b["stock"] is False and b["category"] == "perifericos"
+
+
+def test_armytech_parse():
+    items = _at.parse(open("tests/fixtures/armytech.html").read())
+    assert len(items) == 2
+    a = items[0]
+    assert a["price_cash"] == 727524.82 and a["category"] == "placas-de-video" and a["store_id"] == "6467"
+    assert a["stock"] is None, "el listado no informa stock: no se inventa"
+    assert a["price_list"] is None, "no se deduce un precio de lista"
+    assert a["cuotas"] == "6 cuotas sin interés de $ 144.292" and a["ean"] == "4719331356743" and a["brand"] == "Gigabyte"
+    assert items[1]["price_cash"] == 30000 and items[1]["cuotas"] is None
+
+
+def test_tiendas_nuevas_no_cruzan_por_sku_interno():
+    gt = _gt.parse(json.load(open("tests/fixtures/goldentech.json")))
+    at = _at.parse(open("tests/fixtures/armytech.html").read())
+    cg = [{"store": "Compragamer", "name": "Placa de Video ASUS GeForce RTX 3060 O12G V2", "url": "https://x/1", "price_cash": 900000,
+           "price_list": None, "stock": True, "sku": "90YV0GB2", "pn": "90YV0GB2", "image": None, "category": "placas-de-video", "cuotas": None, "rating": None}]
+    groups = bd.build(gt + at + cg)
+    names = sorted(g["name"] for g in groups)
+    assert len(groups) == len({g["id"] for g in groups}), "ids únicos"
+    stores = {o["store"] for g in groups for o in g["offers"]}
+    assert {"GoldenTech", "Armytech", "Compragamer"} <= stores
+
+
+def test_stores_json_reputacion_verificable():
+    d = json.load(open("site/data/stores.json"))["stores"]
+    for name, s in d.items():
+        for r in s["reputation"]:
+            assert r["source"] and r["url"].startswith("http") and r["date"] and r["count"] > 0 and 0 < r["score"] <= 5, name
+        assert len({r["source"] for r in s["reputation"]}) == len(s["reputation"]), "una puntuación por plataforma; nunca promediadas"
+    assert d["Maximus"]["reputation"] == [] and d["Gezatek"]["integration"] == "no disponible"
+    assert "average" not in json.dumps(d).lower()

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tiendas · ComparáTech</title>
+<link rel="stylesheet" href="css/shared.css">
+<style>
+.st{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+.st h3{margin:0 0 4px;font-size:17px}.st .meta{color:var(--mut);font-size:12.5px;margin-bottom:8px}
+.st dl{display:grid;grid-template-columns:130px 1fr;gap:4px 12px;margin:8px 0}.st dt{color:var(--mut);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.3px}.st dd{margin:0;overflow-wrap:anywhere}
+.int-completa{background:var(--okbg);color:var(--ok)}.int-parcial{background:var(--warnbg);color:var(--warn)}.int-no{background:var(--badbg);color:var(--bad)}
+.rep{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}.rep b{font-size:20px}
+@media(max-width:560px){.st dl{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><div class="top"><a class="logo" href="index.html">Compará<span>Tech</span></a>
+<nav class="nav"><a href="index.html">Comparador de precios</a><a href="armado.html">Armado de PC</a><a href="encontra.html">Encontrá tu equipo</a><a href="comparar.html">Comparar hardware</a><a class="on" href="tiendas.html">Tiendas</a></nav></div></header>
+<main>
+<h1>Tiendas</h1>
+<p class="lead">De dónde sale cada precio, qué tan completa es la conexión con cada tienda y qué reputación pública verificable tiene. No promediamos plataformas ni copiamos opiniones: mostramos el puntaje, la cantidad, la fuente, el enlace y la fecha en que lo consultamos.</p>
+<div id="out"><p class="note">Cargando…</p></div>
+<div class="panel"><b>Cómo leer esta página</b>
+<ul class="chk"><li><b>Completa</b>: leemos el catálogo de la tienda por un medio público y permitido.</li><li><b>Parcial</b>: faltan datos (por ejemplo, stock o fichas individuales) y lo aclaramos.</li><li><b>No disponible</b>: la tienda bloquea o limita las lecturas automáticas. No intentamos evitar esos límites.</li><li>El precio mostrado no incluye el envío salvo que se indique; confirmalo en la tienda.</li></ul></div>
+</main>
+<script src="js/lib.js"></script>
+<script>
+const {esc,ARS}=CT,$=s=>document.querySelector(s);
+const j=async(u,d)=>{try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw 0;return await r.json()}catch{return d}};
+let PR=[],META={},STORES=null;
+const fmt=n=>Number(n).toLocaleString("es-AR",{maximumFractionDigits:1});
+function card(name,s,meta,count){
+  const st=meta&&meta.stores&&meta.stores[name], cls=s.integration==="completa"?"int-completa":s.integration==="parcial"?"int-parcial":"int-no";
+  const c=s.contact||{};
+  const rows=[];
+  rows.push(["Sitio",`<a href="${esc(s.site)}" target="_blank" rel="noopener nofollow">${esc(s.site.replace(/^https?:\/\//,""))}</a>`]);
+  rows.push(["Cómo leemos",esc(s.how)]);
+  if(st)rows.push(["Último estado",st.ok?`${st.count} productos leídos`:`Con error en la última lectura${st.stale?" (mostramos datos anteriores)":""}: ${esc(st.error||"")}`]);
+  if(count!=null)rows.push(["En el catálogo",`${count} ${count===1?"producto":"productos"} con precio`]);
+  if(c.address)rows.push(["Dirección",esc(c.address)]);
+  if(c.phone)rows.push(["Teléfono",esc(c.phone)]);
+  if(c.email)rows.push(["Email",esc(c.email)]);
+  if(c.whatsapp)rows.push(["WhatsApp",`<a href="${esc(c.whatsapp)}" target="_blank" rel="noopener nofollow">Escribir</a>`]);
+  if(c.instagram)rows.push(["Instagram",`<a href="${esc(c.instagram)}" target="_blank" rel="noopener nofollow">Perfil</a>`]);
+  if(s.warranty)rows.push(["Garantía",esc(s.warranty)+(s.warranty_url?` <a href="${esc(s.warranty_url)}" target="_blank" rel="noopener nofollow">Política completa</a>`:"")]);
+  if(s.shipping)rows.push(["Envíos",esc(s.shipping)]);
+  if(s.payments)rows.push(["Pagos",esc(s.payments)]);
+  if(s.about)rows.push(["Sobre la tienda",esc(s.about)]);
+  const rep=(s.reputation&&s.reputation.length)?s.reputation.map(r=>`<div class="rep"><b>${fmt(r.score)} / 5</b><span>${fmt(r.count)} opiniones en <a href="${esc(r.url)}" target="_blank" rel="noopener nofollow">${esc(r.source)}</a> · ficha «${esc(r.listing)}» · consultado el ${esc(r.date)}</span></div>`).join(""):`<span class="note">Sin reputación pública verificada. No la inventamos.</span>`;
+  return `<div class="st"><h3>${esc(name)} <span class="chip ${cls}">${esc(s.integration)}</span></h3><div class="meta">Verificado el ${esc(s.checked||"—")}</div><div>${rep}</div><dl>${rows.map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl>${(s.notes||[]).map(n=>`<p class="note">${esc(n)}</p>`).join("")}</div>`;
+}
+(async()=>{
+  [PR,META,STORES]=await Promise.all([j("data/products.json",[]),j("data/meta.json",{}),j("data/stores.json",null)]);
+  if(!STORES){$("#out").innerHTML='<div class="warn">No se pudo cargar la información de las tiendas.</div>';return}
+  const cnt={};PR.forEach(g=>g.offers.forEach(o=>{cnt[o.store]=(cnt[o.store]||0)+1}));
+  $("#out").innerHTML=Object.entries(STORES.stores).map(([n,s])=>card(n,s,META,cnt[n]==null&&META.stores&&META.stores[n]?null:(cnt[n]||0))).join("");
+})();
+</script>
+<script src="js/assistant.js"></script>
+<script>CT.CTAssistant.mount({section:"tiendas"});</script>
+</body>
+</html>

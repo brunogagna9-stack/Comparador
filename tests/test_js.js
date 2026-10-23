@@ -217,4 +217,52 @@ t("cada producto del catálogo se puede comparar sin errores", () => {
   const byCat = {}; PR.forEach(g => (byCat[g.category] = byCat[g.category] || []).push(g));
   Object.values(byCat).forEach(l => { if (l.length >= 2) { const cmp = C.compare([C.item(l[0]), C.item(l[1])], { res: 1 }); C.notes(cmp); assert(JSON.stringify(cmp).indexOf("NaN") < 0); } });
 });
+
+/* ---------- Fichas técnicas de notebooks (actualización 4) ---------- */
+const SPECS = require("./fixtures/specs_out.json");
+const PRS = JSON.parse(JSON.stringify(PR));
+PRS.find(g => g.id === "ec0ca5a4de").spec = "83dk006har";   // Yoga: ficha completa
+PRS.find(g => g.id === "f9e6c2c5dc").spec = "anv1541r6nm";  // Nitro V: ficha con contradicción de CPU
+const CS = CT.makeFinder(CT.create(HW, PRS, META, SPECS));
+const gNb = id => PRS.find(g => g.id === id);
+t("ficha: el peso sale de la fuente con unidad, SKU y fecha", () => {
+  const r = CS.sf(gNb("ec0ca5a4de"), "peso"); assert.strictEqual(r.v, 1.61); assert.strictEqual(r.u, "kg"); assert.strictEqual(r.tag, "ver");
+  assert.strictEqual(r.src, "Compragamer"); assert.strictEqual(r.sku, "83DK006HAR"); assert.strictEqual(r.date, "2026-10-23");
+});
+t("ficha: sin ficha o sin dato → null, nunca un valor inventado", () => {
+  assert.strictEqual(CS.sf(gNb("bcd4975fad"), "peso"), null); assert.strictEqual(CS.specMissing(gNb("bcd4975fad"), "peso"), "sin ficha");
+  assert.strictEqual(CS.sf(gNb("ec0ca5a4de"), "bateria_wh"), null); assert.strictEqual(CS.specMissing(gNb("ec0ca5a4de"), "bateria_wh"), "no publicado");
+  assert.strictEqual(C.sf(gNb("ec0ca5a4de"), "peso"), null, "sin specs.json la app sigue funcionando");
+});
+t("ficha: la contradicción título/ficha baja el nivel a 'Pendiente de verificar'", () => {
+  const r = CS.sf(gNb("f9e6c2c5dc"), "cpu"); assert.strictEqual(r.tag, "pend"); assert(/7535HS/.test(r.note));
+});
+t("buscador: usa el peso de la ficha y deja de decir que no hay datos", () => {
+  const e = CS.explain({ portable: "si" }, CT.needs({ usos: ["oficina"] }), { kind: "notebook", g: gNb("ec0ca5a4de"), o: PRS[0].offers[0], total: 1, score: 1, s: CT.parse(gNb("ec0ca5a4de").name, "notebooks") });
+  const peso = e.specs.find(x => x[0] === "Peso"); assert(peso && /1,61 kg/.test(peso[1]) && peso[2] === "ver", JSON.stringify(e.specs));
+  assert(e.pros.some(x => /1,61 kg/.test(x))); assert(!e.limits.some(x => /No pudimos obtener el peso/.test(x)));
+  const bat = e.specs.find(x => x[0] === "Batería"); assert.strictEqual(bat[2], "nd"); assert(e.limits.some(x => /Batería/.test(x)));
+});
+t("buscador: notebook sin ficha dice por qué falta el peso", () => {
+  const e = CS.explain({ portable: "si" }, CT.needs({ usos: ["oficina"] }), { kind: "notebook", g: gNb("bcd4975fad"), o: PRS[0].offers[0], total: 1, score: 1, s: CT.parse(gNb("bcd4975fad").name, "notebooks") });
+  const peso = e.specs.find(x => x[0] === "Peso"); assert.strictEqual(peso[2], "nd"); assert(/no publicó una ficha/.test(peso[1]));
+  assert(e.limits.some(x => /No pudimos obtener el peso/.test(x) && /transportar/.test(x)));
+});
+t("buscador: RAM soldada y justa se advierte; slot libre se destaca", () => {
+  const n = CT.needs({ usos: ["programacion", "gaming_casual"] });
+  const a = CS.explain({}, n, { kind: "notebook", g: gNb("ec0ca5a4de"), o: PRS[0].offers[0], total: 1, score: 1, s: CT.parse(gNb("ec0ca5a4de").name, "notebooks") });
+  const b = CS.explain({}, n, { kind: "notebook", g: gNb("f9e6c2c5dc"), o: PRS[0].offers[0], total: 1, score: 1, s: CT.parse(gNb("f9e6c2c5dc").name, "notebooks") });
+  if (n.ram.rec > 8) { assert(a.cons.some(x => /no se puede ampliar/.test(x))); assert(b.pros.some(x => /slot de RAM libre/.test(x))); }
+  assert(a.specs.some(x => x[0] === "RAM ampliable" && /^No/.test(x[1]))); assert(b.specs.some(x => x[0] === "RAM ampliable" && /^Sí/.test(x[1])));
+});
+t("comparador: filas de peso, medidas, garantía y batería con su procedencia", () => {
+  const K = CT.makeCompare(CT.create(HW, PRS, META, SPECS));
+  const cmp = K.compare([K.item(gNb("ec0ca5a4de")), K.item(gNb("f9e6c2c5dc"))], { res: 1 });
+  const row = id => cmp.rows.find(r => r.id === id);
+  assert.strictEqual(row("peso").cells[0].v, 1.61); assert.strictEqual(row("peso").cells[1].v, 2); assert(/Compragamer/.test(row("peso").cells[0].note));
+  assert.strictEqual(row("bat").cells[0].tag, "nd"); assert.strictEqual(row("gar").cells[1].v, 12);
+  assert(/317 × 222 × 17 mm/.test(row("dim").cells[0].text)); assert.strictEqual(row("dim").cells[1].tag, "nd");   // sin medidas en la ficha del Nitro
+  const light = cmp.uses.find(u => u.use.id === "port"); assert(light && light.winner === 0, "gana la más liviana");
+  assert(JSON.stringify(cmp).indexOf("NaN") < 0);
+});
 console.log(n + " pruebas de JavaScript OK");

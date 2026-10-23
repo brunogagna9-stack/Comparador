@@ -86,7 +86,8 @@
         if (s.ssd < n.ssd) { excl.ssd++; return; }
         const rank = gpuLine(s.gpu); if (n.gaming && !s.gpu) { excl.gpu++; return; }
         if (n.gpuReq.some(r => r.fps >= 60) && (rank == null || rank < 22 && !/rx|arc/i.test(s.gpu || ""))) { excl.gpu++; return; }
-        const score = s.ram / 16 + s.ssd / 512 + (s.gpu ? 1.5 + (rank || 20) / 20 : 0) + (s.hz ? s.hz / 240 : 0);
+        const pw = a.portable === "si" ? C.sf(g, "peso") : null;   // si la va a llevar de un lado a otro, se prefiere la liviana (solo con peso publicado)
+        const score = s.ram / 16 + s.ssd / 512 + (s.gpu ? 1.5 + (rank || 20) / 20 : 0) + (s.hz ? s.hz / 240 : 0) + (pw ? Math.max(0, (2.4 - pw.v)) * 0.5 : 0);
         cands.push({ kind: "notebook", g, o, total: CT.price(o), score, s });
       });
       return { cands, excl };
@@ -203,7 +204,26 @@
         specs.push(["Procesador", s.cpu || "Sin datos", s.cpu ? "pend" : "nd"], ["Placa de video", s.gpu ? s.gpu + (s.vram ? " " + s.vram + " GB" : "") : (c.kind === "notebook" ? "No indicada (gráficos integrados)" : "No indicada"), s.gpu ? "pend" : "nd"],
           ["Memoria RAM", s.ram + " GB", "pend"], ["Almacenamiento", (s.ssd >= 1000 ? s.ssd / 1000 + " TB" : s.ssd + " GB") + " SSD", "pend"]);
         if (s.inch) specs.push(["Pantalla", s.inch + '"' + (s.hz ? " · " + s.hz + " Hz" : ""), "pend"]);
-        if (c.kind === "notebook") { specs.push(["Peso y batería", "Sin datos", "nd"]); limits.push("No tenemos el peso ni la duración de la batería: confirmalo en la ficha de la tienda" + (a.portable === "si" ? " (dijiste que lo vas a transportar)." : ".")); }
+        if (c.kind === "notebook") {
+          const pw = C.sf(c.g, "peso"), amp = C.sf(c.g, "ram_ampliable"), gr = C.sf(c.g, "garantia"), pn = C.sf(c.g, "panel"), cpuF = C.sf(c.g, "cpu");
+          const why = C.specMissing(c.g, "peso") === "sin ficha" ? "la tienda no publicó una ficha técnica de este modelo" : "la ficha de la tienda no lo informa";
+          const src = r => ` (${r.src}, SKU ${r.sku}, ${r.date})`;
+          if (pw) {
+            specs.push(["Peso", pw.v.toString().replace(".", ",") + " kg" + src(pw), pw.tag]);
+            if (a.portable === "si") { if (pw.v <= 1.7) pros.push(`Pesa ${pw.v.toString().replace(".", ",")} kg según la ficha de la tienda: cómoda para llevar.`); else if (pw.v >= 2.2) cons.push(`Pesa ${pw.v.toString().replace(".", ",")} kg: pesada para transportar todos los días.`); }
+          } else {
+            specs.push(["Peso", "Sin datos (" + why + ")", "nd"]);
+            limits.push("No pudimos obtener el peso: " + why + (a.portable === "si" ? ". Dijiste que la vas a transportar, así que confirmalo con la tienda o en la hoja técnica del fabricante." : "."));
+          }
+          specs.push(["Batería", "Sin datos: ninguna tienda conectada publica la capacidad (Wh) ni la autonomía medida", "nd"]);
+          limits.push("Batería: la capacidad no figura en las fichas de las tiendas y no usamos la autonomía de marketing como si fuera real. Buscala en la hoja técnica del fabricante" + (a.portable === "si" ? " (dijiste que la vas a transportar)." : "."));
+          if (amp) specs.push(["RAM ampliable", (amp.v ? "Sí" : "No") + " (" + amp.note + ")", amp.tag]);
+          if (pn) specs.push(["Panel", pn.v, pn.tag]);
+          if (gr) specs.push(["Garantía de la tienda", gr.v + " meses", gr.tag]);
+          if (cpuF && cpuF.tag === "pend" && cpuF.note) limits.push(cpuF.note);
+          if (amp && !amp.v && s.ram < n.ram.rec) cons.push(`Su RAM no se puede ampliar (${amp.note.toLowerCase()}): conviene que ya venga con los ${n.ram.rec} GB que necesitás.`);
+          if (amp && amp.v && s.ram < n.ram.rec) pros.push("Tiene un slot de RAM libre: podés ampliarla más adelante.");
+        }
         if (c.kind === "pc" && c.hg) specs.push(["Rendimiento en juegos a " + CT.RES[n.res], "~" + Math.round(fps) + " FPS (estimado)", "est"]);
         if (c.kind === "pc" && n.gaming && !c.cpuKnown) limits.push("No tenemos el puntaje de juegos de este procesador: el rendimiento podría ser menor al estimado.");
         if (c.kind === "notebook" && s.gpu) limits.push("No hay benchmarks de notebooks en nuestras fuentes: no sabemos cuántos FPS dará esa placa (la versión móvil rinde menos que la de escritorio).");
