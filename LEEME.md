@@ -45,3 +45,11 @@ Todo es gratis. Necesitás una cuenta de GitHub (gratis). Eso no lo puedo crear 
 - Tiendas nuevas: **GoldenTech** (API pública de WooCommerce) y **Armytech** (listados paginados; su robots.txt prohíbe filtros y orden, no se usan). Su stock: GoldenTech lo informa; Armytech no (queda "sin confirmar").
 - Asistente (`site/js/assistant.js`, botón flotante en todas las secciones): motor local con reglas y datos del catálogo, sin IA generativa y sin enviar datos. IA opcional: ver `worker/assistant-proxy.js` (la clave va como secreto del Worker, nunca en el sitio) y poner su URL en `site/data/config.json` → `assistant.endpoint`. Por defecto está desactivada.
 - Pruebas: `python tests/run_tests.py` (incluye JavaScript, asistente y proxy; requiere Node).
+
+## Actualización 5 (diseño y mejoras)
+- Se eliminó la página "Tiendas": las tiendas se ven en el filtro lateral de Precios (con cantidad de productos y ⚠ si su último dato falló) y su reputación verificada aparece dentro del detalle de cada producto.
+- Nuevo diseño: encabezado fijo translúcido, portada con resumen, tarjetas con efecto, botones con degradé y modo de movimiento reducido.
+- **Mi lista de compra**: botón "+ Lista" en cada producto; calcula el total comprando lo más barato y el total en una sola tienda; se guarda solo en el navegador; se puede copiar.
+- Indicadores de "dato viejo" (la tienda falló en la última actualización) y "precio inusual" (cambio de -50% o +100%).
+- Botón "Copiar enlace de esta comparación" en Comparar hardware.
+- Se corrigió que el encabezado tapaba el botón de cerrar de la ventana de detalle.

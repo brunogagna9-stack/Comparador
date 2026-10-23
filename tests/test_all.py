@@ -228,3 +228,46 @@ def test_stores_json_reputacion_verificable():
         assert len({r["source"] for r in s["reputation"]}) == len(s["reputation"]), "una puntuación por plataforma; nunca promediadas"
     assert d["Maximus"]["reputation"] == [] and d["Gezatek"]["integration"] == "no disponible"
     assert "average" not in json.dumps(d).lower()
+
+
+def test_logg_marcado_actual():
+    from scrapers import logg
+    html = '''<a class="product-card " href="/ProductDetail/Ryzen-7-7800X3D-WOF" onclick="callGtagFunction('False','59939','x')"><div class="card-labels"></div>
+    <div class="card-img-container"><img src="https://logg.api.cygnus.market/static/a.webp" class="card-img-top" alt="Procesador AMD Ryzen 7 7800X3D 5GHz 96MB Gráficos Radeon Zen4 AM5"></div>
+    <div class="card-body"><p class="card-text">Procesador AMD Ryzen 7 7800X3D 5GHz 96MB Gráficos Radeon Zen4 AM5</p><h5 class="card-price"><span class=""> $ 729.999</span></h5></div></a>
+    <a class="product-card" href="/ProductDetail/x"><div class="card-body"><p class="card-text">Sin precio</p></div></a>'''
+    it = logg.parse(html, "procesadores")
+    assert len(it) == 2 and it[0]["name"].startswith("Procesador AMD Ryzen 7 7800X3D") and it[0]["price_cash"] == 729999
+    assert it[0]["url"] == "https://logg.com.ar/ProductDetail/Ryzen-7-7800X3D-WOF" and it[0]["category"] == "procesadores" and it[0]["stock"] is None
+    assert it[1]["price_cash"] is None   # sin precio: build_data lo descarta, no se inventa
+
+
+def test_procesador_con_graficos_radeon_no_es_placa():
+    assert canon_category("Procesador AMD Ryzen 7 7800X3D 5GHz 96MB Gráficos Radeon Zen4 AM5") == "procesadores"
+    assert canon_category("Micro AMD Ryzen 5 5500 AM4") == "procesadores"
+    assert canon_category("Placa de Video Radeon RX 7600 8GB") == "placas-de-video"
+
+
+def test_logg_paginacion():
+    from scrapers import logg
+    p1 = '''<form method="post"><input type="hidden" name="HeaderCategory.Name" value="Gabinetes"><input name="FilterText" value="">
+    <select name="order"><option value="0">Ordenar</option><option value="1" selected>Precio</option></select><input type="hidden" name="__RequestVerificationToken" value="TOK">
+    <ul class="pagination"><li class="page-item active"><button formaction="/Products?pageNumber=1&amp;handler=GoToPage">1</button></li>
+    <li class="page-item"><button class="page-link" formaction="/Products?pageNumber=2&amp;mode=Vertical&amp;handler=GoToPage">Siguiente</button></li></ul></form>'''
+    p2 = '''<ul class="pagination"><li class="page-item active"><button>2</button></li><li class="page-item"><button class="page-link" formaction="/Products?pageNumber=2&amp;handler=GoToPage">Siguiente</button></li></ul>'''
+    f = logg.form_fields(p1)
+    assert f == {"HeaderCategory.Name": "Gabinetes", "FilterText": "", "order": "1", "__RequestVerificationToken": "TOK"}, f
+    assert logg.next_page(p1) == "https://logg.com.ar/Products?pageNumber=2&mode=Vertical&handler=GoToPage"
+    assert logg.next_page(p2) is None, "última página: el «Siguiente» apunta a sí misma"
+    assert logg.next_page("<p>sin paginación</p>") is None
+
+
+def test_precio_inusual():
+    base = {"store": "X", "name": "Procesador AMD Ryzen 5 5500 AM4 Box", "url": "https://x/1", "price_cash": 100000, "price_list": None,
+            "stock": True, "sku": "100-100000457BOX", "pn": "100-100000457BOX", "image": None, "category": "procesadores", "cuotas": None, "rating": None}
+    hist = {"_v": 2}
+    for day, price in [("2026-10-20", 100000), ("2026-10-21", 30000)]:
+        it = dict(base, price_cash=price); g = bd.build([it]); bd.update_history(g, hist, day); bd.annotate_changes(g, hist, day)
+    assert g[0]["offers"][0].get("anom") is True and g[0]["offers"][0]["chg"]["pct"] == -70.0
+    it = dict(base, price_cash=32000); g = bd.build([it]); bd.update_history(g, hist, "2026-10-22"); bd.annotate_changes(g, hist, "2026-10-22")
+    assert not g[0]["offers"][0].get("anom"), "un cambio normal no se marca"

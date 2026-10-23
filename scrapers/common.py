@@ -31,6 +31,25 @@ def get(url, as_json=False, retries=3):
     raise RuntimeError(f"No se pudo leer {url}: {last}")
 
 
+def post(url, data, as_json=False, retries=3):
+    """POST de un formulario público (paginación de Logg). Misma pausa, reintentos y respeto a 403/429 que get()."""
+    last = None
+    for i in range(retries):
+        try:
+            time.sleep(DELAY)
+            r = _session.post(url, data=data, timeout=40)
+            if r.status_code == 200:
+                return r.json() if as_json else r.text
+            last = f"HTTP {r.status_code}"
+            if r.status_code in (403, 429):
+                break
+        except Exception as e:
+            last = str(e)
+        time.sleep(2 * (i + 1))
+    LOG.append(f"{url} -> {last}")
+    raise RuntimeError(f"No se pudo leer {url}: {last}")
+
+
 def parse_ars(text):
     """'$49.899' -> 49899.0 ; '$270.920,08' -> 270920.08 ; devuelve None si no hay número."""
     if text is None:
@@ -59,6 +78,7 @@ CATEGORIES = [  # el orden importa: la primera regla que coincide gana
     ("fuentes", r"\bfuente\b|fuentes de alimentaci|power supply"),
     ("gabinetes", r"gabinete"),
     ("refrigeracion", r"cooler|refrigeraci|disipador|water ?cooling|pasta t[eé]rmica|\bfan\b|ventilador"),
+    ("procesadores", r"^(procesador(es)?|micro|cpu)\b"),   # "Procesador … Gráficos Radeon" no es una placa de video
     ("placas-de-video", r"placa de video|geforce|radeon|\brtx ?\d|\bgtx ?\d|\brx ?\d{3,4}|\barc ?[ab]\d|video card"),
     ("motherboards", r"\bmother|motherboard|placa madre|mainboard"),
     ("procesadores", r"procesador|ryzen|core i[3579]\b|core ultra|athlon|pentium|celeron|xeon|\bcpu\b"),

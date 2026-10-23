@@ -143,7 +143,7 @@
       if (!names) {
         const live = Object.keys(S).filter(k => S[k].integration !== "no disponible"), down = Object.keys(S).filter(k => S[k].integration === "no disponible");
         return reply([P("Tiendas con precios en ComparáTech: " + (live.join(", ") || "ninguna") + "."), down.length ? P("Por ahora sin datos: " + down.map(k => `${k} (${S[k].how})`).join("; ") + ".") : P(""),
-          P("Para ver reputación, contacto y estado de cada una, entrá a la sección Tiendas.")], { basis: "cat", links: [{ label: "Ver tiendas", href: "tiendas.html" }] });
+          P("Preguntame por una tienda en particular (por ejemplo «¿es confiable GoldenTech?») y te cuento su reputación verificada, contacto y garantía.")], { basis: "cat" });
       }
       const blocks = [];
       names.forEach(n => {
@@ -163,7 +163,7 @@
         (s.notes || []).filter(x => /trustpilot|no pudimos/i.test(x) || wantRep).slice(0, 2).forEach(x => blocks.push(P(x)));
       });
       blocks.push(P("La reputación es un dato de una sola plataforma, tomado en la fecha indicada, y puede cambiar. No promediamos plataformas distintas."));
-      return reply(blocks, { basis: "cat", links: [{ label: "Ver todas las tiendas", href: "tiendas.html" }] });
+      return reply(blocks, { basis: "cat" });
     }
 
     function notebookFacts(g) {
@@ -288,8 +288,8 @@
 
     A.suggestions = ctx => {
       const s = ctx && ctx.section, nb = A.ctxGroups(ctx || {}).some(g => g.category === "notebooks");
-      const base = { precios: ["¿Qué tiendas están conectadas?", "¿Qué significa «Estimado»?", "¿Cuándo se actualizaron los precios?"], armado: ["¿Qué es la VRAM?", "¿DDR4 o DDR5?", "¿Qué fuente necesito para esta placa?"],
-        encontra: ["Quiero una notebook para estudiar", "¿Qué conviene para jugar en 1440p?", "¿Qué significa «Pendiente de verificar»?"], comparar: ["Resumime las diferencias", "¿Cuál conviene y por qué?", "¿Qué datos faltan?"], tiendas: ["¿Es confiable GoldenTech?", "¿Y Army Tech?", "¿Qué tiendas no están disponibles?"] }[s] || ["¿Qué tiendas están conectadas?", "Quiero una notebook para estudiar"];
+      const base = { precios: ["¿Es confiable GoldenTech?", "¿Qué tiendas están conectadas?", "¿Cuándo se actualizaron los precios?"], armado: ["¿Qué es la VRAM?", "¿DDR4 o DDR5?", "¿Qué fuente necesito para esta placa?"],
+        encontra: ["Quiero una notebook para estudiar", "¿Qué conviene para jugar en 1440p?", "¿Qué significa «Pendiente de verificar»?"], comparar: ["Resumime las diferencias", "¿Cuál conviene y por qué?", "¿Qué datos faltan?"], }[s] || ["¿Qué tiendas están conectadas?", "Quiero una notebook para estudiar"];
       return nb ? ["¿Cuánto pesa y qué batería tiene?"].concat(base).slice(0, 4) : base;
     };
 

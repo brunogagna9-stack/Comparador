@@ -19,6 +19,7 @@ ROOT = Path(__file__).parent
 DATA = ROOT / "site" / "data"
 RAW = ROOT / "raw"
 HIST_VERSION = 2
+ANOM_DOWN, ANOM_UP = -50, 100  # % de cambio a partir del cual el precio se marca como inusual
 RECENT_DAYS = 14  # un cambio de precio se considera "reciente" durante estos días
 
 STOP = {"de", "con", "para", "y", "el", "la", "en", "gb", "tb", "mhz", "ghz", "nucleos", "threads",
@@ -198,6 +199,8 @@ def annotate_changes(groups, hist, today):
             if len(s) >= 2 and days_ago(s[-1][0], today) <= RECENT_DAYS:
                 prev, now = s[-2][1], s[-1][1]
                 o["chg"] = {"prev": prev, "pct": round((now - prev) / prev * 100, 1), "date": s[-1][0]}
+                if o["chg"]["pct"] <= ANOM_DOWN or o["chg"]["pct"] >= ANOM_UP:
+                    o["anom"] = True   # salto sospechoso (posible error de la tienda): la web avisa que se confirme
             vals = [x[1] for x in s]
             o["low"] = len(vals) >= 3 and vals[-1] <= min(vals)
         top = g["offers"][0]

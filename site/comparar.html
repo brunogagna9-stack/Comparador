@@ -29,7 +29,7 @@
 </head>
 <body>
 <header><div class="top"><a class="logo" href="index.html">Compará<span>Tech</span></a>
-<nav class="nav"><a href="index.html">Comparador de precios</a><a href="armado.html">Armado de PC</a><a href="encontra.html">Encontrá tu equipo</a><a class="on" href="comparar.html">Comparar hardware</a><a href="tiendas.html">Tiendas</a></nav></div></header>
+<nav class="nav"><a href="index.html">Comparador de precios</a><a href="armado.html">Armado de PC</a><a href="encontra.html">Encontrá tu equipo</a><a class="on" href="comparar.html">Comparar hardware</a></nav></div></header>
 <main>
 <h1>Comparar hardware</h1>
 <p class="lead">Elegí una categoría, sumá de 2 a 4 productos y mirá en qué se diferencian, con tablas, gráficos y una conclusión explicada.</p>
@@ -39,6 +39,7 @@
    <div class="f" style="max-width:260px" id="resbox"><label>Resolución (para rendimiento)</label><div class="seg" id="res"><button data-v="0">1080p</button><button data-v="1" class="on">1440p</button><button data-v="2">4K</button></div></div></div>
   <label class="tog" style="margin-top:8px"><input type="checkbox" id="allc"> Buscar en todas las categorías (solo se podrá comparar precio y disponibilidad)</label>
   <div class="sel" id="sel"></div>
+  <button class="btn" id="share" type="button" style="margin-top:10px">🔗 Copiar enlace de esta comparación</button>
 </div>
 <div id="out"></div>
 <h2>Cómo leer las etiquetas</h2>
@@ -149,6 +150,7 @@ function drawAll(){
   C=CT.makeCompare(CT.create(HW,PR,META,SP));
   $("#legend").innerHTML=["ver","bench","est","pend","nd"].map(t=>`${tagH(t)} <span>${esc(CT.TAGS[t][1])}</span>`).join("<br>");
   try{const p=new URLSearchParams(location.hash.slice(1));if(p.get("cat")&&CT.CATS[p.get("cat")])S.cat=p.get("cat");if(p.get("ids"))S.ids=p.get("ids").split(",").filter(id=>byId(id)).slice(0,4)}catch{}
+  $("#share").onclick=async e=>{const b=e.currentTarget;try{await navigator.clipboard.writeText(location.href);b.textContent="✓ Enlace copiado"}catch{b.textContent="Copialo desde la barra de direcciones"}setTimeout(()=>b.textContent="🔗 Copiar enlace de esta comparación",2500)};
   $("#q").oninput=search;$("#q").onfocus=search;document.addEventListener("click",e=>{if(!e.target.closest(".srch"))$("#dd").hidden=true});
   $("#allc").onchange=e=>{S.all=e.target.checked;drawAll();search()};
   document.querySelectorAll("#res button").forEach(b=>b.onclick=()=>{S.res=+b.dataset.v;document.querySelectorAll("#res button").forEach(x=>x.classList.toggle("on",x===b));drawOut()});
