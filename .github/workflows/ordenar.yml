@@ -91,6 +91,18 @@ jobs:
           if [ ! -f tests/__init__.py ]; then : > tests/__init__.py; fi
           if [ -f .github/workflows/actualizar.yml ]; then rm -f actualizar.yml; fi
           if [ -f .github/workflows/resumen.yml ]; then rm -f resumen.yml; fi
+      - name: Completar las tiendas nuevas en config.json
+        run: |
+          python3 - <<'PY'
+          import json
+          p = "site/data/config.json"
+          c = json.load(open(p, encoding="utf-8"))
+          st = c.setdefault("stores", {})
+          for n in ["Hardloots", "BitHard", "Try", "SCP Hardstore", "Click Gaming", "The Gamer Shop"]:
+              st.setdefault(n, {})
+          json.dump(c, open(p, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
+          print("config.json listo:", len(st), "tiendas")
+          PY
       - name: Guardar cambios
         run: |
           git config user.name "github-actions"
