@@ -533,3 +533,22 @@ def test_datos_danados_no_se_publican():
     wf = Path(".github/workflows/actualizar.yml").read_text()
     assert "pull --rebase" not in wf
     assert "check_data.py" in wf and "site_publicar" in wf
+
+
+def test_estructura_del_sitio():
+    """Todas las páginas comparten encabezado/pie; «Productos» es el nombre único; no quedan nombres viejos."""
+    import re
+    from pathlib import Path
+    site = Path(__file__).resolve().parent.parent / "site"
+    paginas = ["index", "productos", "armado", "actualizar", "encontra", "comparar"]
+    for n in paginas:
+        h = (site / f"{n}.html").read_text(encoding="utf-8")
+        assert 'css/layout.css' in h and 'js/layout.js' in h, n
+        assert "🛒 Mi lista" not in h and "Comparador de precios</a>" not in h and "<header" not in h, n
+        assert f'data-page="{n}"' in h, n
+    lay = (site / "js" / "layout.js").read_text(encoding="utf-8")
+    assert lay.count("Productos") >= 1 and "Mi lista de compra" in lay and 'id="lcount"' in lay and "Volver arriba" in lay
+    for h in ("productos.html", "armado.html", "actualizar.html", "encontra.html", "comparar.html"):
+        assert h in lay
+    p = (site / "productos.html").read_text(encoding="utf-8")
+    assert "const PER=32" in p and "repeat(4,minmax(0,1fr))" in p and "Mostrar más" not in p and "position:sticky" in p and "margin:auto" in p

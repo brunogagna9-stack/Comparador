@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>¿Qué actualizar? · ComparáTech</title>
 <link rel="stylesheet" href="css/shared.css">
+<link rel="stylesheet" href="css/layout.css">
 <style>
 textarea{width:100%;min-height:92px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--tx);font:inherit;resize:vertical}
 .ex{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;align-items:center}.ex button{padding:5px 11px;border:1px solid var(--line);border-radius:99px;background:var(--card);color:var(--tx);cursor:pointer;font:inherit;font-size:12.5px}
@@ -19,9 +20,8 @@ textarea{width:100%;min-height:92px;padding:10px;border:1px solid var(--line);bo
 @media(max-width:600px){.bar{grid-template-columns:1fr 70px}.bar .tr{grid-column:1 / -1;order:3}}
 </style>
 </head>
-<body>
-<header><div class="top"><a class="logo" href="index.html">Compará<span>Tech</span></a>
-<nav class="nav"><a href="index.html">Comparador de precios</a><a href="armado.html">Armado de PC</a><a class="on" href="actualizar.html">¿Qué actualizar?</a><a href="encontra.html">Encontrá tu equipo</a><a href="comparar.html">Comparar hardware</a></nav></div></header>
+<body data-page="actualizar">
+<script src="js/layout.js"></script>
 <main>
 <h1>¿Qué actualizar?</h1>
 <p class="lead">Escribí los componentes que ya tenés y el rendimiento que querés lograr. Te decimos qué te está limitando, qué conviene cambiar primero y cuánto cuesta hoy en las tiendas.</p>

@@ -8,6 +8,19 @@
   CT.esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   CT.ARS = n => "$" + Math.round(n).toLocaleString("es-AR");
   CT.price = o => o.price_cash ?? o.price_list;
+  /* Números de página para el paginador: siempre la primera y la última, la actual con sus vecinas, y "…" en los saltos. */
+  CT.pageList = (cur, total) => {
+    if (total <= 1) return [1];
+    const keep = new Set([1, total, cur - 1, cur, cur + 1]);
+    if (cur <= 3) { keep.add(2); keep.add(3); keep.add(4); }
+    if (cur >= total - 2) { keep.add(total - 1); keep.add(total - 2); keep.add(total - 3); }
+    const out = []; let last = 0;
+    [...keep].filter(n => n >= 1 && n <= total).sort((a, b) => a - b).forEach(n => {
+      if (n - last === 2) out.push(last + 1); else if (n - last > 2) out.push("…");
+      out.push(n); last = n;
+    });
+    return out;
+  };
   CT.up50 = x => Math.ceil(x / 50) * 50;
   CT.RES = ["1080p", "1440p", "4K"];
   const rxm = (m, x) => { const a = new RegExp(m, "i"), b = x ? new RegExp(x, "i") : null; return n => a.test(n) && !(b && b.test(n)); };

@@ -354,4 +354,13 @@ t("el texto de la reputación escapa HTML y no promedia fuentes", () => {
   assert(!/<b>x/.test(REP.badge("X")));
   REP.set(STO);
 });
+/* ---------- Paginador ---------- */
+t("pageList: primera, última, actual con vecinas y saltos con «…»", () => {
+  const CTp = require("../site/js/lib.js");
+  assert.deepStrictEqual(CTp.pageList(1, 1), [1]);
+  assert.deepStrictEqual(CTp.pageList(2, 5), [1, 2, 3, 4, 5]);
+  assert.deepStrictEqual(CTp.pageList(6, 12), [1, "…", 5, 6, 7, "…", 12]);
+  assert.deepStrictEqual(CTp.pageList(12, 12), [1, "…", 9, 10, 11, 12]);
+  for (let tot = 1; tot < 40; tot++) for (let c = 1; c <= tot; c++) { const l = CTp.pageList(c, tot); assert(l.includes(1) && l.includes(tot) && l.includes(c)); }
+});
 console.log(n + " pruebas de JavaScript OK");

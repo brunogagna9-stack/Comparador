@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Encontrá tu equipo · ComparáTech</title>
 <link rel="stylesheet" href="css/shared.css">
+<link rel="stylesheet" href="css/layout.css">
 <style>
 .wiz{max-width:760px;margin:0 auto}
 .prog{height:6px;background:var(--soft);border-radius:99px;overflow:hidden;margin:6px 0 16px}.prog i{display:block;height:100%;background:var(--acc);transition:width .2s}
@@ -28,9 +29,8 @@ details summary{cursor:pointer;color:var(--acc);font-size:13px}
 .rrow{display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:2px 0}
 </style>
 </head>
-<body>
-<header><div class="top"><a class="logo" href="index.html">Compará<span>Tech</span></a>
-<nav class="nav"><a href="index.html">Comparador de precios</a><a href="armado.html">Armado de PC</a><a href="actualizar.html">¿Qué actualizar?</a><a class="on" href="encontra.html">Encontrá tu equipo</a><a href="comparar.html">Comparar hardware</a></nav></div></header>
+<body data-page="encontra">
+<script src="js/layout.js"></script>
 <main>
 <h1>Encontrá tu equipo</h1>
 <p class="lead">Respondé unas preguntas simples (podés saltear las que no sepas) y te mostramos productos reales de las tiendas que se ajustan a tu uso y presupuesto.</p>

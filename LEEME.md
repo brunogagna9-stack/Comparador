@@ -130,3 +130,15 @@ Su reputación quedó vacía a propósito hasta tener una fuente concreta (punta
 **Qué pasó:** el `products.json` publicado tenía marcas de conflicto de Git (`<<<<<<< HEAD`), así que no era un JSON válido y la página mostraba 0 productos. Ocurre cuando dos corridas automáticas (o una corrida y una subida manual) tocan los datos a la vez y el paso «Guardar datos» hacía `git pull --rebase`: el conflicto dejaba el archivo roto y justo ese archivo se publicaba.
 **Qué cambió:** (1) el flujo ya no usa rebase: si el repositorio avanzó, se une dejando siempre los datos recién generados; (2) `scripts/check_data.py` revisa los datos antes de publicar y, si algo está dañado, **no publica** (la web conserva la versión anterior en vez de quedar vacía); (3) el sitio se copia a una carpeta aparte antes de tocar git; (4) `build_data.py` ignora una corrida anterior dañada en vez de romperse. Hay un test nuevo que lo cubre.
 **Cómo recuperar la web ahora:** subí estos archivos (en especial `.github/workflows/actualizar.yml`); la subida dispara sola una actualización que reescribe `products.json` completo. Si no arranca sola: pestaña **Actions → «Actualizar precios y publicar» → Run workflow**.
+
+## Actualización 11: rediseño (inicio, encabezado único, páginas numeradas)
+
+- **Página de inicio nueva** (`index.html`): buscador grande, accesos a las 5 secciones, categorías con cantidad de productos, bajas de precio recientes, «Cómo funciona» y «Datos en los que podés confiar». Muestra datos reales solo si existen (si no hay productos, no inventa números).
+- **«Precios» pasó a llamarse «Productos»** (`productos.html`) en todo el sitio.
+- **Encabezado único** (`js/layout.js` + `css/layout.css`): logo, menú, buscador y carrito (ícono con contador) iguales en todas las secciones y más bajo. Buscar o abrir el carrito desde otra sección lleva a Productos. En el celular queda en dos filas (logo + buscador + carrito / menú deslizable).
+- **Productos**: páginas numeradas de 32 productos (4 columnas × 8 filas; 3 y 2 columnas en pantallas chicas), filtros fijos a la izquierda mientras se desliza solo la lista, y ventana de detalle centrada. La página, la búsqueda y la categoría quedan en la dirección (`productos.html?cat=procesadores&p=2`).
+- **Más contraste** entre fondo y tarjetas (claro y oscuro), botones de ejemplo de «¿Qué actualizar?» y «Encontrá tu equipo» con aspecto de botón.
+- **Pie de página** común: qué es el sitio, secciones, información (cómo funciona, confiabilidad, GitHub) y avisos importantes. Si querés agregar un mail de contacto, ponelo en `site/data/config.json` como `"contact_email": "tu@mail.com"` y aparece solo.
+- **«Volver arriba»**: botón flotante al bajar y botón en el pie.
+- Corregido: el cartelito «Actualizado hace X h» aparecía tachado.
+- Pruebas nuevas: `pageList` (paginador) y estructura común de todas las páginas.

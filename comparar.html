@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Comparar hardware · ComparáTech</title>
 <link rel="stylesheet" href="css/shared.css">
+<link rel="stylesheet" href="css/layout.css">
 <style>
 .catbar{display:flex;gap:6px;flex-wrap:wrap}.catbar button{padding:7px 12px;border:1px solid var(--line);border-radius:99px;background:var(--card);color:var(--tx);cursor:pointer;font:inherit}.catbar button.on{background:var(--tx);color:var(--bg);border-color:var(--tx)}
 .sel{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
@@ -27,9 +28,8 @@
 .radar{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
 </style>
 </head>
-<body>
-<header><div class="top"><a class="logo" href="index.html">Compará<span>Tech</span></a>
-<nav class="nav"><a href="index.html">Comparador de precios</a><a href="armado.html">Armado de PC</a><a href="actualizar.html">¿Qué actualizar?</a><a href="encontra.html">Encontrá tu equipo</a><a class="on" href="comparar.html">Comparar hardware</a></nav></div></header>
+<body data-page="comparar">
+<script src="js/layout.js"></script>
 <main>
 <h1>Comparar hardware</h1>
 <p class="lead">Elegí una categoría, sumá de 2 a 4 productos y mirá en qué se diferencian, con tablas, gráficos y una conclusión explicada.</p>
