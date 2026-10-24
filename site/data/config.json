@@ -12,7 +12,13 @@
     "Katech": {},
     "Venex": {},
     "Gaming City": {},
-    "NET Gaming": {}
+    "NET Gaming": {},
+    "Hardloots": {},
+    "BitHard": {},
+    "Try": {},
+    "SCP Hardstore": {},
+    "Click Gaming": {},
+    "The Gamer Shop": {}
   },
   "assistant": {
     "_ayuda": "Opcional. Poné aquí la URL de tu proxy de IA (ver worker/LEEME). Dejalo en null para usar solo el asistente local. NUNCA pegues claves en este archivo: es público.",
