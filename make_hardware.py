@@ -42,12 +42,12 @@ G = [
     ("rtx-4070ti", "GeForce RTX 4070 Ti", "NVIDIA", 12, 285, 700, (135.1, 97.9, 53.9), None, "nvidia", r"rtx[ -]?4070[ -]?ti", r"super"),
     ("rtx-4070s", "GeForce RTX 4070 SUPER", "NVIDIA", 12, 220, 650, (126.7, 91.2, 49.2), None, "nvidia", r"rtx[ -]?4070[ -]?super", r"ti"),
     ("rtx-4070", "GeForce RTX 4070", "NVIDIA", 12, 200, 650, (111.5, 77.8, 41.3), None, "nvidia", r"rtx[ -]?4070", r"super|ti\b"),
-    ("rtx-4060ti", "GeForce RTX 4060 Ti 8GB", "NVIDIA", 8, 165, 550, (88.0, 58.9, 23.9), None, "nvidia", r"rtx[ -]?4060[ -]?ti", r"16 ?gb"),
+    ("rtx-4060ti", "GeForce RTX 4060 Ti 8GB", "NVIDIA", 8, 160, 550, (88.0, 58.9, 23.9), None, "nvidia", r"rtx[ -]?4060[ -]?ti", r"16 ?gb"),
     ("rtx-4060", "GeForce RTX 4060", "NVIDIA", 8, 115, 550, (71.5, 47.6, 17.4), None, "nvidia", r"rtx[ -]?4060", r"ti"),
     ("rtx-3090ti", "GeForce RTX 3090 Ti", "NVIDIA", 24, 450, 850, (131.7, 99.9, 59.3), None, "nvidia", r"rtx[ -]?3090[ -]?ti", ""),
     ("rtx-3090", "GeForce RTX 3090", "NVIDIA", 24, 350, 750, (122.9, 91.5, 53.1), None, "nvidia", r"rtx[ -]?3090", r"ti"),
     ("rtx-3080ti", "GeForce RTX 3080 Ti", "NVIDIA", 12, 350, 750, (119.6, 89.1, 51.0), None, "nvidia", r"rtx[ -]?3080[ -]?ti", ""),
-    ("rtx-3080", "GeForce RTX 3080", "NVIDIA", 10, 350, 750, (111.6, 82.0, 43.9), None, "nvidia", r"rtx[ -]?3080", r"ti"),
+    ("rtx-3080", "GeForce RTX 3080", "NVIDIA", 10, 320, 750, (111.6, 82.0, 43.9), None, "nvidia", r"rtx[ -]?3080", r"ti"),
     ("rtx-3070ti", "GeForce RTX 3070 Ti", "NVIDIA", 8, 290, 750, (94.6, 66.9, 26.0), None, "nvidia", r"rtx[ -]?3070[ -]?ti", ""),
     ("rtx-3070", "GeForce RTX 3070", "NVIDIA", 8, 220, 650, (87.2, 58.2, 26.2), None, "nvidia", r"rtx[ -]?3070", r"ti"),
     ("rtx-3060ti", "GeForce RTX 3060 Ti", "NVIDIA", 8, 200, 600, (74.2, 51.0, 19.4), None, "nvidia", r"rtx[ -]?3060[ -]?ti", ""),
@@ -56,7 +56,7 @@ G = [
     ("rx-9070xt", "Radeon RX 9070 XT", "AMD", 16, 304, 750, (156.6, 116.5, 65.8), (77.8, 55.5), "amd_gpu", r"rx[ -]?9070[ -]?xt", ""),
     ("rx-9070", "Radeon RX 9070", "AMD", 16, 220, 650, (140.9, 104.0, 57.7), (67.6, 47.6), "amd_gpu", r"rx[ -]?9070", r"xt|gre"),
     ("rx-9060xt-16", "Radeon RX 9060 XT 16GB", "AMD", 16, 160, 450, (98.3, 67.3, 35.2), (45.3, 31.0), "amd_gpu", r"rx[ -]?9060[ -]?xt.*16 ?gb|16 ?gb.*rx[ -]?9060[ -]?xt", ""),
-    ("rx-9060xt-8", "Radeon RX 9060 XT 8GB", "AMD", 8, 160, 450, (93.2, 62.5, 29.7), (33.0, 20.2), "amd_gpu", r"rx[ -]?9060[ -]?xt.*\b8 ?gb|\b8 ?gb.*rx[ -]?9060[ -]?xt", ""),
+    ("rx-9060xt-8", "Radeon RX 9060 XT 8GB", "AMD", 8, 150, 450, (93.2, 62.5, 29.7), (33.0, 20.2), "amd_gpu", r"rx[ -]?9060[ -]?xt.*\b8 ?gb|\b8 ?gb.*rx[ -]?9060[ -]?xt", ""),
     ("rx-7900xtx", "Radeon RX 7900 XTX", "AMD", 24, 355, 800, (161.5, 122.3, 70.6), None, "amd_gpu", r"rx[ -]?7900[ -]?xtx", ""),
     ("rx-7900xt", "Radeon RX 7900 XT", "AMD", 20, 315, 750, (145.4, 108.0, 59.8), None, "amd_gpu", r"rx[ -]?7900[ -]?xt", r"xtx"),
     ("rx-7800xt", "Radeon RX 7800 XT", "AMD", 16, 263, 700, (118.4, 84.7, 45.1), None, "amd_gpu", r"rx[ -]?7800[ -]?xt", ""),
@@ -263,10 +263,96 @@ CS = {
     "i3-12100f": (4, 8, 4.3, 12, False),
 }
 # Campos comprobados contra la ficha oficial del fabricante (resto = "pendiente de verificar").
-# Última comprobación: 22-oct-2026 (NVIDIA compare, AMD RX 9070 XT, AMD Ryzen 5 9600X).
-VERIFIED = {i: ["arq", "sp", "mt", "bus"] for i in GS if i.startswith(("rtx-50", "rtx-40"))}
-VERIFIED["rx-9070xt"] = ["sp", "mt", "bus", "gbps"]
-VERIFIED["r5-9600x"] = ["cores", "threads", "boost", "l3", "igpu"]
+# Comprobación completa del 24-oct-2026: cada ficha se leyó y se comparó número por número (ver VURL).
+# Correcciones que salieron de esa comprobación: RTX 3080 10 GB 350 -> 320 W, RTX 4060 Ti 8 GB 165 -> 160 W,
+# RX 9060 XT 8 GB 160 -> 150 W. No se verificaron (quedan "pendiente"): RTX 20, GTX 16/10, RX 5000, Polaris y Vega
+# (NVIDIA y AMD ya no publican la ficha en una página que se pueda leer) ni la velocidad de memoria de las NVIDIA (sus fichas no la publican).
+VERIFY_DATE = "2026-10-24"
+_NV = "https://www.nvidia.com/en-us/geforce/graphics-cards/"
+_AG = "https://www.amd.com/en/products/graphics/desktops/radeon/"
+_AC = "https://www.amd.com/en/products/processors/desktops/ryzen/"
+_IC = "https://www.intel.com/content/www/us/en/products/sku/"
+VURL = {
+    "rtx-5090": _NV + "50-series/rtx-5090/", "rtx-5080": _NV + "50-series/rtx-5080/",
+    "rtx-5070ti": _NV + "50-series/rtx-5070-family/", "rtx-5070": _NV + "50-series/rtx-5070-family/",
+    "rtx-5060ti-16": _NV + "50-series/rtx-5060-family/", "rtx-5060ti-8": _NV + "50-series/rtx-5060-family/", "rtx-5060": _NV + "50-series/rtx-5060-family/",
+    "rtx-5050": _NV + "50-series/rtx-5050/", "rtx-4090": _NV + "40-series/rtx-4090/",
+    "rtx-4080s": _NV + "40-series/rtx-4080-family/", "rtx-4080": _NV + "40-series/rtx-4080-family/",
+    "rtx-4070tis": _NV + "40-series/rtx-4070-family/", "rtx-4070ti": _NV + "40-series/rtx-4070-family/",
+    "rtx-4070s": _NV + "40-series/rtx-4070-family/", "rtx-4070": _NV + "40-series/rtx-4070-family/",
+    "rtx-4060ti": _NV + "40-series/rtx-4060-4060ti/", "rtx-4060": _NV + "40-series/rtx-4060-4060ti/",
+    "rtx-3090ti": _NV + "30-series/rtx-3090-3090ti/", "rtx-3090": _NV + "30-series/rtx-3090-3090ti/",
+    "rtx-3080ti": _NV + "30-series/rtx-3080-3080ti/", "rtx-3080": _NV + "30-series/rtx-3080-3080ti/",
+    "rtx-3070ti": _NV + "30-series/rtx-3070-3070ti/", "rtx-3070": _NV + "30-series/rtx-3070-3070ti/",
+    "rtx-3060ti": _NV + "30-series/rtx-3060-3060ti/", "rtx-3060": _NV + "30-series/rtx-3060-3060ti/", "rtx-3050": _NV + "30-series/rtx-3050/",
+    "rx-9070xt": _AG + "9000-series/amd-radeon-rx-9070xt.html", "rx-9070": _AG + "9000-series/amd-radeon-rx-9070.html",
+    "rx-9060xt-16": _AG + "9000-series/amd-radeon-rx-9060xt.html", "rx-9060xt-8": _AG + "9000-series/amd-radeon-rx-9060xt-8gb.html",
+    "rx-7900xtx": _AG + "7000-series/amd-radeon-rx-7900xtx.html", "rx-7900xt": _AG + "7000-series/amd-radeon-rx-7900xt.html",
+    "rx-7800xt": _AG + "7000-series/amd-radeon-rx-7800-xt.html", "rx-7700xt": _AG + "7000-series/amd-radeon-rx-7700-xt.html",
+    "rx-7600": _AG + "7000-series/amd-radeon-rx-7600.html",
+    "rx-6950xt": _AG + "6000-series/amd-radeon-rx-6950-xt.html", "rx-6900xt": _AG + "6000-series/amd-radeon-rx-6900-xt.html",
+    "rx-6800xt": _AG + "6000-series/amd-radeon-rx-6800-xt.html", "rx-6750xt": _AG + "6000-series/amd-radeon-rx-6750-xt.html",
+    "rx-6700xt": _AG + "6000-series/amd-radeon-rx-6700-xt.html", "rx-6650xt": _AG + "6000-series/amd-radeon-rx-6650-xt.html",
+    "rx-6600xt": _AG + "6000-series/amd-radeon-rx-6600-xt.html", "rx-6600": _AG + "6000-series/amd-radeon-rx-6600.html",
+    "arc-b580": _IC + "241598/intel-arc-b580-graphics/specifications.html",
+    # CPUs AMD (ficha de producto en amd.com)
+    "r7-9850x3d": _AC + "9000-series/amd-ryzen-7-9850x3d.html", "r9-9950x3d": _AC + "9000-series/amd-ryzen-9-9950x3d.html",
+    "r7-9800x3d": _AC + "9000-series/amd-ryzen-7-9800x3d.html", "r9-9900x3d": _AC + "9000-series/amd-ryzen-9-9900x3d.html",
+    "r9-9950x": _AC + "9000-series/amd-ryzen-9-9950x.html", "r9-9900x": _AC + "9000-series/amd-ryzen-9-9900x.html",
+    "r7-9700x": _AC + "9000-series/amd-ryzen-7-9700x.html", "r5-9600x": _AC + "9000-series/amd-ryzen-5-9600x.html",
+    "r7-7800x3d": _AC + "7000-series/amd-ryzen-7-7800x3d.html", "r9-7950x3d": _AC + "7000-series/amd-ryzen-9-7950x3d.html",
+    "r9-7900x3d": _AC + "7000-series/amd-ryzen-9-7900x3d.html", "r9-7950x": _AC + "7000-series/amd-ryzen-9-7950x.html",
+    "r9-7900x": _AC + "7000-series/amd-ryzen-9-7900x.html", "r7-7700x": _AC + "7000-series/amd-ryzen-7-7700x.html",
+    "r5-7600x": _AC + "7000-series/amd-ryzen-5-7600x.html", "r5-7600": _AC + "7000-series/amd-ryzen-5-7600.html",
+    "r7-5800x3d": _AC + "5000-series/amd-ryzen-7-5800x3d.html", "r7-5800xt": _AC + "5000-series/amd-ryzen-7-5800xt.html",
+    "r7-5800x": _AC + "5000-series/amd-ryzen-7-5800x.html", "r5-5600x": _AC + "5000-series/amd-ryzen-5-5600x.html",
+    "r7-5700x3d": "https://www.amd.com/en/support/downloads/drivers.html/processors/ryzen/ryzen-5000-series/amd-ryzen-7-5700x3d.html",
+    "r7-5700x": "https://www.amd.com/content/dam/amd/en/documents/products/processors/ryzen/5000/amd-ryzen-5000-datasheet.pdf",
+    "r5-5600": "https://www.amd.com/content/dam/amd/en/documents/products/processors/ryzen/5000/amd-ryzen-5000-datasheet.pdf",
+    "r5-5500": "https://www.amd.com/content/dam/amd/en/documents/products/processors/ryzen/5000/amd-ryzen-5000-datasheet.pdf",
+    # CPUs Intel (ficha en intel.com)
+    "u9-285k": _IC + "241060/intel-core-ultra-9-processor-285k-36m-cache-up-to-5-70-ghz/specifications.html",
+    "u7-265k": _IC + "241063/intel-core-ultra-7-processor-265k-30m-cache-up-to-5-50-ghz/specifications.html",
+    "u5-245k": _IC + "241067/intel-core-ultra-5-processor-245k-24m-cache-up-to-5-20-ghz/specifications.html",
+    "u5-225f": _IC + "241069/intel-core-ultra-5-processor-225f-20m-cache-up-to-4-90-ghz/specifications.html",
+    "i9-14900k": _IC + "236773/intel-core-i9-processor-14900k-36m-cache-up-to-6-00-ghz/specifications.html",
+    "i9-13900k": _IC + "230496/intel-core-i913900k-processor-36m-cache-up-to-5-80-ghz/specifications.html",
+    "i7-14700k": _IC + "236783/intel-core-i7-processor-14700k-33m-cache-up-to-5-60-ghz/specifications.html",
+    "i7-13700k": _IC + "230500/intel-core-i713700k-processor-30m-cache-up-to-5-40-ghz/specifications.html",
+    "i5-14600k": _IC + "236799/intel-core-i5-processor-14600k-24m-cache-up-to-5-30-ghz/specifications.html",
+    "i5-13600k": _IC + "230493/intel-core-i513600k-processor-24m-cache-up-to-5-10-ghz/specifications.html",
+    "i7-12700k": _IC + "134594/intel-core-i712700k-processor-25m-cache-up-to-5-00-ghz/specifications.html",
+    "i5-12600k": _IC + "134589/intel-core-i512600k-processor-20m-cache-up-to-4-90-ghz/specifications.html",
+    "i5-14400f": _IC + "236777/intel-core-i5-processor-14400f-20m-cache-up-to-4-70-ghz/specifications.html",
+    "i5-13400f": _IC + "230501/intel-core-i513400f-processor-20m-cache-up-to-4-60-ghz/specifications.html",
+    "i5-12400f": _IC + "134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html",
+    "i3-12100f": _IC + "132223/intel-core-i312100f-processor-12m-cache-up-to-4-30-ghz/specifications.html",
+}
+_GPU_V = ["vram", "tgp", "psu"]
+VERIFIED = {}
+for _i in GS:
+    if _i.startswith(("rtx-50", "rtx-40")):
+        VERIFIED[_i] = ["arq", "sp", "mt", "bus"] + _GPU_V
+    elif _i.startswith("rtx-30"):
+        VERIFIED[_i] = ["sp", "mt", "bus"] + _GPU_V + (["arq"] if _i in ("rtx-3090", "rtx-3090ti") else [])
+    elif _i.startswith(("rx-9070", "rx-9060", "rx-79", "rx-78", "rx-77", "rx-76", "rx-66", "rx-67", "rx-68", "rx-69")):
+        VERIFIED[_i] = ["sp", "mt", "bus", "gbps"] + _GPU_V
+VERIFIED["rx-9070xt"] = ["sp", "mt", "bus", "gbps"] + _GPU_V
+for _i in ("rx-7900xtx", "rx-7900xt"):
+    VERIFIED[_i] = [f for f in VERIFIED[_i] if f != "bus"]       # la ficha de AMD no publica el bus
+VERIFIED["rx-7600"].append("arq")
+VERIFIED["arc-b580"] = ["mt", "bus", "gbps"] + _GPU_V
+for _c in C:
+    _i, _v = _c[0], _c[2]
+    _f = ["cores", "threads", "boost", "l3", "tdp"]
+    if _v == "AMD":
+        _f += ["socket", "mem"] if _i not in ("r7-5700x3d", "r7-5700x", "r5-5600", "r5-5500") else []
+        if _i not in ("r7-5700x3d", "r7-5700x", "r5-5600", "r5-5500"): _f.append("igpu")
+    else:
+        _f.append("maxp")
+        if _i not in ("i5-12400f", "i5-13400f", "i5-14400f", "i3-12100f"): _f.append("igpu")
+    VERIFIED[_i] = _f
+assert set(VURL) >= set(VERIFIED), set(VERIFIED) - set(VURL)
 
 
 def build():
@@ -284,10 +370,12 @@ def build():
         a, sp, mt, bus, gb = GS[g["id"]]
         g["spec"] = dict(arq=a, sp=sp, mt=mt, bus=bus, gbps=gb, bw=round(bus / 8 * gb))
         g["ver"] = VERIFIED.get(g["id"], [])
+        if g["ver"]: g["vurl"], g["vdate"] = VURL[g["id"]], VERIFY_DATE
     for c in cpus:
         n, t, b, l3, ig = CS[c["id"]]
         c["spec"] = dict(cores=n, threads=t, boost=b, l3=l3, igpu=ig)
         c["ver"] = VERIFIED.get(c["id"], [])
+        if c["ver"]: c["vurl"], c["vdate"] = VURL[c["id"]], VERIFY_DATE
         if c["id"] in EST:
             conf, note = EST[c["id"]]
             c["se"] = {"conf": conf, "n": note}      # puntaje estimado: no figura en la tabla de Tom's

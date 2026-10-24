@@ -46,7 +46,7 @@
 <div class="panel"><div class="legend" id="legend"></div>
 <p class="note" style="margin-top:8px">Las puntuaciones y el ganador se calculan solo con métricas numéricas que tienen dato para <b>todos</b> los productos. Cada métrica se normaliza contra el mejor de la comparación (el mejor vale 100 %; si menos es mejor, se invierte) y se pondera según el uso elegido. Si faltan datos o la diferencia es menor al 3 %, decimos que el resultado es inconcluso. No usamos puntajes inventados.</p></div>
 </main>
-<script src="js/lib.js"></script><script src="js/compare.js"></script>
+<script src="js/lib.js"></script><script src="js/rep.js"></script><script src="js/compare.js"></script>
 <script>
 const $=s=>document.querySelector(s),{ARS,esc,RES}=CT;
 const COL=["#4f6bff","#ff4f8b","#12a37f","#e0a100"];
@@ -122,7 +122,7 @@ function table(cmp){
   let h=`<div class="row" style="margin:14px 0 8px;justify-content:space-between"><h2 style="margin:0">Tabla comparativa</h2><label class="tog"><input type="checkbox" id="diff" ${S.diff?"checked":""}> Mostrar solo las diferencias</label></div><div class="tw"><table class="ct"><thead><tr><th>Característica</th>${items.map((it,i)=>`<th class="hd" style="--c:${COL[i]}">${it.o?`<a href="${esc(it.o.url)}" target="_blank" rel="noopener nofollow">${esc(it.name.slice(0,70))}</a>`:esc(it.name)}</th>`).join("")}${two?"<th>Ventaja</th>":""}</tr></thead><tbody>`;
   rows.forEach(r=>{
     h+=`<tr><td class="l">${esc(r.label)}<button class="i" data-h="${r.id}" aria-label="Qué significa" title="${esc(r.help)}">i</button>${r.derived?" "+tagH("est"):""}<div class="help" id="h_${r.id}">${esc(r.help)}</div></td>`;
-    r.cells.forEach(c=>{h+=`<td class="${c.win?"win":""}">${r.id==="store"&&c.url?`<a href="${esc(c.url)}" target="_blank" rel="noopener nofollow">${esc(c.disp)}</a>`:c.win?`<b>${esc(c.disp)}</b>`:esc(c.disp)}${c.tag&&r.id!=="name"?tagH(c.tag,c.note):""}</td>`});
+    r.cells.forEach(c=>{h+=`<td class="${c.win?"win":""}">${(r.id==="store"||r.id==="official")&&c.url?`<a href="${esc(c.url)}" target="_blank" rel="noopener nofollow">${esc(c.disp)}</a>${r.id==="store"?REP.badge(c.disp):""}`:c.win?`<b>${esc(c.disp)}</b>`:esc(c.disp)}${c.tag&&r.id!=="name"?tagH(c.tag,c.note):""}</td>`});
     if(two){const [a,b]=r.cells;let t="";if(r.numeric&&r.dir&&a.v!==b.v){const w=(r.dir==="max"?a.v>b.v:a.v<b.v)?0:1,hi=Math.max(a.v,b.v),lo=Math.min(a.v,b.v),d=lo>0?Math.round((hi-lo)/lo*100):null;t=`<span class="adv" style="color:${COL[w]}">${w===0?"◀":"▶"} ${d!=null&&d>0?d+" %":""}</span>`}h+=`<td>${t}</td>`}
     h+="</tr>"});
   return h+`</tbody></table></div><p class="note">Precios en pesos argentinos${META.updated?`, actualizados el ${esc(fdate(META.updated))} h`:""}. Verde = mejor valor de esa fila. “Sin datos” significa que no tenemos el dato y no lo inferimos.</p>`;
@@ -145,7 +145,7 @@ function drawAll(){
 }
 (async()=>{
   const j=async(u,d)=>{try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw 0;return await r.json()}catch{return d}};
-  let m,SP;[HW,PR,m,SP]=await Promise.all([j("data/hardware.json",null),j("data/products.json",[]),j("data/meta.json",{}),j("data/specs.json",null)]);META=m;
+  let m,SP;[HW,PR,m,SP]=await Promise.all([j("data/hardware.json",null),j("data/products.json",[]),j("data/meta.json",{}),j("data/specs.json",null),REP.load()]);META=m;
   if(!HW||!PR.length){$("#out").innerHTML='<div class="panel">No se pudieron cargar los datos. Probá recargar la página.</div>';return}
   C=CT.makeCompare(CT.create(HW,PR,META,SP));
   $("#legend").innerHTML=["ver","bench","est","pend","nd"].map(t=>`${tagH(t)} <span>${esc(CT.TAGS[t][1])}</span>`).join("<br>");

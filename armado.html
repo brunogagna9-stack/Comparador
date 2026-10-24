@@ -34,7 +34,7 @@
 <h2>De dónde salen los datos</h2>
 <div class="panel note" id="src"></div>
 </main>
-<script src="js/lib.js"></script>
+<script src="js/lib.js"></script><script src="js/rep.js"></script>
 <script>
 const $=s=>document.querySelector(s),{ARS,esc,RES}=CT;
 let HW,PR=[],META={},C,S={mode:"gpu",res:0,id:null};
@@ -43,7 +43,7 @@ const fdate=iso=>{try{return new Date(iso).toLocaleString("es-AR",{timeZone:"Ame
 function shopHtml(items,extra){
   if(!PR.length)return '<div class="note">Sin datos de precios cargados.</div>';
   if(!items.length)return '<div class="note">No encontré opciones con stock ahora mismo en el comparador.</div>';
-  return '<div class="shop">'+items.map(x=>`<div><span><a href="${esc(x.o.url)}" target="_blank" rel="noopener nofollow">${esc(x.g.name.slice(0,70))}</a> <span class="note">· ${esc(x.o.store)}${x.o.stock===true?"":" · stock sin confirmar"}${extra?extra(x):""}</span></span><b>${ARS(x.p)}</b></div>`).join("")+'</div>';
+  return '<div class="shop">'+items.map(x=>`<div><span><a href="${esc(x.o.url)}" target="_blank" rel="noopener nofollow">${esc(x.g.name.slice(0,70))}</a> <span class="note">· ${esc(x.o.store)}${REP.badge(x.o.store)}${x.o.stock===true?"":" · stock sin confirmar"}${extra?extra(x):""}</span></span><b>${ARS(x.p)}</b></div>`).join("")+'</div>';
 }
 const partHtml=p=>`<div class="part"><b>${esc(p.title)}</b><div class="why">${esc(p.why)}</div>${shopHtml(p.shop,p.slot==="psu"?x=>{const m=x.g.name.match(/(\d{3,4})\s?w/i);return m?" · "+m[1]+" W":""}:null)}</div>`;
 function totalHtml(t){
@@ -115,7 +115,7 @@ function setMode(){
 }
 (async()=>{
   const j=async(u,d)=>{try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw 0;return await r.json()}catch{return d}};
-  let m;[HW,PR,m]=await Promise.all([j("data/hardware.json",null),j("data/products.json",[]),j("data/meta.json",{})]);META=m;
+  let m;[HW,PR,m]=await Promise.all([j("data/hardware.json",null),j("data/products.json",[]),j("data/meta.json",{}),REP.load()]);META=m;
   if(!HW){$("#out").textContent="No se pudieron cargar los datos de hardware.";return}
   C=CT.create(HW,PR,META);S.id="rtx-5070";
   $("#src").innerHTML=`Consumos y fuentes requeridas: <a href="${HW.sources.nvidia}">NVIDIA</a>, <a href="${HW.sources.amd_gpu}">AMD</a>, <a href="${HW.sources.intel_gpu}">Intel</a>. Procesadores: <a href="${HW.sources.amd_cpu}">AMD</a> e <a href="${HW.sources.intel_cpu}">Intel ARK</a> (la potencia máxima de AMD es el TDP × 1,35, un valor estimado). Rendimiento de placas: <a href="${HW.sources.tom_gpu}">Tom's Hardware (jerarquía de GPU, jun 2026)</a>. Procesadores: <a href="${HW.sources.tom_cpu}">Tom's Hardware (jerarquía de CPU, oct 2026)</a>. Requisitos de juegos: enlaces en cada fila. Precios: los mismos del comparador.`;

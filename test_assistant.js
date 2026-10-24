@@ -29,7 +29,9 @@ const t = async (name, fn) => { try { await fn(); n++; } catch (e) { console.err
   });
   await t("tiendas: reputación con fuente, fecha y sin promediar; sin datos si no hay", async () => {
     const g = txt(await A.ask("¿Es confiable GoldenTech?", {})); assert(/4,9 sobre 5/.test(g) && /677/.test(g) && /Google Maps/.test(g) && /2026-10-23/.test(g));
-    const m = txt(await A.ask("¿Y la reputación de Maximus?", {})); assert(/No tenemos una puntuación pública verificada/.test(m) && !/\d,\d sobre 5/.test(m));
+    const m = txt(await A.ask("¿Y la reputación de Hardloots?", {})); assert(/No tenemos una puntuación pública verificada/.test(m) && !/\d,\d sobre 5/.test(m));
+    const mx = txt(await A.ask("¿Y la reputación de Maximus?", {})); assert(/4,8 sobre 5/.test(mx) && /14\.557/.test(mx));
+    const bh = txt(await A.ask("¿Es confiable BitHard?", {})); assert(/5,0 sobre 5/.test(bh) && /pocas opiniones/i.test(bh));
     const a = txt(await A.ask("army tech es confiable?", {})); assert(/4,4 sobre 5/.test(a) && /877/.test(a));
     const all = txt(await A.ask("qué tiendas están conectadas", {})); assert(/GoldenTech/.test(all) && /Armytech/.test(all) && /Fullh4rd/.test(all) && /403/.test(all));
     assert(!/promedi(o|amos) de/.test(g));

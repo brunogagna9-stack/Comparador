@@ -114,13 +114,26 @@ def test_hardware_especificaciones():
     for g in hw["gpus"]:
         sp = g["spec"]
         assert sp["bw"] == round(sp["bus"] / 8 * sp["gbps"]), g["id"]
-        assert set(g["ver"]) <= set(sp) , g["id"]
+        assert set(g["ver"]) <= set(sp) | {"vram", "tgp", "psu"}, g["id"]
         re.compile(g["m"])
     for c in hw["cpus"]:
         sp = c["spec"]
         assert sp["threads"] >= sp["cores"] and sp["boost"] > 3, c["id"]
-        assert set(c["ver"]) <= set(sp), c["id"]
+        assert set(c["ver"]) <= set(sp) | {"tdp", "maxp", "socket", "mem"}, c["id"]
         assert not re.search(c["m"], "placa de video rx 7600 8gb", re.I), c["id"]   # "RX 7600" no es el Ryzen 5 7600
+    # lo verificado trae enlace oficial y fecha; lo antiguo sin ficha legible no se marca verificado
+    from urllib.parse import urlparse
+    for x in hw["gpus"] + hw["cpus"]:
+        if x["ver"]:
+            assert x["vurl"].startswith("https://") and urlparse(x["vurl"]).netloc.endswith(("nvidia.com", "amd.com", "intel.com")), x["id"]
+            assert re.match(r"\d{4}-\d\d-\d\d$", x["vdate"]), x["id"]
+        else:
+            assert "vurl" not in x and "vdate" not in x, x["id"]
+    assert all(c["ver"] for c in hw["cpus"]) and all({"cores", "threads", "boost", "l3", "tdp"} <= set(c["ver"]) for c in hw["cpus"])
+    by = {g["id"]: g for g in hw["gpus"]}
+    assert (by["rtx-3080"]["tgp"], by["rtx-4060ti"]["tgp"], by["rx-9060xt-8"]["tgp"]) == (320, 160, 150), "correcciones contra la ficha oficial"
+    assert not any(by[i]["ver"] for i in by if by[i].get("se")), "las placas con rendimiento estimado no figuran como verificadas"
+    assert {"tgp", "psu", "vram"} <= set(by["rtx-5070"]["ver"]) and by["rx-7900xtx"]["ver"].count("bus") == 0
     # Intel F no trae gráficos integrados
     for c in hw["cpus"]:
         if c["id"].endswith("f") and c["vendor"] == "Intel":
@@ -230,14 +243,21 @@ def test_tiendas_nuevas_no_cruzan_por_sku_interno():
 
 
 def test_stores_json_reputacion_verificable():
+    """Cada puntaje tiene fuente, ficha, fecha y URL; una sola plataforma por tienda; sin ficha verificable no hay puntaje."""
+    import re
     d = json.load(open("site/data/stores.json"))["stores"]
     for name, s in d.items():
         for r in s["reputation"]:
-            assert r["source"] and r["url"].startswith("http") and r["date"] and r["count"] > 0 and 0 < r["score"] <= 5, name
+            assert r["source"] and r["listing"] and r["url"].startswith("https://") and re.match(r"\d{4}-\d\d-\d\d$", r["date"]), name
+            assert isinstance(r["count"], int) and r["count"] > 0 and 1 <= r["score"] <= 5, name
+            if r["count"] < 100:   # muestra chica: se avisa en los datos y en la web
+                assert any("Pocas opiniones" in n for n in s.get("notes", [])), name + ": falta aviso de muestra chica"
         assert len({r["source"] for r in s["reputation"]}) == len(s["reputation"]), "una puntuación por plataforma; nunca promediadas"
-    assert d["Maximus"]["reputation"] == [] and d["Gezatek"]["integration"] == "no disponible"
+        if not s["reputation"]:
+            assert any("ficha" in n.lower() or "reputación" in n.lower() for n in s.get("notes", [])), name + ": explicar por qué no hay puntaje"
+    con = {n for n, s in d.items() if s["reputation"]}
+    assert len(con) == 17 and {"Gaming City", "Hardloots"} == set(d) - con, "solo estas dos tiendas quedan sin puntaje verificado"
     assert "average" not in json.dumps(d).lower()
-
 
 def test_logg_marcado_actual():
     from scrapers import logg
@@ -408,7 +428,7 @@ def test_tiendas_woocommerce_nuevas():
     stores = json.load(open("site/data/stores.json"))["stores"]
     cfg = json.load(open("site/data/config.json"))["stores"]
     for n in woo.WOO_STORES:
-        assert n in stores and n in cfg and stores[n]["reputation"] == [], n    # sin reputación inventada
+        assert n in stores and n in cfg, n
 
 
 def test_venex_parse():

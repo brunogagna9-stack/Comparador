@@ -49,7 +49,7 @@ textarea{width:100%;min-height:92px;padding:10px;border:1px solid var(--line);bo
 <div class="panel note" id="how"></div>
 <details class="panel"><summary>Modelos que reconocemos</summary><div class="note" id="known" style="margin-top:8px"></div></details>
 </main>
-<script src="js/lib.js"></script>
+<script src="js/lib.js"></script><script src="js/rep.js"></script>
 <script src="js/compare.js"></script>
 <script src="js/finder.js"></script>
 <script src="js/upgrade.js"></script>
@@ -62,7 +62,7 @@ const fdate=iso=>{try{return new Date(iso).toLocaleString("es-AR",{timeZone:"Ame
 function shopRows(items,extra){
   if(!PR.length)return '<div class="note">Sin datos de precios cargados.</div>';
   if(!items||!items.length)return '<div class="note">Sin stock en el comparador ahora mismo.</div>';
-  return '<div class="shop">'+items.slice(0,2).map(x=>`<div><span><a href="${esc(x.o.url)}" target="_blank" rel="noopener nofollow">${esc(x.g.name.slice(0,70))}</a> <span class="note">· ${esc(x.o.store)}${x.o.stock===true?"":" · stock sin confirmar"}${extra?extra(x):""}</span></span><b>${ARS(x.p)}</b></div>`).join("")+'</div>';
+  return '<div class="shop">'+items.slice(0,2).map(x=>`<div><span><a href="${esc(x.o.url)}" target="_blank" rel="noopener nofollow">${esc(x.g.name.slice(0,70))}</a> <span class="note">· ${esc(x.o.store)}${REP.badge(x.o.store)}${x.o.stock===true?"":" · stock sin confirmar"}${extra?extra(x):""}</span></span><b>${ARS(x.p)}</b></div>`).join("")+'</div>';
 }
 const wOf=x=>{const m=x.g.name.match(/(\d{3,4})\s?w/i);return m?" · "+m[1]+" W":""};
 
@@ -126,7 +126,7 @@ function render(){
 }
 (async()=>{
   const j=async(u,d)=>{try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw 0;return await r.json()}catch{return d}};
-  let m;[HW,PR,m]=await Promise.all([j("data/hardware.json",null),j("data/products.json",[]),j("data/meta.json",{})]);META=m;
+  let m;[HW,PR,m]=await Promise.all([j("data/hardware.json",null),j("data/products.json",[]),j("data/meta.json",{}),REP.load()]);META=m;
   if(!HW){$("#out").textContent="No se pudieron cargar los datos de hardware.";return}
   C=CT.makeFinder(CT.create(HW,PR,META));CT.makeUpgrade(C);
   $("#fps").innerHTML=CT.UPG_FPS.map(([v,l],i)=>`<button data-v="${v}" class="${i===0?"on":""}">${esc(l)}</button>`).join("");

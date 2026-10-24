@@ -172,7 +172,8 @@ t("etiquetas de fiabilidad: verificado / benchmark / estimado / pendiente / sin 
   const cmp = C.compare(items(/RTX 5070 TI Ventus/i, /RX 9070 XT/i), { res: 1 }), tag = (id, i) => cmp.rows.find(r => r.id === id).cells[i].tag;
   assert.strictEqual(tag("sp", 0), "ver"); assert.strictEqual(tag("sp", 1), "ver"); assert.strictEqual(tag("tgp", 0), "ver");
   assert.strictEqual(tag("fpsw", 0), "est"); assert.strictEqual(tag("fps", 0), "bench"); assert.strictEqual(tag("rt", 0), "bench");
-  const c2 = C.compare(items(/RTX 3060 12GB/i, /RTX 4060 8GB/i), { res: 1 }); assert.strictEqual(c2.rows.find(r => r.id === "sp").cells[0].tag, "pend"); // 30xx: pendiente de verificar
+  const c2 = C.compare(items(/RTX 3060 12GB/i, /RTX 4060 8GB/i), { res: 1 }); assert.strictEqual(c2.rows.find(r => r.id === "sp").cells[0].tag, "ver"); // 30xx: comprobado contra la ficha de NVIDIA el 24-oct-2026
+  assert.strictEqual(c2.rows.find(r => r.id === "tgp").cells[0].tag, "ver"); assert.strictEqual(c2.rows.find(r => r.id === "official").cells[0].tag, "ver");
   assert.strictEqual(c2.rows.find(r => r.id === "bw").cells[1].tag, "pend");
 });
 t("ganador justificado y reproducible; el 'valor' y el 'consumo' pueden dar otro ganador", () => {
@@ -336,5 +337,21 @@ t("placas de generaciones anteriores (RTX 2060 Super…): se reconocen, se marca
   [0, 1, 2].forEach(res => HW.gpus.filter(g => !g.se).forEach(g => assert(!CU.pickPair(g, res).cMin.c.se)));
   // la escala se controla contra una placa que SÍ está en ambas tablas: RTX 3050 (legado 40,5 -> 44,6 medido)
   assert(Math.abs(61.5 * 40.5 / 54.7 - HW.gpus.find(g => g.id === "rtx-3050").p[0]) < 1.2);
+});
+/* ---------- Reputación junto a cada oferta ---------- */
+const REP = require("../site/js/rep.js"), STO = require("../site/data/stores.json");
+REP.set(STO);
+t("la reputación se muestra con puntaje, cantidad y fuente", () => {
+  const h = REP.badge("Venex");
+  assert(/★ 4,6/.test(h) && /8\.388 op\. Google/.test(h) && /consultado el 2026-10-24/.test(h) && !/pocas opiniones/.test(h));
+});
+t("pocas opiniones se avisa; sin ficha verificable no se inventa puntaje", () => {
+  assert(/pocas opiniones/.test(REP.badge("BitHard")) && REP.low(REP.get("BitHard")) && !REP.low(REP.get("Gamer Factory")));
+  ["Gaming City", "Hardloots", "TiendaQueNoExiste"].forEach(s => assert(REP.get(s) === null && /sin reputación verificada/.test(REP.badge(s)) && !/★/.test(REP.badge(s))));
+});
+t("el texto de la reputación escapa HTML y no promedia fuentes", () => {
+  REP.set({ stores: { X: { reputation: [{ source: "Google Maps", listing: "<b>x</b>", score: 4, count: 10, date: "2026-10-24" }] } } });
+  assert(!/<b>x/.test(REP.badge("X")));
+  REP.set(STO);
 });
 console.log(n + " pruebas de JavaScript OK");

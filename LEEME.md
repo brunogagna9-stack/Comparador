@@ -106,3 +106,22 @@ Su reputación quedó vacía a propósito hasta tener una fuente concreta (punta
 **Placas de video anteriores** (RTX 20, GTX 16/10, RX 5000, RX 590/580/570, Vega): 27 modelos nuevos en «Armado de PC», «¿Qué actualizar?» y «Encontrá tu equipo». Tom's Hardware no las mide en su tabla actual, así que su rendimiento es **estimado**: se escala su tabla heredada de 2022 con la RTX 3060 como ancla (control: da 2 % de diferencia con la RTX 3050 y reproduce la diferencia de 13 % entre RX 5700 XT y RTX 2060 Super medida por TechSpot). Se marcan como «Estimado» y no se recomiendan como compra, solo sirven para evaluar la placa que ya tenés.
 
 **Error corregido:** los monitores con «HDMI» en el título se clasificaban como accesorios. Los nombres con símbolos HTML (por ejemplo «&#8211;») ahora se muestran bien.
+
+## Actualización 10: fiabilidad de vendedores y de datos de componentes
+
+**Reputación de los vendedores, junto a cada oferta.** No hay una sección aparte: en cada producto (tarjetas del catálogo, detalle de precios, lista, «Encontrá tu equipo», «Armado de PC», «¿Qué actualizar?» y comparador) el vendedor aparece con «★ puntaje · N opiniones Google» o, si no hay dato confiable, «sin reputación verificada». Todo sale de un solo componente (`site/js/rep.js`) que lee `site/data/stores.json`.
+- Fuente: puntaje público de Google Maps, consultado el 24-oct-2026, **solo de fichas cuyo sitio web coincide con el de la tienda** (se descartaron fichas homónimas: «Tienda Bit», «Astrohard», «ClickCenter»). Nunca se promedian fuentes.
+- Menos de 100 opiniones (hoy: BitHard 43 y Click Gaming 46): se avisa «pocas opiniones».
+- Sin puntaje a propósito: **Gaming City** (Google muestra muchas sucursales y ninguna ficha única de la tienda online) y **Hardloots** (no hay ficha con su sitio). Maximus tiene dos fichas; se muestra solo la de Galería Jardín, sin sumarlas. La ficha de Try figura «cerrada temporalmente» por mudanza.
+- Se sumaron dirección y teléfono verificados en la ficha y, para BitHard, Click Gaming y The Gamer Shop, lo que su sitio publica (Ley 24.240, botón de arrepentimiento, QR de AFIP). **Ninguna de esas tiendas muestra razón social ni CUIT en la página que se leyó**: no lo inventamos.
+- Los puntajes cambian con el tiempo. Para actualizarlos: editar `reputation` en `stores.json` (score, count, url, date).
+
+**Datos de componentes contra la ficha oficial** (comprobación del 24-oct-2026, número por número):
+- **Procesadores: 40 de 40** contra AMD e Intel (núcleos, hilos, boost, caché L3, TDP; potencia máxima de Intel; socket y memoria de AMD). Sin diferencias.
+- **Placas de video: 44 de 71** contra NVIDIA, AMD e Intel (RTX 50/40/30, RX 9000/7000/6000, Arc B580): memoria, tipo, bus, consumo (TGP) y fuente recomendada.
+- **Errores encontrados y corregidos**: RTX 3080 10 GB figuraba con 350 W (oficial 320 W); RTX 4060 Ti 8 GB con 165 W (oficial 160 W); RX 9060 XT 8 GB con 160 W (oficial 150 W).
+- **Sin verificar (siguen «pendiente de verificar»)**: las 27 placas anteriores (RTX 20, GTX 16/10, RX 5000, Polaris, Vega): NVIDIA y AMD ya no publican su ficha en una página legible. Tampoco están verificados el socket y la memoria de los Intel, la potencia máxima de los AMD (es un cálculo: TDP × 1,35) ni la velocidad de memoria de las NVIDIA (su ficha no la publica).
+- En el comparador hay una fila nueva «Ficha oficial del fabricante» con el enlace a la página consultada y la fecha. Antes, el consumo, la fuente, la VRAM, el socket y el TDP aparecían como «verificado» por defecto aunque no lo estuvieran: ahora la etiqueta depende de lo realmente comprobado.
+- `make_hardware.py`: `VERIFIED` (campos comprobados) y `VURL` (ficha de cada producto).
+
+**Pruebas nuevas**: cada puntaje con fuente/ficha/fecha/URL; aviso de muestra chica; tiendas sin puntaje con su explicación; las correcciones de las fichas; que nada verificado carezca de enlace oficial y que lo estimado no figure como verificado.
