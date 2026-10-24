@@ -79,6 +79,16 @@ jobs:
           else
             mover config.json site/data/config.json
           fi
+          for f in __init__.py "__init__ (1).py"; do
+            if [ -f "$f" ] && grep -q "SCRAPERS" "$f"; then
+              mkdir -p scrapers
+              mv -f "$f" scrapers/__init__.py
+              echo "movido: scrapers/__init__.py"
+            fi
+          done
+          rm -f __init__.py "__init__ (1).py"
+          mkdir -p tests
+          if [ ! -f tests/__init__.py ]; then : > tests/__init__.py; fi
           if [ -f .github/workflows/actualizar.yml ]; then rm -f actualizar.yml; fi
           if [ -f .github/workflows/resumen.yml ]; then rm -f resumen.yml; fi
       - name: Guardar cambios
