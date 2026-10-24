@@ -273,6 +273,17 @@ def load_history():
     return {"_v": HIST_VERSION}
 
 
+def read_raw(path):
+    """Lee una corrida anterior (carpeta raw). Si el archivo está dañado (por ejemplo con marcas de conflicto de Git),
+    se ignora en vez de romper toda la actualización: esa tienda se vuelve a leer en la próxima corrida."""
+    try:
+        d = json.loads(path.read_text())
+        return d if isinstance(d, list) else []
+    except Exception as e:
+        print(f"[aviso] {path.name} ilegible, se ignora: {e}")
+        return []
+
+
 def seed_from_raw(hist):
     """Primera vez con el formato nuevo: usa la corrida anterior (carpeta raw) como punto de partida."""
     if len(hist) > 1 or not RAW.exists():
@@ -340,7 +351,7 @@ def main(only):
         raw = RAW / f"{store}.json"
         if only and store not in only:
             if raw.exists():
-                all_items += json.loads(raw.read_text())
+                all_items += read_raw(raw)
             continue
         common.LOG.clear()
         try:
@@ -352,7 +363,7 @@ def main(only):
         except Exception as e:
             why = " | ".join(common.LOG[:3]) or str(e)
             print(f"[{store}] ERROR: {why}")
-            items = json.loads(raw.read_text()) if raw.exists() else []
+            items = read_raw(raw) if raw.exists() else []
             status[store] = {"ok": False, "count": len(items), "error": why[:400], "stale": bool(items)}
         all_items += items
     today = dt.date.today().isoformat()

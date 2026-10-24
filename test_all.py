@@ -502,3 +502,34 @@ def test_resumen_semanal():
     assert r == {"id": 7, "estado": "borrador"} and len(calls) == 1 and calls[0][1]["recipients"] == {"listIds": [3]}
     r = m.crear_campana("a", "<p>x</p>", "2026-10-24", env=dict(env, BREVO_ENVIAR_YA="1"), call=fake)
     assert r["estado"] == "enviada" and calls[-1][0] == "/emailCampaigns/7/sendNow"
+
+
+def test_datos_danados_no_se_publican():
+    """Un products.json con marcas de conflicto de Git dejó la web sin productos: ahora se detecta antes de publicar,
+    y una corrida anterior dañada no rompe la actualización."""
+    import tempfile, importlib.util
+    from pathlib import Path
+    spec = importlib.util.spec_from_file_location("check_data", "scripts/check_data.py")
+    cd = importlib.util.module_from_spec(spec); spec.loader.exec_module(cd)
+    with tempfile.TemporaryDirectory() as t:
+        r = Path(t); (r / "site/data").mkdir(parents=True); (r / "raw").mkdir()
+        good = json.dumps([{"id": str(i)} for i in range(80)])
+        (r / "site/data/products.json").write_text(good)
+        assert cd.check(r) == []
+        (r / "site/data/products.json").write_text("<<<<<<< HEAD\n" + good + "\n=======\n" + good + "\n>>>>>>> abc")
+        e = cd.check(r); assert len(e) == 1 and "conflicto" in e[0]
+        (r / "site/data/products.json").write_text(good[:-5])
+        assert "JSON inválido" in cd.check(r)[0]
+        (r / "site/data/products.json").write_text("[]")
+        assert "no se publica" in cd.check(r)[0]
+        (r / "site/data/products.json").write_text(good); (r / "raw/X.json").write_text("<<<<<<< HEAD\n[1]")
+        assert "raw/X.json" in cd.check(r)[0]
+    import build_data
+    with tempfile.TemporaryDirectory() as t:
+        f = Path(t) / "Tienda.json"
+        f.write_text("<<<<<<< HEAD\n[]"); assert build_data.read_raw(f) == []
+        f.write_text('[{"a": 1}]'); assert build_data.read_raw(f) == [{"a": 1}]
+        f.write_text('{"a": 1}'); assert build_data.read_raw(f) == []
+    wf = Path(".github/workflows/actualizar.yml").read_text()
+    assert "pull --rebase" not in wf
+    assert "check_data.py" in wf and "site_publicar" in wf

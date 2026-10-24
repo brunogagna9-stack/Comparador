@@ -125,3 +125,8 @@ Su reputación quedó vacía a propósito hasta tener una fuente concreta (punta
 - `make_hardware.py`: `VERIFIED` (campos comprobados) y `VURL` (ficha de cada producto).
 
 **Pruebas nuevas**: cada puntaje con fuente/ficha/fecha/URL; aviso de muestra chica; tiendas sin puntaje con su explicación; las correcciones de las fichas; que nada verificado carezca de enlace oficial y que lo estimado no figure como verificado.
+
+### Arreglo: la web quedó sin productos (24-oct-2026)
+**Qué pasó:** el `products.json` publicado tenía marcas de conflicto de Git (`<<<<<<< HEAD`), así que no era un JSON válido y la página mostraba 0 productos. Ocurre cuando dos corridas automáticas (o una corrida y una subida manual) tocan los datos a la vez y el paso «Guardar datos» hacía `git pull --rebase`: el conflicto dejaba el archivo roto y justo ese archivo se publicaba.
+**Qué cambió:** (1) el flujo ya no usa rebase: si el repositorio avanzó, se une dejando siempre los datos recién generados; (2) `scripts/check_data.py` revisa los datos antes de publicar y, si algo está dañado, **no publica** (la web conserva la versión anterior en vez de quedar vacía); (3) el sitio se copia a una carpeta aparte antes de tocar git; (4) `build_data.py` ignora una corrida anterior dañada en vez de romperse. Hay un test nuevo que lo cubre.
+**Cómo recuperar la web ahora:** subí estos archivos (en especial `.github/workflows/actualizar.yml`); la subida dispara sola una actualización que reescribe `products.json` completo. Si no arranca sola: pestaña **Actions → «Actualizar precios y publicar» → Run workflow**.
