@@ -174,7 +174,7 @@ def gid(offers):
 # Imágenes "sin foto" que las tiendas ponen en su lugar: no sirven y se descartan.
 PLACEHOLDER_RE = re.compile(r"es-default-|no[-_]?image|sin[-_]?imagen|placeholder|noimg|no[-_]?photo|"
                             r"image[-_]?not[-_]?found|default[-_]?image|/default\.(jpg|png|webp)", re.I)
-IMG_RANK = ["Compragamer", "Logg", "MEXX", "Venex", "Gaming City", "NET Gaming", "Katech", "GoldenTech", "Maximus", "Armytech"]   # de más a menos nítidas
+IMG_RANK = ["Compragamer", "Logg", "MEXX", "Venex", "Gaming City", "NET Gaming", "Katech", "Hardloots", "Click Gaming", "SCP Hardstore", "The Gamer Shop", "Try", "BitHard", "GoldenTech", "Maximus", "Armytech"]   # de más a menos nítidas
 
 
 def good_image(url):

@@ -1,0 +1,176 @@
+{
+ "Hardloots": [
+  {
+   "id": 1,
+   "name": "Pinza Crimpeadora Ugreen Rj45 Rj11 Rj12 8p 6p",
+   "type": "simple",
+   "permalink": "https://hardloots.com.ar/producto/pinza-crimpeadora-ugreen-rj45-rj11-rj12-8p-6p/",
+   "sku": "",
+   "is_in_stock": true,
+   "prices": {
+    "currency_code": "ARS",
+    "currency_minor_unit": 0,
+    "price": "44102",
+    "regular_price": "67849",
+    "sale_price": "44102"
+   },
+   "images": [
+    {
+     "src": "https://hardloots.com.ar/wp-content/uploads/2026/10/a.webp",
+     "thumbnail": "https://hardloots.com.ar/wp-content/uploads/2026/10/a.webp"
+    }
+   ],
+   "categories": [
+    {
+     "name": "Gadgets"
+    },
+    {
+     "name": "Novedades"
+    }
+   ]
+  }
+ ],
+ "BitHard": [
+  {
+   "id": 1,
+   "name": "ACCESORIOS PHILIPS HUE GRADIENT PC STRIP 32 34 INCH EU",
+   "type": "simple",
+   "permalink": "https://bithard.com.ar/product/accesorios-philips-hue-gradient-pc-strip-32-34-inch-eu/",
+   "sku": "NB_929003498601",
+   "is_in_stock": true,
+   "prices": {
+    "currency_code": "ARS",
+    "currency_minor_unit": 0,
+    "price": "354598",
+    "regular_price": "354598",
+    "sale_price": "354598"
+   },
+   "images": [
+    {
+     "src": "https://i1.wp.com/static.nb.com.ar/i/x.jpg?fit=800,800&ssl=1",
+     "thumbnail": "https://i1.wp.com/static.nb.com.ar/i/x.jpg?fit=800,800&ssl=1"
+    }
+   ],
+   "categories": [
+    {
+     "name": "CASA INTELIGENTE"
+    }
+   ]
+  }
+ ],
+ "Try": [
+  {
+   "id": 1,
+   "name": "Mini PC Peladn WO4 Intel Core I5 12450H 16GB 3200MHz 512GB NVMe &#8211; Sin armar",
+   "type": "simple",
+   "permalink": "https://try.com.ar/mini-pc-peladn-wo4-intel-core-i5-12450h-16gb-3200mhz-512gb-nvme-sin-armar/",
+   "sku": "COMBO-PALADN-12450H",
+   "is_in_stock": true,
+   "prices": {
+    "currency_code": "ARS",
+    "currency_minor_unit": 0,
+    "price": "993929",
+    "regular_price": "1093319",
+    "sale_price": "993929"
+   },
+   "images": [
+    {
+     "src": "https://try.com.ar/wp-content/uploads/2026/10/m.webp",
+     "thumbnail": "https://try.com.ar/wp-content/uploads/2026/10/m.webp"
+    }
+   ],
+   "categories": [
+    {
+     "name": "Computadoras"
+    },
+    {
+     "name": "Mini PCs"
+    }
+   ]
+  }
+ ],
+ "SCP Hardstore": [
+  {
+   "id": 1,
+   "name": "Silla Gamer CORSAIR TC500 Luxe Shadow",
+   "type": "simple",
+   "permalink": "https://www.scphardstore.com/producto/silla-gamer-corsair-tc500-luxe-shadow/",
+   "sku": "SIL159",
+   "is_in_stock": true,
+   "prices": {
+    "currency_code": "ARS",
+    "currency_minor_unit": 2,
+    "price": "91266831",
+    "regular_price": "91266831",
+    "sale_price": "91266831"
+   },
+   "images": [
+    {
+     "src": "https://www.scphardstore.com/wp-content/uploads/2026/10/SIL159.png",
+     "thumbnail": "https://www.scphardstore.com/wp-content/uploads/2026/10/SIL159.png"
+    }
+   ],
+   "categories": [
+    {
+     "name": "Silla"
+    }
+   ]
+  }
+ ],
+ "Click Gaming": [
+  {
+   "id": 1,
+   "name": "MONITOR 19 PERFORMANCE PF185R VGA/HDMI",
+   "type": "simple",
+   "permalink": "https://clickgaming.com.ar/producto/monitor-19-performance-pf185r-vga-hdmi/",
+   "sku": "AIR_215742",
+   "is_in_stock": true,
+   "prices": {
+    "currency_code": "ARS",
+    "currency_minor_unit": 0,
+    "price": "69000",
+    "regular_price": "69000",
+    "sale_price": "69000"
+   },
+   "images": [
+    {
+     "src": "https://clickgaming.com.ar/wp-content/uploads/2026/10/m.webp",
+     "thumbnail": "https://clickgaming.com.ar/wp-content/uploads/2026/10/m.webp"
+    }
+   ],
+   "categories": [
+    {
+     "name": "Monitores"
+    }
+   ]
+  }
+ ],
+ "The Gamer Shop": [
+  {
+   "id": 1,
+   "name": "PC GAMER | RYZEN 5 5600GT - RAM 16GB - 512GB M.2 | N230 + WINDOWS11",
+   "type": "simple",
+   "permalink": "https://thegamershop.com.ar/producto/pc-gamer-ryzen-5-5600gt-ram-16gb-512gb-m-2-n230-windows11/",
+   "sku": "TGS_39981",
+   "is_in_stock": true,
+   "prices": {
+    "currency_code": "ARS",
+    "currency_minor_unit": 2,
+    "price": "85610000",
+    "regular_price": "85610000",
+    "sale_price": "85610000"
+   },
+   "images": [
+    {
+     "src": "https://thegamershop.com.ar/wp-content/uploads/TGS_39981.webp",
+     "thumbnail": "https://thegamershop.com.ar/wp-content/uploads/TGS_39981.webp"
+    }
+   ],
+   "categories": [
+    {
+     "name": "PCs Gamer"
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Comparar hardware · ComparáTech</title>
+<link rel="stylesheet" href="css/shared.css">
+<style>
+.catbar{display:flex;gap:6px;flex-wrap:wrap}.catbar button{padding:7px 12px;border:1px solid var(--line);border-radius:99px;background:var(--card);color:var(--tx);cursor:pointer;font:inherit}.catbar button.on{background:var(--tx);color:var(--bg);border-color:var(--tx)}
+.sel{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.pill{display:flex;align-items:center;gap:8px;padding:6px 8px 6px 12px;border:2px solid var(--c);border-radius:99px;background:var(--card);max-width:100%}.pill span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:300px}.pill button{border:0;background:var(--soft);color:var(--tx);border-radius:50%;width:22px;height:22px;cursor:pointer;line-height:1}
+.srch{position:relative}.dd{position:absolute;z-index:5;left:0;right:0;top:100%;background:var(--card);border:1px solid var(--line);border-radius:8px;margin-top:4px;max-height:320px;overflow:auto;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.dd button{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;color:var(--tx);padding:9px 10px;cursor:pointer;font:inherit}.dd button:hover{background:var(--soft)}.dd .p{font-weight:700;white-space:nowrap}
+.verd{border-left:4px solid var(--acc)}.verd h2{margin:0 0 6px}
+.tw{overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.ct{min-width:560px}.ct th,.ct td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.ct thead th{position:sticky;top:0;background:var(--card);z-index:1;font-size:13px;color:var(--tx);border-bottom:2px solid var(--line)}
+.ct td.l{width:210px;min-width:150px;font-weight:600;color:var(--tx)}.ct td.l .i{cursor:help;color:var(--mut);border:1px solid var(--mut);border-radius:50%;display:inline-block;width:16px;height:16px;font-size:11px;text-align:center;line-height:14px;margin-left:4px;font-weight:700;background:none}
+.ct td.win{background:var(--okbg)}.ct td.win b{color:var(--ok)}.adv{font-weight:700;font-size:12px;white-space:nowrap}
+.hd{border-top:4px solid var(--c)}.hd a{color:var(--tx)}
+.help{display:none;font-weight:400;color:var(--mut);font-size:12.5px;margin-top:3px}.help.on{display:block}
+.bars{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.bc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}.bc h4{margin:0 0 8px;font-size:13px}
+.br{display:grid;grid-template-columns:120px 1fr auto;gap:8px;align-items:center;margin:5px 0;font-size:12.5px}.br .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.br .t{height:14px;background:var(--soft);border-radius:4px;overflow:hidden}.br .t i{display:block;height:100%;background:var(--c);border-radius:4px}
+.tog{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--tx);text-transform:none;letter-spacing:0;font-weight:400}
+.ul2{margin:6px 0 0;padding-left:18px}.ul2 li{margin:3px 0}
+.radar{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+</style>
+</head>
+<body>
+<header><div class="top"><a class="logo" href="index.html">Compará<span>Tech</span></a>
+<nav class="nav"><a href="index.html">Comparador de precios</a><a href="armado.html">Armado de PC</a><a href="actualizar.html">¿Qué actualizar?</a><a href="encontra.html">Encontrá tu equipo</a><a class="on" href="comparar.html">Comparar hardware</a></nav></div></header>
+<main>
+<h1>Comparar hardware</h1>
+<p class="lead">Elegí una categoría, sumá de 2 a 4 productos y mirá en qué se diferencian, con tablas, gráficos y una conclusión explicada.</p>
+<div class="panel">
+  <label>1 · Categoría</label><div class="catbar" id="cats" style="margin:6px 0 12px"></div>
+  <div class="row"><div class="f srch" style="min-width:260px"><label>2 · Buscá y sumá productos (nombre o modelo)</label><input type="search" id="q" placeholder="Ej: RTX 5070, Ryzen 5 9600X, DDR5 32GB…" autocomplete="off"><div class="dd" id="dd" hidden></div></div>
+   <div class="f" style="max-width:260px" id="resbox"><label>Resolución (para rendimiento)</label><div class="seg" id="res"><button data-v="0">1080p</button><button data-v="1" class="on">1440p</button><button data-v="2">4K</button></div></div></div>
+  <label class="tog" style="margin-top:8px"><input type="checkbox" id="allc"> Buscar en todas las categorías (solo se podrá comparar precio y disponibilidad)</label>
+  <div class="sel" id="sel"></div>
+  <button class="btn" id="share" type="button" style="margin-top:10px">🔗 Copiar enlace de esta comparación</button>
+</div>
+<div id="out"></div>
+<h2>Cómo leer las etiquetas</h2>
+<div class="panel"><div class="legend" id="legend"></div>
+<p class="note" style="margin-top:8px">Las puntuaciones y el ganador se calculan solo con métricas numéricas que tienen dato para <b>todos</b> los productos. Cada métrica se normaliza contra el mejor de la comparación (el mejor vale 100 %; si menos es mejor, se invierte) y se pondera según el uso elegido. Si faltan datos o la diferencia es menor al 3 %, decimos que el resultado es inconcluso. No usamos puntajes inventados.</p></div>
+</main>
+<script src="js/lib.js"></script><script src="js/compare.js"></script>
+<script>
+const $=s=>document.querySelector(s),{ARS,esc,RES}=CT;
+const COL=["#4f6bff","#ff4f8b","#12a37f","#e0a100"];
+let HW,PR=[],META={},C;
+const S={cat:"placas-de-video",ids:[],res:1,use:null,diff:false,all:false};
+const fdate=iso=>{try{return new Date(iso).toLocaleString("es-AR",{timeZone:"America/Argentina/Buenos_Aires",day:"numeric",month:"long",hour:"2-digit",minute:"2-digit",hour12:false})}catch{return ""}};
+const tagH=(t,n)=>{const [l,h]=CT.TAGS[t]||CT.TAGS.nd;return `<span class="tag t-${t}" title="${esc(h+(n?" — "+n:""))}">${l}</span>`};
+const byId=id=>PR.find(g=>g.id===id);
+
+function drawCats(){
+  const cnt={};PR.forEach(g=>{if(CT.CATS[g.category])cnt[g.category]=(cnt[g.category]||0)+1});
+  $("#cats").innerHTML=Object.entries(CT.CATS).filter(([k])=>cnt[k]).map(([k,l])=>`<button data-c="${k}" class="${S.cat===k?"on":""}">${l} <span class="note" style="color:inherit;opacity:.7">${cnt[k]}</span></button>`).join("");
+  document.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{if(S.cat!==b.dataset.c){S.cat=b.dataset.c;S.ids=S.all?S.ids:[];S.use=null}drawAll()});
+}
+function drawSel(){
+  $("#sel").innerHTML=S.ids.map((id,i)=>{const g=byId(id);return `<div class="pill" style="--c:${COL[i]}"><span title="${esc(g.name)}">${esc(g.name)}</span><button data-r="${id}" aria-label="Quitar">×</button></div>`}).join("")||'<span class="note">Todavía no elegiste productos. Buscá arriba y tocá un resultado.</span>';
+  document.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{S.ids=S.ids.filter(x=>x!==b.dataset.r);drawAll()});
+}
+function search(){
+  const t=$("#q").value.trim().toLowerCase(),dd=$("#dd");
+  if(t.length<2){dd.hidden=true;return}
+  const words=t.split(/\s+/);
+  const res=PR.filter(g=>(S.all||g.category===S.cat)&&!S.ids.includes(g.id)&&words.every(w=>g.name.toLowerCase().includes(w))&&g.offers.some(o=>CT.price(o)))
+   .map(g=>({g,p:Math.min(...g.offers.filter(o=>o.stock!==false).map(CT.price).concat([Infinity]))})).sort((a,b)=>a.p-b.p).slice(0,10);
+  dd.hidden=false;
+  dd.innerHTML=res.length?res.map(({g,p},i)=>`<button data-a="${g.id}"><span>${esc(g.name.slice(0,90))}${S.all?` <span class="note">· ${esc(CT.CATS[g.category]||g.category)}</span>`:""}</span><span class="p">${isFinite(p)?ARS(p):"sin stock"}</span></button>`).join(""):'<div style="padding:10px" class="note">No encontramos productos con ese nombre en esta categoría.</div>';
+  dd.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{if(S.ids.length>=4){dd.innerHTML='<div class="note" style="padding:10px">Podés comparar hasta 4 productos. Quitá uno para sumar otro.</div>';return}S.ids.push(b.dataset.a);$("#q").value="";dd.hidden=true;drawAll()});
+}
+
+/* ---------- gráficos ---------- */
+const shortName=n=>n.replace(/^(placa de video|procesador|memoria( ram)?|disco (s[oó]lido|r[ií]gido)( ssd)?( m\.2)?|fuente|mother(board)?|monitor( gamer)?|notebook( gamer)?|pc (gamer|armada|powered by)|gabinete|cooler)\s+/i,"").split(" ").slice(0,4).join(" ");
+function bars(rows,items){
+  const list=rows.filter(r=>r.chart!=null&&r.numeric&&r.cells.every(c=>typeof c.v==="number"));
+  if(!list.length)return"";
+  return `<h2>Gráficos</h2><div class="bars">${list.map(r=>{const max=Math.max(...r.cells.map(c=>c.v));
+   return `<div class="bc"><h4>${esc(r.label)} ${r.dir?`<span class="note">· ${r.dir==="max"?"más es mejor":"menos es mejor"}</span>`:""} ${tagH(r.cells[0].tag)}</h4>${r.cells.map((c,i)=>`<div class="br" style="--c:${COL[i]}"><span class="n" title="${esc(items[i].name)}">${esc(shortName(items[i].name))}</span><span class="t"><i style="width:${max?Math.max(2,c.v/max*100):0}%"></i></span><b>${esc(c.disp)}</b></div>`).join("")}</div>`}).join("")}</div>`;
+}
+function radar(cmp){
+  const ax=C.radar(cmp);if(ax.length<3)return"";
+  const W=400,cx=200,cy=150,R=95,n=ax.length,pt=(i,k)=>{const a=-Math.PI/2+i*2*Math.PI/n;return [cx+Math.cos(a)*R*k/100,cy+Math.sin(a)*R*k/100]};
+  let svg=`<svg viewBox="0 0 ${W} 300" width="400" height="300" style="max-width:100%;height:auto" role="img" aria-label="Gráfico de radar de puntuaciones relativas">`;
+  [25,50,75,100].forEach(k=>svg+=`<polygon points="${ax.map((_,i)=>pt(i,k).join(",")).join(" ")}" fill="none" stroke="var(--line)"/>`);
+  ax.forEach((a,i)=>{const [x,y]=pt(i,100),[lx,ly]=pt(i,122);svg+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--line)"/><text x="${lx}" y="${ly}" font-size="9.5" fill="var(--mut)" text-anchor="${lx<cx-8?"end":lx>cx+8?"start":"middle"}" dominant-baseline="middle">${esc(a.label.length>24?a.label.slice(0,23)+"…":a.label)}</text>`});
+  cmp.items.forEach((it,j)=>{const p=ax.map((a,i)=>pt(i,a.vals[j]).join(",")).join(" ");svg+=`<polygon points="${p}" fill="${COL[j]}" fill-opacity=".18" stroke="${COL[j]}" stroke-width="2"/>`});
+  svg+="</svg>";
+  return `<h2>Vista general</h2><div class="panel radar">${svg}<div style="flex:1;min-width:220px"><div>${cmp.items.map((it,j)=>`<div><span style="color:${COL[j]}">●</span> ${esc(it.name.slice(0,60))}</div>`).join("")}</div><p class="note">Puntuación relativa calculada por ComparáTech ${tagH("est")}: 100 = el mejor de esta comparación en cada métrica (si menos es mejor, se invierte). Solo incluye métricas con dato para todos. No es un benchmark.</p></div></div>`;
+}
+
+/* ---------- veredicto ---------- */
+function verdict(cmp){
+  if(cmp.mixed)return `<div class="panel verd"><h2>Categorías distintas</h2>${C.notes(cmp).map(t=>`<p>${esc(t)}</p>`).join("")}</div>`;
+  const uses=cmp.uses;if(!S.use||!uses.find(u=>u.use.id===S.use))S.use=uses[0].use.id;
+  const cur=uses.find(u=>u.use.id===S.use),nm=i=>cmp.items[i].name;
+  let h=`<div class="panel verd"><h2>Conclusión</h2><div class="row" style="margin-bottom:8px"><div class="f" style="max-width:420px"><label>¿Qué es lo más importante para vos?</label><select id="use">${uses.map(u=>`<option value="${u.use.id}" ${u.use.id===S.use?"selected":""}>${esc(u.use.label)}</option>`).join("")}</select></div></div>`;
+  if(cur.winner!=null){
+    h+=`<p style="font-size:16px"><b>Para “${esc(cur.use.label.toLowerCase())}”, la opción más conveniente es: ${esc(nm(cur.winner))}</b> <span style="color:${COL[cur.winner]}">●</span></p>`;
+    h+=`<p>Puntuación relativa: ${cmp.items.map((it,i)=>`<span style="color:${COL[i]}">●</span> ${Math.round(cur.scores[i]*100)} %`).join(" · ")} ${tagH("est")}. Se calculó con: ${cur.used.map(esc).join(", ")}.</p>`;
+    if(cur.why.length)h+=`<ul class="ul2">${cur.why.map(t=>`<li>${esc(t)}</li>`).join("")}</ul>`;
+    if(cur.skipped.length)h+=`<p class="note">No pudimos usar (falta el dato en algún producto): ${cur.skipped.map(esc).join(", ")}.</p>`;
+  }else h+=`<p><b>Resultado inconcluso:</b> ${esc(cur.reason)}.${cur.tie?` Los dos primeros son ${esc(nm(cur.tie[0]))} y ${esc(nm(cur.tie[1]))}: elegí según precio y disponibilidad.`:""}</p>`;
+  const others=uses.filter(u=>u.use.id!==S.use&&u.winner!=null);
+  if(others.length)h+=`<div class="sec" style="margin-top:8px;font-size:12px;color:var(--mut);font-weight:700;text-transform:uppercase">Según el criterio</div><ul class="ul2">${others.map(u=>`<li><b>${esc(u.use.label)}:</b> ${esc(nm(u.winner))}</li>`).join("")}</ul>`;
+  const inc=uses.filter(u=>u.winner==null&&u.use.id!==S.use);if(inc.length)h+=`<p class="note">Sin resultado claro en: ${inc.map(u=>esc(u.use.label)).join("; ")}.</p>`;
+  const notes=C.notes(cmp);
+  h+=`<div class="sec" style="margin-top:10px;font-size:12px;color:var(--mut);font-weight:700;text-transform:uppercase">Tené en cuenta</div><ul class="ul2">${notes.map(t=>`<li>${esc(t)}</li>`).join("")}</ul></div>`;
+  return h;
+}
+
+/* ---------- tabla ---------- */
+function table(cmp){
+  const items=cmp.items,two=items.length===2;
+  let rows=cmp.rows;if(S.diff)rows=rows.filter(r=>r.differs||["name","price"].includes(r.id));
+  let h=`<div class="row" style="margin:14px 0 8px;justify-content:space-between"><h2 style="margin:0">Tabla comparativa</h2><label class="tog"><input type="checkbox" id="diff" ${S.diff?"checked":""}> Mostrar solo las diferencias</label></div><div class="tw"><table class="ct"><thead><tr><th>Característica</th>${items.map((it,i)=>`<th class="hd" style="--c:${COL[i]}">${it.o?`<a href="${esc(it.o.url)}" target="_blank" rel="noopener nofollow">${esc(it.name.slice(0,70))}</a>`:esc(it.name)}</th>`).join("")}${two?"<th>Ventaja</th>":""}</tr></thead><tbody>`;
+  rows.forEach(r=>{
+    h+=`<tr><td class="l">${esc(r.label)}<button class="i" data-h="${r.id}" aria-label="Qué significa" title="${esc(r.help)}">i</button>${r.derived?" "+tagH("est"):""}<div class="help" id="h_${r.id}">${esc(r.help)}</div></td>`;
+    r.cells.forEach(c=>{h+=`<td class="${c.win?"win":""}">${r.id==="store"&&c.url?`<a href="${esc(c.url)}" target="_blank" rel="noopener nofollow">${esc(c.disp)}</a>`:c.win?`<b>${esc(c.disp)}</b>`:esc(c.disp)}${c.tag&&r.id!=="name"?tagH(c.tag,c.note):""}</td>`});
+    if(two){const [a,b]=r.cells;let t="";if(r.numeric&&r.dir&&a.v!==b.v){const w=(r.dir==="max"?a.v>b.v:a.v<b.v)?0:1,hi=Math.max(a.v,b.v),lo=Math.min(a.v,b.v),d=lo>0?Math.round((hi-lo)/lo*100):null;t=`<span class="adv" style="color:${COL[w]}">${w===0?"◀":"▶"} ${d!=null&&d>0?d+" %":""}</span>`}h+=`<td>${t}</td>`}
+    h+="</tr>"});
+  return h+`</tbody></table></div><p class="note">Precios en pesos argentinos${META.updated?`, actualizados el ${esc(fdate(META.updated))} h`:""}. Verde = mejor valor de esa fila. “Sin datos” significa que no tenemos el dato y no lo inferimos.</p>`;
+}
+
+function drawOut(){
+  const out=$("#out");
+  if(S.ids.length<2){out.innerHTML=`<div class="panel note">${S.ids.length?"Sumá al menos un producto más para comparar.":"Elegí al menos dos productos para ver la comparación."}</div>`;return}
+  const items=S.ids.map(id=>C.item(byId(id))),cmp=C.compare(items,{res:S.res});
+  out.innerHTML=verdict(cmp)+table(cmp)+(cmp.mixed?"":radar(cmp)+bars(cmp.rows,items));
+  if($("#use"))$("#use").onchange=e=>{S.use=e.target.value;drawOut()};
+  $("#diff").onchange=e=>{S.diff=e.target.checked;drawOut()};
+  document.querySelectorAll("[data-h]").forEach(b=>b.onclick=()=>$("#h_"+b.dataset.h).classList.toggle("on"));
+  try{history.replaceState(null,"","#"+new URLSearchParams({cat:S.cat,ids:S.ids.join(",")}))}catch{}
+}
+function drawAll(){
+  drawCats();drawSel();
+  $("#resbox").style.display=["placas-de-video","pcs-armadas"].includes(S.cat)||S.all?"":"none";
+  drawOut();
+}
+(async()=>{
+  const j=async(u,d)=>{try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw 0;return await r.json()}catch{return d}};
+  let m,SP;[HW,PR,m,SP]=await Promise.all([j("data/hardware.json",null),j("data/products.json",[]),j("data/meta.json",{}),j("data/specs.json",null)]);META=m;
+  if(!HW||!PR.length){$("#out").innerHTML='<div class="panel">No se pudieron cargar los datos. Probá recargar la página.</div>';return}
+  C=CT.makeCompare(CT.create(HW,PR,META,SP));
+  $("#legend").innerHTML=["ver","bench","est","pend","nd"].map(t=>`${tagH(t)} <span>${esc(CT.TAGS[t][1])}</span>`).join("<br>");
+  try{const p=new URLSearchParams(location.hash.slice(1));if(p.get("cat")&&CT.CATS[p.get("cat")])S.cat=p.get("cat");if(p.get("ids"))S.ids=p.get("ids").split(",").filter(id=>byId(id)).slice(0,4)}catch{}
+  $("#share").onclick=async e=>{const b=e.currentTarget;try{await navigator.clipboard.writeText(location.href);b.textContent="✓ Enlace copiado"}catch{b.textContent="Copialo desde la barra de direcciones"}setTimeout(()=>b.textContent="🔗 Copiar enlace de esta comparación",2500)};
+  $("#q").oninput=search;$("#q").onfocus=search;document.addEventListener("click",e=>{if(!e.target.closest(".srch"))$("#dd").hidden=true});
+  $("#allc").onchange=e=>{S.all=e.target.checked;drawAll();search()};
+  document.querySelectorAll("#res button").forEach(b=>b.onclick=()=>{S.res=+b.dataset.v;document.querySelectorAll("#res button").forEach(x=>x.classList.toggle("on",x===b));drawOut()});
+  drawAll();
+})();
+</script>
+<script src="js/assistant.js"></script>
+<script>CT.CTAssistant.mount({section:"comparar",context:()=>({ids:S.ids,cat:S.cat,res:S.res})});</script>
+</body>
+</html>

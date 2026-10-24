@@ -141,6 +141,50 @@ EST = {
     "i5-12400f": ("media", "Con memoria DDR4: el 5600X rinde ~20 % más (TechSpot, ene-2026). Con DDR5 queda cerca del 5600X (~57). Se usa el valor con DDR4, que es el caso más común."),
 }
 
+
+# ---- Placas de generaciones anteriores (rendimiento ESTIMADO) ----
+# La tabla actual de Tom's Hardware no las mide. Su tabla heredada (RTX 3090 = 100 %, 9 juegos, Core i9-9900K, sin
+# actualizar desde 2022) sí. Se pasa a la escala actual usando la RTX 3060 12GB como ancla común:
+#   FPS = FPS_actuales(RTX 3060 12GB) x puntaje_heredado / 54,7
+# Control: con esa regla la RTX 3050 da 45,5 FPS a 1080p y la tabla actual mide 44,6 (2 % de diferencia); y la RX 5700 XT
+# resulta ~13 % sobre la RTX 2060 Super, igual que lo medido por TechSpot en 2022 (33 juegos a 1440p).
+# Nunca se usan para RECOMENDAR una compra: sirven para evaluar la placa que la persona ya tiene.
+LEG_ANCHOR = {"score": 54.7, "fps": (61.5, 41.9, 22.2)}
+LEG_NOTE = ("No figura en la tabla actual de Tom's Hardware. Se estima escalando su tabla heredada (RTX 3090 = 100 %, 9 juegos, 2022) "
+            "con la RTX 3060 12GB como ancla; el control con la RTX 3050 da una diferencia del 2 % a 1080p. A 4K es poco confiable "
+            "(la memoria de 6-8 GB limita en juegos nuevos).")
+LEG_NOTE_LOWVRAM = " Con solo 4 GB de VRAM puede rendir menos en juegos actuales."
+# id, nombre, fabricante, VRAM, consumo W, fuente recomendada W, puntaje heredado, regex, exclusión, (arq, shaders, memoria, bus, Gbps)
+LEG = [
+    ("rtx-2080ti", "GeForce RTX 2080 Ti", "NVIDIA", 11, 260, 650, 77.4, r"rtx[ -]?2080[ -]?ti", "", ("Turing", 4352, "GDDR6", 352, 14)),
+    ("rtx-2080s", "GeForce RTX 2080 SUPER", "NVIDIA", 8, 250, 650, 66.8, r"rtx[ -]?2080[ -]?super", "", ("Turing", 3072, "GDDR6", 256, 15.5)),
+    ("rtx-2080", "GeForce RTX 2080", "NVIDIA", 8, 225, 650, 62.5, r"rtx[ -]?2080", r"super|ti\b", ("Turing", 2944, "GDDR6", 256, 14)),
+    ("rtx-2070s", "GeForce RTX 2070 SUPER", "NVIDIA", 8, 215, 650, 59.6, r"rtx[ -]?2070[ -]?super", "", ("Turing", 2560, "GDDR6", 256, 14)),
+    ("rtx-2070", "GeForce RTX 2070", "NVIDIA", 8, 185, 550, 53.1, r"rtx[ -]?2070", r"super", ("Turing", 2304, "GDDR6", 256, 14)),
+    ("rtx-2060s", "GeForce RTX 2060 SUPER", "NVIDIA", 8, 175, 550, 50.6, r"rtx[ -]?2060[ -]?super", "", ("Turing", 2176, "GDDR6", 256, 14)),
+    ("rtx-2060", "GeForce RTX 2060", "NVIDIA", 6, 160, 500, 44.9, r"rtx[ -]?2060", r"super", ("Turing", 1920, "GDDR6", 192, 14)),
+    ("gtx-1660s", "GeForce GTX 1660 SUPER", "NVIDIA", 6, 125, 450, 37.9, r"gtx[ -]?1660[ -]?super", "", ("Turing", 1408, "GDDR6", 192, 14)),
+    ("gtx-1660ti", "GeForce GTX 1660 Ti", "NVIDIA", 6, 120, 450, 37.8, r"gtx[ -]?1660[ -]?ti", "", ("Turing", 1536, "GDDR6", 192, 12)),
+    ("gtx-1660", "GeForce GTX 1660", "NVIDIA", 6, 120, 450, 32.8, r"gtx[ -]?1660", r"super|ti\b", ("Turing", 1408, "GDDR5", 192, 8)),
+    ("gtx-1650s", "GeForce GTX 1650 SUPER", "NVIDIA", 4, 100, 350, 28.5, r"gtx[ -]?1650[ -]?super", "", ("Turing", 1280, "GDDR6", 128, 12)),
+    ("gtx-1650", "GeForce GTX 1650 (GDDR5)", "NVIDIA", 4, 75, 300, 20.9, r"gtx[ -]?1650", r"super|ti\b", ("Turing", 896, "GDDR5", 128, 8)),
+    ("gtx-1080ti", "GeForce GTX 1080 Ti", "NVIDIA", 11, 250, 600, 57.8, r"gtx[ -]?1080[ -]?ti", "", ("Pascal", 3584, "GDDR5X", 352, 11)),
+    ("gtx-1080", "GeForce GTX 1080", "NVIDIA", 8, 180, 500, 45.2, r"gtx[ -]?1080", r"ti\b", ("Pascal", 2560, "GDDR5X", 256, 10)),
+    ("gtx-1070ti", "GeForce GTX 1070 Ti", "NVIDIA", 8, 180, 500, 41.8, r"gtx[ -]?1070[ -]?ti", "", ("Pascal", 2432, "GDDR5", 256, 8)),
+    ("gtx-1070", "GeForce GTX 1070", "NVIDIA", 8, 150, 500, 36.7, r"gtx[ -]?1070", r"ti\b", ("Pascal", 1920, "GDDR5", 256, 8)),
+    ("gtx-1060", "GeForce GTX 1060 6GB", "NVIDIA", 6, 120, 400, 26.5, r"gtx[ -]?1060", "", ("Pascal", 1280, "GDDR5", 192, 8)),
+    ("gtx-1050ti", "GeForce GTX 1050 Ti", "NVIDIA", 4, 75, 300, 16.1, r"gtx[ -]?1050[ -]?ti", "", ("Pascal", 768, "GDDR5", 128, 7)),
+    ("rx-5700xt", "Radeon RX 5700 XT", "AMD", 8, 225, 600, 57.0, r"rx[ -]?5700[ -]?xt", "", ("RDNA", 2560, "GDDR6", 256, 14)),
+    ("rx-5700", "Radeon RX 5700", "AMD", 8, 185, 550, 51.4, r"rx[ -]?5700", r"xt", ("RDNA", 2304, "GDDR6", 256, 14)),
+    ("rx-5600xt", "Radeon RX 5600 XT", "AMD", 6, 150, 450, 46.6, r"rx[ -]?5600[ -]?xt", "", ("RDNA", 2304, "GDDR6", 192, 14)),
+    ("rx-5500xt", "Radeon RX 5500 XT 8GB", "AMD", 8, 130, 450, 31.8, r"rx[ -]?5500[ -]?xt", "", ("RDNA", 1408, "GDDR6", 128, 14)),
+    ("rx-590", "Radeon RX 590", "AMD", 8, 225, 500, 32.4, r"rx[ -]?590(?!\d)", "", ("Polaris", 2304, "GDDR5", 256, 8)),
+    ("rx-580", "Radeon RX 580 8GB", "AMD", 8, 185, 500, 30.9, r"rx[ -]?580(?!\d)", "", ("Polaris", 2304, "GDDR5", 256, 8)),
+    ("rx-570", "Radeon RX 570 4GB", "AMD", 4, 150, 450, 25.2, r"rx[ -]?570(?!\d)", "", ("Polaris", 2048, "GDDR5", 256, 7)),
+    ("vega-64", "Radeon RX Vega 64", "AMD", 8, 295, 750, 48.4, r"vega[ -]?64", "", ("Vega", 4096, "HBM2", 2048, 1.89)),
+    ("vega-56", "Radeon RX Vega 56", "AMD", 8, 210, 650, 42.7, r"vega[ -]?56", "", ("Vega", 3584, "HBM2", 2048, 1.6)),
+]
+
 # Juegos: requisitos oficiales (textuales) y tipo
 GAMES = [
     {"id": "lol", "name": "League of Legends", "kind": "ligero",
@@ -231,6 +275,11 @@ def build():
             for i, n, v, vr, t, p, perf, rt, s, m, x in G]
     cpus = [dict(id=i, name=n, vendor=v, socket=so, mem=me, tdp=td, maxp=mp, s=sc, src=s, m=m)
             for i, n, v, so, me, td, mp, sc, s, m in C]
+    for i, n, v, vr, t, p, sc, m, x, spec in LEG:
+        k = [round(f * sc / LEG_ANCHOR["score"], 1) for f in LEG_ANCHOR["fps"]]
+        gpus.append(dict(id=i, name=n, vendor=v, vram=vr, tgp=t, psu=p, p=k, rt=None, src="nvidia" if v == "NVIDIA" else "amd_gpu", m=m, x=x,
+                         se={"conf": "baja" if vr <= 4 else "media", "n": LEG_NOTE + (LEG_NOTE_LOWVRAM if vr <= 4 else "")}))
+        GS[i] = spec
     for g in gpus:
         a, sp, mt, bus, gb = GS[g["id"]]
         g["spec"] = dict(arq=a, sp=sp, mt=mt, bus=bus, gbps=gb, bw=round(bus / 8 * gb))

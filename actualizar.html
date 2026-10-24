@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>¿Qué actualizar? · ComparáTech</title>
+<link rel="stylesheet" href="css/shared.css">
+<style>
+textarea{width:100%;min-height:92px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--tx);font:inherit;resize:vertical}
+.ex{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;align-items:center}.ex button{padding:5px 11px;border:1px solid var(--line);border-radius:99px;background:var(--card);color:var(--tx);cursor:pointer;font:inherit;font-size:12.5px}
+.seen{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.seen span{padding:3px 10px;border-radius:99px;background:var(--soft);font-size:12.5px}.seen span.bad{background:var(--warnbg);color:var(--warn)}
+.bars{display:grid;gap:10px;margin:10px 0 4px}.bar{display:grid;grid-template-columns:150px 1fr 90px;gap:10px;align-items:center;font-size:13px}
+.bar .tr{position:relative;height:12px;border-radius:99px;background:var(--soft);overflow:visible}.bar .tr i{display:block;height:100%;border-radius:99px;background:var(--acc)}
+.bar .tr em{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--tx)}
+.bar.lim .tr i{background:var(--warn)}
+.opt2{border-top:1px solid var(--line);padding:10px 0}.opt2:first-of-type{border-top:0}
+.opt2 .hd{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-weight:700}
+.step{margin-bottom:14px}.step h3{margin:0 0 4px;font-size:16px}.num{display:inline-block;width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;background:var(--grad);color:#fff;font-size:13px;margin-right:8px}
+@media(max-width:600px){.bar{grid-template-columns:1fr 70px}.bar .tr{grid-column:1 / -1;order:3}}
+</style>
+</head>
+<body>
+<header><div class="top"><a class="logo" href="index.html">Compará<span>Tech</span></a>
+<nav class="nav"><a href="index.html">Comparador de precios</a><a href="armado.html">Armado de PC</a><a class="on" href="actualizar.html">¿Qué actualizar?</a><a href="encontra.html">Encontrá tu equipo</a><a href="comparar.html">Comparar hardware</a></nav></div></header>
+<main>
+<h1>¿Qué actualizar?</h1>
+<p class="lead">Escribí los componentes que ya tenés y el rendimiento que querés lograr. Te decimos qué te está limitando, qué conviene cambiar primero y cuánto cuesta hoy en las tiendas.</p>
+
+<div class="panel">
+  <div class="f"><label for="txt">Tus componentes actuales</label>
+    <textarea id="txt" placeholder="Ej.: Ryzen 7 5800X, RTX 3070, 16 GB DDR4, fuente 650 W, placa B550"></textarea></div>
+  <div class="ex"><span class="note">Probá un ejemplo:</span>
+    <button data-ex="Ryzen 7 5800X, RTX 3070, 16 GB DDR4, 650 W, B550">5800X + RTX 3070</button>
+    <button data-ex="Ryzen 5 5600X, RX 6600, 16 GB DDR4, 500 W, B450">5600X + RX 6600</button>
+    <button data-ex="Core i5-12400F, RTX 3060, 16 GB DDR4, 550 W">i5-12400F + RTX 3060</button>
+    <button data-ex="Ryzen 5 5500, RTX 3050, 8 GB DDR4, 450 W, A520">5500 + RTX 3050</button></div>
+  <p class="note">Separalos con comas o en renglones. No hace falta que escribas todo: con el procesador y la placa de video ya podemos empezar. Fuente en watts (ej. 650 W), memoria con su tipo (ej. 16 GB DDR4) y la placa madre por su chipset (ej. B550).</p>
+  <div class="row" style="margin-top:6px">
+    <div class="f" style="max-width:300px"><label>Resolución de tu monitor</label><div class="seg" id="res"><button data-v="0" class="on">1080p</button><button data-v="1">1440p</button><button data-v="2">4K</button></div></div>
+    <div class="f" style="max-width:380px"><label>Rendimiento que querés (juegos exigentes)</label><div class="seg" id="fps"></div></div>
+    <div class="f" style="max-width:220px"><label for="bud">Presupuesto máximo (opcional)</label><input id="bud" type="number" min="0" step="10000" placeholder="$ en pesos"></div>
+  </div>
+  <div style="margin-top:12px"><button class="btn pri" id="go">Ver qué actualizar</button></div>
+</div>
+
+<div id="out" aria-live="polite"></div>
+
+<h2>Cómo lo calculamos</h2>
+<div class="panel note" id="how"></div>
+<details class="panel"><summary>Modelos que reconocemos</summary><div class="note" id="known" style="margin-top:8px"></div></details>
+</main>
+<script src="js/lib.js"></script>
+<script src="js/compare.js"></script>
+<script src="js/finder.js"></script>
+<script src="js/upgrade.js"></script>
+<script>
+const $=s=>document.querySelector(s),{ARS,esc,RES}=CT;
+let HW,PR=[],META={},C,S={res:0,fps:60};
+const tag=k=>{const t=CT.TAGS[k];return `<span class="tag t-${k}" title="${esc(t[1])}">${esc(t[0])}</span>`};
+const fdate=iso=>{try{return new Date(iso).toLocaleString("es-AR",{timeZone:"America/Argentina/Buenos_Aires",day:"numeric",month:"long",hour:"2-digit",minute:"2-digit",hour12:false})}catch{return ""}};
+
+function shopRows(items,extra){
+  if(!PR.length)return '<div class="note">Sin datos de precios cargados.</div>';
+  if(!items||!items.length)return '<div class="note">Sin stock en el comparador ahora mismo.</div>';
+  return '<div class="shop">'+items.slice(0,2).map(x=>`<div><span><a href="${esc(x.o.url)}" target="_blank" rel="noopener nofollow">${esc(x.g.name.slice(0,70))}</a> <span class="note">· ${esc(x.o.store)}${x.o.stock===true?"":" · stock sin confirmar"}${extra?extra(x):""}</span></span><b>${ARS(x.p)}</b></div>`).join("")+'</div>';
+}
+const wOf=x=>{const m=x.g.name.match(/(\d{3,4})\s?w/i);return m?" · "+m[1]+" W":""};
+
+function bars(r){
+  const mx=Math.max(r.target*1.25,r.cur.gF||0,r.cur.cF||0,10);
+  const row=(lab,v,tg,lim)=>v==null?`<div class="bar"><span>${lab}</span><span class="note">Sin datos</span><span></span></div>`:
+    `<div class="bar ${lim?"lim":""}"><span>${lab}${tg?" "+tag(tg):""}</span><div class="tr"><i style="width:${Math.min(100,v/mx*100).toFixed(1)}%"></i><em style="left:${(r.target/mx*100).toFixed(1)}%" title="Tu objetivo"></em></div><b>~${Math.round(v)} FPS</b></div>`;
+  const g=r.o.gpu,c=r.o.cpu;
+  return `<div class="bars">${row("Tu placa de video"+(g?`<div class="note">${esc(g.name)}</div>`:""),r.cur.gF,g&&g.se?"est":"bench",r.cur.limiter==="gpu")}${row("Lo que mueve tu procesador"+(c?`<div class="note">${esc(c.name)}</div>`:""),r.cur.cF,c&&c.se?"est":"bench",r.cur.limiter==="cpu")}</div><p class="note">La línea vertical es tu objetivo (${r.target} FPS). Promedio de 11 juegos exigentes a ${RES[r.res]} en Ultra, sin DLSS/FSR.</p>`;
+}
+function gpuOpt(x,r){
+  const e=[];
+  if(x.capped)e.push(`Con tu procesador llegarías a ~${Math.round(x.reach)} FPS (la placa podría dar ~${Math.round(x.g.p[r.res])}).`);
+  if(x.psuOk===false)e.push(`<b>Necesita fuente nueva:</b> pide ${x.need} W o más y tenés ${r.o.psu.w} W${x.psuShop?`; la opción más barata cuesta ${ARS(x.psuShop.p)}, total ${ARS(x.total)}`:""}.`);
+  else if(x.psuOk===true)e.push(`Tu fuente de ${r.o.psu.w} W alcanza (pide ${x.need} W).`);
+  else e.push(`Verificá tu fuente: pide ${x.need} W o más.`);
+  return `<div class="opt2"><div class="hd"><span>${esc(x.g.name)} ${tag("bench")}</span><span>~${Math.round(x.reach)} FPS ${x.meets?'<span class="chip c-ok">Cumple</span>':'<span class="chip c-warn">No llega al objetivo</span>'}</span></div><div class="note">${e.join(" ")} · ${x.g.vram} GB de VRAM.</div>${shopRows(x.shop)}</div>`;
+}
+function cpuOpt(x,r,plat){
+  const c=x.c,t=c.se?tag("est"):tag("bench");
+  const head=`<div class="hd"><span>${esc(c.name)} ${t}</span><span>mueve ~${Math.round(x.f)} FPS ${x.meets===false?'<span class="chip c-warn">No llega al objetivo</span>':'<span class="chip c-ok">Cumple</span>'}</span></div>`;
+  const nt=c.se?`<div class="note"><b>Puntaje estimado</b> (confianza ${esc(c.se.conf)}): ${esc(c.se.n)}</div>`:"";
+  if(!plat)return `<div class="opt2">${head}${nt}<div class="note">Mismo socket (${c.socket}): entra en tu placa madre actual, confirmando la lista de compatibilidad y la BIOS.</div>${shopRows(x.shop)}</div>`;
+  const p=x.parts;
+  return `<div class="opt2">${head}${nt}<div class="note">Cambio de plataforma (${c.socket}, ${c.mem}): procesador + placa madre + memoria. Total ≈ <b>${ARS(x.total)}</b>.</div>${shopRows([p.cpu])}${shopRows([p.mobo])}${shopRows([p.ram])}</div>`;
+}
+function render(){
+  const text=$("#txt").value.trim();
+  if(!text){$("#out").innerHTML='<div class="warn">Escribí al menos tu procesador o tu placa de video.</div>';return}
+  const r=C.advise({text,res:S.res,fps:S.fps,budget:+$("#bud").value||null});
+  let h="";
+  h+=`<h2>Entendimos esto</h2><div class="seen">${r.o.seen.map(s=>`<span><b>${esc(s[0])}:</b> ${esc(s[1])}</span>`).join("")}${r.unknown.map(u=>`<span class="bad"><b>${esc(u.slot)}:</b> ${esc(u.text)} (sin datos)</span>`).join("")}${r.o.unknown.map(u=>`<span class="bad">No entendimos: ${esc(u)}</span>`).join("")}</div>`;
+  r.unknown.forEach(u=>{h+=`<p class="note"><b>${esc(u.slot)} «${esc(u.text)}»:</b> ${esc(u.why)}</p>`});
+  if(r.head)h+=`<div class="panel"><b>${esc(r.head)}</b>${(r.cur.gF!=null||r.cur.cF!=null)?bars(r):""}${r.o.gpu&&r.o.gpu.se?`<p class="note"><b>Sobre el rendimiento de tu placa (estimado, confianza ${esc(r.o.gpu.se.conf)}):</b> ${esc(r.o.gpu.se.n)}</p>`:""}${r.o.cpu&&r.o.cpu.se?`<p class="note"><b>Sobre el puntaje de tu procesador (estimado, confianza ${esc(r.o.cpu.se.conf)}):</b> ${esc(r.o.cpu.se.n)}</p>`:""}</div>`;
+  let n=0;
+  r.steps.forEach(s=>{
+    n++;const num=`<span class="num">${n}</span>`;
+    if(s.kind==="gpu"){
+      h+=`<div class="panel step"><h3>${num}${s.unknownGpu?"Qué placa de video aprovecharía tu procesador":"Cambiar la placa de video"}</h3>`;
+      if(s.options.length){
+        h+=`<p class="note">${s.hayOk?`Placas con stock que llegan a ${r.target} FPS a ${RES[r.res]}${r.cur.cF!=null?" con tu procesador":""}, de la más barata a la más potente:`:`Ninguna placa con stock llega a ${r.target} FPS con tu procesador; esto es lo mejor disponible:`}</p>`+s.options.map(x=>gpuOpt(x,r)).join("");
+      }else h+=`<p class="note">No encontramos placas con stock que mejoren al menos un 25 % lo que tenés${r.budget?" dentro de tu presupuesto":""}. ${s.fueraPresup?`Hay ${s.fueraPresup} que se pasan del presupuesto.`:""} ${s.sinStock?`Otras ${s.sinStock} no tienen stock en el comparador.`:""}</p>`;
+      h+="</div>";
+    }else if(s.kind==="cpu"){
+      h+=`<div class="panel step"><h3>${num}Cambiar el procesador</h3>`;
+      if(s.same.length)h+=`<p class="note">Sin cambiar de placa madre:</p>`+s.same.map(x=>cpuOpt(x,r,false)).join("");
+      if(s.sameNoStock&&s.sameNoStock.length&&!s.same.length)h+=`<p class="note">Del mismo socket mejorarían, pero hoy no hay stock en el comparador: ${s.sameNoStock.map(x=>esc(x.c.name)+(x.c.se?" (estimado)":"")).join(", ")}. Si ya no se consiguen nuevos, mirá el mercado usado con cuidado.</p>`;
+      if(s.platform.length)h+=`<p class="note">${s.same.length?"Si querés llegar más lejos, cambiando de plataforma:":"Para llegar al objetivo hay que cambiar de plataforma:"}</p>`+s.platform.map(x=>cpuOpt(x,r,true)).join("");
+      if(!s.same.length&&!s.platform.length)h+=`<p class="note">No encontramos una mejora con precio en el comparador ahora mismo.</p>`;
+      h+="</div>";
+    }else if(s.kind==="psu"){
+      h+=`<div class="panel step"><h3>${num}${esc(s.title)}</h3><p class="note">${esc(s.why)}</p>${shopRows(s.options.map(o=>o.shop[0]),wOf)}</div>`;
+    }else{
+      h+=`<div class="panel step"><h3>${num}${esc(s.title)}</h3><p class="note">${esc(s.why)}</p>${shopRows(s.shop)}</div>`;
+    }
+  });
+  if(!r.steps.length&&r.head&&r.cur.meets)h+=`<div class="panel">No necesitás cambiar nada para este objetivo.</div>`;
+  if(r.notes.length)h+=`<div class="panel"><b>Para tener en cuenta</b><ul class="chk">${r.notes.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`;
+  if(META.updated)h+=`<p class="note">Precios del comparador, actualizados el ${esc(fdate(META.updated))} h. Pueden cambiar en la tienda.</p>`;
+  $("#out").innerHTML=h;
+}
+(async()=>{
+  const j=async(u,d)=>{try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw 0;return await r.json()}catch{return d}};
+  let m;[HW,PR,m]=await Promise.all([j("data/hardware.json",null),j("data/products.json",[]),j("data/meta.json",{})]);META=m;
+  if(!HW){$("#out").textContent="No se pudieron cargar los datos de hardware.";return}
+  C=CT.makeFinder(CT.create(HW,PR,META));CT.makeUpgrade(C);
+  $("#fps").innerHTML=CT.UPG_FPS.map(([v,l],i)=>`<button data-v="${v}" class="${i===0?"on":""}">${esc(l)}</button>`).join("");
+  $("#how").innerHTML=`<p><b>Placa de video:</b> promedio de FPS en 11 juegos exigentes (Ultra, sin DLSS/FSR) de <a href="${HW.sources.tom_gpu}">Tom's Hardware</a> ${tag("bench")}. <b>Procesador:</b> puntaje en juegos de <a href="${HW.sources.tom_cpu}">Tom's Hardware</a> (oct 2026), convertido a FPS con la misma escala ${tag("bench")}. Si tu procesador no figura en esa tabla (por ejemplo el Ryzen 7 5800X o el 5600X) usamos un <b>puntaje estimado</b> ${tag("est")} calculado a partir de comparaciones publicadas por TechSpot; cada estimado dice cómo se calculó y qué tan confiable es. Nunca recomendamos comprar un procesador por un puntaje estimado, salvo cuando es la única mejora posible en tu mismo socket y lo avisamos.</p>
+  <p>Un componente «limita» cuando rinde un 10 % o más que el otro. Los FPS reales dependen de cada juego, de los ajustes y del resto del equipo: es una guía, no una promesa. Si algo no figura en nuestra base, lo decimos y no inventamos un número. Precios: los mismos del comparador (la opción más barata con stock).</p>`;
+  $("#known").innerHTML=`<p><b>Procesadores:</b> ${HW.cpus.filter(c=>c.s).map(c=>esc(c.name)).join(", ")}.</p><p><b>Placas de video:</b> ${HW.gpus.map(g=>esc(g.name)).join(", ")}.</p>`;
+  document.querySelectorAll("#res button").forEach(b=>b.onclick=()=>{S.res=+b.dataset.v;document.querySelectorAll("#res button").forEach(x=>x.classList.toggle("on",x===b));if($("#out").innerHTML)render()});
+  document.querySelectorAll("#fps button").forEach(b=>b.onclick=()=>{S.fps=+b.dataset.v;document.querySelectorAll("#fps button").forEach(x=>x.classList.toggle("on",x===b));if($("#out").innerHTML)render()});
+  document.querySelectorAll("[data-ex]").forEach(b=>b.onclick=()=>{$("#txt").value=b.dataset.ex;render()});
+  $("#go").onclick=render;
+})();
+</script>
+<script src="js/assistant.js"></script>
+<script>CT.CTAssistant.mount({section:"actualizar",context:()=>({})});</script>
+</body>
+</html>

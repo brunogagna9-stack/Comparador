@@ -90,3 +90,19 @@ Su reputación quedó vacía a propósito hasta tener una fuente concreta (punta
 - Escribís tus componentes (por ejemplo: «Ryzen 7 5800X, RTX 3070, 16 GB DDR4, 650 W, B550»), elegís resolución y objetivo de FPS (y, si querés, presupuesto).
 - Te dice qué te limita (placa de video o procesador), qué cambiar primero, si tu fuente alcanza, si conviene sumar RAM o un SSD, y qué productos reales del comparador sirven (con precio y tienda).
 - Lo que no reconoce (por ejemplo una GTX 1060 o un Ryzen 5 3600, que no están en las tablas de rendimiento que usamos) lo dice claramente; no inventa números.
+
+## Actualización 9: 6 tiendas nuevas y placas de video anteriores
+
+**Tiendas nuevas** (todas WooCommerce, leídas por la API pública de catálogo que usa su propio sitio; antes de agregarlas se revisó el robots.txt de cada una): Hardloots, BitHard, Try, SCP Hardstore, Click Gaming y The Gamer Shop. Ahora son 18 tiendas. La reputación de las nuevas queda vacía hasta tener una fuente verificable. Se agregan en `scrapers/woo.py` (diccionario `WOO_STORES`): sumar otra tienda WooCommerce es una línea.
+
+**Tiendas revisadas que NO se agregaron (y por qué)**
+- *Store GS* (storegs.ar): su robots.txt pide 60 segundos entre pedidos y 6 páginas por hora; con eso es imposible leer un catálogo sin ignorarlo.
+- *Gears Store*: su catálogo vive en Libre Opción, cuyo robots.txt prohíbe la paginación (`?page=`).
+- *Noxie Store* y *Rocket Hard*: no respondieron a la lectura de su catálogo público; no se insistió.
+- *ShopGamer* (Tiendanube) y *HydraXtreme* (otra tecnología): se podrían agregar con lectores de HTML propios; quedan para una próxima etapa.
+- No encontramos ninguna tienda llamada «BitBayres». Si querés otra, pasame la dirección web.
+- Un dato útil: hay tiendas que se pueden sumar si les pedís permiso por escrito (Store GS, Gears Store).
+
+**Placas de video anteriores** (RTX 20, GTX 16/10, RX 5000, RX 590/580/570, Vega): 27 modelos nuevos en «Armado de PC», «¿Qué actualizar?» y «Encontrá tu equipo». Tom's Hardware no las mide en su tabla actual, así que su rendimiento es **estimado**: se escala su tabla heredada de 2022 con la RTX 3060 como ancla (control: da 2 % de diferencia con la RTX 3050 y reproduce la diferencia de 13 % entre RX 5700 XT y RTX 2060 Super medida por TechSpot). Se marcan como «Estimado» y no se recomiendan como compra, solo sirven para evaluar la placa que ya tenés.
+
+**Error corregido:** los monitores con «HDMI» en el título se clasificaban como accesorios. Los nombres con símbolos HTML (por ejemplo «&#8211;») ahora se muestran bien.

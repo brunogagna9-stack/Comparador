@@ -1,0 +1,32 @@
+{
+  "_ayuda": "Cuotas por tienda. Completá solo lo que hayas verificado en cada tienda. n=cantidad de cuotas, sin_interes=true/false. Se calcula sobre el precio de lista.",
+  "stores": {
+    "Compragamer": {},
+    "MEXX": {},
+    "Maximus": {},
+    "Gezatek": {},
+    "Fullh4rd": {},
+    "Logg": {},
+    "GoldenTech": {},
+    "Armytech": {},
+    "Katech": {},
+    "Venex": {},
+    "Gaming City": {},
+    "NET Gaming": {},
+    "Hardloots": {},
+    "BitHard": {},
+    "Try": {},
+    "SCP Hardstore": {},
+    "Click Gaming": {},
+    "The Gamer Shop": {}
+  },
+  "assistant": {
+    "_ayuda": "Opcional. Poné aquí la URL de tu proxy de IA (ver worker/LEEME). Dejalo en null para usar solo el asistente local. NUNCA pegues claves en este archivo: es público.",
+    "endpoint": null
+  },
+  "alerts": {
+    "_ayuda": "Avisos de bajas de precio. Pegá acá, entre comillas, el enlace de suscripción de tu formulario de Brevo (email_form_url) y/o el enlace de invitación de tu canal de WhatsApp (whatsapp_channel_url). Si dejás null, el botón «Avisos» no se muestra. Estos enlaces son públicos: NUNCA pegues claves acá.",
+    "email_form_url": null,
+    "whatsapp_channel_url": null
+  }
+}

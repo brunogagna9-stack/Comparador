@@ -1,0 +1,34 @@
+name: Resumen semanal de bajas
+
+on:
+  schedule:
+    - cron: "43 12 * * 5"   # viernes 09:43 de Argentina
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  resumen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Armar el resumen (y crear el borrador en Brevo si hay secretos)
+        env:
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          BREVO_LIST_ID: ${{ secrets.BREVO_LIST_ID }}
+          BREVO_SENDER_EMAIL: ${{ secrets.BREVO_SENDER_EMAIL }}
+          BREVO_ENVIAR_YA: ${{ vars.BREVO_ENVIAR_YA }}
+        run: python scripts/enviar_resumen.py --enviar
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: resumen
+          path: |
+            resumen.txt
+            resumen.html
+          if-no-files-found: ignore

@@ -19,6 +19,7 @@ concurrency:
 jobs:
   actualizar:
     runs-on: ubuntu-latest
+    timeout-minutes: 120   # NET Gaming pide 5 s entre pedidos: la corrida completa es más lenta
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
