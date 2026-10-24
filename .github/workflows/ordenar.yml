@@ -1,0 +1,95 @@
+ name: Ordenar archivos (una sola vez)
+
+# Mueve a su carpeta los archivos que quedaron sueltos en la raiz del repositorio
+# (por ejemplo layout.js -> site/js/layout.js). No toca los datos de las tiendas.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  ordenar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Mover archivos a su carpeta
+        run: |
+          python3 - <<'PY'
+          import os, shutil, subprocess
+          MAPA = {
+           "armytech.py": "scrapers/armytech.py",
+           "common.py": "scrapers/common.py",
+           "compragamer.py": "scrapers/compragamer.py",
+           "fullh4rd.py": "scrapers/fullh4rd.py",
+           "gamingcity.py": "scrapers/gamingcity.py",
+           "gezatek.py": "scrapers/gezatek.py",
+           "goldentech.py": "scrapers/goldentech.py",
+           "katech.py": "scrapers/katech.py",
+           "logg.py": "scrapers/logg.py",
+           "maximus.py": "scrapers/maximus.py",
+           "mexx.py": "scrapers/mexx.py",
+           "netgaming.py": "scrapers/netgaming.py",
+           "specs.py": "scrapers/specs.py",
+           "venex.py": "scrapers/venex.py",
+           "woo.py": "scrapers/woo.py",
+           "check_data.py": "scripts/check_data.py",
+           "enviar_resumen.py": "scripts/enviar_resumen.py",
+           "actualizar.html": "site/actualizar.html",
+           "armado.html": "site/armado.html",
+           "comparar.html": "site/comparar.html",
+           "layout.css": "site/css/layout.css",
+           "shared.css": "site/css/shared.css",
+           "config.json": "site/data/config.json",
+           "hardware.json": "site/data/hardware.json",
+           "imagenes_extra.json": "site/data/imagenes_extra.json",
+           "stores.json": "site/data/stores.json",
+           "encontra.html": "site/encontra.html",
+           "index.html": "site/index.html",
+           "assistant.js": "site/js/assistant.js",
+           "compare.js": "site/js/compare.js",
+           "finder.js": "site/js/finder.js",
+           "layout.js": "site/js/layout.js",
+           "lib.js": "site/js/lib.js",
+           "rep.js": "site/js/rep.js",
+           "upgrade.js": "site/js/upgrade.js",
+           "productos.html": "site/productos.html",
+           "armytech.html": "tests/fixtures/armytech.html",
+           "catalog.json": "tests/fixtures/catalog.json",
+           "gamingcity.html": "tests/fixtures/gamingcity.html",
+           "goldentech.json": "tests/fixtures/goldentech.json",
+           "katech.json": "tests/fixtures/katech.json",
+           "netgaming.html": "tests/fixtures/netgaming.html",
+           "specs_cg.json": "tests/fixtures/specs_cg.json",
+           "venex.html": "tests/fixtures/venex.html",
+           "woo_stores.json": "tests/fixtures/woo_stores.json",
+           "make_fixture.py": "tests/make_fixture.py",
+           "run_tests.py": "tests/run_tests.py",
+           "test_all.py": "tests/test_all.py",
+           "test_assistant.js": "tests/test_assistant.js",
+           "test_js.js": "tests/test_js.js",
+           "test_worker.mjs": "tests/test_worker.mjs",
+           "assistant-proxy.js": "worker/assistant-proxy.js"
+          }
+          KEEP_IF_EXISTS = {"config.json"}   # tus ajustes (avisos, cuotas) no se pisan si ya existen
+          movidos, borrados, saltados = [], [], []
+          for nombre, destino in MAPA.items():
+              if not os.path.isfile(nombre):
+                  continue
+              if nombre in KEEP_IF_EXISTS and os.path.exists(destino):
+                  os.remove(nombre); borrados.append(nombre); continue
+              os.makedirs(os.path.dirname(destino), exist_ok=True)
+              os.replace(nombre, destino); movidos.append(destino)
+          for y in ("actualizar.yml", "resumen.yml"):   # copias sueltas de los workflows: la que vale esta en .github/workflows
+              if os.path.isfile(y) and os.path.isfile(".github/workflows/" + y):
+                  os.remove(y); borrados.append(y)
+          print("Movidos:", len(movidos))
+          for m in movidos: print("  ->", m)
+          print("Borrados (ya existian en su carpeta):", borrados)
+          PY
+      - name: Guardar cambios
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then echo "No habia nada para ordenar"; else git commit -m "Ordenar archivos en sus carpetas" && git push; fi
