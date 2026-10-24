@@ -81,6 +81,7 @@ GENERIC_WORDS = STOP | {"gamer", "gaming", "socket", "intel", "amd", "nvidia", "
                         "curved", "ms", "g", "pc", "para", "wireless", "inalambrico", "usb", "bluetooth", "mecanico"}
 _UNIT = re.compile(r"^\d+(\.\d+)?(ghz|mhz|mt|mm|cm|hz|ms|w|v|mb|kg|mbps|gbps|fps)$")
 _CAP = re.compile(r"^\d+(gb|tb|w)$")
+SOCKETS = {"1700", "1851", "1200", "1151", "1150", "1155", "1156", "2066", "2011", "4677", "1718", "1954", "4189", "775", "1366", "939", "2011v3"}
 NO_LINE_CHECK = {"procesadores"}   # un procesador se identifica solo por su código de modelo
 
 
@@ -90,7 +91,8 @@ def match_info(item):
     brand = brand_of(name)
     if not brand:
         return None
-    toks = [t for t in re.split(r"[^a-z0-9]+", name.lower()) if t]
+    toks = [re.sub(r"^lga(?=\d{4})", "", t) for t in re.split(r"[^a-z0-9]+", name.lower()) if t]   # lga1700 → 1700
+    toks = [t for t in toks if t not in SOCKETS]   # el socket no identifica un modelo
     codes = frozenset(t for t in toks if not _UNIT.match(t) and not _CAP.match(t)
                       and (len(re.sub(r"\D", "", t)) >= 3 or (len(t) >= 5 and re.search(r"\d", t) and re.search(r"[a-z]", t))))
     if not codes:
@@ -172,7 +174,7 @@ def gid(offers):
 # Imágenes "sin foto" que las tiendas ponen en su lugar: no sirven y se descartan.
 PLACEHOLDER_RE = re.compile(r"es-default-|no[-_]?image|sin[-_]?imagen|placeholder|noimg|no[-_]?photo|"
                             r"image[-_]?not[-_]?found|default[-_]?image|/default\.(jpg|png|webp)", re.I)
-IMG_RANK = ["Compragamer", "Logg", "MEXX", "GoldenTech", "Maximus", "Armytech"]   # de más a menos nítidas
+IMG_RANK = ["Compragamer", "Logg", "MEXX", "Venex", "Gaming City", "NET Gaming", "Katech", "GoldenTech", "Maximus", "Armytech"]   # de más a menos nítidas
 
 
 def good_image(url):

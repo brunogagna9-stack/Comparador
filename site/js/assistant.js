@@ -39,6 +39,7 @@
   const STORE_ALIASES = {
     Compragamer: /compra ?gamer/, MEXX: /\bmexx\b/, Maximus: /maximus/, Gezatek: /gezatek/, Fullh4rd: /full ?h4rd|fullhard|full hard/,
     Logg: /\blogg\b/, GoldenTech: /golden ?tech/, Armytech: /army ?tech/,
+    Katech: /\bkatech\b/, Venex: /\bvenex\b/, "Gaming City": /gaming ?city/, "NET Gaming": /net ?gaming/,
   };
 
   const USO_WORDS = [

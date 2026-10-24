@@ -101,6 +101,9 @@ aside details>*:not(summary){margin-top:6px}
   .im{aspect-ratio:1/.85;margin-bottom:6px}.nm{font-size:13px;min-height:2.6em;margin-bottom:4px}.pr{font-size:16px}.sub,.st{font-size:11px}
   .addl{padding:2px 8px;font-size:11px}
 }
+[hidden]{display:none!important}
+@media(max-width:1380px){.fresh{display:none}}
+@media(max-width:800px){#abtn,#lbtn{padding:7px 10px;font-size:13px}#abtn .lbl{display:none}}
 </style>
 </head>
 <body>
@@ -108,7 +111,7 @@ aside details>*:not(summary){margin-top:6px}
 <header><div class="top">
   <div class="logo">Compará<span>Tech</span></div><nav class="nav" aria-label="Secciones"><a class="on" href="index.html" aria-current="page">Precios</a><a href="armado.html">Armado de PC</a><a href="encontra.html">Encontrá tu equipo</a><a href="comparar.html">Comparar hardware</a></nav>
   <input id="q" type="search" placeholder="Buscar: ryzen 5 5500, rtx 4060, ddr5 32gb…">
-  <span class="fresh" id="fresh" title="Cuándo se leyeron los precios de las tiendas"></span><button class="sec" id="lbtn" aria-haspopup="dialog">🛒 Mi lista <span id="lcount">0</span></button>
+  <span class="fresh" id="fresh" title="Cuándo se leyeron los precios de las tiendas"></span><button class="sec" id="abtn" hidden aria-haspopup="dialog" aria-label="Avisos de bajas de precio">🔔<span class="lbl"> Avisos</span></button><button class="sec" id="lbtn" aria-haspopup="dialog">🛒 Mi lista <span id="lcount">0</span></button>
   <button class="tab" id="fbtn">Filtros</button>
 </div></header>
 <div class="wrap">
@@ -156,6 +159,14 @@ let STORES={stores:{}};
 const stale=s=>{const m=(META.stores||{})[s];return !!(m&&!m.ok)};   // la tienda no respondió en la última lectura: se muestran datos anteriores
 const rep1=s=>{const r=((STORES.stores||{})[s]||{}).reputation||[];return r[0]||null};
 const saveF=()=>{try{localStorage.setItem("seg",JSON.stringify(FOLLOW))}catch{}};
+function openAlerts(){
+  const A=CFG.alerts||{},ok=u=>typeof u==="string"&&/^https:\/\//.test(u);
+  $("#box").innerHTML=`<button class="x" id="cx" aria-label="Cerrar">×</button><h2 style="margin:0 0 6px">🔔 Avisos de bajas de precio</h2>
+  <p class="sub" style="margin:0 0 12px">Una vez por semana te mandamos las mayores bajas confirmadas (sin saltos raros ni productos sin stock). Podés darte de baja cuando quieras.</p>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">${ok(A.email_form_url)?`<a class="pri" href="${esc(A.email_form_url)}" target="_blank" rel="noopener noreferrer">✉️ Recibir por mail</a>`:""}${ok(A.whatsapp_channel_url)?`<a class="sec" href="${esc(A.whatsapp_channel_url)}" target="_blank" rel="noopener noreferrer">💬 Seguir el canal de WhatsApp</a>`:""}</div>
+  <p class="sub" style="margin:12px 0 0">Tu mail lo guarda el servicio de envío (Brevo), no este sitio. El canal de WhatsApp es público: nadie ve tu número.</p>`;
+  $("#modal").classList.add("on");$("#cx").onclick=()=>$("#modal").classList.remove("on");
+}
 async function j(u,d){try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw 0;return await r.json()}catch{return d}}
 
 function visible(g){ // oferta(s) que pasan los filtros de tienda/stock
@@ -288,7 +299,7 @@ document.addEventListener("click",e=>{
   const t=e.target;
   if(t.dataset.f){e.stopPropagation();toggleF(t.dataset.f);return}
   if(t.dataset.l){e.stopPropagation();toggleL(t.dataset.l);return}
-  const tb=t.closest("[data-t]");if(tb){e.preventDefault();S.tab=tb.dataset.t;S.shown=48;render();return}
+  const tb=t.closest("[data-t]");if(tb){e.preventDefault();S.tab=tb.dataset.t;S.shown=48;if(S.tab==="bajaron")S.sort="down";else if(S.tab==="subieron")S.sort="up";else if(S.tab==="todos"&&(S.sort==="down"||S.sort==="up"))S.sort="price";render();return}
   const c=t.closest(".card");if(c){openModal(c.dataset.id);return}
   if(t.id==="modal")t.classList.remove("on");
 });
@@ -306,6 +317,7 @@ function bind(){
   $("#bmore").onclick=()=>{S.allBrands=!S.allBrands;renderSide()};
   $("#more").onclick=()=>{S.shown+=48;render()};
   $("#lbtn").onclick=openList;
+  {const A=CFG.alerts||{},ok=u=>typeof u==="string"&&/^https:\/\//.test(u);if(ok(A.email_form_url)||ok(A.whatsapp_channel_url)){$("#abtn").hidden=false;$("#abtn").onclick=openAlerts}}
   $("#fbtn").onclick=()=>$("#side").classList.toggle("show");
   $("#reset").onclick=()=>{Object.assign(S,{cat:"",brands:new Set(),stores:new Set(),pmin:null,pmax:null,stock:false,multi:false,lowonly:false,q:"",bq:""});
     ["q","pmin","pmax","bq"].forEach(i=>$("#"+i).value="");["stock","multi","lowonly"].forEach(i=>$("#"+i).checked=false);re()};

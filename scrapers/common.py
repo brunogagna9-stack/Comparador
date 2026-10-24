@@ -12,12 +12,12 @@ _session = requests.Session()
 _session.headers.update({"User-Agent": UA, "Accept-Language": "es-AR,es;q=0.9"})
 
 
-def get(url, as_json=False, retries=3):
+def get(url, as_json=False, retries=3, delay=None):
     """Descarga una URL con pausa y reintentos. Devuelve texto o JSON."""
     last = None
     for i in range(retries):
         try:
-            time.sleep(DELAY)
+            time.sleep(DELAY if delay is None else delay)
             r = _session.get(url, timeout=40)
             if r.status_code == 200:
                 return r.json() if as_json else r.text

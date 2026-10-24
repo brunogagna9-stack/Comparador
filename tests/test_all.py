@@ -370,3 +370,88 @@ def test_aviso_precios_muy_distintos():
     assert bd.build([a, b])[0].get("dif") is True
     b["price_cash"] = 55000
     assert not bd.build([a, b])[0].get("dif")
+
+
+# ---------- tiendas nuevas (actualización 7) ----------
+from scrapers import katech as _kt, venex as _vx, gamingcity as _gc, netgaming as _ng
+
+
+def test_katech_parse():
+    items = _kt.parse(json.load(open("tests/fixtures/katech.json")))
+    assert len(items) == 2 and all(i["store"] == "Katech" for i in items)
+    a, b = items
+    assert a["price_cash"] == 368500 and a["stock"] is True and a["category"] == "perifericos" and a["pn"] is None and a["store_sku"] == "MIC037"
+    assert b["price_cash"] == 120000 and b["price_list"] == 135000 and b["stock"] is False and b["category"] == "procesadores"
+
+
+def test_venex_parse():
+    items = _vx.parse(open("tests/fixtures/venex.html").read(), "microprocesadores")
+    assert len(items) == 2, "se descarta el que no tiene precio"
+    a, b = items
+    assert a["name"].endswith("Bulk (Simil 5600GT)"), "nombre completo desde el alt, no el título cortado con «...»"
+    assert a["price_cash"] == 259990 and a["category"] == "procesadores" and a["stock"] is None and a["pn"] is None
+    assert a["image"] == "https://www.venex.com.ar/products_images/thumb/1787161580_procesador_amd_ryzen_5_pro_5650g_612_44ghz_am4_bulk_2png"
+    assert b["price_cash"] == 339999 and b["url"].startswith("https://www.venex.com.ar/componentes-de-pc/")
+
+
+def test_gamingcity_parse():
+    html = open("tests/fixtures/gamingcity.html").read()
+    items = _gc.parse(html, "procesadores")
+    assert len(items) == 2
+    a, b = items
+    assert a["price_cash"] == 87399 and a["price_list"] == 91999 and a["stock"] is True and a["category"] == "procesadores"
+    assert a["cuotas"] == "12 cuotas de $ 10.733", "no se afirma que sea sin interés"
+    assert a["url"] == "https://www.gamingcity.com.ar/micro-amd-procesador-amd-ryzen-3-3200g-radeon-bulk-8-4c-4t---det--18184"
+    assert a["image"].endswith("imagen1_400x400.jpg")
+    assert b["stock"] is False and b["price_list"] is None and b["category"] == "motherboards"
+    assert _gc.next_page(html) == "https://www.gamingcity.com.ar/procesadores-componentes--prod--27--view--grilla-25"
+
+
+def test_netgaming_parse():
+    items = _ng.parse(open("tests/fixtures/netgaming.html").read(), "todas las memorias")
+    assert len(items) == 2, "se descarta el producto sin precio"
+    a, b = items
+    assert a["price_cash"] == 2646 and a["price_list"] == 2940 and a["stock"] is True and a["store_sku"] == "33806" and a["pn"] is None
+    assert b["price_cash"] == 90000 and b["stock"] is False and b["category"] == "memorias-ram"
+    assert _ng.DELAY >= 5, "su robots.txt pide Crawl-delay: 5"
+
+
+def test_tiendas_nuevas_se_cruzan_con_cuidado():
+    cg = _it("Compragamer", "Procesador Intel Core i5 14400F 4.7GHz Turbo Socket 1700 Raptor Lake", "procesadores", price=350000)
+    vx = _vx.parse(open("tests/fixtures/venex.html").read(), "microprocesadores")
+    g = bd.build(vx + [cg])
+    two = [x for x in g if len(x["offers"]) == 2]
+    assert len(two) == 1 and {o["store"] for o in two[0]["offers"]} == {"Venex", "Compragamer"}
+
+
+# ---------- avisos / resumen semanal ----------
+def _load_resumen():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("enviar_resumen", "scripts/enviar_resumen.py")
+    m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m); return m
+
+
+def test_resumen_semanal():
+    m = _load_resumen()
+    def g(name, pct, **o):
+        off = dict({"store": "Compragamer", "url": "https://c/x", "price_cash": 90000, "stock": True}, **o)
+        return {"name": name, "offers": [off], "chg": {"prev": 100000, "pct": pct, "date": "2026-10-23"}}
+    groups = [g("Baja chica", -3), g("Baja buena", -20), g("Baja enorme", -60, anom=True), g("Sin stock", -30, stock=False),
+              g("Mas baja", -35), dict(g("Precios raros", -40), dif=True), {"name": "Sin cambio", "offers": [{"store": "A", "url": "u", "price_cash": 1}]}]
+    rows = m.top_drops(groups)
+    assert [r["name"] for r in rows] == ["Mas baja", "Baja buena"], "solo bajas confiables: sin saltos sospechosos, sin stock agotado, sin precios dudosos"
+    subject, html, text = m.render(rows, "2026-10-24")
+    assert "2 productos" in subject and "$90.000" in text and "35% menos" in text and "<script" not in html
+    assert m.render([], "2026-10-24") is None
+    # nombres con HTML se escapan
+    h = m.render([dict(rows[0], name="<b>x</b>")], "2026-10-24")[1]
+    assert "&lt;b&gt;" in h
+    # Brevo: sin secretos no hace nada; con secretos crea BORRADOR y solo envía si se pide
+    assert m.crear_campana("a", "<p>x</p>", "2026-10-24", env={}) is None
+    calls = []
+    fake = lambda path, payload, key, method="POST": (calls.append((path, payload)) or {"id": 7})
+    env = {"BREVO_API_KEY": "k", "BREVO_LIST_ID": "3", "BREVO_SENDER_EMAIL": "a@b.com"}
+    r = m.crear_campana("a", "<p>x</p>", "2026-10-24", env=env, call=fake)
+    assert r == {"id": 7, "estado": "borrador"} and len(calls) == 1 and calls[0][1]["recipients"] == {"listIds": [3]}
+    r = m.crear_campana("a", "<p>x</p>", "2026-10-24", env=dict(env, BREVO_ENVIAR_YA="1"), call=fake)
+    assert r["estado"] == "enviada" and calls[-1][0] == "/emailCampaigns/7/sendNow"

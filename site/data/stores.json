@@ -141,6 +141,62 @@
       "notes": [
         "Corregido el 2026-10-23: el sitio cambió el marcado de las tarjetas de producto y el lector anterior no encontraba nada."
       ]
+    },
+    "Katech": {
+      "site": "https://katech.com.ar",
+      "integration": "completa",
+      "how": "API pública de catálogo de WooCommerce (la misma que usa el sitio). Su robots.txt permite el acceso general; sus señales de contenido «ai-train=no» se refieren al entrenamiento de IA, algo que este proyecto no hace.",
+      "contact": {},
+      "checked": "2026-10-24",
+      "reputation": [],
+      "notes": [
+        "Reputación: todavía no verificada con una fuente concreta.",
+        "Su SKU es un código interno: los productos se cruzan con otras tiendas por nombre y modelo."
+      ]
+    },
+    "Venex": {
+      "site": "https://www.venex.com.ar",
+      "integration": "parcial",
+      "how": "Listados de categoría (HTML) con ?page=N, lo único que su robots.txt no prohíbe. El listado no informa stock: queda «stock sin confirmar».",
+      "contact": {},
+      "checked": "2026-10-24",
+      "reputation": [],
+      "notes": [
+        "Reputación: todavía no verificada con una fuente concreta."
+      ]
+    },
+    "Gaming City": {
+      "site": "https://www.gamingcity.com.ar",
+      "integration": "completa",
+      "how": "Listados de categoría (HTML) por sus URLs amigables; no se usan las páginas que su robots.txt prohíbe. Informa stock, precio sugerido y cuotas.",
+      "contact": {},
+      "checked": "2026-10-24",
+      "reputation": [],
+      "notes": [
+        "Reputación: todavía no verificada con una fuente concreta.",
+        "Las cuotas se muestran tal como las publica la tienda («con todos los medios de pago»); no se afirma que sean sin interés."
+      ]
+    },
+    "NET Gaming": {
+      "site": "https://netgaming.ar",
+      "integration": "completa",
+      "how": "Listados de categoría (HTML) con ?page=N. Su robots.txt pide esperar 5 segundos entre pedidos y así se hace (por eso esta tienda tarda más en actualizarse).",
+      "contact": {},
+      "checked": "2026-10-24",
+      "reputation": [],
+      "notes": [
+        "Reputación: todavía no verificada con una fuente concreta.",
+        "Su código de artículo es interno de la tienda (no es número de parte)."
+      ]
+    },
+    "Gamer Factory": {
+      "site": "https://www.gamerfactory.com.ar",
+      "integration": "no disponible",
+      "how": "El sitio carga los productos mediante una API privada con detección de bots; no se intenta leerla.",
+      "contact": {},
+      "checked": "2026-10-24",
+      "reputation": [],
+      "notes": []
     }
   }
 }

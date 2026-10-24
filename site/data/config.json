@@ -8,10 +8,19 @@
     "Fullh4rd": {},
     "Logg": {},
     "GoldenTech": {},
-    "Armytech": {}
+    "Armytech": {},
+    "Katech": {},
+    "Venex": {},
+    "Gaming City": {},
+    "NET Gaming": {}
   },
   "assistant": {
     "_ayuda": "Opcional. Poné aquí la URL de tu proxy de IA (ver worker/LEEME). Dejalo en null para usar solo el asistente local. NUNCA pegues claves en este archivo: es público.",
     "endpoint": null
+  },
+  "alerts": {
+    "_ayuda": "Avisos de bajas de precio. Pegá acá, entre comillas, el enlace de suscripción de tu formulario de Brevo (email_form_url) y/o el enlace de invitación de tu canal de WhatsApp (whatsapp_channel_url). Si dejás null, el botón «Avisos» no se muestra. Estos enlaces son públicos: NUNCA pegues claves acá.",
+    "email_form_url": null,
+    "whatsapp_channel_url": null
   }
 }

@@ -63,3 +63,15 @@ Todo es gratis. Necesitás una cuenta de GitHub (gratis). Eso no lo puedo crear 
 - Un salto de precio sospechoso ya no cuenta en "Bajaron / Subieron de precio".
 - Nuevo orden "Más relevante" (categorías principales, comparado en más tiendas, con stock, con foto).
 - Celular: encabezado compacto y sin quedar fijo (de 241 px a 144 px), portada baja, menú y pestañas en una sola fila, tarjetas más bajas. Los filtros se pliegan por sección.
+
+## Actualización 7 (4 tiendas nuevas y avisos)
+**Tiendas nuevas:** Katech (API de WooCommerce), Venex, Gaming City y NET Gaming (listados HTML). NET Gaming pide en su robots.txt esperar 5 segundos entre pedidos y así se hace, por eso la actualización completa tarda más (el trabajo tiene un límite de 120 minutos). Descartadas: Gamer Factory (API privada con detección de bots). Sin verificar: Maldito Hard y Megatek.
+Su reputación quedó vacía a propósito hasta tener una fuente concreta (puntaje, cantidad, enlace y fecha).
+
+**Avisos de bajas de precio (mail y WhatsApp)** — queda desactivado hasta que completes estos pasos:
+1. *Mail (gratis, hasta 300 por día):* creá una cuenta en brevo.com → Contactos → creá una lista → Formularios de suscripción → creá un formulario (con confirmación por mail) y copiá el enlace de la página del formulario. Pegalo en `site/data/config.json`, en `"email_form_url"`, entre comillas. Con eso aparece el botón «🔔 Avisos» en la web.
+2. *Envío automático semanal:* en Brevo → tu nombre → SMTP y API → Claves API → creá una clave. En GitHub (repositorio → Settings → Secrets and variables → Actions → New repository secret) cargá: `BREVO_API_KEY` (la clave), `BREVO_LIST_ID` (el número de tu lista) y `BREVO_SENDER_EMAIL` (el mail remitente, verificado en Brevo). Cada viernes el sistema arma el resumen y lo deja como BORRADOR en Brevo para que lo revises y lo envíes. Cuando confíes, en Settings → Variables creá `BREVO_ENVIAR_YA` = `1` y se enviará solo.
+3. *WhatsApp:* WhatsApp no permite enviar mensajes automáticos gratis. La opción gratuita es un Canal: creá un canal desde la app de WhatsApp, copiá su enlace de invitación y pegalo en `"whatsapp_channel_url"`. Cada viernes el sistema deja el texto listo en la pestaña «Actions» → «Resumen semanal de bajas» (resumen del trabajo), y lo pegás en el canal.
+- Nunca pegues claves dentro del código o de config.json: el repositorio es público. Las claves van solo como secretos de GitHub.
+- Solo se incluyen bajas confiables (sin saltos sospechosos, sin productos sin stock ni con precios muy distintos entre tiendas).
+- Probalo antes: en GitHub → Actions → «Resumen semanal de bajas» → Run workflow.

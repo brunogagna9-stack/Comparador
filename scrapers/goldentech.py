@@ -21,7 +21,7 @@ def _money(prices, key):
         return None
 
 
-def parse(items):
+def parse(items, store=STORE):
     out = []
     for it in items:
         if it.get("type") not in (None, "simple") or not it.get("name"):
@@ -33,7 +33,7 @@ def parse(items):
         cats = " ".join(c.get("name", "") for c in it.get("categories") or [])
         name = re.sub(r"\s+", " ", it["name"]).strip()
         imgs = it.get("images") or []
-        p = product(STORE, name, it.get("permalink"), cash, reg if reg and cash and reg > cash else None,
+        p = product(store, name, it.get("permalink"), cash, reg if reg and cash and reg > cash else None,
                     stock=bool(it.get("is_in_stock")), sku=None, pn=None,
                     image=(imgs[0].get("thumbnail") or imgs[0].get("src")) if imgs else None,
                     category=canon_category(name, cats))
