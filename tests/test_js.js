@@ -265,4 +265,62 @@ t("comparador: filas de peso, medidas, garantía y batería con su procedencia",
   const light = cmp.uses.find(u => u.use.id === "port"); assert(light && light.winner === 0, "gana la más liviana");
   assert(JSON.stringify(cmp).indexOf("NaN") < 0);
 });
+
+/* ---------- Armado: cobertura de procesadores y "¿Qué actualizar?" ---------- */
+require("../site/js/upgrade.js");
+const CU = (() => { const c = CT.makeFinder(CT.create(HW, PR, META)); CT.makeUpgrade(c); return c; })();
+t("todo procesador con puntaje da sugerencias de placa en los tres resoluciones", () => {
+  HW.cpus.filter(c => c.s).forEach(c => { const cf = CU.cpuFps(c); assert(cf > 0, c.id);
+    [0].forEach(r => assert(HW.gpus.some(g => g.p[r] <= cf), "sin sugerencia para " + c.id)); });
+  const sin = HW.cpus.filter(c => !c.s).map(c => c.id); assert.deepStrictEqual(sin, ["i3-12100f"], "solo el 12100F queda sin puntaje (no hay fuente)");
+});
+t("el Ryzen 7 5800X existe, se reconoce y no se confunde con X3D / XT", () => {
+  const id = n => (CU.hwCpu(n) || {}).id;
+  assert.strictEqual(id("Procesador AMD Ryzen 7 5800X 4.7GHz AM4 Sin Cooler"), "r7-5800x");
+  assert.strictEqual(id("Micro AMD Ryzen 7 5800X3D 3.4Ghz"), "r7-5800x3d");
+  assert.strictEqual(id("AMD Ryzen 7 5800XT 3.8GHz"), "r7-5800xt");
+  assert.strictEqual(id("Ryzen 5 5600X"), "r5-5600x"); assert.strictEqual(id("Ryzen 5 5600"), "r5-5600");
+  assert.strictEqual(CU.hwCpu("Placa de Video Sapphire RX 7900XTX 24GB"), null); assert.strictEqual(CU.hwCpu("Radeon RX 7600XT 16GB"), null);
+});
+t("los puntajes estimados se marcan y explican; los medidos no", () => {
+  const cpu = id => HW.cpus.find(c => c.id === id);
+  ["r7-5800x", "r5-5600x", "r7-5800x3d", "r5-5500", "r5-7600", "r7-9700x", "i5-12400f"].forEach(i => { assert(cpu(i).se && cpu(i).se.n.length > 30 && ["alta", "media", "baja"].includes(cpu(i).se.conf), i); });
+  ["r7-9800x3d", "r5-9600x", "i5-14400f", "r7-7800x3d", "u5-225f"].forEach(i => assert(!cpu(i).se, i));
+  assert(cpu("r5-5600").s < cpu("r5-5600x").s && cpu("r5-5600x").s < cpu("r7-5800x").s && cpu("r7-5800x").s < cpu("r7-5800x3d").s);
+});
+t("recomendar una compra nunca usa un puntaje estimado", () => {
+  [0, 1, 2].forEach(r => HW.gpus.forEach(g => { const p = CU.pickPair(g, r); assert(!p.cMin.c.se && !p.cSug.c.se, g.id); }));
+});
+t("¿Qué actualizar?: 5800X + RTX 3070 → limita la placa, ofrece placas que llegan al objetivo y avisa de la fuente", () => {
+  const r = CU.advise({ text: "Ryzen 7 5800X, RTX 3070, 16 GB DDR4, 650 W, B550", res: 1, fps: 100 });
+  assert.strictEqual(r.o.cpu.id, "r7-5800x"); assert.strictEqual(r.o.gpu.id, "rtx-3070"); assert.strictEqual(r.o.psu.w, 650); assert.strictEqual(r.o.ram.gb, 16); assert.strictEqual(r.o.mobo.chipset, "B550");
+  assert.strictEqual(r.cur.limiter, "gpu"); assert.strictEqual(r.cur.meets, false);
+  const g = r.steps.find(s => s.kind === "gpu"); assert(g && g.options.length > 0);
+  g.options.forEach(o => { assert(o.reach >= 100 && o.price > 0); assert(o.psuOk === (650 >= o.need)); if (!o.psuOk) assert(o.total >= o.price); });
+  assert(!r.steps.some(s => s.kind === "cpu"), "el 5800X (~122 FPS) alcanza para 100 FPS");
+});
+t("¿Qué actualizar?: si ya cumple, no inventa cambios; si el CPU limita, ofrece CPU", () => {
+  const ok = CU.advise({ text: "Ryzen 7 9800X3D, RTX 5070 Ti", res: 1, fps: 60 }); assert.strictEqual(ok.cur.meets, true); assert.strictEqual(ok.steps.filter(s => s.kind === "gpu" || s.kind === "cpu").length, 0);
+  const lim = CU.advise({ text: "Ryzen 5 5500, RTX 4070 Super", res: 0, fps: 100 }); assert.strictEqual(lim.cur.limiter, "cpu");
+  assert(lim.steps.some(s => s.kind === "cpu"));
+});
+t("¿Qué actualizar?: lo que no está en la base se dice, no se inventa un puntaje", () => {
+  const r = CU.advise({ text: "Ryzen 5 3600, GTX 1060, 8 GB DDR4", res: 0, fps: 60 });
+  assert.strictEqual(r.cur.gF, null); assert.strictEqual(r.cur.cF, null); assert.strictEqual(r.cur.eff, null);
+  assert(r.unknown.length === 2 && r.unknown.every(u => u.why.length > 20)); assert.strictEqual(r.o.socketGuess, "AM4");
+  assert(r.steps.some(s => s.kind === "ram"), "8 GB de RAM sí se puede evaluar");
+  assert(JSON.stringify(r).indexOf("NaN") < 0);
+});
+t("¿Qué actualizar?: lectura flexible del texto (modelos sueltos, separadores, sin datos)", () => {
+  const o = CU.parseOwned("5800x + 3070\n16gb ddr4 3200, 750w");
+  assert.strictEqual(o.cpu.id, "r7-5800x"); assert.strictEqual(o.gpu.id, "rtx-3070"); assert.strictEqual(o.psu.w, 750); assert.strictEqual(o.ram.gb, 16);
+  assert.strictEqual(CU.parseOwned("rx 6700 xt").gpu.id, "rx-6700xt"); assert.strictEqual(CU.parseOwned("Intel Core i5-12400F").cpu.id, "i5-12400f");
+  const vacio = CU.advise({ text: "hola", res: 0, fps: 60 }); assert.strictEqual(vacio.steps.length, 0); assert(vacio.head.length > 0);
+});
+t("¿Qué actualizar?: presupuesto, y objetivo inalcanzable muestra lo mejor disponible", () => {
+  const b = CU.advise({ text: "Ryzen 7 5800X, RTX 3060", res: 1, fps: 100, budget: 200000 });
+  const g = b.steps.find(s => s.kind === "gpu"); assert(!g || g.options.every(o => o.total <= 200000));
+  const dur = CU.advise({ text: "Ryzen 7 5800X, RTX 3070", res: 2, fps: 144 }), gs = dur.steps.find(s => s.kind === "gpu");
+  assert(gs); if (gs.options.length) assert(gs.options.every(o => !o.meets) || gs.hayOk);
+});
 console.log(n + " pruebas de JavaScript OK");

@@ -63,32 +63,83 @@ G = [
     ("rx-7700xt", "Radeon RX 7700 XT", "AMD", 12, 245, 700, (102.9, 72.7, 38.0), None, "amd_gpu", r"rx[ -]?7700[ -]?xt", ""),
     ("rx-7600", "Radeon RX 7600", "AMD", 8, 165, 550, (69.9, 45.4, 18.4), None, "amd_gpu", r"rx[ -]?7600", r"xt"),
     ("rx-6600", "Radeon RX 6600", "AMD", 8, 132, 450, (51.9, 24.8, 14.5), None, "amd_gpu", r"rx[ -]?6600", r"xt"),
+    ("rx-6950xt", "Radeon RX 6950 XT", "AMD", 16, 335, 850, (123.3, 89.5, 48.3), None, "amd_gpu", r"rx[ -]?6950[ -]?xt", ""),
+    ("rx-6900xt", "Radeon RX 6900 XT", "AMD", 16, 300, 850, (117.1, 83.9, 44.9), None, "amd_gpu", r"rx[ -]?6900[ -]?xt", ""),
+    ("rx-6800xt", "Radeon RX 6800 XT", "AMD", 16, 300, 750, (111.8, 79.6, 42.2), None, "amd_gpu", r"rx[ -]?6800[ -]?xt", ""),
+    ("rx-6750xt", "Radeon RX 6750 XT", "AMD", 12, 250, 650, (83.2, 57.6, 29.6), None, "amd_gpu", r"rx[ -]?6750[ -]?xt", ""),
+    ("rx-6700xt", "Radeon RX 6700 XT", "AMD", 12, 230, 650, (79.2, 54.3, 28.0), None, "amd_gpu", r"rx[ -]?6700[ -]?xt", ""),
+    ("rx-6650xt", "Radeon RX 6650 XT", "AMD", 8, 180, 500, (64.3, 38.0, 19.0), None, "amd_gpu", r"rx[ -]?6650[ -]?xt", ""),
+    ("rx-6600xt", "Radeon RX 6600 XT", "AMD", 8, 160, 500, (62.7, 40.7, 17.3), None, "amd_gpu", r"rx[ -]?6600[ -]?xt", ""),
     ("arc-b580", "Intel Arc B580", "Intel", 12, 190, 600, (71.5, 50.7, 27.6), (34.9, 23.1), "intel_gpu", r"arc[ -]?b580", ""),
 ]
 
 # id, nombre, fabricante, socket, memoria, potencia base/TDP (W), potencia máxima (W), puntaje juegos o None, fuente, regex
 # potencia máxima: Intel = "Maximum Turbo Power" (Intel ARK). AMD = TDP x 1,35 (límite PPT estándar de AMD, estimado).
 C = [
+    # --- AMD AM5 ---
+    ("r7-9850x3d", "Ryzen 7 9850X3D", "AMD", "AM5", "DDR5", 120, 162, 100.0, "amd_cpu", r"9850x3d"),
     ("r9-9950x3d", "Ryzen 9 9950X3D", "AMD", "AM5", "DDR5", 170, 230, 95.7, "amd_cpu", r"9950x3d"),
     ("r7-9800x3d", "Ryzen 7 9800X3D", "AMD", "AM5", "DDR5", 120, 162, 97.0, "amd_cpu", r"9800x3d"),
-    ("r7-9700x", "Ryzen 7 9700X", "AMD", "AM5", "DDR5", 65, 88, None, "amd_cpu", r"9700x"),
-    ("r5-9600x", "Ryzen 5 9600X", "AMD", "AM5", "DDR5", 65, 88, 72.6, "amd_cpu", r"9600x"),
+    ("r9-9900x3d", "Ryzen 9 9900X3D", "AMD", "AM5", "DDR5", 120, 162, 86.9, "amd_cpu", r"9900x3d"),
     ("r7-7800x3d", "Ryzen 7 7800X3D", "AMD", "AM5", "DDR5", 120, 162, 85.6, "amd_cpu", r"7800x3d"),
-    ("r5-7600", "Ryzen 5 7600", "AMD", "AM5", "DDR5", 65, 88, None, "amd_cpu", r"(ryzen 5|\br5)[ -]?7600(?![x0-9])"),
-    ("r7-5800x3d", "Ryzen 7 5800X3D", "AMD", "AM4", "DDR4", 105, 142, None, "amd_cpu", r"5800x3d"),
-    ("r5-5600", "Ryzen 5 5600", "AMD", "AM4", "DDR4", 65, 88, None, "amd_cpu", r"(ryzen 5|\br5)[ -]?5600(?![a-z0-9])"),
-    ("r5-5500", "Ryzen 5 5500", "AMD", "AM4", "DDR4", 65, 88, None, "amd_cpu", r"(ryzen 5|\br5)[ -]?5500(?![a-z0-9])"),
+    ("r9-7950x3d", "Ryzen 9 7950X3D", "AMD", "AM5", "DDR5", 120, 162, 83.9, "amd_cpu", r"7950x3d"),
+    ("r9-7900x3d", "Ryzen 9 7900X3D", "AMD", "AM5", "DDR5", 120, 162, 77.1, "amd_cpu", r"7900x3d"),
+    ("r9-9950x", "Ryzen 9 9950X", "AMD", "AM5", "DDR5", 170, 230, 76.9, "amd_cpu", r"9950x(?!3d)"),
+    ("r9-9900x", "Ryzen 9 9900X", "AMD", "AM5", "DDR5", 120, 162, 73.9, "amd_cpu", r"9900x(?!3d)"),
+    ("r9-7950x", "Ryzen 9 7950X", "AMD", "AM5", "DDR5", 170, 230, 71.0, "amd_cpu", r"7950x(?!3d)"),
+    ("r9-7900x", "Ryzen 9 7900X", "AMD", "AM5", "DDR5", 170, 230, 69.2, "amd_cpu", r"7900x(?![t3])"),
+    ("r7-9700x", "Ryzen 7 9700X", "AMD", "AM5", "DDR5", 65, 88, 72.6, "amd_cpu", r"9700x"),
+    ("r5-9600x", "Ryzen 5 9600X", "AMD", "AM5", "DDR5", 65, 88, 72.6, "amd_cpu", r"9600x"),
+    ("r7-7700x", "Ryzen 7 7700X", "AMD", "AM5", "DDR5", 105, 142, 70.6, "amd_cpu", r"7700x(?![t3])"),
+    ("r5-7600x", "Ryzen 5 7600X", "AMD", "AM5", "DDR5", 105, 142, 67.3, "amd_cpu", r"7600x(?![t3])"),
+    ("r5-7600", "Ryzen 5 7600", "AMD", "AM5", "DDR5", 65, 88, 66.7, "amd_cpu", r"(ryzen 5|\br5)[ -]?7600(?![x0-9])"),
+    # --- AMD AM4 ---
+    ("r7-5800x3d", "Ryzen 7 5800X3D", "AMD", "AM4", "DDR4", 105, 142, 66.9, "amd_cpu", r"5800x3d"),
+    ("r7-5700x3d", "Ryzen 7 5700X3D", "AMD", "AM4", "DDR4", 105, 142, 63.5, "amd_cpu", r"5700x3d"),
+    ("r7-5800xt", "Ryzen 7 5800XT", "AMD", "AM4", "DDR4", 105, 142, 59.3, "amd_cpu", r"5800xt"),
+    ("r7-5800x", "Ryzen 7 5800X", "AMD", "AM4", "DDR4", 105, 142, 58.2, "amd_cpu", r"5800x(?![t3])"),
+    ("r7-5700x", "Ryzen 7 5700X", "AMD", "AM4", "DDR4", 65, 88, 57.5, "amd_cpu", r"5700x(?![t3])"),
+    ("r5-5600x", "Ryzen 5 5600X", "AMD", "AM4", "DDR4", 65, 88, 57.0, "amd_cpu", r"5600x(?!t)"),
+    ("r5-5600", "Ryzen 5 5600", "AMD", "AM4", "DDR4", 65, 88, 54.7, "amd_cpu", r"(ryzen 5|\br5)[ -]?5600(?![a-z0-9])"),
+    ("r5-5500", "Ryzen 5 5500", "AMD", "AM4", "DDR4", 65, 88, 45.6, "amd_cpu", r"(ryzen 5|\br5)[ -]?5500(?![a-z0-9])"),
+    # --- Intel Core Ultra (LGA1851) ---
     ("u9-285k", "Core Ultra 9 285K", "Intel", "LGA1851", "DDR5", 125, 250, 71.8, "intel_cpu", r"285kf?\b"),
     ("u7-265k", "Core Ultra 7 265K", "Intel", "LGA1851", "DDR5", 125, 250, 70.3, "intel_cpu", r"265kf?\b"),
     ("u5-245k", "Core Ultra 5 245K", "Intel", "LGA1851", "DDR5", 125, 159, 67.1, "intel_cpu", r"245kf?\b"),
+    ("u5-225f", "Core Ultra 5 225F", "Intel", "LGA1851", "DDR5", 65, 121, 62.5, "intel_cpu", r"ultra ?5.{0,12}\b225f?\b"),
+    # --- Intel Core 12.ª a 14.ª (LGA1700) ---
+    ("i9-14900k", "Core i9-14900K", "Intel", "LGA1700", "DDR4/DDR5", 125, 253, 78.2, "intel_cpu", r"14900kf?\b"),
+    ("i9-13900k", "Core i9-13900K", "Intel", "LGA1700", "DDR4/DDR5", 125, 253, 76.8, "intel_cpu", r"13900kf?\b"),
     ("i7-14700k", "Core i7-14700K", "Intel", "LGA1700", "DDR4/DDR5", 125, 253, 76.4, "intel_cpu", r"14700kf?\b"),
+    ("i7-13700k", "Core i7-13700K", "Intel", "LGA1700", "DDR4/DDR5", 125, 253, 75.8, "intel_cpu", r"13700kf?\b"),
     ("i5-14600k", "Core i5-14600K", "Intel", "LGA1700", "DDR4/DDR5", 125, 181, 72.8, "intel_cpu", r"14600kf?\b"),
     ("i5-13600k", "Core i5-13600K", "Intel", "LGA1700", "DDR4/DDR5", 125, 181, 70.9, "intel_cpu", r"13600kf?\b"),
+    ("i7-12700k", "Core i7-12700K", "Intel", "LGA1700", "DDR4/DDR5", 125, 190, 65.8, "intel_cpu", r"12700kf?\b"),
+    ("i5-12600k", "Core i5-12600K", "Intel", "LGA1700", "DDR4/DDR5", 125, 150, 60.8, "intel_cpu", r"12600kf?\b"),
     ("i5-14400f", "Core i5-14400F", "Intel", "LGA1700", "DDR4/DDR5", 65, 148, 58.0, "intel_cpu", r"14400f?\b"),
-    ("i5-13400f", "Core i5-13400F", "Intel", "LGA1700", "DDR4/DDR5", 65, 148, None, "intel_cpu", r"13400f?\b"),
-    ("i5-12400f", "Core i5-12400F", "Intel", "LGA1700", "DDR4/DDR5", 65, 117, None, "intel_cpu", r"12400f?\b"),
+    ("i5-13400f", "Core i5-13400F", "Intel", "LGA1700", "DDR4/DDR5", 65, 148, 56.8, "intel_cpu", r"13400f?\b"),
+    ("i5-12400f", "Core i5-12400F", "Intel", "LGA1700", "DDR4/DDR5", 65, 117, 47.5, "intel_cpu", r"12400f?\b"),
     ("i3-12100f", "Core i3-12100F", "Intel", "LGA1700", "DDR4/DDR5", 58, 89, None, "intel_cpu", r"12100f?\b"),
 ]
+
+# Puntajes ESTIMADOS (no figuran en la tabla de Tom's Hardware). Nunca se usan para recomendar una compra:
+# solo para evaluar un procesador que la persona YA tiene. Cada uno dice cómo se calculó.
+TOM = "Tom's Hardware (jerarquía de CPU, 5-oct-2026)"
+TS_B = "TechSpot, repaso de Zen 3 (ene-2026: el 7500F rinde ~17 % más que el 5600X, el 5800XT ~4 % más, el 5600 ~4 % menos y el 12400F con DDR4 ~20 % menos)"
+EST = {
+    "r5-5600x": ("alta", f"No figura en la tabla de Tom's. Se toma como ancla el Core Ultra 5 225 (62,5 en {TOM}) y se aplica la diferencia con el 5600X que mide TechSpot (ene-2026); el resultado coincide con el cruce por el 7500F y el 12400F con DDR5. Margen aprox. ±3 puntos."),
+    "r5-5600": ("alta", "Un 4 % menos que el Ryzen 5 5600X estimado, según TechSpot (ene-2026)."),
+    "r7-5800xt": ("alta", "Un 4 % más que el Ryzen 5 5600X estimado, según TechSpot (ene-2026)."),
+    "r7-5800x": ("media", "No hay medición propia en nuestras fuentes. Se asume ~2 % por debajo del 5800XT (mismo chip con 200 MHz menos de reloj): es un supuesto nuestro."),
+    "r7-5700x": ("baja", "No hay medición en nuestras fuentes. Se asume muy cercano al 5600X/5800X (mismo diseño, 8 núcleos, reloj intermedio): supuesto nuestro."),
+    "r7-5800x3d": ("media", "Un 15 % más que el 5800X estimado (TechSpot, abril 2022: promedio de 41 juegos a 1080p con RTX 3090 Ti). Medición vieja y con otra placa: orientativo."),
+    "r7-5700x3d": ("baja", "Supuesto nuestro: ~5 % menos que el 5800X3D por menor reloj. No hay medición en nuestras fuentes."),
+    "r5-5500": ("baja", "El 5600X rinde entre 15 % y 37 % más según el juego (TechSpot, ene-2026); se toma el punto medio (25 %), por eso el margen es amplio."),
+    "r5-7600": ("media", "Se asimila al Ryzen 5 7500F (mismo núcleo y casi el mismo reloj), que TechSpot ubica ~17 % por encima del 5600X estimado. No supera al 7600X medido (67,3)."),
+    "r7-9700x": ("media", "No figura en la tabla de Tom's. Se asume igual al 9600X (misma arquitectura y rendimiento en juegos muy parecido): supuesto nuestro."),
+    "i5-13400f": ("media", "No figura en la tabla de Tom's. Se asume ~2 % por debajo del i5-14400F medido (mismo diseño, 100 MHz menos): supuesto nuestro."),
+    "i5-12400f": ("media", "Con memoria DDR4: el 5600X rinde ~20 % más (TechSpot, ene-2026). Con DDR5 queda cerca del 5600X (~57). Se usa el valor con DDR4, que es el caso más común."),
+}
 
 # Juegos: requisitos oficiales (textuales) y tipo
 GAMES = [
@@ -142,15 +193,28 @@ GS = {
     "rx-7900xtx": ("RDNA 3", 6144, "GDDR6", 384, 20), "rx-7900xt": ("RDNA 3", 5376, "GDDR6", 320, 20),
     "rx-7800xt": ("RDNA 3", 3840, "GDDR6", 256, 19.5), "rx-7700xt": ("RDNA 3", 3456, "GDDR6", 192, 18),
     "rx-7600": ("RDNA 3", 2048, "GDDR6", 128, 18), "rx-6600": ("RDNA 2", 1792, "GDDR6", 128, 14),
+    "rx-6950xt": ("RDNA 2", 5120, "GDDR6", 256, 18), "rx-6900xt": ("RDNA 2", 5120, "GDDR6", 256, 16),
+    "rx-6800xt": ("RDNA 2", 4608, "GDDR6", 256, 16), "rx-6750xt": ("RDNA 2", 2560, "GDDR6", 192, 18),
+    "rx-6700xt": ("RDNA 2", 2560, "GDDR6", 192, 16), "rx-6650xt": ("RDNA 2", 2048, "GDDR6", 128, 17.5),
+    "rx-6600xt": ("RDNA 2", 2048, "GDDR6", 128, 16),
     "arc-b580": ("Xe2 (Battlemage)", 2560, "GDDR6", 192, 19),
 }
 # CPU: (nucleos, hilos, boost GHz, caché L3 MB, gráficos integrados)
 CS = {
-    "r9-9950x3d": (16, 32, 5.7, 128, True), "r7-9800x3d": (8, 16, 5.2, 96, True), "r7-9700x": (8, 16, 5.5, 32, True),
-    "r5-9600x": (6, 12, 5.4, 32, True), "r7-7800x3d": (8, 16, 5.0, 96, True), "r5-7600": (6, 12, 5.1, 32, True),
-    "r7-5800x3d": (8, 16, 4.5, 96, False), "r5-5600": (6, 12, 4.4, 32, False), "r5-5500": (6, 12, 4.2, 16, False),
+    "r7-9850x3d": (8, 16, 5.6, 96, True), "r9-9950x3d": (16, 32, 5.7, 128, True), "r7-9800x3d": (8, 16, 5.2, 96, True),
+    "r9-9900x3d": (12, 24, 5.5, 128, True), "r7-7800x3d": (8, 16, 5.0, 96, True), "r9-7950x3d": (16, 32, 5.7, 128, True),
+    "r9-7900x3d": (12, 24, 5.6, 128, True), "r9-9950x": (16, 32, 5.7, 64, True), "r9-9900x": (12, 24, 5.6, 64, True),
+    "r9-7950x": (16, 32, 5.7, 64, True), "r9-7900x": (12, 24, 5.6, 64, True), "r7-9700x": (8, 16, 5.5, 32, True),
+    "r5-9600x": (6, 12, 5.4, 32, True), "r7-7700x": (8, 16, 5.4, 32, True), "r5-7600x": (6, 12, 5.3, 32, True),
+    "r5-7600": (6, 12, 5.1, 32, True),
+    "r7-5800x3d": (8, 16, 4.5, 96, False), "r7-5700x3d": (8, 16, 4.1, 96, False), "r7-5800xt": (8, 16, 4.8, 32, False),
+    "r7-5800x": (8, 16, 4.7, 32, False), "r7-5700x": (8, 16, 4.6, 32, False), "r5-5600x": (6, 12, 4.6, 32, False),
+    "r5-5600": (6, 12, 4.4, 32, False), "r5-5500": (6, 12, 4.2, 16, False),
     "u9-285k": (24, 24, 5.7, 36, True), "u7-265k": (20, 20, 5.5, 30, True), "u5-245k": (14, 14, 5.2, 24, True),
-    "i7-14700k": (20, 28, 5.6, 33, True), "i5-14600k": (14, 20, 5.3, 24, True), "i5-13600k": (14, 20, 5.1, 24, True),
+    "u5-225f": (10, 10, 4.9, 20, False),
+    "i9-14900k": (24, 32, 6.0, 36, True), "i9-13900k": (24, 32, 5.8, 36, True), "i7-14700k": (20, 28, 5.6, 33, True),
+    "i7-13700k": (16, 24, 5.4, 30, True), "i5-14600k": (14, 20, 5.3, 24, True), "i5-13600k": (14, 20, 5.1, 24, True),
+    "i7-12700k": (12, 20, 5.0, 25, True), "i5-12600k": (10, 16, 4.9, 20, True),
     "i5-14400f": (10, 16, 4.7, 20, False), "i5-13400f": (10, 16, 4.6, 20, False), "i5-12400f": (6, 12, 4.4, 18, False),
     "i3-12100f": (4, 8, 4.3, 12, False),
 }
@@ -162,6 +226,7 @@ VERIFIED["r5-9600x"] = ["cores", "threads", "boost", "l3", "igpu"]
 
 
 def build():
+    assert all(k in {c[0] for c in C} for k in EST), "EST con id inexistente"
     gpus = [dict(id=i, name=n, vendor=v, vram=vr, tgp=t, psu=p, p=list(perf), rt=list(rt) if rt else None, src=s, m=m, x=x)
             for i, n, v, vr, t, p, perf, rt, s, m, x in G]
     cpus = [dict(id=i, name=n, vendor=v, socket=so, mem=me, tdp=td, maxp=mp, s=sc, src=s, m=m)
@@ -174,6 +239,9 @@ def build():
         n, t, b, l3, ig = CS[c["id"]]
         c["spec"] = dict(cores=n, threads=t, boost=b, l3=l3, igpu=ig)
         c["ver"] = VERIFIED.get(c["id"], [])
+        if c["id"] in EST:
+            conf, note = EST[c["id"]]
+            c["se"] = {"conf": conf, "n": note}      # puntaje estimado: no figura en la tabla de Tom's
     out = {"sources": SOURCES, "gpus": gpus, "cpus": cpus, "games": GAMES,
            "ref": {"gpu_fps_ref": 203.8, "cpu_score_ref": 97.0,
                    "notas": "FPS de CPU estimado = 203,8 x (puntaje del CPU / 97). Ver README."}}

@@ -170,13 +170,15 @@
     const cpuTests = HW.cpus.map(c => [c, rxm(c.m)]);
     C.hwGpu = (name, vram) => { if (NOT_PC.test(name)) return null; const v = vram === undefined ? vramOf(name) : vram; // en PC armadas la VRAM sale del análisis del título, no del primer "GB"
       const hit = gpuTests.find(([g, t]) => t(name) && (v == null || v === g.vram)); return hit ? hit[0] : null; };
-    C.hwCpu = name => { if (/cooler|disipador|fan|pasta|\bkit\b/i.test(name)) return null; const hit = cpuTests.find(([c, t]) => t(name)); return hit ? hit[0] : null; };
+    /* "Sin Cooler" / "con cooler Wraith" describen al procesador, no lo convierten en un cooler */
+    const cpuClean = n => n.replace(/\b(?:sin|con|incluye|no incluye|s\/|c\/)\s?(?:cooler|disipador|ventilador|fan)(?:\s+(?:wraith|stock|original|stealth|prism))?(?:\s+(?:stealth|spire))?/ig, " ");
+    C.hwCpu = name => { name = cpuClean(name); if (/cooler|disipador|fan|pasta|\bkit\b/i.test(name)) return null; const hit = cpuTests.find(([c, t]) => t(name)); return hit ? hit[0] : null; };
 
     const isPc = n => /^pc\b|\bpc (armada|gamer|powered)|powered by|notebook|combo|\bkit\b|all in one/i.test(n);
     C.findGpu = g => { const t = rxm(g.m, g.x);
       return C.cheapest(inCat("placas-de-video").filter(p => !isPc(p.name) && !NOT_PC.test(p.name) && t(p.name) && (vramOf(p.name) == null || vramOf(p.name) === g.vram))); };
     C.findCpu = c => { const t = rxm(c.m);
-      return C.cheapest(inCat("procesadores").filter(p => t(p.name) && !/cooler|disipador|fan|\bkit\b|combo|pc /i.test(p.name))); };
+      return C.cheapest(inCat("procesadores").filter(p => { const n = cpuClean(p.name); return t(n) && !/cooler|disipador|fan|\bkit\b|combo|pc /i.test(n); })); };
     C.findPsu = w => C.cheapest(inCat("fuentes").filter(p => { const s = psuSpec(p.name); return s.w && s.w >= w && s.w <= w + 250 && s.cert && !/combo|gabinete/i.test(p.name); }));
     C.findMobo = c => C.cheapest(inCat("motherboards").filter(p => moboSpec(p.name).socket === c.socket));
     C.findRam = (c, gb) => { const ddr = c.mem === "DDR5" ? /ddr5/i : c.mem === "DDR4" ? /ddr4/i : /ddr[45]/i;
@@ -187,7 +189,8 @@
     /* ---------- lógica de armado (la misma que usaba armado.html) ---------- */
     C.cpuFps = c => c.s ? HW.ref.gpu_fps_ref * c.s / HW.ref.cpu_score_ref : null;
     C.pickCpu = (Gv, factor, vendor) => {
-      const l = HW.cpus.filter(c => c.s && (!vendor || c.vendor === vendor)).sort((a, b) => a.s - b.s);
+      /* para RECOMENDAR una compra solo se usan procesadores con puntaje medido (los estimados sirven para evaluar lo que ya se tiene) */
+      const l = HW.cpus.filter(c => c.s && !c.se && (!vendor || c.vendor === vendor)).sort((a, b) => a.s - b.s);
       const ok = l.find(c => C.cpuFps(c) >= factor * Gv);
       return ok ? { c: ok, short: false } : { c: l[l.length - 1], short: true };
     };
@@ -210,7 +213,7 @@
           why: `${g.vram} GB de VRAM · consumo ${g.tgp} W (${g.vendor}).`, shop: C.findGpu(g) },
         { slot: "cpu", label: "Procesador", key: "cpu:" + c.id, title: "Procesador: " + c.name,
           why: `${c.socket} · ${c.mem} · ${c.tdp} W base, hasta ~${c.maxp} W${c.vendor === "AMD" ? " (estimado)" : ""}.` +
-            (c.s ? ` Puntaje de juegos ${c.s}/100 (≈${Math.round(C.cpuFps(c))} FPS máx. en el suite).` : "") +
+            (c.s ? ` Puntaje de juegos ${c.s}/100${c.se ? " (estimado)" : ""} (≈${Math.round(C.cpuFps(c))} FPS máx. en el suite).` : "") +
             (short ? " Es el más potente de la lista y aun así podría limitar a esta placa." : ""), shop: C.findCpu(c) },
         { slot: "psu", label: "Fuente de poder", key: "psu:" + psuW, title: `Fuente de poder: ${psuW} W o más`,
           why: "Incluye procesador al máximo + placa + ~100 W del resto. " + (kind === "min" ? "Es el piso: no bajes de este valor." : "Con ~25 % de margen para que trabaje holgada y dure más.") +

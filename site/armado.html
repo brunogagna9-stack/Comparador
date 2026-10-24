@@ -9,7 +9,7 @@
 </head>
 <body>
 <header><div class="top"><a class="logo" href="index.html">Compará<span>Tech</span></a>
-<nav class="nav"><a href="index.html">Comparador de precios</a><a class="on" href="armado.html">Armado de PC</a><a href="encontra.html">Encontrá tu equipo</a><a href="comparar.html">Comparar hardware</a></nav></div></header>
+<nav class="nav"><a href="index.html">Comparador de precios</a><a class="on" href="armado.html">Armado de PC</a><a href="actualizar.html">¿Qué actualizar?</a><a href="encontra.html">Encontrá tu equipo</a><a href="comparar.html">Comparar hardware</a></nav></div></header>
 <main>
 <h1>Armado de PC</h1>
 <p class="lead">Elegí una placa de video o un procesador y te decimos qué hardware acompañarlo (mínimo y sugerido), qué fuente necesitás y cómo rendiría en juegos.</p>
@@ -92,13 +92,14 @@ function render(){
   }else{
     const c=HW.cpus.find(x=>x.id===S.id),cf=C.cpuFps(c);
     h+=`<div class="panel"><b>${esc(c.name)}</b> (${c.socket}, ${c.mem}, hasta ~${c.maxp} W).`;
+    if(c.se)h+=` <span class="chip c-warn">Puntaje estimado</span> <span class="note">${esc(c.se.n)} Confianza: ${esc(c.se.conf)}.</span>`;
     if(!cf){h+=` No tenemos un puntaje de rendimiento en juegos comparable para este procesador, por lo que no podemos decir qué placa de video es la ideal. Elegí otro procesador o empezá por la placa de video.</div>`;}
     else{
       const r=S.res,ok=HW.gpus.filter(g=>g.p[r]<=cf/1.0).sort((a,b)=>b.p[r]-a.p[r]);
       const ok8=HW.gpus.filter(g=>g.p[r]<=cf/0.8&&g.p[r]>cf/1.0).sort((a,b)=>b.p[r]-a.p[r]);
       h+=` Puede alimentar (sin cuello de botella) placas de hasta ~${Math.round(cf)} FPS de promedio a ${RES[r]}.</div>`;
       const li=a=>a.slice(0,6).map(g=>`<div><span class="pick" data-g="${g.id}">${esc(g.name)}</span> <span class="note">· ~${Math.round(g.p[r])} FPS · fuente ${g.psu} W+</span></div>`).join("")||'<div class="note">Ninguna en la lista.</div>';
-      h+=`<div class="cols"><div class="col"><h3>Placas sugeridas (equilibradas)</h3><div class="tg">El procesador no limita a la placa</div>${li(ok)}</div><div class="col"><h3>Placas posibles (límite)</h3><div class="tg">Leve cuello de botella (hasta 20 %)</div>${li(ok8)}</div></div><p class="note">Tocá una placa para ver el armado completo con fuente, placa madre y memoria.</p>`;
+      h+=`<div class="cols"><div class="col"><h3>Placas sugeridas (equilibradas)</h3><div class="tg">El procesador no limita a la placa</div>${li(ok)}</div><div class="col"><h3>Placas posibles (límite)</h3><div class="tg">Leve cuello de botella (hasta 20 %)</div>${li(ok8)}</div></div><p class="note">Tocá una placa para ver el armado completo con fuente, placa madre y memoria. ¿Ya tenés este procesador y querés saber qué cambiar? Probá <a href="actualizar.html">¿Qué actualizar?</a></p>`;
     }
   }
   $("#out").innerHTML=h;
@@ -107,7 +108,7 @@ function render(){
 function setMode(){
   document.querySelectorAll("#mode button").forEach(b=>b.classList.toggle("on",b.dataset.v===S.mode));
   $("#lsel").textContent=S.mode==="gpu"?"Placa de video":"Procesador";
-  const l=S.mode==="gpu"?HW.gpus:HW.cpus;if(!l.find(x=>x.id===S.id))S.id=l[0].id;
+  const l=S.mode==="gpu"?HW.gpus:HW.cpus.filter(c=>c.s);if(!l.find(x=>x.id===S.id))S.id=l[0].id;
   const grp={};l.forEach(x=>(grp[x.vendor]=grp[x.vendor]||[]).push(x));
   $("#sel").innerHTML=Object.entries(grp).map(([v,a])=>`<optgroup label="${v}">${a.map(x=>`<option value="${x.id}" ${x.id===S.id?"selected":""}>${esc(x.name)}</option>`).join("")}</optgroup>`).join("");
   render();

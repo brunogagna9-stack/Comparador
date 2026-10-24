@@ -29,6 +29,7 @@ Todo es gratis. Necesitás una cuenta de GitHub (gratis). Eso no lo puedo crear 
 ## Secciones del sitio (actualización 3)
 - `armado.html` – Armado de PC. Los componentes iguales en "mínimo" y "sugerido" se muestran una sola vez, y cada configuración tiene su propio total.
 - `encontra.html` – Encontrá tu equipo: cuestionario guiado → PC armadas, PC por componentes o notebooks reales del catálogo.
+- `actualizar.html` – ¿Qué actualizar?: escribís tus componentes y el rendimiento que querés; te dice qué cambiar primero, con precios reales del comparador.
 - `comparar.html` – Comparar hardware: tabla, gráficos, ventajas y ganador justificado.
 - `site/js/lib.js`, `compare.js`, `finder.js` – lógica compartida. Se prueba con `node tests/test_js.js` (también corre dentro de `python tests/run_tests.py`).
 - Etiquetas de datos: **Verificado** (ficha oficial), **Benchmark** (medición independiente), **Estimado** (calculado), **Pendiente de verificar** (del título de la tienda o aún sin comprobar), **Sin datos**.
@@ -75,3 +76,17 @@ Su reputación quedó vacía a propósito hasta tener una fuente concreta (punta
 - Nunca pegues claves dentro del código o de config.json: el repositorio es público. Las claves van solo como secretos de GitHub.
 - Solo se incluyen bajas confiables (sin saltos sospechosos, sin productos sin stock ni con precios muy distintos entre tiendas).
 - Probalo antes: en GitHub → Actions → «Resumen semanal de bajas» → Run workflow.
+
+## Actualización 8: Armado de PC completo y «¿Qué actualizar?»
+
+**Qué se arregló en «Armado de PC»**
+- Antes, 8 de 19 procesadores no tenían puntaje y no daban sugerencias, y faltaban modelos muy comunes (como el Ryzen 7 5800X). Ahora hay 40 procesadores y **todos** dan sugerencias, salvo el Core i3-12100F (no encontramos ninguna fuente con su rendimiento y no inventamos un número).
+- Se corrigió además un error de lectura: los productos con «Sin Cooler» en el título (muy comunes en las tiendas) no se asociaban al procesador.
+- Se agregaron 7 placas de video AMD Radeon RX 6000 (6600 XT a 6950 XT).
+- **Puntajes estimados:** Tom's Hardware no mide algunos procesadores (5800X, 5600X, 5800X3D, 5500, 7600, 9700X, 12400F, 13400F…). Para esos usamos un puntaje **estimado**, calculado con comparaciones publicadas por TechSpot. En la pantalla aparece la etiqueta «Estimado», cómo se calculó y qué tan confiable es (alta / media / baja). Todo está en `make_hardware.py` (diccionario `EST`). **Nunca se recomienda comprar un procesador por un puntaje estimado** en «Armado de PC».
+- Si encontrás una fuente mejor para alguno, cambiás el número en `make_hardware.py`, ejecutás `python make_hardware.py` y listo.
+
+**Nueva página «¿Qué actualizar?»** (`actualizar.html`)
+- Escribís tus componentes (por ejemplo: «Ryzen 7 5800X, RTX 3070, 16 GB DDR4, 650 W, B550»), elegís resolución y objetivo de FPS (y, si querés, presupuesto).
+- Te dice qué te limita (placa de video o procesador), qué cambiar primero, si tu fuente alcanza, si conviene sumar RAM o un SSD, y qué productos reales del comparador sirven (con precio y tienda).
+- Lo que no reconoce (por ejemplo una GTX 1060 o un Ryzen 5 3600, que no están en las tablas de rendimiento que usamos) lo dice claramente; no inventa números.

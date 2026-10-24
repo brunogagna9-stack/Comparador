@@ -82,7 +82,11 @@ def test_hardware_json():
     for g in mh.G:
         assert g[4] > 0 and g[5] >= g[4] and all(x > 0 for x in g[6]), g[0]   # la fuente nunca es menor al consumo
         re.compile(g[9]); re.compile(g[10] or "x")
+    assert all(k in {c[0] for c in mh.C} for k in mh.EST)
+    for k, (conf, note) in mh.EST.items():     # todo puntaje estimado dice cómo se calculó
+        assert conf in ("alta", "media", "baja") and len(note) > 30, k
     for c in mh.C:
+        assert c[7] is not None or c[0] == "i3-12100f", c[0]   # sin puntaje solo si no hay fuente
         assert c[6] >= c[5] and c[3] in ("AM4", "AM5", "LGA1700", "LGA1851"), c[0]
         re.compile(c[9])
         # el tipo de memoria debe ser coherente con el socket
