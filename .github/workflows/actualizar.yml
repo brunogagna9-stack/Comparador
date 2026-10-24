@@ -2,8 +2,8 @@ name: Actualizar precios y publicar
 
 on:
   schedule:
-    - cron: "17 */6 * * *"
-  workflow_dispatch:
+    - cron: "17 */6 * * *"   # cada 6 horas
+  workflow_dispatch:          # botón "Run workflow" para correrlo a mano
   push:
     branches: [main]
 
@@ -19,6 +19,7 @@ concurrency:
 jobs:
   actualizar:
     runs-on: ubuntu-latest
+    timeout-minutes: 120   # NET Gaming pide 5 s entre pedidos: la corrida completa es más lenta
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
@@ -33,17 +34,24 @@ jobs:
         run: python tests/run_tests.py
       - name: Recolectar precios
         run: python build_data.py
+      - name: Verificar que los datos sean válidos (si no, no se publica)
+        run: python scripts/check_data.py
+      - name: Copiar el sitio listo para publicar (antes de tocar git)
+        run: cp -r site "$RUNNER_TEMP/site_publicar"
       - name: Guardar datos en el repositorio
         run: |
           git config user.name "actualizador"
           git config user.email "actions@users.noreply.github.com"
           git add site/data raw
           git diff --staged --quiet || git commit -m "Actualización automática de precios"
-          git pull --rebase origin main || true
+          # Si el repositorio avanzó mientras corríamos, se une dejando SIEMPRE los datos recién generados.
+          # Nunca se usa rebase: un conflicto dejaba marcas «<<<<<<<» dentro de products.json y la web quedaba vacía.
+          git fetch origin main || true
+          git merge -X ours --no-edit origin/main || git merge --abort || true
           git push || true
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: site
+          path: ${{ runner.temp }}/site_publicar
       - id: deploy
         uses: actions/deploy-pages@v4
