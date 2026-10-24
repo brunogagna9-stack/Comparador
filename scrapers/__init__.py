@@ -1,4 +1,4 @@
-from . import compragamer, mexx, maximus, gezatek, fullh4rd, logg, goldentech, armytech, katech, venex, gamingcity, netgaming
+from . import compragamer, mexx, maximus, gezatek, fullh4rd, logg, goldentech, armytech, katech, venex, gamingcity, netgaming, woo
 
 SCRAPERS = {
     "Compragamer": compragamer.scrape,
@@ -13,5 +13,6 @@ SCRAPERS = {
     "Venex": venex.scrape,
     "Gaming City": gamingcity.scrape,
     "NET Gaming": netgaming.scrape,
+    **{name: woo.make(name) for name in woo.WOO_STORES},   # 6 tiendas WooCommerce (ver scrapers/woo.py)
     # Mercado Libre: no se recolecta por scraping (ver README, requiere programa de afiliados / API oficial)
 }
