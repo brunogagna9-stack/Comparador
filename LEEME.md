@@ -53,3 +53,13 @@ Todo es gratis. Necesitás una cuenta de GitHub (gratis). Eso no lo puedo crear 
 - Indicadores de "dato viejo" (la tienda falló en la última actualización) y "precio inusual" (cambio de -50% o +100%).
 - Botón "Copiar enlace de esta comparación" en Comparar hardware.
 - Se corrigió que el encabezado tapaba el botón de cerrar de la ventana de detalle.
+
+## Actualización 6 (imágenes, limpieza y cruce de productos)
+- **Imágenes:** las fotos de Compragamer pasan de miniatura (100 px) a 750 px; se descartan las imágenes genéricas de "sin foto" (Armytech); si una tienda no tiene foto se usa la de otra tienda que vende el mismo producto; si ninguna tiene, se usa `site/data/imagenes_extra.json` (fotos cargadas a mano desde páginas oficiales de fabricantes, con fuente y enlace); si tampoco hay, la tarjeta muestra el ícono de su categoría. Si una foto grande falla, se usa la miniatura.
+- **Cruce de productos corregido:** antes se podían juntar productos distintos (una fuente con placas de video; mothers distintas por compartir chipset; RTX 5060 con RTX 5060 Ti). Ahora dos ofertas se juntan solo si tienen el mismo número de parte, el mismo título, o la misma marca + modelo + capacidad + variante. Es preferible NO comparar a comparar mal.
+- Los productos usados / outlet / open box nunca se mezclan con los nuevos.
+- Si los precios de un mismo producto difieren 3 veces o más, la tarjeta muestra "precios muy distintos" y se excluye del orden "Mayor diferencia entre tiendas".
+- Se ocultan servicios ("Actualización de Bios") y productos que no son hardware (robots, fundas, toners, televisores). Se limpian palabras repetidas en los títulos.
+- Un salto de precio sospechoso ya no cuenta en "Bajaron / Subieron de precio".
+- Nuevo orden "Más relevante" (categorías principales, comparado en más tiendas, con stock, con foto).
+- Celular: encabezado compacto y sin quedar fijo (de 241 px a 144 px), portada baja, menú y pestañas en una sola fila, tarjetas más bajas. Los filtros se pliegan por sección.

@@ -105,7 +105,17 @@ def is_service(name):
     """Servicios que no son productos comparables (p. ej. el 'ARMADO DE PC' de Compragamer)."""
     n = (name or "").lower().strip()
     return bool(re.match(r"^(armado|servic(io|e)|instalaci[oó]n|mano de obra)\b", n)
-                or re.search(r"armado (de|express|item|ítem)|armado item|\bitem \d{3,4}\b.*armado", n))
+                or re.search(r"armado (de|express|item|ítem)|armado item|\bitem \d{3,4}\b.*armado", n)
+                or re.search(r"actualizaci[oó]n de bios|extensi[oó]n de garant[ií]a|^garant[ií]a\b", n))
+
+
+_NON_HW = re.compile(r"\brobot\b|transformers|\bfunda\b|\bcelular\b|\btoner\b|cartucho|\btinta\b|\bjuguete|"
+                     r"smart ?tv|televisor|\bsoporte (de )?tv\b|soporte tv|\bheladera|\bpeluche|\bperfume", re.I)
+
+
+def is_non_hardware(name, category):
+    """Productos de la categoría 'otros' que no son hardware de PC (robots, fundas, toners, televisores…)."""
+    return category == "otros" and bool(_NON_HW.search(name or ""))
 
 
 def canon_category(*texts):

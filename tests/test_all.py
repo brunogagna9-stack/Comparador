@@ -271,3 +271,102 @@ def test_precio_inusual():
     assert g[0]["offers"][0].get("anom") is True and g[0]["offers"][0]["chg"]["pct"] == -70.0
     it = dict(base, price_cash=32000); g = bd.build([it]); bd.update_history(g, hist, "2026-10-22"); bd.annotate_changes(g, hist, "2026-10-22")
     assert not g[0]["offers"][0].get("anom"), "un cambio normal no se marca"
+
+
+def _it(store, name, cat, image=None, price=100000, pn=None, url=None):
+    return {"store": store, "name": name, "url": url or f"https://{store}/{abs(hash(name + store)) % 99999}",
+            "price_cash": price, "price_list": None, "stock": True, "sku": pn, "pn": pn, "image": image,
+            "category": cat, "cuotas": None, "rating": None}
+
+
+def test_imagenes():
+    mini = "https://imagenes.compragamer.com/productos/compragamer_Imganen_general_1_X_abc-mini.jpg"
+    assert bd.hq_image(mini).endswith("_abc.jpg") and "-mini" not in bd.hq_image(mini)
+    assert bd.hq_image("https://otra.com/a-mini.jpg") == "https://otra.com/a-mini.jpg", "solo se toca Compragamer"
+    ph = "https://www.armytech.com.ar/img/p/es-default-home_default.jpg"
+    assert bd.good_image(ph) is None and bd.good_image("https://www.armytech.com.ar/123-home_default/x.jpg")
+    # el placeholder de una tienda se descarta y se usa la foto de otra tienda que vende lo mismo
+    a = _it("Armytech", "Fuente MSI MAG A650GN 650W 80 Plus Gold", "fuentes", ph, 90000, "A650GN-X1")
+    b = _it("Logg", "Fuente MSI MAG A650GN 650W 80 Plus Gold", "fuentes", "https://logg.api.cygnus.market/p.jpg", 95000, "A650GN-X1")
+    g = bd.build([a, b])
+    assert len(g) == 1 and g[0]["image"] == "https://logg.api.cygnus.market/p.jpg"
+    c = _it("Compragamer", "Memoria Team DDR5 16GB 6000 MHz Vulcan CL38", "memorias-ram", mini, 80000, "FLARD516G6000HC38J01")
+    g = bd.build([c])
+    assert g[0]["image"] == bd.hq_image(mini) and g[0]["image_fb"] == mini, "alta resolución + respaldo"
+    # sin foto en ninguna tienda: se usa la cargada a mano del fabricante, con su fuente
+    d = _it("Armytech", "Mother Asus Prime B760m-a D4 1700", "motherboards", ph, 150000)
+    g = bd.build([d], {"mother-asus-prime-b760m-a-d4-1700": {"url": "https://dlcdnwebimgs.asus.com/x", "source": "Sitio del fabricante (asus.com)"}})
+    assert g[0]["image"] == "https://dlcdnwebimgs.asus.com/x" and "asus.com" in g[0]["img_src"]
+    g = bd.build([d]); assert g[0]["image"] is None
+    import json as _j
+    ex = _j.load(open("site/data/imagenes_extra.json"))["items"]
+    assert ex and all(v["url"].startswith("https://") and v["page"] and v["source"] for v in ex.values())
+
+
+def test_limpieza_catalogo():
+    from scrapers import common as cm
+    assert cm.is_service("Actualización de Bios")
+    assert cm.is_non_hardware("Robot Robosen Transformers Optimus Prime", "otros")
+    assert cm.is_non_hardware("Funda Celular Samsung Flip Wallet A3", "otros")
+    assert cm.is_non_hardware("SMART TV HYUNDAI 32'' HD", "otros")
+    assert not cm.is_non_hardware("UPS con Estabilizador Lyonn 800ap", "otros")
+    assert not cm.is_non_hardware("Monitor Smart TV Samsung 27", "monitores"), "solo la categoría 'otros'"
+    g = bd.build([_it("A", "Robot Robosen Transformers G1 Bumblebee", "otros"), _it("A", "Actualización de Bios", "otros"),
+                  _it("A", "UPS Lyonn CTB 800ap 800v Display", "otros")])
+    assert [x["name"] for x in g] == ["UPS Lyonn CTB 800ap 800v Display"]
+    assert bd.clean_name("Extensor de Red TP-Link TL-WA850RE WIFI 300Mbps White 300Mbps Universal 300Mbps 300Mbps Universal") == \
+        "Extensor de Red TP-Link TL-WA850RE WIFI 300Mbps White Universal"
+    assert bd.clean_name("Mouse Pad Gamer Pad XL") == "Mouse Pad Gamer Pad XL", "palabras cortas no se tocan"
+
+
+def test_cruce_entre_tiendas():
+    # mismo nombre exacto con distinto URL: un solo producto
+    g = bd.build([_it("A", "Teclado Mecanico Redragon Kumara K552 Rainbow", "perifericos", price=50000),
+                  _it("B", "Teclado Mecanico Redragon Kumara K552 Rainbow", "perifericos", price=52000)])
+    assert len(g) == 1 and len(g[0]["offers"]) == 2
+    # cruce flexible: misma marca, modelo y variante aunque el título esté ordenado distinto
+    g = bd.build([_it("Compragamer", 'Monitor Gamer ASUS VA27EHF-J 27" FHD IPS 100Hz', "monitores", price=200000),
+                  _it("MEXX", 'Monitor Gamer 27" Asus Full Hd Ips 100Hz 1Ms Freesync VA27EHF-J', "monitores", price=190000)])
+    assert len(g) == 1 and [o["store"] for o in g[0]["offers"]] == ["MEXX", "Compragamer"]
+    # variantes distintas NO se mezclan (Ti / Super / color)
+    g = bd.build([_it("A", "Placa de Video MSI GeForce RTX 5060 Ti 16GB Ventus", "placas-de-video", price=1000000),
+                  _it("B", "Placa de Video MSI GeForce RTX 5060 16GB Ventus", "placas-de-video", price=900000)])
+    assert len(g) == 2
+    g = bd.build([_it("A", "Auriculares Redragon Ire PRO H848 Wireless 2.4Ghz Black 7.1", "perifericos", price=100000),
+                  _it("B", "Auriculares Redragon Ire PRO H848 Wireless 2.4Ghz White 7.1", "perifericos", price=100000)])
+    assert len(g) == 2
+    # usado / outlet nunca se mezcla con el nuevo, aunque comparta número de parte
+    g = bd.build([_it("A", "Monitor Gamer ASUS VA27EHF-J 27 FHD IPS 100Hz", "monitores", pn="90LM0560-B01170"),
+                  _it("A", "Monitor Gamer ASUS VA27EHF-J 27 FHD IPS 100Hz - Usado en evento", "monitores", pn="90LM0560-B01170", price=150000)])
+    assert len(g) == 2
+
+
+def test_cruce_no_mezcla_productos_distintos():
+    """Casos reales que el cruce anterior juntaba por error (se vieron en la web publicada)."""
+    gpu = _it("Maximus", "Placa de Video MSI Nvidia GeForce RTX 5070 Ventus 2X 12GB OC GDDR7", "placas-de-video", price=1708380)
+    psu = _it("Compragamer", "Fuente ASUS PRIME 750W 80 Plus Gold AP-750G Full Modular ATX 3.1 PCIe 5.1", "fuentes", price=166600)
+    gpu2 = _it("Armytech", "Placa de Video GeForce RTX 5070 12GB ASUS ROG Strix OC 12GB GDDR7", "placas-de-video", price=1910247)
+    assert len(bd.build([gpu, psu, gpu2])) == 3
+    m1 = _it("Compragamer", "Mother Asrock A520M HDV AM4", "motherboards", price=81407)
+    m2 = _it("Armytech", "Mother Asus Prime A520m-k Am4", "motherboards", price=82246)
+    m3 = _it("MEXX", "Motherboard AM4 - Gigabyte A520M K V2", "motherboards", price=97999)
+    m4 = _it("A", "Mother Asus Prime A520M-E Am4", "motherboards", price=70000)
+    pc = _it("Maximus", "PC Armada AMD Ryzen 5 5600GT 16GB 512GB", "pcs-armadas", price=841590)
+    assert len(bd.build([m1, m2, m3, m4, pc])) == 5, "chipset igual no es producto igual"
+    # dos placas del mismo chip pero de línea distinta (Dual / TUF / Prime) no se cruzan
+    a = _it("A", "Placa de Video ASUS Dual GeForce RTX 5060 Ti 16GB GDDR7 OC", "placas-de-video", price=1000000)
+    b = _it("B", "Placa de Video ASUS TUF Gaming GeForce RTX 5060 Ti 16GB GDDR7 OC", "placas-de-video", price=1200000)
+    assert len(bd.build([a, b])) == 2
+    # el mismo procesador con títulos distintos sí se cruza; tray y box no
+    c1 = _it("A", "Procesador AMD Ryzen 5 5500 3.6GHz Turbo 4.2 AM4", "procesadores", price=120000)
+    c2 = _it("B", "Micro AMD Ryzen 5 5500 - 6 Nucleos 12 Threads 4.2Ghz AM4", "procesadores", price=125000)
+    c3 = _it("C", "Procesador AMD Ryzen 5 5500 Tray AM4", "procesadores", price=100000)
+    g = bd.build([c1, c2, c3]); assert sorted(len(x["offers"]) for x in g) == [1, 2]
+
+
+def test_aviso_precios_muy_distintos():
+    a = _it("A", "Teclado Mecanico Redragon Kumara K552 Rainbow", "perifericos", price=50000)
+    b = _it("B", "Teclado Mecanico Redragon Kumara K552 Rainbow", "perifericos", price=500000)
+    assert bd.build([a, b])[0].get("dif") is True
+    b["price_cash"] = 55000
+    assert not bd.build([a, b])[0].get("dif")

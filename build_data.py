@@ -48,6 +48,14 @@ def tokens(name):
     return [t for t in re.split(r"[^a-z0-9]+", name.lower()) if t]
 
 
+_USED = re.compile(r"\busado\b|\boutlet\b|reacondicionad|open ?box|\bexhibici[oó]n|\bdemo\b|\bbulk\b", re.I)
+
+
+def is_used(name):
+    """Unidades usadas / outlet / open box: nunca se mezclan con el producto nuevo."""
+    return bool(_USED.search(name or ""))
+
+
 def pn_tokens(item):
     """Números de parte: tokens largos que mezclan letras y números."""
     cands = set()
@@ -59,16 +67,54 @@ def pn_tokens(item):
     return cands
 
 
-def signature(item):
-    """Firma por nombre: tokens con dígitos (modelo, capacidad, velocidad) + categoría."""
-    toks = [t for t in tokens(item["name"]) if t not in STOP]
-    key = sorted({t for t in toks if re.search(r"\d", t) and len(t) >= 3
-                  and not re.search(r"(ghz|mhz|mm|cm|hz)$", t)})
-    return (item["category"], tuple(key)) if len(key) >= 2 else None
+# ---- cruce de productos entre tiendas ----
+# Principio: es preferible NO comparar (el producto aparece en una sola tienda) que comparar dos productos distintos.
+# Dos ofertas son el mismo producto si comparten número de parte, tienen el mismo título exacto, o si (misma marca y
+# categoría) coinciden TODOS sus códigos de modelo, capacidades y variantes y, salvo en procesadores, sus palabras de línea.
+VARIANT_WORDS = {"ti", "super", "xt", "xtx", "gre", "x3d", "oc", "white", "black", "blanco", "negro", "rgb", "argb",
+                 "wifi", "plus", "pro", "max", "evo", "gold", "bronze", "platinum", "titanium", "silver", "rojo",
+                 "red", "blue", "azul", "pink", "rosa", "ultra", "mini", "lite", "tray", "box", "oem", "bulk"}
+GENERIC_WORDS = STOP | {"gamer", "gaming", "socket", "intel", "amd", "nvidia", "geforce", "radeon", "series", "serie",
+                        "cooler", "incluye", "no", "nucleos", "threads", "turbo", "graphics", "graficos", "tarjeta",
+                        "de", "con", "la", "el", "full", "hd", "fhd", "ips", "va", "led", "pcie", "gddr6", "gddr7",
+                        "gddr6x", "ddr4", "ddr5", "atx", "modular", "80", "plus", "freesync", "gsync", "sync", "hdr", "curvo",
+                        "curved", "ms", "g", "pc", "para", "wireless", "inalambrico", "usb", "bluetooth", "mecanico"}
+_UNIT = re.compile(r"^\d+(\.\d+)?(ghz|mhz|mt|mm|cm|hz|ms|w|v|mb|kg|mbps|gbps|fps)$")
+_CAP = re.compile(r"^\d+(gb|tb|w)$")
+NO_LINE_CHECK = {"procesadores"}   # un procesador se identifica solo por su código de modelo
+
+
+def match_info(item):
+    """Datos para decidir si dos ofertas son el mismo producto; None si no hay información suficiente."""
+    name = item["name"]
+    brand = brand_of(name)
+    if not brand:
+        return None
+    toks = [t for t in re.split(r"[^a-z0-9]+", name.lower()) if t]
+    codes = frozenset(t for t in toks if not _UNIT.match(t) and not _CAP.match(t)
+                      and (len(re.sub(r"\D", "", t)) >= 3 or (len(t) >= 5 and re.search(r"\d", t) and re.search(r"[a-z]", t))))
+    if not codes:
+        return None
+    caps = frozenset(t for t in toks if _CAP.match(t))
+    var = frozenset(t for t in toks if t in VARIANT_WORDS)
+    alpha = frozenset(t for t in toks if t.isalpha() and t not in GENERIC_WORDS and t not in VARIANT_WORDS
+                      and t != brand.lower() and len(t) >= 1)
+    return {"cat": item["category"], "brand": brand, "codes": codes, "caps": caps, "var": var, "alpha": alpha,
+            "used": is_used(name)}
+
+
+def same_product(a, b):
+    if (a["cat"], a["brand"], a["codes"], a["caps"], a["var"], a["used"]) != \
+            (b["cat"], b["brand"], b["codes"], b["caps"], b["var"], b["used"]):
+        return False
+    if a["cat"] in NO_LINE_CHECK:
+        return True
+    u = a["alpha"] | b["alpha"]
+    return not u or len(a["alpha"] & b["alpha"]) / len(u) >= 0.7
 
 
 def group(items):
-    """Agrupa ofertas del mismo producto (unión por PN o por firma de nombre)."""
+    """Agrupa ofertas del mismo producto (número de parte, título exacto o coincidencia estricta de modelo)."""
     parent = list(range(len(items)))
 
     def find(i):
@@ -78,16 +124,29 @@ def group(items):
         return i
 
     seen = {}
+    infos = {}
     for i, it in enumerate(items):
-        keys = [("pn", p) for p in pn_tokens(it)]
-        sig = signature(it)
-        if sig:
-            keys.append(("sig", sig))
+        used = is_used(it["name"])
+        keys = [("pn", p, used) for p in pn_tokens(it)]
+        norm = re.sub(r"[^a-z0-9]", "", it["name"].lower())
+        if len(norm) >= 12:
+            keys.append(("name", it["category"], norm))   # mismo título exacto = mismo producto
         for k in keys:
             if k in seen:
                 parent[find(i)] = find(seen[k])
             else:
                 seen[k] = i
+        mi = match_info(it)
+        if mi:
+            infos[i] = mi
+    blocks = {}
+    for i, mi in infos.items():
+        blocks.setdefault((mi["cat"], mi["brand"], mi["codes"]), []).append(i)
+    for idx in blocks.values():   # comparación de a pares solo dentro de cada bloque (misma marca, categoría y códigos)
+        for x in range(len(idx)):
+            for y in range(x + 1, len(idx)):
+                if find(idx[x]) != find(idx[y]) and same_product(infos[idx[x]], infos[idx[y]]):
+                    parent[find(idx[x])] = find(idx[y])
     buckets = {}
     for i in range(len(items)):
         buckets.setdefault(find(i), []).append(items[i])
@@ -109,10 +168,61 @@ def gid(offers):
     return base.strip("-")
 
 
-def build(all_items):
-    from scrapers.common import is_service
+# ---------- imágenes ----------
+# Imágenes "sin foto" que las tiendas ponen en su lugar: no sirven y se descartan.
+PLACEHOLDER_RE = re.compile(r"es-default-|no[-_]?image|sin[-_]?imagen|placeholder|noimg|no[-_]?photo|"
+                            r"image[-_]?not[-_]?found|default[-_]?image|/default\.(jpg|png|webp)", re.I)
+IMG_RANK = ["Compragamer", "Logg", "MEXX", "GoldenTech", "Maximus", "Armytech"]   # de más a menos nítidas
+
+
+def good_image(url):
+    return url if url and isinstance(url, str) and url.startswith("http") and not PLACEHOLDER_RE.search(url) else None
+
+
+def hq_image(url):
+    """Compragamer publica miniaturas (-mini, 100 px); la misma foto sin el sufijo mide 750 px."""
+    if url and "imagenes.compragamer.com" in url and url.endswith("-mini.jpg"):
+        return url[:-len("-mini.jpg")] + ".jpg"
+    return url
+
+
+def pick_image(offers):
+    """(imagen, imagen de respaldo): la mejor foto válida entre TODAS las tiendas que venden el producto."""
+    cands = sorted((o for o in offers if good_image(o.get("image"))),
+                   key=lambda o: IMG_RANK.index(o["store"]) if o["store"] in IMG_RANK else 99)
+    if not cands:
+        return None, None
+    raw = cands[0]["image"]
+    big = hq_image(raw)
+    return big, (raw if big != raw else None)
+
+
+def load_extra_images():
+    """Fotos de respaldo cargadas a mano desde páginas oficiales de fabricantes (site/data/imagenes_extra.json)."""
+    path = DATA / "imagenes_extra.json"
+    try:
+        return json.loads(path.read_text()).get("items", {})
+    except Exception:
+        return {}
+
+
+def clean_name(name):
+    """Quita palabras repetidas de los títulos ('300Mbps Universal 300Mbps 300Mbps Universal')."""
+    seen, out = set(), []
+    for w in name.split():
+        k = re.sub(r"[^a-z0-9]", "", w.lower())
+        if k in seen and (len(k) >= 5 or (len(k) >= 4 and re.search(r"\d", k))):
+            continue
+        seen.add(k)
+        out.append(w)
+    return " ".join(out)
+
+
+def build(all_items, extra_images=None):
+    from scrapers.common import is_service, is_non_hardware
     groups = []
-    for offers in group([i for i in all_items if price_of(i) and not is_service(i["name"])]):
+    for offers in group([i for i in all_items if price_of(i) and not is_service(i["name"])
+                         and not is_non_hardware(i["name"], i["category"])]):
         offers_all = offers
         best = {}  # una oferta por tienda: la más barata
         for o in offers:
@@ -122,10 +232,11 @@ def build(all_items):
         offers = sorted(best.values(), key=price_of)
         main = max(offers, key=lambda o: len(o["name"]))
         brand = next((b for b in (brand_of(o["name"]) for o in offers) if b), None)
+        image, image_fb = pick_image(offers_all)
         groups.append({
             "_pns": sorted(set().union(*[pn_tokens(o) for o in offers_all])),
-            "id": gid(offers), "name": main["name"], "category": main["category"], "brand": brand,
-            "image": next((o["image"] for o in offers if o.get("image")), None),
+            "id": gid(offers), "name": clean_name(main["name"]), "category": main["category"], "brand": brand,
+            "image": image, **({"image_fb": image_fb} if image_fb else {}),
             "offers": [dict({k: o.get(k) for k in ("store", "url", "price_cash", "price_list", "stock",
                                                     "cuotas", "rating", "prev_cash")}, k=okey(o)) for o in offers],
         })
@@ -135,6 +246,14 @@ def build(all_items):
         used[g["id"]] = n + 1
         if n:
             g["id"] += f"-{n}"
+    for g in groups:   # red de seguridad: si los precios difieren 3 veces o más, la web avisa que se verifique
+        ps = [price_of(o) for o in g["offers"]]
+        if len(ps) > 1 and max(ps) / min(ps) >= 3:
+            g["dif"] = True
+    for g in groups:
+        if not g["image"] and g["id"] in (extra_images or {}):   # foto del fabricante cargada a mano
+            e = extra_images[g["id"]]
+            g["image"], g["img_src"] = e["url"], e.get("source", "Sitio del fabricante")
     return groups
 
 
@@ -235,7 +354,7 @@ def main(only):
             status[store] = {"ok": False, "count": len(items), "error": why[:400], "stale": bool(items)}
         all_items += items
     today = dt.date.today().isoformat()
-    groups = build(all_items)
+    groups = build(all_items, load_extra_images())
     from scrapers import specs
     try:
         spec_items, spec_status = specs.refresh(all_items, RAW, only or None)
