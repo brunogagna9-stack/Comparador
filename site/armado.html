@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Armado de PC · ComparáTech</title>
 <link rel="stylesheet" href="css/shared.css">
+<link rel="stylesheet" href="css/layout.css">
 
 </head>
-<body>
-<header><div class="top"><a class="logo" href="index.html">Compará<span>Tech</span></a>
-<nav class="nav"><a href="index.html">Comparador de precios</a><a class="on" href="armado.html">Armado de PC</a><a href="actualizar.html">¿Qué actualizar?</a><a href="encontra.html">Encontrá tu equipo</a><a href="comparar.html">Comparar hardware</a></nav></div></header>
+<body data-page="armado">
+<script src="js/layout.js"></script>
 <main>
 <h1>Armado de PC</h1>
 <p class="lead">Elegí una placa de video o un procesador y te decimos qué hardware acompañarlo (mínimo y sugerido), qué fuente necesitás y cómo rendiría en juegos.</p>
@@ -34,7 +34,7 @@
 <h2>De dónde salen los datos</h2>
 <div class="panel note" id="src"></div>
 </main>
-<script src="js/lib.js"></script>
+<script src="js/lib.js"></script><script src="js/rep.js"></script>
 <script>
 const $=s=>document.querySelector(s),{ARS,esc,RES}=CT;
 let HW,PR=[],META={},C,S={mode:"gpu",res:0,id:null};
@@ -43,7 +43,7 @@ const fdate=iso=>{try{return new Date(iso).toLocaleString("es-AR",{timeZone:"Ame
 function shopHtml(items,extra){
   if(!PR.length)return '<div class="note">Sin datos de precios cargados.</div>';
   if(!items.length)return '<div class="note">No encontré opciones con stock ahora mismo en el comparador.</div>';
-  return '<div class="shop">'+items.map(x=>`<div><span><a href="${esc(x.o.url)}" target="_blank" rel="noopener nofollow">${esc(x.g.name.slice(0,70))}</a> <span class="note">· ${esc(x.o.store)}${x.o.stock===true?"":" · stock sin confirmar"}${extra?extra(x):""}</span></span><b>${ARS(x.p)}</b></div>`).join("")+'</div>';
+  return '<div class="shop">'+items.map(x=>`<div><span><a href="${esc(x.o.url)}" target="_blank" rel="noopener nofollow">${esc(x.g.name.slice(0,70))}</a> <span class="note">· ${esc(x.o.store)}${REP.badge(x.o.store)}${x.o.stock===true?"":" · stock sin confirmar"}${extra?extra(x):""}</span></span><b>${ARS(x.p)}</b></div>`).join("")+'</div>';
 }
 const partHtml=p=>`<div class="part"><b>${esc(p.title)}</b><div class="why">${esc(p.why)}</div>${shopHtml(p.shop,p.slot==="psu"?x=>{const m=x.g.name.match(/(\d{3,4})\s?w/i);return m?" · "+m[1]+" W":""}:null)}</div>`;
 function totalHtml(t){
@@ -95,8 +95,8 @@ function render(){
     if(c.se)h+=` <span class="chip c-warn">Puntaje estimado</span> <span class="note">${esc(c.se.n)} Confianza: ${esc(c.se.conf)}.</span>`;
     if(!cf){h+=` No tenemos un puntaje de rendimiento en juegos comparable para este procesador, por lo que no podemos decir qué placa de video es la ideal. Elegí otro procesador o empezá por la placa de video.</div>`;}
     else{
-      const r=S.res,ok=HW.gpus.filter(g=>g.p[r]<=cf/1.0).sort((a,b)=>b.p[r]-a.p[r]);
-      const ok8=HW.gpus.filter(g=>g.p[r]<=cf/0.8&&g.p[r]>cf/1.0).sort((a,b)=>b.p[r]-a.p[r]);
+      const r=S.res,ok=HW.gpus.filter(g=>!g.se&&g.p[r]<=cf/1.0).sort((a,b)=>b.p[r]-a.p[r]);
+      const ok8=HW.gpus.filter(g=>!g.se&&g.p[r]<=cf/0.8&&g.p[r]>cf/1.0).sort((a,b)=>b.p[r]-a.p[r]);
       h+=` Puede alimentar (sin cuello de botella) placas de hasta ~${Math.round(cf)} FPS de promedio a ${RES[r]}.</div>`;
       const li=a=>a.slice(0,6).map(g=>`<div><span class="pick" data-g="${g.id}">${esc(g.name)}</span> <span class="note">· ~${Math.round(g.p[r])} FPS · fuente ${g.psu} W+</span></div>`).join("")||'<div class="note">Ninguna en la lista.</div>';
       h+=`<div class="cols"><div class="col"><h3>Placas sugeridas (equilibradas)</h3><div class="tg">El procesador no limita a la placa</div>${li(ok)}</div><div class="col"><h3>Placas posibles (límite)</h3><div class="tg">Leve cuello de botella (hasta 20 %)</div>${li(ok8)}</div></div><p class="note">Tocá una placa para ver el armado completo con fuente, placa madre y memoria. ¿Ya tenés este procesador y querés saber qué cambiar? Probá <a href="actualizar.html">¿Qué actualizar?</a></p>`;
@@ -109,13 +109,13 @@ function setMode(){
   document.querySelectorAll("#mode button").forEach(b=>b.classList.toggle("on",b.dataset.v===S.mode));
   $("#lsel").textContent=S.mode==="gpu"?"Placa de video":"Procesador";
   const l=S.mode==="gpu"?HW.gpus:HW.cpus.filter(c=>c.s);if(!l.find(x=>x.id===S.id))S.id=l[0].id;
-  const grp={};l.forEach(x=>(grp[x.vendor]=grp[x.vendor]||[]).push(x));
+  const grp={};l.forEach(x=>{const k=x.vendor+(x.se?" · generaciones anteriores (rendimiento estimado)":"");(grp[k]=grp[k]||[]).push(x)});
   $("#sel").innerHTML=Object.entries(grp).map(([v,a])=>`<optgroup label="${v}">${a.map(x=>`<option value="${x.id}" ${x.id===S.id?"selected":""}>${esc(x.name)}</option>`).join("")}</optgroup>`).join("");
   render();
 }
 (async()=>{
   const j=async(u,d)=>{try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw 0;return await r.json()}catch{return d}};
-  let m;[HW,PR,m]=await Promise.all([j("data/hardware.json",null),j("data/products.json",[]),j("data/meta.json",{})]);META=m;
+  let m;[HW,PR,m]=await Promise.all([j("data/hardware.json",null),j("data/products.json",[]),j("data/meta.json",{}),REP.load()]);META=m;
   if(!HW){$("#out").textContent="No se pudieron cargar los datos de hardware.";return}
   C=CT.create(HW,PR,META);S.id="rtx-5070";
   $("#src").innerHTML=`Consumos y fuentes requeridas: <a href="${HW.sources.nvidia}">NVIDIA</a>, <a href="${HW.sources.amd_gpu}">AMD</a>, <a href="${HW.sources.intel_gpu}">Intel</a>. Procesadores: <a href="${HW.sources.amd_cpu}">AMD</a> e <a href="${HW.sources.intel_cpu}">Intel ARK</a> (la potencia máxima de AMD es el TDP × 1,35, un valor estimado). Rendimiento de placas: <a href="${HW.sources.tom_gpu}">Tom's Hardware (jerarquía de GPU, jun 2026)</a>. Procesadores: <a href="${HW.sources.tom_cpu}">Tom's Hardware (jerarquía de CPU, oct 2026)</a>. Requisitos de juegos: enlaces en cada fila. Precios: los mismos del comparador.`;

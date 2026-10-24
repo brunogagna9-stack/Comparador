@@ -4,6 +4,7 @@ Usa la API pública de catálogo de WooCommerce (`/wp-json/wc/store/v1/products`
 propio sitio. El robots.txt de la tienda no la prohíbe. Los precios vienen en centavos (currency_minor_unit=2).
 El SKU es un código interno de la tienda, NO un número de parte del fabricante: no se usa para cruzar productos.
 """
+import html
 import re
 from .common import get, product, canon_category
 
@@ -31,7 +32,7 @@ def parse(items, store=STORE):
             continue
         cash, reg = _money(pr, "price"), _money(pr, "regular_price")
         cats = " ".join(c.get("name", "") for c in it.get("categories") or [])
-        name = re.sub(r"\s+", " ", it["name"]).strip()
+        name = re.sub(r"\s+", " ", html.unescape(it["name"])).strip()
         imgs = it.get("images") or []
         p = product(store, name, it.get("permalink"), cash, reg if reg and cash and reg > cash else None,
                     stock=bool(it.get("is_in_stock")), sku=None, pn=None,

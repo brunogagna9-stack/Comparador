@@ -96,7 +96,7 @@
       /* ----- placa de video ----- */
       const gpuStep = () => {
         const min = gF != null ? gF * 1.25 : target;
-        let cands = HW.gpus.filter(g => g.p[res] >= min);
+        let cands = HW.gpus.filter(g => !g.se && g.p[res] >= min); // no se recomienda comprar una placa de rendimiento estimado
         const items = [];
         let sinStock = 0, fueraPresup = 0;
         cands.forEach(g => {

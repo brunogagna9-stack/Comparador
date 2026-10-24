@@ -70,7 +70,7 @@ def parse_ars(text):
 
 
 CATEGORIES = [  # el orden importa: la primera regla que coincide gana
-    ("accesorios", r"\bcable\b|adaptador|conversor|\bhdmi\b|hub usb|alargue"),
+    ("accesorios", r"\bcable\b|adaptador|conversor|splitter hdmi|hub usb|alargue"),
     ("almacenamiento", r"micro ?sd|sdhc|sdxc|pendrive|tarjeta de memoria|memoria flash"),
     ("pcs-armadas", r"armad[oa]|^pc\b|\bpc (de escritorio|gamer|powered)|powered by|all in one|kit de actualizaci"),
     ("notebooks", r"notebook|laptop|netbook"),

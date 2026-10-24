@@ -39,7 +39,7 @@
   const STORE_ALIASES = {
     Compragamer: /compra ?gamer/, MEXX: /\bmexx\b/, Maximus: /maximus/, Gezatek: /gezatek/, Fullh4rd: /full ?h4rd|fullhard|full hard/,
     Logg: /\blogg\b/, GoldenTech: /golden ?tech/, Armytech: /army ?tech/,
-    Katech: /\bkatech\b/, Venex: /\bvenex\b/, "Gaming City": /gaming ?city/, "NET Gaming": /net ?gaming/,
+    Katech: /\bkatech\b/, Venex: /\bvenex\b/, "Gaming City": /gaming ?city/, "NET Gaming": /net ?gaming/, Hardloots: /hard ?loots/, BitHard: /bit ?hard/, Try: /\btry\b(?!\w)/, "SCP Hardstore": /scp ?hard ?store/, "Click Gaming": /click ?gaming/, "The Gamer Shop": /gamer ?shop/,
   };
 
   const USO_WORDS = [
@@ -153,7 +153,7 @@
         const any = wantRep || wantW || wantShip || wantContact;
         const lines = [];
         if (wantRep || !any) {
-          if (s.reputation && s.reputation.length) s.reputation.forEach(r => lines.push(`Reputación en ${r.source}: ${fmtN(r.score, 1)} sobre 5 con ${fmtN(r.count)} opiniones (ficha «${r.listing}», consultada el ${r.date}).`));
+          if (s.reputation && s.reputation.length) s.reputation.forEach(r => lines.push(`Reputación en ${r.source}: ${Number(r.score).toLocaleString("es-AR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} sobre 5 con ${fmtN(r.count)} opiniones (ficha «${r.listing}», consultada el ${r.date}).` + (r.count < 100 ? " Son pocas opiniones (menos de 100): el puntaje es poco representativo." : "")));
           else lines.push("No tenemos una puntuación pública verificada de esta tienda, y no la inventamos.");
         }
         if (wantW || !any) lines.push(s.warranty ? s.warranty : "Garantía: no tenemos la política verificada; consultala en el sitio de la tienda.");

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>¿Qué actualizar? · ComparáTech</title>
 <link rel="stylesheet" href="css/shared.css">
+<link rel="stylesheet" href="css/layout.css">
 <style>
 textarea{width:100%;min-height:92px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--tx);font:inherit;resize:vertical}
 .ex{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;align-items:center}.ex button{padding:5px 11px;border:1px solid var(--line);border-radius:99px;background:var(--card);color:var(--tx);cursor:pointer;font:inherit;font-size:12.5px}
@@ -19,9 +20,8 @@ textarea{width:100%;min-height:92px;padding:10px;border:1px solid var(--line);bo
 @media(max-width:600px){.bar{grid-template-columns:1fr 70px}.bar .tr{grid-column:1 / -1;order:3}}
 </style>
 </head>
-<body>
-<header><div class="top"><a class="logo" href="index.html">Compará<span>Tech</span></a>
-<nav class="nav"><a href="index.html">Comparador de precios</a><a href="armado.html">Armado de PC</a><a class="on" href="actualizar.html">¿Qué actualizar?</a><a href="encontra.html">Encontrá tu equipo</a><a href="comparar.html">Comparar hardware</a></nav></div></header>
+<body data-page="actualizar">
+<script src="js/layout.js"></script>
 <main>
 <h1>¿Qué actualizar?</h1>
 <p class="lead">Escribí los componentes que ya tenés y el rendimiento que querés lograr. Te decimos qué te está limitando, qué conviene cambiar primero y cuánto cuesta hoy en las tiendas.</p>
@@ -49,7 +49,7 @@ textarea{width:100%;min-height:92px;padding:10px;border:1px solid var(--line);bo
 <div class="panel note" id="how"></div>
 <details class="panel"><summary>Modelos que reconocemos</summary><div class="note" id="known" style="margin-top:8px"></div></details>
 </main>
-<script src="js/lib.js"></script>
+<script src="js/lib.js"></script><script src="js/rep.js"></script>
 <script src="js/compare.js"></script>
 <script src="js/finder.js"></script>
 <script src="js/upgrade.js"></script>
@@ -62,7 +62,7 @@ const fdate=iso=>{try{return new Date(iso).toLocaleString("es-AR",{timeZone:"Ame
 function shopRows(items,extra){
   if(!PR.length)return '<div class="note">Sin datos de precios cargados.</div>';
   if(!items||!items.length)return '<div class="note">Sin stock en el comparador ahora mismo.</div>';
-  return '<div class="shop">'+items.slice(0,2).map(x=>`<div><span><a href="${esc(x.o.url)}" target="_blank" rel="noopener nofollow">${esc(x.g.name.slice(0,70))}</a> <span class="note">· ${esc(x.o.store)}${x.o.stock===true?"":" · stock sin confirmar"}${extra?extra(x):""}</span></span><b>${ARS(x.p)}</b></div>`).join("")+'</div>';
+  return '<div class="shop">'+items.slice(0,2).map(x=>`<div><span><a href="${esc(x.o.url)}" target="_blank" rel="noopener nofollow">${esc(x.g.name.slice(0,70))}</a> <span class="note">· ${esc(x.o.store)}${REP.badge(x.o.store)}${x.o.stock===true?"":" · stock sin confirmar"}${extra?extra(x):""}</span></span><b>${ARS(x.p)}</b></div>`).join("")+'</div>';
 }
 const wOf=x=>{const m=x.g.name.match(/(\d{3,4})\s?w/i);return m?" · "+m[1]+" W":""};
 
@@ -71,7 +71,7 @@ function bars(r){
   const row=(lab,v,tg,lim)=>v==null?`<div class="bar"><span>${lab}</span><span class="note">Sin datos</span><span></span></div>`:
     `<div class="bar ${lim?"lim":""}"><span>${lab}${tg?" "+tag(tg):""}</span><div class="tr"><i style="width:${Math.min(100,v/mx*100).toFixed(1)}%"></i><em style="left:${(r.target/mx*100).toFixed(1)}%" title="Tu objetivo"></em></div><b>~${Math.round(v)} FPS</b></div>`;
   const g=r.o.gpu,c=r.o.cpu;
-  return `<div class="bars">${row("Tu placa de video"+(g?`<div class="note">${esc(g.name)}</div>`:""),r.cur.gF,"bench",r.cur.limiter==="gpu")}${row("Lo que mueve tu procesador"+(c?`<div class="note">${esc(c.name)}</div>`:""),r.cur.cF,c&&c.se?"est":"bench",r.cur.limiter==="cpu")}</div><p class="note">La línea vertical es tu objetivo (${r.target} FPS). Promedio de 11 juegos exigentes a ${RES[r.res]} en Ultra, sin DLSS/FSR.</p>`;
+  return `<div class="bars">${row("Tu placa de video"+(g?`<div class="note">${esc(g.name)}</div>`:""),r.cur.gF,g&&g.se?"est":"bench",r.cur.limiter==="gpu")}${row("Lo que mueve tu procesador"+(c?`<div class="note">${esc(c.name)}</div>`:""),r.cur.cF,c&&c.se?"est":"bench",r.cur.limiter==="cpu")}</div><p class="note">La línea vertical es tu objetivo (${r.target} FPS). Promedio de 11 juegos exigentes a ${RES[r.res]} en Ultra, sin DLSS/FSR.</p>`;
 }
 function gpuOpt(x,r){
   const e=[];
@@ -96,7 +96,7 @@ function render(){
   let h="";
   h+=`<h2>Entendimos esto</h2><div class="seen">${r.o.seen.map(s=>`<span><b>${esc(s[0])}:</b> ${esc(s[1])}</span>`).join("")}${r.unknown.map(u=>`<span class="bad"><b>${esc(u.slot)}:</b> ${esc(u.text)} (sin datos)</span>`).join("")}${r.o.unknown.map(u=>`<span class="bad">No entendimos: ${esc(u)}</span>`).join("")}</div>`;
   r.unknown.forEach(u=>{h+=`<p class="note"><b>${esc(u.slot)} «${esc(u.text)}»:</b> ${esc(u.why)}</p>`});
-  if(r.head)h+=`<div class="panel"><b>${esc(r.head)}</b>${(r.cur.gF!=null||r.cur.cF!=null)?bars(r):""}${r.o.cpu&&r.o.cpu.se?`<p class="note"><b>Sobre el puntaje de tu procesador (estimado, confianza ${esc(r.o.cpu.se.conf)}):</b> ${esc(r.o.cpu.se.n)}</p>`:""}</div>`;
+  if(r.head)h+=`<div class="panel"><b>${esc(r.head)}</b>${(r.cur.gF!=null||r.cur.cF!=null)?bars(r):""}${r.o.gpu&&r.o.gpu.se?`<p class="note"><b>Sobre el rendimiento de tu placa (estimado, confianza ${esc(r.o.gpu.se.conf)}):</b> ${esc(r.o.gpu.se.n)}</p>`:""}${r.o.cpu&&r.o.cpu.se?`<p class="note"><b>Sobre el puntaje de tu procesador (estimado, confianza ${esc(r.o.cpu.se.conf)}):</b> ${esc(r.o.cpu.se.n)}</p>`:""}</div>`;
   let n=0;
   r.steps.forEach(s=>{
     n++;const num=`<span class="num">${n}</span>`;
@@ -126,7 +126,7 @@ function render(){
 }
 (async()=>{
   const j=async(u,d)=>{try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw 0;return await r.json()}catch{return d}};
-  let m;[HW,PR,m]=await Promise.all([j("data/hardware.json",null),j("data/products.json",[]),j("data/meta.json",{})]);META=m;
+  let m;[HW,PR,m]=await Promise.all([j("data/hardware.json",null),j("data/products.json",[]),j("data/meta.json",{}),REP.load()]);META=m;
   if(!HW){$("#out").textContent="No se pudieron cargar los datos de hardware.";return}
   C=CT.makeFinder(CT.create(HW,PR,META));CT.makeUpgrade(C);
   $("#fps").innerHTML=CT.UPG_FPS.map(([v,l],i)=>`<button data-v="${v}" class="${i===0?"on":""}">${esc(l)}</button>`).join("");

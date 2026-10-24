@@ -48,11 +48,23 @@
       "site": "https://www.maximus.com.ar",
       "integration": "completa",
       "how": "Listados de categoría (HTML).",
-      "contact": {},
-      "checked": "2026-10-23",
-      "reputation": [],
+      "contact": {
+        "address": "Florida 537, local 379, CABA (Galería Jardín)",
+        "phone": "011 2357-5522"
+      },
+      "checked": "2026-10-24",
+      "reputation": [
+        {
+          "source": "Google Maps",
+          "listing": "Maximus Gaming Hardware (Galería Jardín)",
+          "score": 4.8,
+          "count": 14557,
+          "url": "https://www.google.com/maps/search/Maximus+Gaming+Hardware+Galería+Jardín+Florida+537",
+          "date": "2026-10-24"
+        }
+      ],
       "notes": [
-        "No encontramos una ficha pública verificable (con el mismo sitio web) para mostrar su reputación."
+        "Tiene dos fichas en Google (Galería Jardín y sucursal Floresta); mostramos solo la de Galería Jardín, sin sumarlas."
       ]
     },
     "GoldenTech": {
@@ -117,27 +129,65 @@
       "site": "https://gezatek.com.ar",
       "integration": "no disponible",
       "how": "La tienda respondió HTTP 429 (demasiadas consultas) a las lecturas automáticas. No se insiste ni se intenta evitar el límite.",
-      "contact": {},
-      "checked": "2026-10-23",
-      "reputation": [],
+      "contact": {
+        "address": "México 3080, CABA",
+        "phone": "011 7700-0048"
+      },
+      "checked": "2026-10-24",
+      "reputation": [
+        {
+          "source": "Google Maps",
+          "listing": "Gezatek",
+          "score": 4.3,
+          "count": 3250,
+          "url": "https://www.google.com/maps/search/gezatek.com.ar",
+          "date": "2026-10-24"
+        }
+      ],
       "notes": []
     },
     "Fullh4rd": {
       "site": "https://fullh4rd.com.ar",
       "integration": "no disponible",
       "how": "La tienda respondió HTTP 403 (acceso denegado) a las lecturas automáticas. No se intenta evitar el bloqueo.",
-      "contact": {},
-      "checked": "2026-10-23",
-      "reputation": [],
-      "notes": []
+      "contact": {
+        "address": "Galería Jardín, Florida 537, local 370, CABA",
+        "phone": "011 7079-9997"
+      },
+      "checked": "2026-10-24",
+      "reputation": [
+        {
+          "source": "Google Maps",
+          "listing": "Fullh4rd - Tienda Gamer",
+          "score": 4.4,
+          "count": 8874,
+          "url": "https://www.google.com/maps/search/fullh4rd.com.ar",
+          "date": "2026-10-24"
+        }
+      ],
+      "notes": [
+        "Comparte galería (Florida 537) con otras tiendas: la ficha de Google es la del local con el mismo sitio web."
+      ]
     },
     "Logg": {
       "site": "https://logg.com.ar",
       "integration": "completa",
       "how": "Listados de categoría (HTML). Cada categoría muestra todos sus productos en una página; su robots.txt está vacío. No informa stock salvo «Quedan pocas»: queda «stock sin confirmar».",
-      "contact": {},
-      "checked": "2026-10-23",
-      "reputation": [],
+      "contact": {
+        "address": "José Hernández 2525, CABA",
+        "phone": "011 4788-9372"
+      },
+      "checked": "2026-10-24",
+      "reputation": [
+        {
+          "source": "Google Maps",
+          "listing": "Logg Hardstore",
+          "score": 4.5,
+          "count": 2014,
+          "url": "https://www.google.com/maps/search/logg.com.ar",
+          "date": "2026-10-24"
+        }
+      ],
       "notes": [
         "Corregido el 2026-10-23: el sitio cambió el marcado de las tarjetas de producto y el lector anterior no encontraba nada."
       ]
@@ -146,11 +196,22 @@
       "site": "https://katech.com.ar",
       "integration": "completa",
       "how": "API pública de catálogo de WooCommerce (la misma que usa el sitio). Su robots.txt permite el acceso general; sus señales de contenido «ai-train=no» se refieren al entrenamiento de IA, algo que este proyecto no hace.",
-      "contact": {},
+      "contact": {
+        "address": "Carlos Gardel 278, Lanús, Buenos Aires",
+        "phone": "011 3383-0278"
+      },
       "checked": "2026-10-24",
-      "reputation": [],
+      "reputation": [
+        {
+          "source": "Google Maps",
+          "listing": "Katech - Hardware Store",
+          "score": 4.9,
+          "count": 1075,
+          "url": "https://www.google.com/maps/search/katech.com.ar",
+          "date": "2026-10-24"
+        }
+      ],
       "notes": [
-        "Reputación: todavía no verificada con una fuente concreta.",
         "Su SKU es un código interno: los productos se cruzan con otras tiendas por nombre y modelo."
       ]
     },
@@ -158,12 +219,22 @@
       "site": "https://www.venex.com.ar",
       "integration": "parcial",
       "how": "Listados de categoría (HTML) con ?page=N, lo único que su robots.txt no prohíbe. El listado no informa stock: queda «stock sin confirmar».",
-      "contact": {},
+      "contact": {
+        "address": "Hipólito Yrigoyen 850, 2.º piso, of. 220, CABA",
+        "phone": "0810-555-8892"
+      },
       "checked": "2026-10-24",
-      "reputation": [],
-      "notes": [
-        "Reputación: todavía no verificada con una fuente concreta."
-      ]
+      "reputation": [
+        {
+          "source": "Google Maps",
+          "listing": "Venex",
+          "score": 4.6,
+          "count": 8388,
+          "url": "https://www.google.com/maps/search/venex.com.ar",
+          "date": "2026-10-24"
+        }
+      ],
+      "notes": []
     },
     "Gaming City": {
       "site": "https://www.gamingcity.com.ar",
@@ -173,19 +244,30 @@
       "checked": "2026-10-24",
       "reputation": [],
       "notes": [
-        "Reputación: todavía no verificada con una fuente concreta.",
-        "Las cuotas se muestran tal como las publica la tienda («con todos los medios de pago»); no se afirma que sean sin interés."
+        "Las cuotas se muestran tal como las publica la tienda («con todos los medios de pago»); no se afirma que sean sin interés.",
+        "Google muestra muchas sucursales de Gaming City y ninguna ficha única de la tienda online: no mostramos una puntuación para no mezclar locales."
       ]
     },
     "NET Gaming": {
       "site": "https://netgaming.ar",
       "integration": "completa",
       "how": "Listados de categoría (HTML) con ?page=N. Su robots.txt pide esperar 5 segundos entre pedidos y así se hace (por eso esta tienda tarda más en actualizarse).",
-      "contact": {},
+      "contact": {
+        "address": "Av. Alicia Moreau de Justo 1150, CABA",
+        "phone": "011 2328-7507"
+      },
       "checked": "2026-10-24",
-      "reputation": [],
+      "reputation": [
+        {
+          "source": "Google Maps",
+          "listing": "NET Gaming l Hardware Gamer y Tecnología",
+          "score": 4.7,
+          "count": 568,
+          "url": "https://www.google.com/maps/search/netgaming.ar",
+          "date": "2026-10-24"
+        }
+      ],
       "notes": [
-        "Reputación: todavía no verificada con una fuente concreta.",
         "Su código de artículo es interno de la tienda (no es número de parte)."
       ]
     },
@@ -193,10 +275,155 @@
       "site": "https://www.gamerfactory.com.ar",
       "integration": "no disponible",
       "how": "El sitio carga los productos mediante una API privada con detección de bots; no se intenta leerla.",
+      "contact": {
+        "address": "Moreno 1270, CABA",
+        "phone": "011 8031-0399"
+      },
+      "checked": "2026-10-24",
+      "reputation": [
+        {
+          "source": "Google Maps",
+          "listing": "Gamer Factory",
+          "score": 4.6,
+          "count": 104,
+          "url": "https://www.google.com/maps/search/gamerfactory.com.ar",
+          "date": "2026-10-24"
+        }
+      ],
+      "notes": []
+    },
+    "Hardloots": {
+      "site": "https://hardloots.com.ar",
+      "integration": "completa",
+      "how": "API pública de catálogo de WooCommerce (la misma que usa el sitio). Su robots.txt no bloquea el catálogo ni la API y no pide pausa entre pedidos.",
       "contact": {},
       "checked": "2026-10-24",
       "reputation": [],
-      "notes": []
+      "notes": [
+        "Su SKU es un código interno: los productos se cruzan con otras tiendas por nombre y modelo.",
+        "No encontramos una ficha de Google con el mismo sitio web: sin reputación mostrada."
+      ]
+    },
+    "BitHard": {
+      "site": "https://bithard.com.ar",
+      "integration": "completa",
+      "how": "API pública de catálogo de WooCommerce (la misma que usa el sitio). Su robots.txt no bloquea el catálogo ni la API y no pide pausa entre pedidos.",
+      "contact": {
+        "address": "Hilario Gorostiaga 5030, Santiago del Estero",
+        "phone": "+54 3877 47-7127",
+        "email": "ventas@bithard.com.ar"
+      },
+      "checked": "2026-10-24",
+      "reputation": [
+        {
+          "source": "Google Maps",
+          "listing": "BitHard",
+          "score": 5.0,
+          "count": 43,
+          "url": "https://www.google.com/maps/search/BitHard+Hilario+Gorostiaga+5030+Santiago+del+Estero",
+          "date": "2026-10-24"
+        }
+      ],
+      "notes": [
+        "Su SKU es un código interno: los productos se cruzan con otras tiendas por nombre y modelo.",
+        "Pocas opiniones (menos de 100): el puntaje es poco representativo.",
+        "El pie del sitio muestra Ley 24.240, enlaces a botón de arrepentimiento y garantía/devoluciones y QR de AFIP; no publica razón social ni CUIT. Se detectó una versión anterior del pie con otro horario y «Santiago del Estero, Capital»."
+      ]
+    },
+    "Try": {
+      "site": "https://try.com.ar",
+      "integration": "completa",
+      "how": "API pública de catálogo de WooCommerce (la misma que usa el sitio). Su robots.txt no bloquea el catálogo ni la API y no pide pausa entre pedidos.",
+      "contact": {},
+      "checked": "2026-10-24",
+      "reputation": [
+        {
+          "source": "Google Maps",
+          "listing": "TryHardware - Nos estamos mudando!",
+          "score": 4.9,
+          "count": 122,
+          "url": "https://www.google.com/maps/search/try.com.ar",
+          "date": "2026-10-24"
+        }
+      ],
+      "notes": [
+        "Su SKU es un código interno: los productos se cruzan con otras tiendas por nombre y modelo.",
+        "La ficha de Google figura «cerrada temporalmente» por mudanza (Alberto Larroque 1904, CABA): confirmá en la tienda cómo se retira o se envía."
+      ]
+    },
+    "SCP Hardstore": {
+      "site": "https://www.scphardstore.com",
+      "integration": "completa",
+      "how": "API pública de catálogo de WooCommerce (la misma que usa el sitio). Su robots.txt no bloquea el catálogo ni la API y no pide pausa entre pedidos.",
+      "contact": {
+        "address": "Quirós 2693, CABA",
+        "phone": "011 2621-9517"
+      },
+      "checked": "2026-10-24",
+      "reputation": [
+        {
+          "source": "Google Maps",
+          "listing": "SCP HARDSTORE - PICKUP POINT",
+          "score": 4.6,
+          "count": 214,
+          "url": "https://www.google.com/maps/search/scphardstore.com",
+          "date": "2026-10-24"
+        }
+      ],
+      "notes": [
+        "Su SKU es un código interno: los productos se cruzan con otras tiendas por nombre y modelo."
+      ]
+    },
+    "Click Gaming": {
+      "site": "https://clickgaming.com.ar",
+      "integration": "completa",
+      "how": "API pública de catálogo de WooCommerce (la misma que usa el sitio). Su robots.txt no bloquea el catálogo ni la API y no pide pausa entre pedidos.",
+      "contact": {
+        "address": "Av. San Martín 1322, Rosario (también Brigadier López 1485, Arequito)",
+        "phone": "341 211-8650"
+      },
+      "checked": "2026-10-24",
+      "reputation": [
+        {
+          "source": "Google Maps",
+          "listing": "Click Gaming - Pc Gamers - Computación",
+          "score": 4.8,
+          "count": 46,
+          "url": "https://www.google.com/maps/search/Click+Gaming+San+Martín+1322+Rosario",
+          "date": "2026-10-24"
+        }
+      ],
+      "notes": [
+        "Su SKU es un código interno: los productos se cruzan con otras tiendas por nombre y modelo.",
+        "Pocas opiniones (menos de 100): el puntaje es poco representativo.",
+        "El sitio muestra dos sucursales (Rosario y Arequito) y un QR de AFIP; no muestra razón social ni CUIT en la página de contacto."
+      ]
+    },
+    "The Gamer Shop": {
+      "site": "https://thegamershop.com.ar",
+      "integration": "completa",
+      "how": "API pública de catálogo de WooCommerce (la misma que usa el sitio). Su robots.txt no bloquea el catálogo ni la API y no pide pausa entre pedidos.",
+      "contact": {
+        "address": "Av. Lisandro de la Torre 373 (Liniers) y Carhué 1409 (Mataderos), CABA",
+        "phone": "011 4870-4101",
+        "email": "ventas@thegamershop.com.ar"
+      },
+      "checked": "2026-10-24",
+      "reputation": [
+        {
+          "source": "Google Maps",
+          "listing": "The Gamer Shop",
+          "score": 4.9,
+          "count": 696,
+          "url": "https://www.google.com/maps/search/The+Gamer+Shop+Av.+Lisandro+de+la+Torre+373+Liniers",
+          "date": "2026-10-24"
+        }
+      ],
+      "notes": [
+        "Su SKU es un código interno: los productos se cruzan con otras tiendas por nombre y modelo.",
+        "Su robots.txt bloquea el entrenamiento de IA (GPTBot, ClaudeBot…); este proyecto no entrena modelos: solo lee precios para compararlos.",
+        "Pie del sitio: «Garantía oficial en todos los productos», botón de arrepentimiento, Ley 27.743 de defensa del consumidor; no muestra razón social ni CUIT en la página principal."
+      ]
     }
   }
 }

@@ -121,7 +121,7 @@
     C.recBuilds = (a, n) => {
       const cands = [], res = n.res;
       if (n.gaming) {
-        HW.gpus.forEach(g => {
+        HW.gpus.filter(g => !g.se).forEach(g => {
           if (n.gpuReq.some(r => g.p[r.res] < r.fps)) return;
           if (!C.findGpu(g).length) return;
           const { cMin, cSug } = C.pickPair(g, res);
@@ -164,7 +164,7 @@
       const cpu = HW.cpus.find(c => c.id === h.cpu) || null, cur = HW.gpus.find(g => g.id === h.gpu) || null, psuW = +h.psu || null, res = n.res;
       const goal = h.goal || "gpu";
       if (goal === "gpu" || goal === "todo") {
-        HW.gpus.filter(g => C.findGpu(g).length && (!cur || g.p[res] >= cur.p[res] * 1.25) && !n.gpuReq.some(r => g.p[r.res] < r.fps)).forEach(g => {
+        HW.gpus.filter(g => !g.se && C.findGpu(g).length && (!cur || g.p[res] >= cur.p[res] * 1.25) && !n.gpuReq.some(r => g.p[r.res] < r.fps)).forEach(g => {
           const compat = [];
           if (psuW) compat.push(psuW >= g.psu ? { s: "ok", t: `Tu fuente de ${psuW} W cumple el mínimo del fabricante (${g.psu} W). Igual verificá que tenga los conectores de la placa.` }
             : { s: "bad", t: `Tu fuente de ${psuW} W es menor a los ${g.psu} W que pide el fabricante: tendrías que cambiarla.` });

@@ -77,7 +77,7 @@ def test_servicios():
 def test_hardware_json():
     import re, subprocess, sys
     import make_hardware as mh
-    ids = [g[0] for g in mh.G] + [c[0] for c in mh.C]
+    ids = [g[0] for g in mh.G] + [c[0] for c in mh.C] + [l[0] for l in mh.LEG]
     assert len(ids) == len(set(ids))
     for g in mh.G:
         assert g[4] > 0 and g[5] >= g[4] and all(x > 0 for x in g[6]), g[0]   # la fuente nunca es menor al consumo
@@ -85,6 +85,9 @@ def test_hardware_json():
     assert all(k in {c[0] for c in mh.C} for k in mh.EST)
     for k, (conf, note) in mh.EST.items():     # todo puntaje estimado dice cómo se calculó
         assert conf in ("alta", "media", "baja") and len(note) > 30, k
+    for l in mh.LEG:                            # placas viejas: estimadas, con datos coherentes y sin pisar a otras
+        assert l[4] > 0 and l[5] >= l[4] and 10 < l[6] < 100, l[0]
+        re.compile(l[7]); re.compile(l[8] or "x")
     for c in mh.C:
         assert c[7] is not None or c[0] == "i3-12100f", c[0]   # sin puntaje solo si no hay fuente
         assert c[6] >= c[5] and c[3] in ("AM4", "AM5", "LGA1700", "LGA1851"), c[0]
@@ -100,6 +103,8 @@ def test_categorias_pc_armadas():
         assert canon_category(n) == "pcs-armadas", n   # antes caían en "placas de video"
     assert canon_category("Placa de Video MSI GeForce RTX 5070 Ti 16GB") == "placas-de-video"
     assert is_service("Service Instalación Cooler CPU en equipos armados")
+    assert canon_category("MONITOR 19 PERFORMANCE PF185R VGA/HDMI") == "monitores"   # «HDMI» en el título no lo vuelve accesorio
+    assert canon_category("Cable HDMI 2.1 2 metros") == "accesorios"
 
 
 def test_hardware_especificaciones():
@@ -109,13 +114,26 @@ def test_hardware_especificaciones():
     for g in hw["gpus"]:
         sp = g["spec"]
         assert sp["bw"] == round(sp["bus"] / 8 * sp["gbps"]), g["id"]
-        assert set(g["ver"]) <= set(sp) , g["id"]
+        assert set(g["ver"]) <= set(sp) | {"vram", "tgp", "psu"}, g["id"]
         re.compile(g["m"])
     for c in hw["cpus"]:
         sp = c["spec"]
         assert sp["threads"] >= sp["cores"] and sp["boost"] > 3, c["id"]
-        assert set(c["ver"]) <= set(sp), c["id"]
+        assert set(c["ver"]) <= set(sp) | {"tdp", "maxp", "socket", "mem"}, c["id"]
         assert not re.search(c["m"], "placa de video rx 7600 8gb", re.I), c["id"]   # "RX 7600" no es el Ryzen 5 7600
+    # lo verificado trae enlace oficial y fecha; lo antiguo sin ficha legible no se marca verificado
+    from urllib.parse import urlparse
+    for x in hw["gpus"] + hw["cpus"]:
+        if x["ver"]:
+            assert x["vurl"].startswith("https://") and urlparse(x["vurl"]).netloc.endswith(("nvidia.com", "amd.com", "intel.com")), x["id"]
+            assert re.match(r"\d{4}-\d\d-\d\d$", x["vdate"]), x["id"]
+        else:
+            assert "vurl" not in x and "vdate" not in x, x["id"]
+    assert all(c["ver"] for c in hw["cpus"]) and all({"cores", "threads", "boost", "l3", "tdp"} <= set(c["ver"]) for c in hw["cpus"])
+    by = {g["id"]: g for g in hw["gpus"]}
+    assert (by["rtx-3080"]["tgp"], by["rtx-4060ti"]["tgp"], by["rx-9060xt-8"]["tgp"]) == (320, 160, 150), "correcciones contra la ficha oficial"
+    assert not any(by[i]["ver"] for i in by if by[i].get("se")), "las placas con rendimiento estimado no figuran como verificadas"
+    assert {"tgp", "psu", "vram"} <= set(by["rtx-5070"]["ver"]) and by["rx-7900xtx"]["ver"].count("bus") == 0
     # Intel F no trae gráficos integrados
     for c in hw["cpus"]:
         if c["id"].endswith("f") and c["vendor"] == "Intel":
@@ -225,14 +243,21 @@ def test_tiendas_nuevas_no_cruzan_por_sku_interno():
 
 
 def test_stores_json_reputacion_verificable():
+    """Cada puntaje tiene fuente, ficha, fecha y URL; una sola plataforma por tienda; sin ficha verificable no hay puntaje."""
+    import re
     d = json.load(open("site/data/stores.json"))["stores"]
     for name, s in d.items():
         for r in s["reputation"]:
-            assert r["source"] and r["url"].startswith("http") and r["date"] and r["count"] > 0 and 0 < r["score"] <= 5, name
+            assert r["source"] and r["listing"] and r["url"].startswith("https://") and re.match(r"\d{4}-\d\d-\d\d$", r["date"]), name
+            assert isinstance(r["count"], int) and r["count"] > 0 and 1 <= r["score"] <= 5, name
+            if r["count"] < 100:   # muestra chica: se avisa en los datos y en la web
+                assert any("Pocas opiniones" in n for n in s.get("notes", [])), name + ": falta aviso de muestra chica"
         assert len({r["source"] for r in s["reputation"]}) == len(s["reputation"]), "una puntuación por plataforma; nunca promediadas"
-    assert d["Maximus"]["reputation"] == [] and d["Gezatek"]["integration"] == "no disponible"
+        if not s["reputation"]:
+            assert any("ficha" in n.lower() or "reputación" in n.lower() for n in s.get("notes", [])), name + ": explicar por qué no hay puntaje"
+    con = {n for n, s in d.items() if s["reputation"]}
+    assert len(con) == 17 and {"Gaming City", "Hardloots"} == set(d) - con, "solo estas dos tiendas quedan sin puntaje verificado"
     assert "average" not in json.dumps(d).lower()
-
 
 def test_logg_marcado_actual():
     from scrapers import logg
@@ -388,6 +413,24 @@ def test_katech_parse():
     assert b["price_cash"] == 120000 and b["price_list"] == 135000 and b["stock"] is False and b["category"] == "procesadores"
 
 
+def test_tiendas_woocommerce_nuevas():
+    """Seis tiendas WooCommerce (actualización 9): precios con y sin centavos, nombres con entidades HTML, categoría y registro."""
+    from scrapers import woo, SCRAPERS
+    F = json.load(open("tests/fixtures/woo_stores.json"))
+    assert set(F) == set(woo.WOO_STORES) and all(n in SCRAPERS for n in woo.WOO_STORES)
+    got = {n: woo.parse(F[n], n)[0] for n in F}
+    assert got["Hardloots"]["price_cash"] == 44102 and got["Hardloots"]["price_list"] == 67849, "minor_unit 0: ya vienen en pesos"
+    assert got["SCP Hardstore"]["price_cash"] == 912668.31, "minor_unit 2: centavos"
+    assert got["The Gamer Shop"]["price_cash"] == 856100 and got["The Gamer Shop"]["category"] == "pcs-armadas"
+    assert got["Try"]["name"].endswith("512GB NVMe – Sin armar") and "&#" not in got["Try"]["name"]
+    assert got["Click Gaming"]["category"] == "monitores" and got["Click Gaming"]["pn"] is None and got["Click Gaming"]["store_sku"] == "AIR_215742"
+    assert all(g["store"] == n and g["stock"] is True and g["url"].startswith("https://") for n, g in got.items())
+    stores = json.load(open("site/data/stores.json"))["stores"]
+    cfg = json.load(open("site/data/config.json"))["stores"]
+    for n in woo.WOO_STORES:
+        assert n in stores and n in cfg, n
+
+
 def test_venex_parse():
     items = _vx.parse(open("tests/fixtures/venex.html").read(), "microprocesadores")
     assert len(items) == 2, "se descarta el que no tiene precio"
@@ -459,3 +502,53 @@ def test_resumen_semanal():
     assert r == {"id": 7, "estado": "borrador"} and len(calls) == 1 and calls[0][1]["recipients"] == {"listIds": [3]}
     r = m.crear_campana("a", "<p>x</p>", "2026-10-24", env=dict(env, BREVO_ENVIAR_YA="1"), call=fake)
     assert r["estado"] == "enviada" and calls[-1][0] == "/emailCampaigns/7/sendNow"
+
+
+def test_datos_danados_no_se_publican():
+    """Un products.json con marcas de conflicto de Git dejó la web sin productos: ahora se detecta antes de publicar,
+    y una corrida anterior dañada no rompe la actualización."""
+    import tempfile, importlib.util
+    from pathlib import Path
+    spec = importlib.util.spec_from_file_location("check_data", "scripts/check_data.py")
+    cd = importlib.util.module_from_spec(spec); spec.loader.exec_module(cd)
+    with tempfile.TemporaryDirectory() as t:
+        r = Path(t); (r / "site/data").mkdir(parents=True); (r / "raw").mkdir()
+        good = json.dumps([{"id": str(i)} for i in range(80)])
+        (r / "site/data/products.json").write_text(good)
+        assert cd.check(r) == []
+        (r / "site/data/products.json").write_text("<<<<<<< HEAD\n" + good + "\n=======\n" + good + "\n>>>>>>> abc")
+        e = cd.check(r); assert len(e) == 1 and "conflicto" in e[0]
+        (r / "site/data/products.json").write_text(good[:-5])
+        assert "JSON inválido" in cd.check(r)[0]
+        (r / "site/data/products.json").write_text("[]")
+        assert "no se publica" in cd.check(r)[0]
+        (r / "site/data/products.json").write_text(good); (r / "raw/X.json").write_text("<<<<<<< HEAD\n[1]")
+        assert "raw/X.json" in cd.check(r)[0]
+    import build_data
+    with tempfile.TemporaryDirectory() as t:
+        f = Path(t) / "Tienda.json"
+        f.write_text("<<<<<<< HEAD\n[]"); assert build_data.read_raw(f) == []
+        f.write_text('[{"a": 1}]'); assert build_data.read_raw(f) == [{"a": 1}]
+        f.write_text('{"a": 1}'); assert build_data.read_raw(f) == []
+    wf = Path(".github/workflows/actualizar.yml").read_text()
+    assert "pull --rebase" not in wf
+    assert "check_data.py" in wf and "site_publicar" in wf
+
+
+def test_estructura_del_sitio():
+    """Todas las páginas comparten encabezado/pie; «Productos» es el nombre único; no quedan nombres viejos."""
+    import re
+    from pathlib import Path
+    site = Path(__file__).resolve().parent.parent / "site"
+    paginas = ["index", "productos", "armado", "actualizar", "encontra", "comparar"]
+    for n in paginas:
+        h = (site / f"{n}.html").read_text(encoding="utf-8")
+        assert 'css/layout.css' in h and 'js/layout.js' in h, n
+        assert "🛒 Mi lista" not in h and "Comparador de precios</a>" not in h and "<header" not in h, n
+        assert f'data-page="{n}"' in h, n
+    lay = (site / "js" / "layout.js").read_text(encoding="utf-8")
+    assert lay.count("Productos") >= 1 and "Mi lista de compra" in lay and 'id="lcount"' in lay and "Volver arriba" in lay
+    for h in ("productos.html", "armado.html", "actualizar.html", "encontra.html", "comparar.html"):
+        assert h in lay
+    p = (site / "productos.html").read_text(encoding="utf-8")
+    assert "const PER=32" in p and "repeat(4,minmax(0,1fr))" in p and "Mostrar más" not in p and "position:sticky" in p and "margin:auto" in p

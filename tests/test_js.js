@@ -172,7 +172,8 @@ t("etiquetas de fiabilidad: verificado / benchmark / estimado / pendiente / sin 
   const cmp = C.compare(items(/RTX 5070 TI Ventus/i, /RX 9070 XT/i), { res: 1 }), tag = (id, i) => cmp.rows.find(r => r.id === id).cells[i].tag;
   assert.strictEqual(tag("sp", 0), "ver"); assert.strictEqual(tag("sp", 1), "ver"); assert.strictEqual(tag("tgp", 0), "ver");
   assert.strictEqual(tag("fpsw", 0), "est"); assert.strictEqual(tag("fps", 0), "bench"); assert.strictEqual(tag("rt", 0), "bench");
-  const c2 = C.compare(items(/RTX 3060 12GB/i, /RTX 4060 8GB/i), { res: 1 }); assert.strictEqual(c2.rows.find(r => r.id === "sp").cells[0].tag, "pend"); // 30xx: pendiente de verificar
+  const c2 = C.compare(items(/RTX 3060 12GB/i, /RTX 4060 8GB/i), { res: 1 }); assert.strictEqual(c2.rows.find(r => r.id === "sp").cells[0].tag, "ver"); // 30xx: comprobado contra la ficha de NVIDIA el 24-oct-2026
+  assert.strictEqual(c2.rows.find(r => r.id === "tgp").cells[0].tag, "ver"); assert.strictEqual(c2.rows.find(r => r.id === "official").cells[0].tag, "ver");
   assert.strictEqual(c2.rows.find(r => r.id === "bw").cells[1].tag, "pend");
 });
 t("ganador justificado y reproducible; el 'valor' y el 'consumo' pueden dar otro ganador", () => {
@@ -305,7 +306,7 @@ t("¿Qué actualizar?: si ya cumple, no inventa cambios; si el CPU limita, ofrec
   assert(lim.steps.some(s => s.kind === "cpu"));
 });
 t("¿Qué actualizar?: lo que no está en la base se dice, no se inventa un puntaje", () => {
-  const r = CU.advise({ text: "Ryzen 5 3600, GTX 1060, 8 GB DDR4", res: 0, fps: 60 });
+  const r = CU.advise({ text: "Ryzen 5 3600, GTX 960, 8 GB DDR4", res: 0, fps: 60 });
   assert.strictEqual(r.cur.gF, null); assert.strictEqual(r.cur.cF, null); assert.strictEqual(r.cur.eff, null);
   assert(r.unknown.length === 2 && r.unknown.every(u => u.why.length > 20)); assert.strictEqual(r.o.socketGuess, "AM4");
   assert(r.steps.some(s => s.kind === "ram"), "8 GB de RAM sí se puede evaluar");
@@ -322,5 +323,44 @@ t("¿Qué actualizar?: presupuesto, y objetivo inalcanzable muestra lo mejor dis
   const g = b.steps.find(s => s.kind === "gpu"); assert(!g || g.options.every(o => o.total <= 200000));
   const dur = CU.advise({ text: "Ryzen 7 5800X, RTX 3070", res: 2, fps: 144 }), gs = dur.steps.find(s => s.kind === "gpu");
   assert(gs); if (gs.options.length) assert(gs.options.every(o => !o.meets) || gs.hayOk);
+});
+t("placas de generaciones anteriores (RTX 2060 Super…): se reconocen, se marcan como estimadas y no se recomiendan", () => {
+  const old = HW.gpus.filter(g => g.se); assert(old.length >= 20);
+  old.forEach(g => { assert(g.se.n.length > 60 && ["media", "baja"].includes(g.se.conf), g.id); assert(g.p[0] > g.p[1] && g.p[1] > g.p[2], g.id); });
+  const id = n => (CU.hwGpu(n) || {}).id;
+  assert.strictEqual(id("Placa de Video Gigabyte GeForce RTX 2060 Super 8GB"), "rtx-2060s"); assert.strictEqual(id("GeForce GTX 1660 Super 6GB"), "gtx-1660s");
+  assert.strictEqual(id("Radeon RX 580 8GB"), "rx-580"); assert.strictEqual(id("Radeon RX 5700 XT 8GB"), "rx-5700xt"); assert(!id("GeForce GTX 1060 3GB"), "la 3 GB no es la de 6 GB");
+  const r = CU.advise({ text: "Ryzen 7 5800X, RTX 2060 Super, 16 GB DDR4, 550 W", res: 1, fps: 60 });
+  assert.strictEqual(r.o.gpu.id, "rtx-2060s"); assert(r.o.gpu.se); assert.strictEqual(r.cur.limiter, "gpu"); assert(r.cur.gF > 30 && r.cur.gF < 50);
+  const g = r.steps.find(x => x.kind === "gpu"); assert(g && g.options.length && g.options.every(o => !o.g.se && o.reach >= 60));
+  assert(!CU.recommend({ usos: ["gaming_pesado"], tipo: "componentes", budget: 9e6, res: "1080" }).sections[0].picks.some(p => p.c.parts.some(q => q.key && /gpu:(rtx-20|gtx|rx-5|rx-5[0-9]{2}|vega)/.test(q.key))));
+  [0, 1, 2].forEach(res => HW.gpus.filter(g => !g.se).forEach(g => assert(!CU.pickPair(g, res).cMin.c.se)));
+  // la escala se controla contra una placa que SÍ está en ambas tablas: RTX 3050 (legado 40,5 -> 44,6 medido)
+  assert(Math.abs(61.5 * 40.5 / 54.7 - HW.gpus.find(g => g.id === "rtx-3050").p[0]) < 1.2);
+});
+/* ---------- Reputación junto a cada oferta ---------- */
+const REP = require("../site/js/rep.js"), STO = require("../site/data/stores.json");
+REP.set(STO);
+t("la reputación se muestra con puntaje, cantidad y fuente", () => {
+  const h = REP.badge("Venex");
+  assert(/★ 4,6/.test(h) && /8\.388 op\. Google/.test(h) && /consultado el 2026-10-24/.test(h) && !/pocas opiniones/.test(h));
+});
+t("pocas opiniones se avisa; sin ficha verificable no se inventa puntaje", () => {
+  assert(/pocas opiniones/.test(REP.badge("BitHard")) && REP.low(REP.get("BitHard")) && !REP.low(REP.get("Gamer Factory")));
+  ["Gaming City", "Hardloots", "TiendaQueNoExiste"].forEach(s => assert(REP.get(s) === null && /sin reputación verificada/.test(REP.badge(s)) && !/★/.test(REP.badge(s))));
+});
+t("el texto de la reputación escapa HTML y no promedia fuentes", () => {
+  REP.set({ stores: { X: { reputation: [{ source: "Google Maps", listing: "<b>x</b>", score: 4, count: 10, date: "2026-10-24" }] } } });
+  assert(!/<b>x/.test(REP.badge("X")));
+  REP.set(STO);
+});
+/* ---------- Paginador ---------- */
+t("pageList: primera, última, actual con vecinas y saltos con «…»", () => {
+  const CTp = require("../site/js/lib.js");
+  assert.deepStrictEqual(CTp.pageList(1, 1), [1]);
+  assert.deepStrictEqual(CTp.pageList(2, 5), [1, 2, 3, 4, 5]);
+  assert.deepStrictEqual(CTp.pageList(6, 12), [1, "…", 5, 6, 7, "…", 12]);
+  assert.deepStrictEqual(CTp.pageList(12, 12), [1, "…", 9, 10, 11, 12]);
+  for (let tot = 1; tot < 40; tot++) for (let c = 1; c <= tot; c++) { const l = CTp.pageList(c, tot); assert(l.includes(1) && l.includes(tot) && l.includes(c)); }
 });
 console.log(n + " pruebas de JavaScript OK");
