@@ -222,13 +222,14 @@
       const total = use.w.reduce((a, [, w]) => a + w, 0), used = [], skipped = [];
       use.w.forEach(([id, w]) => {
         const r = byId[id];
-        if (!r || !r.dir) { skipped.push(id); return; }
+        if (!r || !r.dir) return;
         const vals = r.cells.map(c => c.v);
         if (vals.some(v => typeof v !== "number" || !(v > 0))) { skipped.push(r.label); return; }
         used.push({ r, w });
       });
       const usedW = used.reduce((a, u) => a + u.w, 0);
       const out = { use, used: used.map(u => u.r.label), skipped, scores: null, winner: null, runner: null, reason: null, why: [] };
+      if (items.length < 2) { out.reason = "se necesitan al menos dos productos"; return out; }
       if (!used.length || usedW < total * .6) {
         out.reason = used.length ? "faltan datos de varias métricas importantes para este criterio" : "no hay datos numéricos comparables para este criterio";
         return out;
@@ -256,18 +257,37 @@
       if (cat === "placas-de-video" && items.length >= 2) {
         const t = r("tgp"), p = r("psu");
         if (t && t.numeric && p && p.numeric) { const hi = t.cells[0].v >= t.cells[1].v ? 0 : 1, lo = 1 - hi;
-          if (t.cells[hi].v - t.cells[lo].v >= 30) out.push(`La más potente en consumo (${nm(hi)}) usa ${t.cells[hi].v - t.cells[lo].v} W más y el fabricante pide una fuente de ${p.cells[hi].v} W (la otra, ${p.cells[lo].v} W): puede obligarte a cambiar la fuente.`); }
+          if (t.cells[hi].v - t.cells[lo].v >= 30) out.push(`La que más consume (${nm(hi)}) usa ${t.cells[hi].v - t.cells[lo].v} W más y el fabricante pide una fuente de ${p.cells[hi].v} W (la otra, ${p.cells[lo].v} W): puede obligarte a cambiar la fuente.`); }
         const v = r("vram"); if (v && v.numeric) { const lo = v.cells.findIndex(c => c.v === Math.min(...v.cells.map(x => x.v)));
           if (v.cells[lo].v <= 8) out.push(`${nm(lo)} tiene ${v.cells[lo].v} GB de VRAM: alcanza en 1080p, pero algunos juegos nuevos a 1440p/4K con texturas altas la superan.`); }
-        out.push("Los FPS son un promedio de 11 juegos con un procesador de gama alta: en tu juego favorito la diferencia puede ser mayor o menor, y con DLSS/FSR cambia.");
+        const fp = r("fps"); if (fp && fp.cells.some(c => typeof c.v === "number")) out.push("Los FPS son un promedio de 11 juegos con un procesador de gama alta: en tu juego favorito la diferencia puede ser mayor o menor, y con DLSS/FSR cambia.");
       }
       if (cat === "procesadores") out.push("El puntaje de juegos se midió con una RTX 5090 a 1080p para destacar al procesador; con una placa de video más modesta, la diferencia entre procesadores se achica o desaparece.");
       if (cat === "notebooks") out.push("Procesador, memoria y almacenamiento se leen del título de la tienda; peso, medidas, panel y garantía, de la ficha técnica de la tienda para ese SKU cuando existe. La capacidad de batería no la publica ninguna tienda conectada. El rendimiento real depende de la refrigeración y de los vatios que el fabricante le dé a cada chip.");
       if (cat === "pcs-armadas") out.push("El rendimiento es una estimación a partir de la placa y el procesador del título; confirmá con la tienda la versión exacta y la fuente incluida.");
       if (cat === "almacenamiento" || cat === "memorias-ram") out.push("Las velocidades son las anunciadas por la tienda o el fabricante (picos teóricos); en el uso diario una diferencia grande de cifras suele sentirse poco.");
       if (cat === "fuentes") out.push("La potencia y la certificación 80 Plus no garantizan calidad de componentes ni protecciones: priorizá marcas con reseñas independientes.");
-      const missing = cmp.rows.filter(x => x.cells.some(c => c.tag === "nd") && !["store", "stock"].includes(x.id)).map(x => x.label);
+      const missing = cmp.rows.filter(x => x.cells.some(c => c.tag === "nd") && !x.cells.every(c => c.tag === "nd") && !["store", "stock"].includes(x.id)).map(x => x.label);
       if (missing.length) out.push("Sin datos para alguno de los productos en: " + missing.slice(0, 6).join(", ") + (missing.length > 6 ? "…" : "") + ". No inferimos esos valores.");
+      return out;
+    };
+
+    /* Qué datos técnicos tiene cada producto (sin contar nombre, precio, tienda ni disponibilidad). */
+    const NO_SPEC = ["name", "price", "store", "stock", "official"];
+    C.coverage = cmp => cmp.items.map((it, i) => {
+      const spec = cmp.rows.filter(r => !NO_SPEC.includes(r.id) && !r.derived);
+      return { name: it.name, have: spec.filter(r => r.cells[i].tag !== "nd").length, total: spec.length };
+    });
+
+    /* Lo que SÍ se puede afirmar con los datos que hay: filas numéricas con una diferencia real (>= 1 %). */
+    C.facts = cmp => {
+      const out = [];
+      cmp.rows.forEach(r => {
+        if (!r.numeric || !r.dir || r.derived) return;
+        const w = r.cells.findIndex(c => c.win); if (w < 0) return;
+        const others = r.cells.filter((_, i) => i !== w).map(c => c.disp).join(" / ");
+        out.push({ id: r.id, label: r.label, winner: w, tag: r.cells[w].tag, text: `${r.id === "price" ? "Precio" : r.label}: ${r.id === "price" ? "más barato" : r.dir === "max" ? "mayor" : "menor"} en ${cmp.items[w].name.replace(/^(placa de video|procesador|memoria ram|disco (s[oó]lido|r[ií]gido)|fuente|mother(board)?|monitor|notebook|gabinete)\s+/i, "").slice(0, 44)} (${r.cells[w].disp} frente a ${others})` });
+      });
       return out;
     };
 

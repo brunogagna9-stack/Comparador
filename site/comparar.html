@@ -10,8 +10,10 @@
 .catbar{display:flex;gap:6px;flex-wrap:wrap}.catbar button{padding:7px 12px;border:1px solid var(--line);border-radius:99px;background:var(--card);color:var(--tx);cursor:pointer;font:inherit}.catbar button.on{background:var(--tx);color:var(--bg);border-color:var(--tx)}
 .sel{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .pill{display:flex;align-items:center;gap:8px;padding:6px 8px 6px 12px;border:2px solid var(--c);border-radius:99px;background:var(--card);max-width:100%}.pill span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:300px}.pill button{border:0;background:var(--soft);color:var(--tx);border-radius:50%;width:22px;height:22px;cursor:pointer;line-height:1}
-.srch{position:relative}.dd{position:absolute;z-index:5;left:0;right:0;top:100%;background:var(--card);border:1px solid var(--line);border-radius:8px;margin-top:4px;max-height:320px;overflow:auto;box-shadow:0 8px 24px rgba(0,0,0,.18)}
-.dd button{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;color:var(--tx);padding:9px 10px;cursor:pointer;font:inherit}.dd button:hover{background:var(--soft)}.dd .p{font-weight:700;white-space:nowrap}
+.srch{position:relative}.dd{position:absolute;z-index:20;left:0;right:0;top:100%;background:var(--card);border:1px solid var(--line);border-radius:8px;margin-top:4px;max-height:320px;overflow:auto;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.dd button{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;color:var(--tx);padding:9px 10px;cursor:pointer;font:inherit}.dd button:hover,.dd button.act{background:var(--soft)}.dd button.act{box-shadow:inset 3px 0 0 var(--acc)}.dd mark{background:color-mix(in srgb,var(--acc) 28%,transparent);color:inherit;border-radius:3px;padding:0 1px}.ddh{padding:7px 10px;font-size:12px;color:var(--mut);border-bottom:1px solid var(--line2);position:sticky;top:0;background:var(--card)}.ddm{padding:12px;color:var(--mut)}
+.cov{border-left:4px solid var(--warn);background:var(--warnbg)}.cov h2{margin:0 0 6px;font-size:16px}.cov ul{margin:6px 0 0;padding-left:18px}
+details.nod{margin-top:10px;background:var(--card);border:1px solid var(--line2);border-radius:12px;padding:10px 14px}details.nod summary{cursor:pointer;font-weight:600}details.nod p{margin:8px 0 0;color:var(--mut)}.nd{color:var(--mut);font-style:italic}.dd .p{font-weight:700;white-space:nowrap}
 .verd{border-left:4px solid var(--acc)}.verd h2{margin:0 0 6px}
 .tw{overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}
 .ct{min-width:560px}.ct th,.ct td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
@@ -22,7 +24,7 @@
 .help{display:none;font-weight:400;color:var(--mut);font-size:12.5px;margin-top:3px}.help.on{display:block}
 .bars{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
 .bc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}.bc h4{margin:0 0 8px;font-size:13px}
-.br{display:grid;grid-template-columns:120px 1fr auto;gap:8px;align-items:center;margin:5px 0;font-size:12.5px}.br .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.br .t{height:14px;background:var(--soft);border-radius:4px;overflow:hidden}.br .t i{display:block;height:100%;background:var(--c);border-radius:4px}
+.br{display:grid;grid-template-columns:150px 1fr auto;gap:8px;align-items:center;margin:5px 0;font-size:12.5px}.br .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.br .t{height:14px;background:var(--soft);border-radius:4px;overflow:hidden}.br .t i{display:block;height:100%;background:var(--c);border-radius:4px}
 .tog{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--tx);text-transform:none;letter-spacing:0;font-weight:400}
 .ul2{margin:6px 0 0;padding-left:18px}.ul2 li{margin:3px 0}
 .radar{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
@@ -35,7 +37,7 @@
 <p class="lead">Elegí una categoría, sumá de 2 a 4 productos y mirá en qué se diferencian, con tablas, gráficos y una conclusión explicada.</p>
 <div class="panel">
   <label>1 · Categoría</label><div class="catbar" id="cats" style="margin:6px 0 12px"></div>
-  <div class="row"><div class="f srch" style="min-width:260px"><label>2 · Buscá y sumá productos (nombre o modelo)</label><input type="search" id="q" placeholder="Ej: RTX 5070, Ryzen 5 9600X, DDR5 32GB…" autocomplete="off"><div class="dd" id="dd" hidden></div></div>
+  <div class="row"><div class="f srch" style="min-width:260px"><label>2 · Buscá y sumá productos (nombre o modelo)</label><input type="search" id="q" placeholder="Ej: RTX 5070, Ryzen 5 9600X, DDR5 32GB…" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="dd" aria-autocomplete="list" aria-label="Buscar productos para comparar"><div class="dd" id="dd" role="listbox" hidden></div></div>
    <div class="f" style="max-width:260px" id="resbox"><label>Resolución (para rendimiento)</label><div class="seg" id="res"><button data-v="0">1080p</button><button data-v="1" class="on">1440p</button><button data-v="2">4K</button></div></div></div>
   <label class="tog" style="margin-top:8px"><input type="checkbox" id="allc"> Buscar en todas las categorías (solo se podrá comparar precio y disponibilidad)</label>
   <div class="sel" id="sel"></div>
@@ -65,15 +67,24 @@ function drawSel(){
   $("#sel").innerHTML=S.ids.map((id,i)=>{const g=byId(id);return `<div class="pill" style="--c:${COL[i]}"><span title="${esc(g.name)}">${esc(g.name)}</span><button data-r="${id}" aria-label="Quitar">×</button></div>`}).join("")||'<span class="note">Todavía no elegiste productos. Buscá arriba y tocá un resultado.</span>';
   document.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{S.ids=S.ids.filter(x=>x!==b.dataset.r);drawAll()});
 }
+let DD=-1;   // opción resaltada con el teclado
+function ddMark(i){const bs=[...document.querySelectorAll("#dd [data-a]")];if(!bs.length)return;DD=(i+bs.length)%bs.length;
+  bs.forEach((b,k)=>{b.classList.toggle("act",k===DD);b.setAttribute("aria-selected",k===DD)});bs[DD].scrollIntoView({block:"nearest"});$("#q").setAttribute("aria-activedescendant",bs[DD].id)}
+function ddAdd(id){
+  const dd=$("#dd");
+  if(S.ids.length>=4){dd.innerHTML='<div class="ddm">Podés comparar hasta 4 productos. Quitá uno para sumar otro.</div>';return}
+  S.ids.push(id);$("#q").value="";dd.hidden=true;$("#q").setAttribute("aria-expanded","false");DD=-1;drawAll()}
+function hl(name,words){let h=esc(name.slice(0,100));words.forEach(w=>{if(w.length>1)h=h.replace(new RegExp("("+w.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")","ig"),"<mark>$1</mark>")});return h}
 function search(){
-  const t=$("#q").value.trim().toLowerCase(),dd=$("#dd");
-  if(t.length<2){dd.hidden=true;return}
+  const t=$("#q").value.trim().toLowerCase(),dd=$("#dd");DD=-1;
+  if(t.length<2){dd.hidden=true;$("#q").setAttribute("aria-expanded","false");return}
   const words=t.split(/\s+/);
-  const res=PR.filter(g=>(S.all||g.category===S.cat)&&!S.ids.includes(g.id)&&words.every(w=>g.name.toLowerCase().includes(w))&&g.offers.some(o=>CT.price(o)))
-   .map(g=>({g,p:Math.min(...g.offers.filter(o=>o.stock!==false).map(CT.price).concat([Infinity]))})).sort((a,b)=>a.p-b.p).slice(0,10);
-  dd.hidden=false;
-  dd.innerHTML=res.length?res.map(({g,p},i)=>`<button data-a="${g.id}"><span>${esc(g.name.slice(0,90))}${S.all?` <span class="note">· ${esc(CT.CATS[g.category]||g.category)}</span>`:""}</span><span class="p">${isFinite(p)?ARS(p):"sin stock"}</span></button>`).join(""):'<div style="padding:10px" class="note">No encontramos productos con ese nombre en esta categoría.</div>';
-  dd.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{if(S.ids.length>=4){dd.innerHTML='<div class="note" style="padding:10px">Podés comparar hasta 4 productos. Quitá uno para sumar otro.</div>';return}S.ids.push(b.dataset.a);$("#q").value="";dd.hidden=true;drawAll()});
+  const all=PR.filter(g=>(S.all||g.category===S.cat)&&!S.ids.includes(g.id)&&words.every(w=>g.name.toLowerCase().includes(w))&&g.offers.some(o=>CT.price(o)))
+   .map(g=>({g,p:Math.min(...g.offers.filter(o=>o.stock!==false).map(CT.price).concat([Infinity]))})).sort((a,b)=>a.p-b.p);
+  const res=all.slice(0,10);
+  dd.hidden=false;$("#q").setAttribute("aria-expanded","true");
+  dd.innerHTML=res.length?`<div class="ddh">${all.length>10?`Mostrando 10 de ${all.length} · seguí escribiendo para afinar`:`${all.length} ${all.length===1?"resultado":"resultados"}`} · ↑ ↓ y Enter para elegir</div>`+res.map(({g,p},i)=>`<button type="button" role="option" id="dd${i}" data-a="${esc(g.id)}"><span>${hl(g.name,words)}${S.all?` <span class="note">· ${esc(CT.CATS[g.category]||g.category)}</span>`:""}</span><span class="p">${isFinite(p)?ARS(p):"sin stock"}</span></button>`).join(""):`<div class="ddm">No encontramos «${esc(t)}» en ${S.all?"ninguna categoría":esc(CT.CATS[S.cat]||"esta categoría")}. Probá con otra parte del nombre (por ejemplo solo el modelo).${S.all?"":" También podés tildar «Buscar en todas las categorías»."}</div>`;
+  dd.querySelectorAll("[data-a]").forEach(b=>b.onmousedown=e=>{e.preventDefault();ddAdd(b.dataset.a)});
 }
 
 /* ---------- gráficos ---------- */
@@ -84,12 +95,13 @@ function bars(rows,items){
   return `<h2>Gráficos</h2><div class="bars">${list.map(r=>{const max=Math.max(...r.cells.map(c=>c.v));
    return `<div class="bc"><h4>${esc(r.label)} ${r.dir?`<span class="note">· ${r.dir==="max"?"más es mejor":"menos es mejor"}</span>`:""} ${tagH(r.cells[0].tag)}</h4>${r.cells.map((c,i)=>`<div class="br" style="--c:${COL[i]}"><span class="n" title="${esc(items[i].name)}">${esc(shortName(items[i].name))}</span><span class="t"><i style="width:${max?Math.max(2,c.v/max*100):0}%"></i></span><b>${esc(c.disp)}</b></div>`).join("")}</div>`}).join("")}</div>`;
 }
+const RL=l=>({"Procesadores de sombreado":"Sombreado","Consumo de la placa (TGP)":"Consumo (TGP)","Ancho de banda de memoria":"Ancho de banda","Memoria de video (VRAM)":"VRAM","Fuente mínima que pide el fabricante":"Fuente mínima","Rendimiento en juegos":"Rendimiento","Rendimiento en juegos a 1080p":"Rendimiento","Rendimiento en juegos a 1440p":"Rendimiento","Rendimiento en juegos a 4K":"Rendimiento"}[l]||l).slice(0,22);
 function radar(cmp){
   const ax=C.radar(cmp);if(ax.length<3)return"";
-  const W=400,cx=200,cy=150,R=95,n=ax.length,pt=(i,k)=>{const a=-Math.PI/2+i*2*Math.PI/n;return [cx+Math.cos(a)*R*k/100,cy+Math.sin(a)*R*k/100]};
-  let svg=`<svg viewBox="0 0 ${W} 300" width="400" height="300" style="max-width:100%;height:auto" role="img" aria-label="Gráfico de radar de puntuaciones relativas">`;
+  const W=560,cx=280,cy=160,R=100,n=ax.length,pt=(i,k)=>{const a=-Math.PI/2+i*2*Math.PI/n;return [cx+Math.cos(a)*R*k/100,cy+Math.sin(a)*R*k/100]};
+  let svg=`<svg viewBox="0 0 ${W} 320" width="560" height="320" style="max-width:100%;height:auto" role="img" aria-label="Gráfico de radar de puntuaciones relativas">`;
   [25,50,75,100].forEach(k=>svg+=`<polygon points="${ax.map((_,i)=>pt(i,k).join(",")).join(" ")}" fill="none" stroke="var(--line)"/>`);
-  ax.forEach((a,i)=>{const [x,y]=pt(i,100),[lx,ly]=pt(i,122);svg+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--line)"/><text x="${lx}" y="${ly}" font-size="9.5" fill="var(--mut)" text-anchor="${lx<cx-8?"end":lx>cx+8?"start":"middle"}" dominant-baseline="middle">${esc(a.label.length>24?a.label.slice(0,23)+"…":a.label)}</text>`});
+  ax.forEach((a,i)=>{const [x,y]=pt(i,100),[lx,ly]=pt(i,118);svg+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--line)"/><text x="${lx}" y="${ly}" font-size="12" font-weight="600" fill="var(--tx)" text-anchor="${lx<cx-8?"end":lx>cx+8?"start":"middle"}" dominant-baseline="middle">${esc(RL(a.label))}</text>`});
   cmp.items.forEach((it,j)=>{const p=ax.map((a,i)=>pt(i,a.vals[j]).join(",")).join(" ");svg+=`<polygon points="${p}" fill="${COL[j]}" fill-opacity=".18" stroke="${COL[j]}" stroke-width="2"/>`});
   svg+="</svg>";
   return `<h2>Vista general</h2><div class="panel radar">${svg}<div style="flex:1;min-width:220px"><div>${cmp.items.map((it,j)=>`<div><span style="color:${COL[j]}">●</span> ${esc(it.name.slice(0,60))}</div>`).join("")}</div><p class="note">Puntuación relativa calculada por ComparáTech ${tagH("est")}: 100 = el mejor de esta comparación en cada métrica (si menos es mejor, se invierte). Solo incluye métricas con dato para todos. No es un benchmark.</p></div></div>`;
@@ -100,16 +112,21 @@ function verdict(cmp){
   if(cmp.mixed)return `<div class="panel verd"><h2>Categorías distintas</h2>${C.notes(cmp).map(t=>`<p>${esc(t)}</p>`).join("")}</div>`;
   const uses=cmp.uses;if(!S.use||!uses.find(u=>u.use.id===S.use))S.use=uses[0].use.id;
   const cur=uses.find(u=>u.use.id===S.use),nm=i=>cmp.items[i].name;
-  let h=`<div class="panel verd"><h2>Conclusión</h2><div class="row" style="margin-bottom:8px"><div class="f" style="max-width:420px"><label>¿Qué es lo más importante para vos?</label><select id="use">${uses.map(u=>`<option value="${u.use.id}" ${u.use.id===S.use?"selected":""}>${esc(u.use.label)}</option>`).join("")}</select></div></div>`;
+  const anyWin=uses.some(u=>u.winner!=null);
+  let h=`<div class="panel verd"><h2>Conclusión</h2>${anyWin?`<div class="row" style="margin-bottom:8px"><div class="f" style="max-width:420px"><label>¿Qué es lo más importante para vos?</label><select id="use">${uses.map(u=>`<option value="${u.use.id}" ${u.use.id===S.use?"selected":""}>${esc(u.use.label)}</option>`).join("")}</select></div></div>`:""}`;
   if(cur.winner!=null){
     h+=`<p style="font-size:16px"><b>Para “${esc(cur.use.label.toLowerCase())}”, la opción más conveniente es: ${esc(nm(cur.winner))}</b> <span style="color:${COL[cur.winner]}">●</span></p>`;
     h+=`<p>Puntuación relativa: ${cmp.items.map((it,i)=>`<span style="color:${COL[i]}">●</span> ${Math.round(cur.scores[i]*100)} %`).join(" · ")} ${tagH("est")}. Se calculó con: ${cur.used.map(esc).join(", ")}.</p>`;
     if(cur.why.length)h+=`<ul class="ul2">${cur.why.map(t=>`<li>${esc(t)}</li>`).join("")}</ul>`;
     if(cur.skipped.length)h+=`<p class="note">No pudimos usar (falta el dato en algún producto): ${cur.skipped.map(esc).join(", ")}.</p>`;
-  }else h+=`<p><b>Resultado inconcluso:</b> ${esc(cur.reason)}.${cur.tie?` Los dos primeros son ${esc(nm(cur.tie[0]))} y ${esc(nm(cur.tie[1]))}: elegí según precio y disponibilidad.`:""}</p>`;
+  }else{
+    h+=`<p><b>No podemos elegir un ganador con seguridad para este criterio.</b> ${cur.tie?`Hay un empate técnico entre ${esc(nm(cur.tie[0]))} y ${esc(nm(cur.tie[1]))}: elegí según precio y disponibilidad.`:`Motivo: ${esc(cur.reason)}.`}</p>`;
+    const fx=C.facts(cmp);
+    if(fx.length)h+=`<div class="sec" style="margin-top:8px;font-size:12px;color:var(--mut);font-weight:700;text-transform:uppercase">Lo que sí podemos afirmar con los datos que hay</div><ul class="ul2">${fx.map(f=>`<li>${esc(f.text)} ${tagH(f.tag)}</li>`).join("")}</ul>`;
+  }
   const others=uses.filter(u=>u.use.id!==S.use&&u.winner!=null);
   if(others.length)h+=`<div class="sec" style="margin-top:8px;font-size:12px;color:var(--mut);font-weight:700;text-transform:uppercase">Según el criterio</div><ul class="ul2">${others.map(u=>`<li><b>${esc(u.use.label)}:</b> ${esc(nm(u.winner))}</li>`).join("")}</ul>`;
-  const inc=uses.filter(u=>u.winner==null&&u.use.id!==S.use);if(inc.length)h+=`<p class="note">Sin resultado claro en: ${inc.map(u=>esc(u.use.label)).join("; ")}.</p>`;
+  const inc=uses.filter(u=>u.winner==null&&u.use.id!==S.use);if(anyWin&&inc.length)h+=`<p class="note">Sin resultado claro en: ${inc.map(u=>esc(u.use.label)).join("; ")}.</p>`;
   const notes=C.notes(cmp);
   h+=`<div class="sec" style="margin-top:10px;font-size:12px;color:var(--mut);font-weight:700;text-transform:uppercase">Tené en cuenta</div><ul class="ul2">${notes.map(t=>`<li>${esc(t)}</li>`).join("")}</ul></div>`;
   return h;
@@ -119,20 +136,31 @@ function verdict(cmp){
 function table(cmp){
   const items=cmp.items,two=items.length===2;
   let rows=cmp.rows;if(S.diff)rows=rows.filter(r=>r.differs||["name","price"].includes(r.id));
+  const empty=rows.filter(r=>r.cells.every(c=>c.tag==="nd"));rows=rows.filter(r=>!empty.includes(r));
   let h=`<div class="row" style="margin:14px 0 8px;justify-content:space-between"><h2 style="margin:0">Tabla comparativa</h2><label class="tog"><input type="checkbox" id="diff" ${S.diff?"checked":""}> Mostrar solo las diferencias</label></div><div class="tw"><table class="ct"><thead><tr><th>Característica</th>${items.map((it,i)=>`<th class="hd" style="--c:${COL[i]}">${it.o?`<a href="${esc(it.o.url)}" target="_blank" rel="noopener nofollow">${esc(it.name.slice(0,70))}</a>`:esc(it.name)}</th>`).join("")}${two?"<th>Ventaja</th>":""}</tr></thead><tbody>`;
   rows.forEach(r=>{
     h+=`<tr><td class="l">${esc(r.label)}<button class="i" data-h="${r.id}" aria-label="Qué significa" title="${esc(r.help)}">i</button>${r.derived?" "+tagH("est"):""}<div class="help" id="h_${r.id}">${esc(r.help)}</div></td>`;
-    r.cells.forEach(c=>{h+=`<td class="${c.win?"win":""}">${(r.id==="store"||r.id==="official")&&c.url?`<a href="${esc(c.url)}" target="_blank" rel="noopener nofollow">${esc(c.disp)}</a>${r.id==="store"?REP.badge(c.disp):""}`:c.win?`<b>${esc(c.disp)}</b>`:esc(c.disp)}${c.tag&&r.id!=="name"?tagH(c.tag,c.note):""}</td>`});
+    r.cells.forEach(c=>{h+=`<td class="${c.win?"win":""}">${(r.id==="store"||r.id==="official")&&c.url?`<a href="${esc(c.url)}" target="_blank" rel="noopener nofollow">${esc(c.disp)}</a>${r.id==="store"?REP.badge(c.disp):""}`:c.tag==="nd"?`<span class="nd">Sin datos</span>`:c.win?`<b>${esc(c.disp)}</b>`:esc(c.disp)}${c.tag&&c.tag!=="nd"&&r.id!=="name"?tagH(c.tag,c.note):""}</td>`});
     if(two){const [a,b]=r.cells;let t="";if(r.numeric&&r.dir&&a.v!==b.v){const w=(r.dir==="max"?a.v>b.v:a.v<b.v)?0:1,hi=Math.max(a.v,b.v),lo=Math.min(a.v,b.v),d=lo>0?Math.round((hi-lo)/lo*100):null;t=`<span class="adv" style="color:${COL[w]}">${w===0?"◀":"▶"} ${d!=null&&d>0?d+" %":""}</span>`}h+=`<td>${t}</td>`}
     h+="</tr>"});
-  return h+`</tbody></table></div><p class="note">Precios en pesos argentinos${META.updated?`, actualizados el ${esc(fdate(META.updated))} h`:""}. Verde = mejor valor de esa fila. “Sin datos” significa que no tenemos el dato y no lo inferimos.</p>`;
+  return h+`</tbody></table></div>${empty.length?`<details class="nod"><summary>${empty.length} ${empty.length===1?"característica sin datos":"características sin datos"} para estos productos</summary><p>${empty.map(r=>esc(r.label)).join(" · ")}. No tenemos el dato (o no está verificado) y no lo inferimos.</p></details>`:""}<p class="note">Precios en pesos argentinos${META.updated?`, actualizados el ${esc(fdate(META.updated))} h`:""}. Verde = mejor valor de esa fila. “Sin datos” significa que no tenemos el dato y no lo inferimos.</p>`;
 }
 
+function coverage(cmp){
+  if(cmp.mixed)return"";
+  const cov=C.coverage(cmp),max=Math.max(...cov.map(c=>c.have)),bad=cov.map((c,i)=>({c,i})).filter(({c})=>c.have<=1&&c.total>2);
+  if(!bad.length)return"";
+  const none=bad.length===cov.length;
+  return `<div class="panel cov" role="note"><h2>${none?"No tenemos fichas técnicas verificadas de estos productos":"Falta la ficha técnica de "+(bad.length===1?"uno de los productos":"algunos productos")}</h2>
+  <p>${none?"Solo se puede comparar":"De "+(bad.length===1?"ese producto":"esos productos")+" solo se puede comparar"} lo que publica la tienda (precio, disponibilidad y, si figura en el título, la memoria).${max>1?" El rendimiento y el resto de las especificaciones no se comparan para no mezclar datos de otro modelo.":""}</p>
+  <ul>${bad.map(({c,i})=>`<li><span style="color:${COL[i]}">●</span> ${esc(c.name.slice(0,80))}</li>`).join("")}</ul>
+  <p class="note" style="margin-top:6px">Suele pasar con variantes poco comunes (por ejemplo, la misma placa con menos memoria, que rinde distinto) o con modelos muy nuevos. Preferimos decir «sin datos» antes que inventar.</p></div>`;
+}
 function drawOut(){
   const out=$("#out");
   if(S.ids.length<2){out.innerHTML=`<div class="panel note">${S.ids.length?"Sumá al menos un producto más para comparar.":"Elegí al menos dos productos para ver la comparación."}</div>`;return}
   const items=S.ids.map(id=>C.item(byId(id))),cmp=C.compare(items,{res:S.res});
-  out.innerHTML=verdict(cmp)+table(cmp)+(cmp.mixed?"":radar(cmp)+bars(cmp.rows,items));
+  out.innerHTML=coverage(cmp)+verdict(cmp)+table(cmp)+(cmp.mixed?"":radar(cmp)+bars(cmp.rows,items));
   if($("#use"))$("#use").onchange=e=>{S.use=e.target.value;drawOut()};
   $("#diff").onchange=e=>{S.diff=e.target.checked;drawOut()};
   document.querySelectorAll("[data-h]").forEach(b=>b.onclick=()=>$("#h_"+b.dataset.h).classList.toggle("on"));
@@ -151,7 +179,7 @@ function drawAll(){
   $("#legend").innerHTML=["ver","bench","est","pend","nd"].map(t=>`${tagH(t)} <span>${esc(CT.TAGS[t][1])}</span>`).join("<br>");
   try{const p=new URLSearchParams(location.hash.slice(1));if(p.get("cat")&&CT.CATS[p.get("cat")])S.cat=p.get("cat");if(p.get("ids"))S.ids=p.get("ids").split(",").filter(id=>byId(id)).slice(0,4)}catch{}
   $("#share").onclick=async e=>{const b=e.currentTarget;try{await navigator.clipboard.writeText(location.href);b.textContent="✓ Enlace copiado"}catch{b.textContent="Copialo desde la barra de direcciones"}setTimeout(()=>b.textContent="🔗 Copiar enlace de esta comparación",2500)};
-  $("#q").oninput=search;$("#q").onfocus=search;document.addEventListener("click",e=>{if(!e.target.closest(".srch"))$("#dd").hidden=true});
+  $("#q").oninput=search;$("#q").onfocus=search;$("#q").onkeydown=e=>{const dd=$("#dd");if(dd.hidden&&e.key!=="ArrowDown")return;if(e.key==="ArrowDown"){e.preventDefault();if(dd.hidden)search();ddMark(DD+1)}else if(e.key==="ArrowUp"){e.preventDefault();ddMark(DD-1)}else if(e.key==="Enter"){const b=document.querySelectorAll("#dd [data-a]")[DD<0?0:DD];if(b){e.preventDefault();ddAdd(b.dataset.a)}}else if(e.key==="Escape"){dd.hidden=true;$("#q").setAttribute("aria-expanded","false")}};document.addEventListener("click",e=>{if(!e.target.closest(".srch"))$("#dd").hidden=true});
   $("#allc").onchange=e=>{S.all=e.target.checked;drawAll();search()};
   document.querySelectorAll("#res button").forEach(b=>b.onclick=()=>{S.res=+b.dataset.v;document.querySelectorAll("#res button").forEach(x=>x.classList.toggle("on",x===b));drawOut()});
   drawAll();

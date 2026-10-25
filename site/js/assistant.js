@@ -325,17 +325,17 @@
 
   /* ---------------- widget (solo navegador) ---------------- */
   const CSS = `
-#ctas-btn{position:fixed;right:16px;bottom:16px;z-index:9998;display:flex;align-items:center;gap:8px;padding:12px 16px;border:0;border-radius:999px;background:var(--acc,#1f6feb);color:#fff;font:600 14px system-ui,sans-serif;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+#ctas-btn{position:fixed;right:16px;bottom:16px;z-index:9998;display:flex;align-items:center;gap:8px;padding:12px 16px;border:0;border-radius:999px;background:#2a56d8;color:#fff;font:600 14px system-ui,sans-serif;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.25)}
 #ctas-btn:focus-visible,#ctas-p button:focus-visible,#ctas-p input:focus-visible,#ctas-p a:focus-visible{outline:3px solid #ffb703;outline-offset:2px}
 #ctas-p{position:fixed;right:16px;bottom:16px;z-index:9999;width:min(380px,calc(100vw - 32px));height:min(560px,calc(100dvh - 32px));display:none;flex-direction:column;background:var(--card,#fff);color:var(--tx,#16191f);border:1px solid var(--line,#e3e6ea);border-radius:14px;box-shadow:0 10px 36px rgba(0,0,0,.3);font:14px/1.45 system-ui,sans-serif;overflow:hidden}
 #ctas-p.open{display:flex}#ctas-p.min{height:auto}#ctas-p.min #ctas-body,#ctas-p.min #ctas-form,#ctas-p.min #ctas-chips{display:none}
 #ctas-h{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--acc,#1f6feb);color:#fff}#ctas-h b{flex:1}
 #ctas-h button{background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:6px;width:30px;height:30px;font-size:16px;cursor:pointer}
-#ctas-mode{font-size:11px;padding:6px 12px;background:var(--soft,#eef0f3);color:var(--mut,#6a7280);border-bottom:1px solid var(--line,#e3e6ea)}
+#ctas-mode{font-size:12px;padding:6px 12px;background:var(--soft,#eef0f3);color:var(--mut,#6a7280);border-bottom:1px solid var(--line,#e3e6ea)}
 #ctas-body{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
 .ctas-m{max-width:92%;padding:8px 11px;border-radius:12px;word-wrap:break-word}.ctas-m p{margin:0 0 6px}.ctas-m p:last-child{margin:0}.ctas-m ul{margin:4px 0 6px;padding-left:18px}
 .ctas-u{align-self:flex-end;background:var(--acc,#1f6feb);color:#fff}.ctas-b{align-self:flex-start;background:var(--soft,#eef0f3)}
-.ctas-src{display:block;margin-top:6px;font-size:11px;color:var(--mut,#6a7280)}.ctas-ai{border-left:3px solid var(--warn,#b7791f)}
+.ctas-src{display:block;margin-top:6px;font-size:12px;color:var(--mut,#6a7280)}.ctas-ai{border-left:3px solid var(--warn,#b7791f)}
 #ctas-chips{display:flex;gap:6px;flex-wrap:wrap;padding:0 12px 8px}
 #ctas-chips button{border:1px solid var(--line,#e3e6ea);background:var(--card,#fff);color:var(--tx,#16191f);border-radius:999px;padding:5px 10px;font:inherit;font-size:12.5px;cursor:pointer}
 #ctas-form{display:flex;gap:6px;padding:10px;border-top:1px solid var(--line,#e3e6ea)}

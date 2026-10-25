@@ -7,6 +7,9 @@
 <link rel="stylesheet" href="css/shared.css">
 <link rel="stylesheet" href="css/layout.css">
 
+<style>
+@media(max-width:640px){table.gt,table.gt tbody,table.gt tr,table.gt td{display:block;width:100%}table.gt tr:first-child{display:none}table.gt tr{padding:12px 14px;border-bottom:1px solid var(--line2)}table.gt td{border:0;padding:3px 0}table.gt td:nth-child(2){padding:6px 0}}
+</style>
 </head>
 <body data-page="armado">
 <script src="js/layout.js"></script>
@@ -87,7 +90,7 @@ function render(){
     h+=`<div class="panel"><b>${esc(g.name)}</b> a ${RES[S.res]}: promedio de ~${Math.round(Gv)} FPS en juegos exigentes (Ultra, sin DLSS/FSR). Consumo ${g.tgp} W; el fabricante pide una fuente de al menos <b>${g.psu} W</b> para todo el equipo.</div>`;
     h+=`<div class="warn"><b>Importante:</b> este es un cálculo orientativo. Antes de comprar, revisá el checklist de abajo y los manuales del fabricante.</div>`;
     h+=build(g,A);
-    h+=`<h2>Rendimiento estimado en juegos</h2><div class="panel" style="padding:0;overflow:auto"><table><tr><th>Juego y requisitos oficiales</th><th>Veredicto</th><th>Detalle (hardware sugerido: ${esc(A.cSug.c.name)})</th></tr>${HW.games.map(gm=>gameRow(gm,g,A.cSug.c)).join("")}</table></div>
+    h+=`<h2>Rendimiento estimado en juegos</h2><div class="panel" style="padding:0;overflow:auto"><table class="gt"><tr><th>Juego y requisitos oficiales</th><th>Veredicto</th><th>Detalle (hardware sugerido: ${esc(A.cSug.c.name)})</th></tr>${HW.games.map(gm=>gameRow(gm,g,A.cSug.c)).join("")}</table></div>
     <p class="note">Cómo se estima: el FPS de la placa sale del promedio de 11 juegos (incluye CS2 y Cyberpunk 2077) de Tom's Hardware (junio 2026); el del procesador se escala desde su puntaje en juegos. El rendimiento real en cada juego puede variar. Para los juegos livianos solo comparamos contra sus requisitos oficiales.</p>`;
   }else{
     const c=HW.cpus.find(x=>x.id===S.id),cf=C.cpuFps(c);

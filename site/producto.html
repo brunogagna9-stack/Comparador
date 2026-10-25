@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Producto · ComparáTech</title>
+<link rel="stylesheet" href="css/shared.css">
+<link rel="stylesheet" href="css/layout.css">
+<style>
+.crumb{margin:4px 0 12px;font-size:13px;color:var(--mut)}.crumb a{font-weight:600}
+.ph1{display:grid;grid-template-columns:minmax(220px,360px) 1fr;gap:24px;align-items:start}
+.im{aspect-ratio:1;background:#fff;border:1px solid var(--line);border-radius:16px;display:flex;align-items:center;justify-content:center;overflow:hidden}.im img{max-width:100%;max-height:100%;object-fit:contain}
+.im .ph{display:flex;flex-direction:column;align-items:center;gap:4px;color:#6b7482;font-size:13px}.im .ph i{font-style:normal;font-size:64px;opacity:.75}
+.pd h1{margin:6px 0 8px;font-size:26px;line-height:1.2}
+.big{font-size:34px;font-weight:800;letter-spacing:-.8px}.big .sub{font-weight:500;letter-spacing:0}.sub{font-size:13px;color:var(--mut)}.dn{color:var(--down);font-weight:700}.up{color:var(--up);font-weight:700}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.acts .btn{border-radius:999px;display:inline-flex;align-items:center;gap:6px}.acts .btn.pri{color:#fff}
+.tag2{display:inline-block;font-size:12px;padding:3px 10px;border-radius:999px;background:var(--soft);border:1px solid var(--line);margin-right:6px;font-weight:600}
+.tw2{overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}.tw2 table{min-width:640px}
+td.n,th.n{text-align:right;white-space:nowrap}tr.best td{background:var(--best)}.in{color:var(--down);font-weight:600}.out{color:var(--up);font-weight:600}
+.warnpill{display:inline-block;font-size:12px;padding:1px 7px;border-radius:999px;background:var(--warnbg);color:var(--warn);font-weight:700;margin-left:4px}
+.chart{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--card)}.chart svg{width:100%;height:auto;display:block}
+.leg{display:flex;gap:12px;flex-wrap:wrap;font-size:12.5px;margin-top:6px}.leg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px}
+.spec td:first-child{width:42%;font-weight:600}.empty{padding:30px;text-align:center;color:var(--mut)}
+.alert{background:var(--soft);border:1px solid var(--line);border-left:4px solid var(--warn);border-radius:10px;padding:10px 14px;margin:12px 0}
+@media(max-width:760px){.ph1{grid-template-columns:1fr}.im{max-width:300px}.big{font-size:28px}.pd h1{font-size:21px}}
+</style>
+</head>
+<body data-page="productos">
+<script src="js/layout.js"></script>
+<main>
+  <div class="crumb"><a href="productos.html">← Volver a Productos</a><span id="bc"></span></div>
+  <div id="pd"><div class="empty">Cargando producto…</div></div>
+</main>
+<script src="js/lib.js"></script><script src="js/rep.js"></script><script src="js/compare.js"></script><script src="js/detail.js"></script>
+<script>
+const $=s=>document.querySelector(s),{ARS,esc}=CT;
+const CATS={procesadores:"Procesadores",motherboards:"Motherboards","placas-de-video":"Placas de video","memorias-ram":"Memorias RAM",almacenamiento:"Almacenamiento",refrigeracion:"Refrigeración",fuentes:"Fuentes",gabinetes:"Gabinetes",monitores:"Monitores",notebooks:"Notebooks","pcs-armadas":"PCs armadas",perifericos:"Periféricos",redes:"Redes",accesorios:"Cables y accesorios",otros:"Otros"};
+const ICON={procesadores:"🧠",motherboards:"🔌","placas-de-video":"🎮","memorias-ram":"🧮",almacenamiento:"💽",refrigeracion:"❄️",fuentes:"⚡",gabinetes:"🖥️",monitores:"🖥️",notebooks:"💻","pcs-armadas":"🖥️",perifericos:"⌨️",redes:"📡",accesorios:"🔌",otros:"📦"};
+const price=o=>o.price_cash??o.price_list;
+let FOLLOW={};try{FOLLOW=JSON.parse(localStorage.getItem("seg")||"{}")}catch{}
+let LIST=[];try{LIST=JSON.parse(localStorage.getItem("lista")||"[]")}catch{}
+const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}};
+const tagH=(t,n)=>{const [l,h]=CT.TAGS[t]||CT.TAGS.nd;return `<span class="tag t-${t}" title="${esc(h+(n?" — "+n:""))}">${l}</span>`};
+async function j(u,d){try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw 0;return await r.json()}catch{return d}}
+function imgFail(el){const fb=el.dataset.fb;if(fb&&el.src!==fb){el.src=fb;return}const sp=document.createElement("span");sp.className="ph";sp.innerHTML=`<i>${ICON[el.dataset.cat]||"📦"}</i>Sin foto`;el.replaceWith(sp)}
+window.imgFail=imgFail;
+function specs(g,HW,PR,META,SP){
+  try{
+    const C=CT.makeCompare(CT.create(HW,PR,META,SP)),cmp=C.compare([C.item(g)],{res:1});
+    const rows=cmp.rows.filter(r=>!["name","price","store","stock"].includes(r.id)&&r.cells[0].tag!=="nd");
+    if(!rows.length)return `<p class="sub">Todavía no tenemos especificaciones para este producto. No las inferimos: preferimos mostrar solo lo que podemos respaldar.</p>`;
+    return `<div class="tw2"><table class="spec">${rows.map(r=>{const c=r.cells[0];return `<tr><td>${esc(r.label)}</td><td>${r.id==="official"&&c.url?`<a href="${esc(c.url)}" target="_blank" rel="noopener nofollow">${esc(c.disp)}</a>`:esc(c.disp)} ${c.tag?tagH(c.tag,c.note):""}</td></tr>`}).join("")}</table></div><p class="sub" style="margin-top:6px">Las etiquetas indican qué tan confiable es cada dato (verificado contra la ficha oficial, estimado, pendiente de verificar).</p>`;
+  }catch{return `<p class="sub">No se pudieron calcular las especificaciones de este producto.</p>`}
+}
+(async()=>{
+  const id=new URLSearchParams(location.search).get("id");
+  const [PR,HIST,META,CFG,STORES,HW,SP]=await Promise.all([j("data/products.json",[]),j("data/history.json",{}),j("data/meta.json",{}),j("data/config.json",{stores:{}}),j("data/stores.json",{stores:{}}),j("data/hardware.json",null),j("data/specs.json",null)]);
+  REP.set(STORES);
+  const g=(Array.isArray(PR)?PR:[]).find(x=>x.id===id);
+  if(!g||!g.offers||!g.offers.length){$("#pd").innerHTML=`<div class="empty"><h2>No encontramos este producto</h2><p>Puede que la tienda ya no lo publique o que el enlace esté incompleto.</p><p><a class="btn pri" href="productos.html" style="display:inline-block">Ver todos los productos</a></p></div>`;document.title="Producto no encontrado · ComparáTech";return}
+  window.CURID=g.id;document.title=g.name+" · ComparáTech";
+  $("#bc").innerHTML=` · <a href="productos.html?cat=${encodeURIComponent(g.category)}">${esc(CATS[g.category]||g.category)}</a>`;
+  const stale=s=>{const m=(META.stores||{})[s];return !!(m&&!m.ok)},ctx={HIST,META,CFG,REP,stale};
+  const best=price(g.offers[0]),c=(g.chg&&!(g.offers[0]&&g.offers[0].anom))?g.chg:null;
+  const img=g.image?`<img data-cat="${esc(g.category)}" data-fb="${esc(g.image_fb||"")}" src="${esc(g.image)}" alt="${esc(g.name)}" onerror="imgFail(this)">`:`<span class="ph"><i>${ICON[g.category]||"📦"}</i>Sin foto</span>`;
+  const inList=()=>LIST.includes(g.id),fol=()=>!!FOLLOW[g.id];
+  const cmpLink=CT.CATS&&CT.CATS[g.category]?`comparar.html#${new URLSearchParams({cat:g.category,ids:g.id})}`:null;
+  const head=()=>`<div class="ph1"><div class="im">${img}</div><div class="pd"><div><span class="tag2">${esc(CATS[g.category]||g.category)}</span>${g.brand?`<span class="tag2">${esc(g.brand)}</span>`:""}${g.img_src?`<span class="tag2" title="Ninguna tienda publica foto de este producto">Foto: ${esc(g.img_src)}</span>`:""}</div>
+    <h1>${esc(g.name)}</h1>
+    <div class="big">${ARS(best)} <span class="sub">en ${esc(g.offers[0].store)}${g.offers.length>1?` · comparado en ${g.offers.length} tiendas`:" · 1 tienda"}</span></div>
+    ${c?`<div class="${c.pct<0?"dn":"up"}">${c.pct<0?"▼ Bajó":"▲ Subió"} ${Math.abs(c.pct)}% (antes ${ARS(c.prev)})</div>`:""}${g.low?'<div class="dn">Está en su mínimo histórico</div>':""}
+    <div class="acts"><a class="btn pri" href="${esc(g.offers[0].url)}" target="_blank" rel="noopener nofollow">Ir a la tienda más barata ↗</a><button class="btn" id="fl">${inList()?"✓ En mi lista (quitar)":"+ Agregar a mi lista"}</button><button class="btn" id="fb">${fol()?"★ Siguiendo":"☆ Seguir precio"}</button>${cmpLink?`<a class="btn" href="${esc(cmpLink)}">⚖️ Comparar con otros</a>`:""}</div>
+    ${g.offers.some(o=>o.anom)?'<div class="alert">Alguna oferta cambió de precio de forma muy brusca. Puede ser un error de la tienda: confirmalo antes de comprar.</div>':""}</div></div>`;
+  $("#pd").innerHTML=`<div id="hd">${head()}</div>
+   <h2>Dónde comprarlo</h2>${DET.offersTable(g,ctx)}<p class="sub" style="margin:8px 0 0">${g.offers.some(o=>REP.get(o.store))?"La reputación es el puntaje público de cada tienda en Google Maps (con su fecha); no se promedian fuentes. ":""}Los precios no incluyen envío: se calcula en cada tienda.</p>
+   <h2>Historial de precio</h2>${DET.chart(g,ctx)||'<p class="sub">Todavía no hay historial: se va armando con cada actualización.</p>'}
+   <h2>Especificaciones</h2>${specs(g,HW,PR,META,SP)}`;
+  const bind=()=>{
+    $("#fl").onclick=()=>{const i=LIST.indexOf(g.id);i>=0?LIST.splice(i,1):LIST.push(g.id);save("lista",LIST);CTL.count(LIST.length);$("#hd").innerHTML=head();bind()};
+    $("#fb").onclick=()=>{if(FOLLOW[g.id])delete FOLLOW[g.id];else FOLLOW[g.id]={price:best,name:g.name};save("seg",FOLLOW);$("#hd").innerHTML=head();bind()};
+  };bind();
+})();
+</script>
+<script src="js/assistant.js"></script>
+<script>CT.CTAssistant.mount({section:"precios",context:()=>({ids:window.CURID?[window.CURID]:[]})});</script>
+</body>
+</html>

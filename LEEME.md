@@ -142,3 +142,11 @@ Su reputación quedó vacía a propósito hasta tener una fuente concreta (punta
 - **«Volver arriba»**: botón flotante al bajar y botón en el pie.
 - Corregido: el cartelito «Actualizado hace X h» aparecía tachado.
 - Pruebas nuevas: `pageList` (paginador) y estructura común de todas las páginas.
+
+## Actualización 12: comparar hardware, producto en otra pestaña y legibilidad
+
+- **Comparar hardware**: el desplegable de búsqueda no se abría porque el buscador nuevo del encabezado tenía el mismo nombre interno (`q`) que el de esta página. Ahora el del encabezado se llama `qh`. El listado resalta lo escrito, se maneja con ↑ ↓ Enter, avisa si hay más resultados o ninguno.
+- **Comparación más clara**: si falta la ficha técnica de un producto se explica arriba (y cuáles son); las filas sin ningún dato se agrupan en un desplegable en vez de ocupar la tabla; cuando no hay ganador seguro se muestra «Lo que sí podemos afirmar con los datos que hay» (precio, memoria, etc.). La nota de FPS solo aparece si hay FPS. El gráfico de radar tiene etiquetas legibles.
+- **Producto en otra pestaña**: cada tarjeta es un enlace real (`producto.html?id=…`): rueda del mouse, clic derecho → «Abrir en pestaña nueva» y Ctrl/Cmd+clic funcionan; el clic normal sigue abriendo la ventana de detalle, que ahora tiene el botón «↗ Abrir en otra pestaña». La página nueva muestra dónde comprarlo, historial de precio y especificaciones (solo las que tienen respaldo).
+- **Legibilidad**: revisión automática de contraste (WCAG AA) y tamaño de letra en las 7 páginas, en claro/oscuro y en 3 anchos de pantalla: textos mínimos de 12 px, etiquetas, botón del asistente, botones principales al pasar el mouse, «✓ En lista» y colores de advertencia corregidos. La tabla de juegos de «Armado de PC» pasa a tarjetas en el celular.
+- Pruebas nuevas: comparación con un solo producto, sin ficha técnica, hechos por fila, enlaces de producto y que el id del buscador del encabezado no choque.
