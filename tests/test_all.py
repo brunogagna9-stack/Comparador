@@ -540,15 +540,21 @@ def test_estructura_del_sitio():
     import re
     from pathlib import Path
     site = Path(__file__).resolve().parent.parent / "site"
-    paginas = ["index", "productos", "armado", "actualizar", "encontra", "comparar"]
+    paginas = ["index", "productos", "armado", "actualizar", "encontra", "comparar", "producto"]
     for n in paginas:
         h = (site / f"{n}.html").read_text(encoding="utf-8")
         assert 'css/layout.css' in h and 'js/layout.js' in h, n
         assert "🛒 Mi lista" not in h and "Comparador de precios</a>" not in h and "<header" not in h, n
-        assert f'data-page="{n}"' in h, n
+        assert f'data-page="{"productos" if n == "producto" else n}"' in h, n
     lay = (site / "js" / "layout.js").read_text(encoding="utf-8")
     assert lay.count("Productos") >= 1 and "Mi lista de compra" in lay and 'id="lcount"' in lay and "Volver arriba" in lay
     for h in ("productos.html", "armado.html", "actualizar.html", "encontra.html", "comparar.html"):
         assert h in lay
     p = (site / "productos.html").read_text(encoding="utf-8")
     assert "const PER=32" in p and "repeat(4,minmax(0,1fr))" in p and "Mostrar más" not in p and "position:sticky" in p and "margin:auto" in p
+    # el buscador del encabezado no puede llamarse "q": comparar.html tiene su propio buscador y los dos se pisaban
+    assert 'id="qh"' in lay and 'id="q"' not in lay
+    assert 'id="q"' in (site / "comparar.html").read_text(encoding="utf-8")
+    # abrir un producto en otra pestaña: enlace real en cada tarjeta y botón en la ventana de detalle
+    assert 'class="stretch"' in p and "Abrir en otra pestaña" in p and "DET.url" in p
+    assert (site / "js" / "detail.js").exists() and "Dónde comprarlo" in (site / "producto.html").read_text(encoding="utf-8")

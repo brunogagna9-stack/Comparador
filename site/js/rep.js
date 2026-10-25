@@ -18,7 +18,7 @@
   };
   if (typeof document !== "undefined") {
     const st = document.createElement("style");
-    st.textContent = ".rep1,.rep0{text-transform:none;letter-spacing:0;font-size:11.5px;font-weight:400;white-space:normal;display:inline-block;margin-left:6px;max-width:100%;color:var(--mut,#667)}.rep1{color:var(--ink,inherit)}.rep1 .rn{color:var(--mut,#667)}.rlow{color:var(--warn,#b45309);font-weight:600}.rep0{font-style:italic}";
+    st.textContent = ".rep1,.rep0{text-transform:none;letter-spacing:0;font-size:12px;font-weight:400;white-space:normal;display:inline-block;margin-left:6px;max-width:100%;color:var(--mut,#667)}.rep1{color:var(--ink,inherit)}.rep1 .rn{color:var(--mut,#667)}.rlow{color:var(--warn,#b45309);font-weight:600}.rep0{font-style:italic}";
     document.head.appendChild(st);
   }
   if (typeof module !== "undefined" && module.exports) module.exports = R; else root.REP = R;

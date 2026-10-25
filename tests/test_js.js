@@ -363,4 +363,34 @@ t("pageList: primera, última, actual con vecinas y saltos con «…»", () => {
   assert.deepStrictEqual(CTp.pageList(12, 12), [1, "…", 9, 10, 11, 12]);
   for (let tot = 1; tot < 40; tot++) for (let c = 1; c <= tot; c++) { const l = CTp.pageList(c, tot); assert(l.includes(1) && l.includes(tot) && l.includes(c)); }
 });
+/* ---------- Comparación: un solo producto, datos faltantes y hechos comprobables ---------- */
+require("../site/js/compare.js");
+const DET = require("../site/js/detail.js");
+t("comparar con un solo producto no falla (página de detalle) y lista solo datos con respaldo", () => {
+  const K = CT.makeCompare(CT.create(HW, PR, {}, null));
+  const g = PR.find(x => x.category === "procesadores");
+  const cmp = K.compare([K.item(g)], { res: 1 });
+  assert(cmp.rows.length > 3 && cmp.uses.every(u => u.winner == null));
+});
+t("sin ficha técnica no hay ganador inventado: solo hechos de precio y memoria", () => {
+  const K = CT.makeCompare(CT.create(HW, PR, {}, null));
+  const a = PR.find(x => /RTX 3050 6GB/.test(x.name)), b = PR.find(x => /RTX 3060 8GB/.test(x.name));
+  if (!a || !b) return;
+  const cmp = K.compare([K.item(a), K.item(b)], { res: 1 });
+  assert(K.coverage(cmp).every(c => c.have <= 1), "ninguna de las dos tiene ficha");
+  assert(cmp.uses.every(u => u.winner == null), "sin datos no hay ganador");
+  const f = K.facts(cmp).map(x => x.text).join("|");
+  assert(/Precio: más barato en/.test(f) && /VRAM/.test(f) && !/FPS/.test(f));
+  assert(!K.notes(cmp).some(x => /promedio de 11 juegos/.test(x)), "no se nombran FPS si no hay FPS");
+});
+t("con ficha de ambas, los hechos señalan al ganador de cada fila", () => {
+  const K = CT.makeCompare(CT.create(HW, PR, {}, null));
+  const a = PR.find(x => /3060 12GB/.test(x.name)), b = PR.find(x => /RTX 4060/.test(x.name) && x.category === "placas-de-video");
+  const cmp = K.compare([K.item(a), K.item(b)], { res: 1 });
+  const f = K.facts(cmp);
+  assert(f.some(x => x.id === "vram" && x.winner === 0) && f.some(x => x.id === "tgp" && x.winner === 1));
+});
+t("la dirección de la página de producto escapa el id", () => {
+  assert.strictEqual(DET.url("a b&c"), "producto.html?id=a%20b%26c");
+});
 console.log(n + " pruebas de JavaScript OK");

@@ -12,7 +12,7 @@
   const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const file = (location.pathname.split("/").pop() || "index.html").toLowerCase();
   const page = (document.body && document.body.dataset.page) || (file.replace(".html", "") || "index");
-  const isProducts = page === "productos";
+  const isProducts = file === "productos.html" || file === "productos";   // solo el listado filtra en vivo; producto.html se comporta como las demás secciones
 
   const CART = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2.5 3h2.7l2.4 11.2a1.6 1.6 0 0 0 1.6 1.3h8.6a1.6 1.6 0 0 0 1.6-1.2L21 7H6"/></svg>';
   const LENS = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>';
@@ -22,7 +22,7 @@
   const header = `<header class="site"><div class="hin">
     <a class="logo" href="index.html" aria-label="ComparáTech, ir al inicio">Compará<span>Tech</span></a>
     <nav aria-label="Secciones">${NAV.map(([h, t, id]) => `<a href="${h}"${id === page ? ' class="on" aria-current="page"' : ""}>${t}</a>`).join("")}</nav>
-    <div class="hsearch">${LENS}<input id="q" type="search" placeholder="Buscar productos: ryzen 5 5500, rtx 4060…" aria-label="Buscar productos" autocomplete="off"></div>
+    <div class="hsearch">${LENS}<input id="qh" type="search" placeholder="Buscar productos: ryzen 5 5500, rtx 4060…" aria-label="Buscar productos" autocomplete="off"></div>
     <button class="bell" id="abtn" hidden aria-haspopup="dialog" aria-label="Avisos de bajas de precio" title="Avisos de bajas de precio">🔔</button>
     <button class="cart" id="lbtn" aria-haspopup="dialog" aria-label="Mi lista de compra" title="Mi lista de compra">${CART}<span class="cn" id="lcount" data-n="0">0</span></button>
   </div></header>`;
@@ -53,7 +53,7 @@
     CTL.count(listCount());
     // Fuera de «Productos», el buscador y el carrito llevan a Productos.
     if (!isProducts) {
-      const q = document.getElementById("q");
+      const q = document.getElementById("qh");
       q.addEventListener("keydown", e => { if (e.key === "Enter" && q.value.trim()) location.href = "productos.html?q=" + encodeURIComponent(q.value.trim()); });
       document.getElementById("lbtn").onclick = () => { location.href = "productos.html?lista=1"; };
     }
@@ -74,7 +74,7 @@
       if (!isProducts && (ok(A.email_form_url) || ok(A.whatsapp_channel_url))) { const b = document.getElementById("abtn"); b.hidden = false; b.onclick = () => { location.href = "productos.html?avisos=1"; }; }
     });
     fetch("data/meta.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).catch(() => null).then(m => {
-      if (m && m.updated) { const d = new Date(m.updated); if (!isNaN(d)) document.getElementById("fupd").textContent = "Última lectura de precios: " + d.toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" }) + "."; }
+      if (m && m.updated) { const d = new Date(m.updated); if (!isNaN(d)) document.getElementById("fupd").textContent = "Última lectura de precios: " + d.toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" }); }
     });
   }
 
