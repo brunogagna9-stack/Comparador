@@ -150,3 +150,15 @@ Su reputación quedó vacía a propósito hasta tener una fuente concreta (punta
 - **Producto en otra pestaña**: cada tarjeta es un enlace real (`producto.html?id=…`): rueda del mouse, clic derecho → «Abrir en pestaña nueva» y Ctrl/Cmd+clic funcionan; el clic normal sigue abriendo la ventana de detalle, que ahora tiene el botón «↗ Abrir en otra pestaña». La página nueva muestra dónde comprarlo, historial de precio y especificaciones (solo las que tienen respaldo).
 - **Legibilidad**: revisión automática de contraste (WCAG AA) y tamaño de letra en las 7 páginas, en claro/oscuro y en 3 anchos de pantalla: textos mínimos de 12 px, etiquetas, botón del asistente, botones principales al pasar el mouse, «✓ En lista» y colores de advertencia corregidos. La tabla de juegos de «Armado de PC» pasa a tarjetas en el celular.
 - Pruebas nuevas: comparación con un solo producto, sin ficha técnica, hechos por fila, enlaces de producto y que el id del buscador del encabezado no choque.
+
+## Actualización 13: auditoría de fichas técnicas (26-oct-2026)
+
+Se auditaron los 5.900 productos publicados para ver cuáles no tenían ficha técnica para comparar.
+
+- **Procesadores**: la base tenía 40 modelos; ahora 75. Se agregaron 35 (Ryzen 5 5600XT/5600GT/5600G/5600T, 5700G, 5700, 5900X/5900XT/5950X, 4500, 4100, 3200G, 3400G, 7600X3D, 7700, 7900, 9600, 8400F/8500G/8600G/8700G/8700F; Core i9-14900/F, i7-14700/F, i3-14100/F, i3-13100/F, i7-12700/F, i9-12900/F/K, i5-10400, Ultra 9 285, Ultra 7 265/F, Ultra 7 270K Plus, Ultra 5 250K/KF Plus, Pentium Gold G7400). Cada uno con su ficha oficial de amd.com o intel.com (enlace y fecha). El puntaje de juegos solo figura si lo mide Tom's Hardware (7600X3D, 270K Plus, 250K Plus); el resto dice «Sin datos» y no se usa para recomendar.
+- Se reconocen títulos con «+ Wraith Stealth Cooler» y se descartan los «símil» (un Ryzen 5 PRO 5650G «símil 5600GT» no es un 5600GT).
+- **Placas de video**: RX 9070 GRE (con rendimiento medido), y para comparar (sin entrar en recomendaciones): RTX 3050 6GB, Arc B570, RX 9060 y RX 9050. Se arregló «RX 9070 16GB XT» (se leía como RX 9070).
+- **Categorías**: mini PCs, consolas, combos de actualización, tablets, soportes y kits que las tiendas ponían como «procesador», «placa de video», etc. ahora van a su categoría; las procesadoras/licuadoras de cocina se descartan (`fix_category` en `scrapers/common.py`).
+- **Lectura de títulos**: pulgadas con ″ ´ ' o sin comillas, paneles HVA/WOLED/Fast IPS, resolución 1920x1080, memorias en MT/s, «D4» en motherboards, memoria deducida del socket (AM4 y LGA1200 solo DDR4; AM5 y LGA1851 solo DDR5), certificación Cybenetics, RPM de discos rígidos.
+- **«No aplica» en vez de «Sin datos»** cuando el dato no existe para ese producto (por ejemplo, generación PCIe en un disco SATA o rígido).
+- Resultado con los datos del 26-oct: procesadores con ficha 87 de 240 → 121 de 134 (los 106 restantes no eran procesadores); placas de video 349 → 389 de 427. Lo que sigue faltando (modelos viejos u OEM, placas profesionales, datos que la tienda no pone en el título) está listado en `fichas_incompletas.csv`.

@@ -141,7 +141,7 @@
           if (!c.spec.igpu || (n.cores && c.spec.cores < n.cores)) return;
           const cpuShop = C.findCpu(c).filter(x => CT.hasIgpu(x.g.name) === true); if (!cpuShop.length) return;
           psuRam.forEach(([kind, gb]) => {
-            const w = CT.up50(c.maxp + 150), ram = gb;
+            const w = CT.up50((c.maxp || c.tdp * 2) + 150), ram = gb;
             const parts = [
               { slot: "cpu", label: "Procesador", title: "Procesador: " + c.name, why: `${c.socket} · ${c.cores || c.spec.cores} núcleos · gráficos integrados (sin placa de video).`, shop: cpuShop, key: "cpu:" + c.id },
               { slot: "mobo", label: "Placa madre", title: `Placa madre (socket ${c.socket})`, why: "Verificá que la BIOS soporte este procesador.", shop: C.findMobo(c), key: "mobo:" + c.socket },

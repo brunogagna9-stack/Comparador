@@ -14,6 +14,7 @@
   };
   const spNote = r => `${r.src}${r.sku ? " · SKU " + r.sku : ""} · ${r.date}` + (r.note ? " · " + r.note : "");
   const ND = { v: null, disp: "Sin datos", tag: "nd" };
+  const NA = { v: null, text: "No aplica", disp: "No aplica", tag: null };   // el dato no existe para este tipo de producto (no es un faltante)
   const fmt = (n, d = 0) => n == null ? null : Number(n).toLocaleString("es-AR", { maximumFractionDigits: d, minimumFractionDigits: 0 });
   const mk = (v, disp, tag) => v == null ? ND : { v, disp: disp ?? String(v), tag };
   const txt = (v, tag) => v ? { v: null, text: v, disp: v, tag } : ND;
@@ -31,7 +32,7 @@
     C.item = g => {
       const o = C.bestOffer(g) || g.offers.slice().sort((a, b) => price(a) - price(b))[0];
       const it = { g, o, p: o ? price(o) : null, inStock: !!C.bestOffer(g), name: g.name, cat: g.category, sp: CT.parse(g.name, g.category) };
-      if (g.category === "placas-de-video") it.hwg = C.hwGpu(g.name);
+      if (g.category === "placas-de-video") it.hwg = C.hwGpu(g.name) || C.hwGpuX(g.name);
       if (g.category === "procesadores") it.hwc = C.hwCpu(g.name);
       if (g.category === "pcs-armadas") { it.hwg = C.hwGpu(g.name, it.sp.vram ?? null); it.hwc = C.hwCpu(g.name); }
       return it;
@@ -54,7 +55,7 @@
     /* ---- filas por categoría ---- */
     const ROWS = {
       "placas-de-video": res => [
-        { id: "fps", label: `Rendimiento en juegos a ${CT.RES[res]}`, help: "FPS promedio de 11 juegos exigentes (Ultra, sin DLSS/FSR). Medición independiente, no oficial.", dir: "max", chart: " FPS", get: it => it.hwg ? mk(it.hwg.p[res], "~" + fmt(it.hwg.p[res]) + " FPS", "bench") : ND },
+        { id: "fps", label: `Rendimiento en juegos a ${CT.RES[res]}`, help: "FPS promedio de 11 juegos exigentes (Ultra, sin DLSS/FSR). Medición independiente, no oficial.", dir: "max", chart: " FPS", get: it => it.hwg && it.hwg.p ? mk(it.hwg.p[res], "~" + fmt(it.hwg.p[res]) + " FPS", "bench") : ND },
         { id: "rt", label: "Con ray tracing (1080p)", help: "FPS promedio con ray tracing en 1080p. Solo existe para algunas placas.", dir: "max", chart: " FPS", get: it => it.hwg && it.hwg.rt ? mk(it.hwg.rt[0], "~" + fmt(it.hwg.rt[0]) + " FPS", "bench") : ND },
         { id: "arq", label: "Arquitectura", help: "Generación de diseño del chip. Generaciones más nuevas suelen sumar tecnologías (DLSS 4, FSR 4, etc.).", get: it => it.hwg ? txt(it.hwg.spec.arq, onev(it.hwg, "arq")) : ND },
         { id: "sp", label: "Procesadores de sombreado", help: "CUDA cores (NVIDIA) o stream processors (AMD/Intel). Solo se pueden comparar con números dentro de una misma arquitectura: no son una medida directa de rendimiento.", dir: "max", chart: "", get: it => it.hwg ? mk(it.hwg.spec.sp, fmt(it.hwg.spec.sp), onev(it.hwg, "sp")) : ND },
@@ -63,10 +64,10 @@
         { id: "bus", label: "Bus de memoria", help: "Ancho del bus en bits. Junto con la velocidad define el ancho de banda.", dir: "max", chart: " bits", get: it => it.hwg ? mk(it.hwg.spec.bus, it.hwg.spec.bus + " bits", onev(it.hwg, "bus")) : ND },
         { id: "bw", label: "Ancho de banda de memoria", help: "Bus ÷ 8 × velocidad por pin. Es un máximo teórico, no FPS.", dir: "max", chart: " GB/s", get: it => it.hwg ? mk(it.hwg.spec.bw, fmt(it.hwg.spec.bw) + " GB/s", onev(it.hwg, "bus") === "ver" && onev(it.hwg, "gbps") === "ver" ? "ver" : "pend") : ND },
         { id: "tgp", label: "Consumo de la placa (TGP)", help: "Potencia que declara el fabricante para la placa sola. No es el consumo medido en uso.", dir: "min", chart: " W", get: it => it.hwg ? mk(it.hwg.tgp, it.hwg.tgp + " W", onev(it.hwg, "tgp")) : ND },
-        { id: "psu", label: "Fuente mínima que pide el fabricante", help: "Potencia de fuente recomendada por el fabricante para todo el equipo.", dir: "min", chart: " W", get: it => it.hwg ? mk(it.hwg.psu, it.hwg.psu + " W", onev(it.hwg, "psu")) : ND },
+        { id: "psu", label: "Fuente mínima que pide el fabricante", help: "Potencia de fuente recomendada por el fabricante para todo el equipo.", dir: "min", chart: " W", get: it => it.hwg && it.hwg.psu ? mk(it.hwg.psu, it.hwg.psu + " W", onev(it.hwg, "psu")) : ND },
         { id: "official", label: "Ficha oficial del fabricante", help: "Página del fabricante contra la que se comprobaron los datos marcados como verificados, con la fecha de la comprobación.", get: it => it.hwg && it.hwg.vurl ? { v: null, text: "Ver ficha", disp: "Ver ficha (comprobada el " + it.hwg.vdate + ")", tag: "ver", url: it.hwg.vurl } : it.hwg ? { v: null, text: "Sin verificar", disp: "Sin verificar contra la ficha oficial", tag: "pend" } : ND },
-        { id: "fpsw", label: "Eficiencia: FPS por vatio", help: "FPS promedio ÷ TGP. Orientativo: mezcla un benchmark con un consumo declarado.", dir: "max", derived: true, chart: "", get: it => it.hwg ? mk(Math.round(it.hwg.p[res] / it.hwg.tgp * 100) / 100, fmt(it.hwg.p[res] / it.hwg.tgp, 2) + " FPS/W", "est") : ND },
-        { id: "fpspp", label: "Valor: FPS por cada $100.000", help: "FPS promedio ÷ precio × 100.000. Depende del precio del día.", dir: "max", derived: true, chart: "", get: it => it.hwg && it.p ? mk(Math.round(perPrice(it.hwg.p[res], it.p, 1e5) * 10) / 10, fmt(perPrice(it.hwg.p[res], it.p, 1e5), 1), "est") : ND },
+        { id: "fpsw", label: "Eficiencia: FPS por vatio", help: "FPS promedio ÷ TGP. Orientativo: mezcla un benchmark con un consumo declarado.", dir: "max", derived: true, chart: "", get: it => it.hwg && it.hwg.p ? mk(Math.round(it.hwg.p[res] / it.hwg.tgp * 100) / 100, fmt(it.hwg.p[res] / it.hwg.tgp, 2) + " FPS/W", "est") : ND },
+        { id: "fpspp", label: "Valor: FPS por cada $100.000", help: "FPS promedio ÷ precio × 100.000. Depende del precio del día.", dir: "max", derived: true, chart: "", get: it => it.hwg && it.hwg.p && it.p ? mk(Math.round(perPrice(it.hwg.p[res], it.p, 1e5) * 10) / 10, fmt(perPrice(it.hwg.p[res], it.p, 1e5), 1), "est") : ND },
       ],
       procesadores: () => [
         { id: "score", label: "Rendimiento en juegos (puntaje 0–100)", help: "Puntaje relativo al Ryzen 7 9850X3D (=100) en 17 juegos a 1080p con una RTX 5090. Medición independiente.", dir: "max", chart: " /100", get: it => it.hwc && it.hwc.s ? mk(it.hwc.s, fmt(it.hwc.s, 1), "bench") : ND },
@@ -78,7 +79,7 @@
         { id: "l3", label: "Caché L3", help: "Memoria rápida dentro del procesador. La 3D V-Cache de AMD ayuda mucho en juegos.", dir: "max", chart: " MB", get: it => it.hwc ? mk(it.hwc.spec.l3, it.hwc.spec.l3 + " MB", onev(it.hwc, "l3")) : ND },
         { id: "igpu", label: "Gráficos integrados", help: "Permite usar la PC sin placa de video. Los modelos con F (Intel) no los traen.", get: it => { const v = CT.hasIgpu(it.name); return v == null ? ND : { v: null, text: v ? "Sí" : "No", disp: v ? "Sí" : "No", tag: it.hwc && onev(it.hwc, "igpu") === "ver" && v === it.hwc.spec.igpu ? "ver" : "pend" }; } },
         { id: "tdp", label: "Potencia base (TDP)", help: "Dato del fabricante.", dir: "min", chart: " W", get: it => it.hwc ? mk(it.hwc.tdp, it.hwc.tdp + " W", onev(it.hwc, "tdp")) : ND },
-        { id: "maxp", label: "Potencia máxima", help: "Intel: 'Maximum Turbo Power' oficial. AMD: TDP × 1,35 (estimado).", dir: "min", chart: " W", get: it => it.hwc ? mk(it.hwc.maxp, it.hwc.maxp + " W", it.hwc.vendor === "AMD" ? "est" : onev(it.hwc, "maxp")) : ND },
+        { id: "maxp", label: "Potencia máxima", help: "Intel: 'Maximum Turbo Power' oficial. AMD: TDP × 1,35 (estimado).", dir: "min", chart: " W", get: it => it.hwc && it.hwc.maxp ? mk(it.hwc.maxp, it.hwc.maxp + " W", it.hwc.vendor === "AMD" ? "est" : onev(it.hwc, "maxp")) : ND },
         { id: "official", label: "Ficha oficial del fabricante", help: "Página del fabricante contra la que se comprobaron los datos marcados como verificados, con la fecha de la comprobación.", get: it => it.hwc && it.hwc.vurl ? { v: null, text: "Ver ficha", disp: "Ver ficha (comprobada el " + it.hwc.vdate + ")", tag: "ver", url: it.hwc.vurl } : it.hwc ? { v: null, text: "Sin verificar", disp: "Sin verificar contra la ficha oficial", tag: "pend" } : ND },
         { id: "spp", label: "Valor: puntaje por cada $100.000", help: "Puntaje de juegos ÷ precio × 100.000.", dir: "max", derived: true, chart: "", get: it => it.hwc && it.hwc.s && it.p ? mk(Math.round(perPrice(it.hwc.s, it.p, 1e5) * 100) / 100, fmt(perPrice(it.hwc.s, it.p, 1e5), 2), "est") : ND },
       ],
@@ -95,13 +96,14 @@
         { id: "gb", label: "Capacidad", help: "Espacio total.", dir: "max", chart: " GB", get: it => it.sp.gb ? mk(it.sp.gb, it.sp.gb >= 1000 ? fmt(it.sp.gb / 1000, 2) + " TB" : it.sp.gb + " GB", "pend") : ND },
         { id: "kind", label: "Tipo", help: "SSD (rápido, sin partes móviles), HDD (barato por GB, lento).", get: it => txt(it.sp.kind, "pend") },
         { id: "iface", label: "Interfaz", help: "NVMe (M.2) es mucho más rápido que SATA; verificá que tu placa tenga ranura M.2.", get: it => txt(it.sp.iface, "pend") },
-        { id: "gen", label: "Generación PCIe", help: "Gen4 duplica el máximo teórico de Gen3. Tu placa madre limita la velocidad.", get: it => txt(it.sp.gen, "pend") },
+        { id: "gen", label: "Generación PCIe", help: "Gen4 duplica el máximo teórico de Gen3. Tu placa madre limita la velocidad.", get: it => it.sp.genNA ? NA : txt(it.sp.gen, "pend") },
+        { id: "rpm", label: "Velocidad de giro", help: "Solo en discos rígidos (HDD): 7200 RPM es más rápido que 5400.", dir: "max", chart: " RPM", get: it => it.sp.kind === "HDD" ? (it.sp.rpm ? mk(it.sp.rpm, it.sp.rpm + " RPM", "pend") : ND) : it.sp.kind ? NA : ND },
         { id: "mbs", label: "Velocidad anunciada", help: "Velocidad máxima de lectura que publica la tienda/fabricante. Es un pico, no el uso real.", dir: "max", chart: " MB/s", get: it => it.sp.mbs ? mk(it.sp.mbs, fmt(it.sp.mbs) + " MB/s", "pend") : ND },
         { id: "ppg", label: "Precio por GB", help: "Precio ÷ capacidad.", dir: "min", derived: true, chart: "$", get: it => it.sp.gb && it.p ? mk(Math.round(it.p / it.sp.gb * 10) / 10, ARS(it.p / it.sp.gb), "est") : ND },
       ],
       fuentes: () => [
         { id: "w", label: "Potencia", help: "Potencia total que entrega. Elegí según el consumo de tu placa de video y procesador.", dir: "max", chart: " W", get: it => it.sp.w ? mk(it.sp.w, it.sp.w + " W", "pend") : ND },
-        { id: "cert", label: "Certificación 80 Plus", help: "Eficiencia: Bronze < Silver < Gold < Platinum < Titanium. No mide la calidad de los componentes internos.", dir: "max", chart: "", get: it => it.sp.cert ? { v: it.sp.certRank, text: it.sp.cert[0].toUpperCase() + it.sp.cert.slice(1), disp: it.sp.cert[0].toUpperCase() + it.sp.cert.slice(1), tag: "pend" } : ND },
+        { id: "cert", label: "Certificación de eficiencia", help: "80 Plus: Bronze < Silver < Gold < Platinum < Titanium. Cybenetics es otra certificación, con otra escala: no se compara con 80 Plus. Ninguna mide la calidad de los componentes internos.", dir: "max", chart: "", get: it => it.sp.cyb ? txt(it.sp.cyb, "pend") : it.sp.cert ? { v: it.sp.certRank, text: it.sp.cert[0].toUpperCase() + it.sp.cert.slice(1), disp: it.sp.cert[0].toUpperCase() + it.sp.cert.slice(1), tag: "pend" } : ND },
         { id: "mod", label: "Cables modulares", help: "Los modulares ordenan mejor el gabinete.", get: it => ({ v: null, text: it.sp.modular ? "Sí" : "No indicado", disp: it.sp.modular ? "Sí" : "No indicado", tag: it.sp.modular ? "pend" : "nd" }) },
         { id: "atx", label: "Estándar ATX", help: "ATX 3.x trae el conector 12V-2x6 de las placas de gama alta modernas.", get: it => txt(it.sp.atx3, "pend") },
         { id: "ppw", label: "Precio por vatio", help: "Precio ÷ potencia.", dir: "min", derived: true, chart: "$", get: it => it.sp.w && it.p ? mk(Math.round(it.p / it.sp.w * 10) / 10, ARS(it.p / it.sp.w), "est") : ND },
@@ -109,7 +111,7 @@
       motherboards: () => [
         { id: "socket", label: "Socket", help: "Debe coincidir con el del procesador.", get: it => txt(it.sp.socket, "pend") },
         { id: "chipset", label: "Chipset", help: "Define funciones: overclock, cantidad de PCIe y USB.", get: it => txt(it.sp.chipset, "pend") },
-        { id: "ddr", label: "Memoria", help: "DDR4 o DDR5, según la placa.", get: it => txt(it.sp.ddr, "pend") },
+        { id: "ddr", label: "Memoria", help: "DDR4 o DDR5, según la placa. En AM4 y LGA1200 solo existe DDR4; en AM5 y LGA1851 solo DDR5.", get: it => it.sp.ddr ? Object.assign(txt(it.sp.ddr + (it.sp.ddrBySocket ? " (por el socket)" : ""), "pend"), it.sp.ddrBySocket ? { note: "Deducido del socket: ese socket solo admite " + it.sp.ddr } : {}) : ND },
         { id: "form", label: "Formato", help: "Debe entrar en tu gabinete: Mini-ITX < Micro-ATX < ATX < E-ATX.", get: it => txt(it.sp.form, "pend") },
         { id: "wifi", label: "Wi-Fi integrado", help: "Si no lo trae necesitás una placa de red aparte.", get: it => ({ v: null, text: it.sp.wifi ? "Sí" : "No indicado", disp: it.sp.wifi ? "Sí" : "No indicado", tag: it.sp.wifi ? "pend" : "nd" }) },
       ],
@@ -280,13 +282,15 @@
     });
 
     /* Lo que SÍ se puede afirmar con los datos que hay: filas numéricas con una diferencia real (>= 1 %). */
+    // nombre corto para las frases: el del modelo reconocido ("Ryzen 7 5800XT") o el título sin palabras de relleno
+    const shortN = it => (it.hwc && it.hwc.name) || (it.hwg && it.hwg.name) || it.name.replace(/^(placa de video|procesador|memoria( ram)?|disco (s[oó]lido|r[ií]gido)( ssd)?|fuente|mother(board)?|monitor( gamer)?|notebook( gamer)?|gabinete)\s+/i, "").slice(0, 48);
     C.facts = cmp => {
       const out = [];
       cmp.rows.forEach(r => {
         if (!r.numeric || !r.dir || r.derived) return;
         const w = r.cells.findIndex(c => c.win); if (w < 0) return;
         const others = r.cells.filter((_, i) => i !== w).map(c => c.disp).join(" / ");
-        out.push({ id: r.id, label: r.label, winner: w, tag: r.cells[w].tag, text: `${r.id === "price" ? "Precio" : r.label}: ${r.id === "price" ? "más barato" : r.dir === "max" ? "mayor" : "menor"} en ${cmp.items[w].name.replace(/^(placa de video|procesador|memoria ram|disco (s[oó]lido|r[ií]gido)|fuente|mother(board)?|monitor|notebook|gabinete)\s+/i, "").slice(0, 44)} (${r.cells[w].disp} frente a ${others})` });
+        out.push({ id: r.id, label: r.label, winner: w, tag: r.cells[w].tag, text: `${r.id === "price" ? "Precio" : r.label}: ${r.id === "price" ? "más barato" : r.dir === "max" ? "mayor" : "menor"} en ${shortN(cmp.items[w])} (${r.cells[w].disp} frente a ${others})` });
       });
       return out;
     };

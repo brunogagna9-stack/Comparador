@@ -53,8 +53,9 @@ G = [
     ("rtx-3060ti", "GeForce RTX 3060 Ti", "NVIDIA", 8, 200, 600, (74.2, 51.0, 19.4), None, "nvidia", r"rtx[ -]?3060[ -]?ti", ""),
     ("rtx-3060", "GeForce RTX 3060 12GB", "NVIDIA", 12, 170, 550, (61.5, 41.9, 22.2), None, "nvidia", r"rtx[ -]?3060", r"ti"),
     ("rtx-3050", "GeForce RTX 3050", "NVIDIA", 8, 130, 550, (44.6, 29.8, 12.6), None, "nvidia", r"rtx[ -]?3050", ""),
-    ("rx-9070xt", "Radeon RX 9070 XT", "AMD", 16, 304, 750, (156.6, 116.5, 65.8), (77.8, 55.5), "amd_gpu", r"rx[ -]?9070[ -]?xt", ""),
-    ("rx-9070", "Radeon RX 9070", "AMD", 16, 220, 650, (140.9, 104.0, 57.7), (67.6, 47.6), "amd_gpu", r"rx[ -]?9070", r"xt|gre"),
+    ("rx-9070xt", "Radeon RX 9070 XT", "AMD", 16, 304, 750, (156.6, 116.5, 65.8), (77.8, 55.5), "amd_gpu", r"rx[ -]?9070(?:[ -]?xt\b|.{0,14}\bxt\b)", ""),
+    ("rx-9070gre", "Radeon RX 9070 GRE", "AMD", 12, 220, 650, (120.6, 86.6, 46.3), (58.4, 37.3), "amd_gpu", r"rx[ -]?9070[ -]?gre", ""),
+    ("rx-9070", "Radeon RX 9070", "AMD", 16, 220, 650, (140.9, 104.0, 57.7), (67.6, 47.6), "amd_gpu", r"rx[ -]?9070", r"\bxt\b|9070[ -]?xt|gre"),
     ("rx-9060xt-16", "Radeon RX 9060 XT 16GB", "AMD", 16, 160, 450, (98.3, 67.3, 35.2), (45.3, 31.0), "amd_gpu", r"rx[ -]?9060[ -]?xt.*16 ?gb|16 ?gb.*rx[ -]?9060[ -]?xt", ""),
     ("rx-9060xt-8", "Radeon RX 9060 XT 8GB", "AMD", 8, 150, 450, (93.2, 62.5, 29.7), (33.0, 20.2), "amd_gpu", r"rx[ -]?9060[ -]?xt.*\b8 ?gb|\b8 ?gb.*rx[ -]?9060[ -]?xt", ""),
     ("rx-7900xtx", "Radeon RX 7900 XTX", "AMD", 24, 355, 800, (161.5, 122.3, 70.6), None, "amd_gpu", r"rx[ -]?7900[ -]?xtx", ""),
@@ -71,6 +72,16 @@ G = [
     ("rx-6650xt", "Radeon RX 6650 XT", "AMD", 8, 180, 500, (64.3, 38.0, 19.0), None, "amd_gpu", r"rx[ -]?6650[ -]?xt", ""),
     ("rx-6600xt", "Radeon RX 6600 XT", "AMD", 8, 160, 500, (62.7, 40.7, 17.3), None, "amd_gpu", r"rx[ -]?6600[ -]?xt", ""),
     ("arc-b580", "Intel Arc B580", "Intel", 12, 190, 600, (71.5, 50.7, 27.6), (34.9, 23.1), "intel_gpu", r"arc[ -]?b580", ""),
+]
+
+# Placas que se pueden COMPARAR pero no entran en las recomendaciones (Armado, ¿Qué actualizar?, Encontrá tu equipo)
+# porque les falta un dato que esas secciones necesitan (rendimiento medido o fuente mínima oficial).
+# id, nombre, fabricante, VRAM, TGP W, fuente W o None, FPS (1080p,1440p,4K) o None, RT (1080p,1440p) o None, fuente, regex, exclusión
+GX = [
+    ("rtx-3050-6", "GeForce RTX 3050 6GB", "NVIDIA", 6, 70, 300, None, None, "nvidia", r"rtx[ -]?3050", r"\b8 ?gb"),
+    ("arc-b570", "Intel Arc B570", "Intel", 10, 150, None, (63.5, 44.3, 19.6), (19.8, 13.1), "intel_gpu", r"arc[ -]?b570", ""),
+    ("rx-9060", "Radeon RX 9060", "AMD", 8, 132, 450, None, None, "amd_gpu", r"rx[ -]?9060(?![ -]?xt)", r"\bxt\b"),
+    ("rx-9050", "Radeon RX 9050", "AMD", 8, 92, 450, None, None, "amd_gpu", r"\br(?:x)?[ -]?9050\b", ""),
 ]
 
 # id, nombre, fabricante, socket, memoria, potencia base/TDP (W), potencia máxima (W), puntaje juegos o None, fuente, regex
@@ -120,6 +131,43 @@ C = [
     ("i5-13400f", "Core i5-13400F", "Intel", "LGA1700", "DDR4/DDR5", 65, 148, 56.8, "intel_cpu", r"13400f?\b"),
     ("i5-12400f", "Core i5-12400F", "Intel", "LGA1700", "DDR4/DDR5", 65, 117, 47.5, "intel_cpu", r"12400f?\b"),
     ("i3-12100f", "Core i3-12100F", "Intel", "LGA1700", "DDR4/DDR5", 58, 89, None, "intel_cpu", r"12100f?\b"),
+    # --- Agregados el 26-oct-2026 (auditoría de fichas faltantes). Especificaciones comprobadas en la ficha oficial.
+    #     Puntaje de juegos SOLO si figura en la tabla de Tom's Hardware; si no, None (la web dice "sin datos" y no lo recomienda).
+    ("r5-7600x3d", "Ryzen 5 7600X3D", "AMD", "AM5", "DDR5", 65, 88, 80.6, "amd_cpu", r"7600x3d"),
+    ("r9-7900", "Ryzen 9 7900", "AMD", "AM5", "DDR5", 65, 88, None, "amd_cpu", r"(ryzen 9|\br9)[ -]?7900(?![x0-9a-z])"),
+    ("r7-7700", "Ryzen 7 7700", "AMD", "AM5", "DDR5", 65, 88, None, "amd_cpu", r"(ryzen 7|\br7)[ -]?7700(?![x0-9a-z])"),
+    ("r5-9600", "Ryzen 5 9600", "AMD", "AM5", "DDR5", 65, 88, None, "amd_cpu", r"(ryzen 5|\br5)[ -]?9600(?![x0-9a-z])"),
+    ("r7-8700g", "Ryzen 7 8700G", "AMD", "AM5", "DDR5", 65, 88, None, "amd_cpu", r"8700g\b"),
+    ("r5-8600g", "Ryzen 5 8600G", "AMD", "AM5", "DDR5", 65, 88, None, "amd_cpu", r"8600g\b"),
+    ("r5-8500g", "Ryzen 5 8500G", "AMD", "AM5", "DDR5", 65, 88, None, "amd_cpu", r"8500g\b"),
+    ("r7-8700f", "Ryzen 7 8700F", "AMD", "AM5", "DDR5", 65, 88, None, "amd_cpu", r"8700f\b"),
+    ("r5-8400f", "Ryzen 5 8400F", "AMD", "AM5", "DDR5", 65, 88, None, "amd_cpu", r"8400f\b"),
+    ("r9-5950x", "Ryzen 9 5950X", "AMD", "AM4", "DDR4", 105, 142, None, "amd_cpu", r"5950x\b"),
+    ("r9-5900xt", "Ryzen 9 5900XT", "AMD", "AM4", "DDR4", 105, 142, None, "amd_cpu", r"5900xt\b"),
+    ("r9-5900x", "Ryzen 9 5900X", "AMD", "AM4", "DDR4", 105, 142, None, "amd_cpu", r"5900x(?![t3])"),
+    ("r7-5700g", "Ryzen 7 5700G", "AMD", "AM4", "DDR4", 65, 88, None, "amd_cpu", r"5700g(?!e)\b"),
+    ("r7-5700", "Ryzen 7 5700", "AMD", "AM4", "DDR4", 65, 88, None, "amd_cpu", r"(ryzen 7|\br7)[ -]?5700(?![a-z0-9])"),
+    ("r5-5600xt", "Ryzen 5 5600XT", "AMD", "AM4", "DDR4", 65, 88, None, "amd_cpu", r"5600xt\b"),
+    ("r5-5600gt", "Ryzen 5 5600GT", "AMD", "AM4", "DDR4", 65, 88, None, "amd_cpu", r"5600gt\b"),
+    ("r5-5600g", "Ryzen 5 5600G", "AMD", "AM4", "DDR4", 65, 88, None, "amd_cpu", r"5600g\b"),
+    ("r5-5600t", "Ryzen 5 5600T", "AMD", "AM4", "DDR4", 65, 88, None, "amd_cpu", r"5600t\b"),
+    ("r5-4500", "Ryzen 5 4500", "AMD", "AM4", "DDR4", 65, 88, None, "amd_cpu", r"(ryzen 5|\br5)[ -]?4500(?![a-z0-9])"),
+    ("r3-4100", "Ryzen 3 4100", "AMD", "AM4", "DDR4", 65, 88, None, "amd_cpu", r"(ryzen 3|\br3)[ -]?4100(?![a-z0-9])"),
+    ("r5-3400g", "Ryzen 5 3400G", "AMD", "AM4", "DDR4", 65, 88, None, "amd_cpu", r"3400g\b"),
+    ("r3-3200g", "Ryzen 3 3200G", "AMD", "AM4", "DDR4", 65, 88, None, "amd_cpu", r"3200g\b"),
+    ("u7-270kp", "Core Ultra 7 270K Plus", "Intel", "LGA1851", "DDR5", 125, 250, 77.5, "intel_cpu", r"270kf?\b"),
+    ("u5-250kp", "Core Ultra 5 250K Plus", "Intel", "LGA1851", "DDR5", 125, 159, 73.3, "intel_cpu", r"250kf?\b"),
+    ("u9-285", "Core Ultra 9 285", "Intel", "LGA1851", "DDR5", 65, 182, None, "intel_cpu", r"ultra ?9.{0,14}\b285f?\b"),
+    ("u7-265", "Core Ultra 7 265", "Intel", "LGA1851", "DDR5", 65, 182, None, "intel_cpu", r"ultra ?7.{0,14}\b265f?\b"),
+    ("i9-14900", "Core i9-14900", "Intel", "LGA1700", "DDR4/DDR5", 65, 219, None, "intel_cpu", r"14900f?\b"),
+    ("i7-14700", "Core i7-14700", "Intel", "LGA1700", "DDR4/DDR5", 65, 219, None, "intel_cpu", r"14700f?\b"),
+    ("i3-14100", "Core i3-14100", "Intel", "LGA1700", "DDR4/DDR5", 60, 110, None, "intel_cpu", r"14100f?\b"),
+    ("i3-13100", "Core i3-13100", "Intel", "LGA1700", "DDR4/DDR5", 60, 110, None, "intel_cpu", r"13100f?\b"),
+    ("i9-12900k", "Core i9-12900K", "Intel", "LGA1700", "DDR4/DDR5", 125, 241, None, "intel_cpu", r"12900kf?\b"),
+    ("i9-12900", "Core i9-12900", "Intel", "LGA1700", "DDR4/DDR5", 65, 202, None, "intel_cpu", r"12900f?\b"),
+    ("i7-12700", "Core i7-12700", "Intel", "LGA1700", "DDR4/DDR5", 65, 180, None, "intel_cpu", r"12700f?\b"),
+    ("i5-10400", "Core i5-10400", "Intel", "LGA1200", "DDR4", 65, None, None, "intel_cpu", r"10400f?\b"),
+    ("pg-7400", "Pentium Gold G7400", "Intel", "LGA1700", "DDR4/DDR5", 46, None, None, "intel_cpu", r"\bg7400\b"),
 ]
 
 # Puntajes ESTIMADOS (no figuran en la tabla de Tom's Hardware). Nunca se usan para recomendar una compra:
@@ -242,6 +290,8 @@ GS = {
     "rx-6700xt": ("RDNA 2", 2560, "GDDR6", 192, 16), "rx-6650xt": ("RDNA 2", 2048, "GDDR6", 128, 17.5),
     "rx-6600xt": ("RDNA 2", 2048, "GDDR6", 128, 16),
     "arc-b580": ("Xe2 (Battlemage)", 2560, "GDDR6", 192, 19),
+    "rx-9070gre": ("RDNA 4", 3072, "GDDR6", 192, 18),
+    "rtx-3050-6": ("Ampere", 2304, "GDDR6", 96, 14), "rx-9060": ("RDNA 4", 1792, "GDDR6", 128, 18), "rx-9050": ("RDNA 4", 1024, "GDDR6", 128, 18), "arc-b570": ("Xe2 (Battlemage)", 2304, "GDDR6", 160, 19),
 }
 # CPU: (nucleos, hilos, boost GHz, caché L3 MB, gráficos integrados)
 CS = {
@@ -261,6 +311,20 @@ CS = {
     "i7-12700k": (12, 20, 5.0, 25, True), "i5-12600k": (10, 16, 4.9, 20, True),
     "i5-14400f": (10, 16, 4.7, 20, False), "i5-13400f": (10, 16, 4.6, 20, False), "i5-12400f": (6, 12, 4.4, 18, False),
     "i3-12100f": (4, 8, 4.3, 12, False),
+    # agregados 26-oct-2026 (ficha oficial; "caché" = L3 en AMD, Smart Cache en Intel)
+    "r5-7600x3d": (6, 12, 4.7, 96, True), "r9-7900": (12, 24, 5.4, 64, True), "r7-7700": (8, 16, 5.3, 32, True),
+    "r5-9600": (6, 12, 5.2, 32, True), "r7-8700g": (8, 16, 5.1, 16, True), "r5-8600g": (6, 12, 5.0, 16, True),
+    "r5-8500g": (6, 12, 5.0, 16, True), "r7-8700f": (8, 16, 5.0, 16, False), "r5-8400f": (6, 12, 4.7, 16, False),
+    "r9-5950x": (16, 32, 4.9, 64, False), "r9-5900xt": (16, 32, 4.8, 64, False), "r9-5900x": (12, 24, 4.8, 64, False),
+    "r7-5700g": (8, 16, 4.6, 16, True), "r7-5700": (8, 16, 4.6, 16, False), "r5-5600xt": (6, 12, 4.7, 32, False),
+    "r5-5600gt": (6, 12, 4.6, 16, True), "r5-5600g": (6, 12, 4.4, 16, True), "r5-5600t": (6, 12, 4.5, 32, False),
+    "r5-4500": (6, 12, 4.1, 8, False), "r3-4100": (4, 8, 4.0, 4, False), "r5-3400g": (4, 8, 4.2, 4, True),
+    "r3-3200g": (4, 4, 4.0, 4, True),
+    "u7-270kp": (24, 24, 5.5, 36, True), "u5-250kp": (18, 18, 5.3, 30, False), "u9-285": (24, 24, 5.6, 36, True),
+    "u7-265": (20, 20, 5.3, 30, False), "i9-14900": (24, 32, 5.8, 36, True), "i7-14700": (20, 28, 5.4, 33, True),
+    "i3-14100": (4, 8, 4.7, 12, True), "i3-13100": (4, 8, 4.5, 12, True), "i9-12900k": (16, 24, 5.2, 30, True),
+    "i9-12900": (16, 24, 5.1, 30, True), "i7-12700": (12, 20, 4.9, 25, True), "i5-10400": (6, 12, 4.3, 12, True),
+    "pg-7400": (2, 4, 3.7, 6, True),
 }
 # Campos comprobados contra la ficha oficial del fabricante (resto = "pendiente de verificar").
 # Comprobación completa del 24-oct-2026: cada ficha se leyó y se comparó número por número (ver VURL).
@@ -272,6 +336,7 @@ _NV = "https://www.nvidia.com/en-us/geforce/graphics-cards/"
 _AG = "https://www.amd.com/en/products/graphics/desktops/radeon/"
 _AC = "https://www.amd.com/en/products/processors/desktops/ryzen/"
 _IC = "https://www.intel.com/content/www/us/en/products/sku/"
+_AS = "https://www.amd.com/en/support/downloads/drivers.html/processors/ryzen/"   # páginas de soporte de AMD (incluyen la ficha)
 VURL = {
     "rtx-5090": _NV + "50-series/rtx-5090/", "rtx-5080": _NV + "50-series/rtx-5080/",
     "rtx-5070ti": _NV + "50-series/rtx-5070-family/", "rtx-5070": _NV + "50-series/rtx-5070-family/",
@@ -295,6 +360,9 @@ VURL = {
     "rx-6700xt": _AG + "6000-series/amd-radeon-rx-6700-xt.html", "rx-6650xt": _AG + "6000-series/amd-radeon-rx-6650-xt.html",
     "rx-6600xt": _AG + "6000-series/amd-radeon-rx-6600-xt.html", "rx-6600": _AG + "6000-series/amd-radeon-rx-6600.html",
     "arc-b580": _IC + "241598/intel-arc-b580-graphics/specifications.html",
+    "rx-9070gre": _AG + "9000-series/amd-radeon-rx-9070-gre.html", "rtx-3050-6": _NV + "30-series/rtx-3050/",
+    "arc-b570": _IC + "241676/intel-arc-b570-graphics/specifications.html",
+    "rx-9060": _AG + "9000-series/amd-radeon-rx-9060.html", "rx-9050": _AG + "9000-series/amd-radeon-rx-9050.html",
     # CPUs AMD (ficha de producto en amd.com)
     "r7-9850x3d": _AC + "9000-series/amd-ryzen-7-9850x3d.html", "r9-9950x3d": _AC + "9000-series/amd-ryzen-9-9950x3d.html",
     "r7-9800x3d": _AC + "9000-series/amd-ryzen-7-9800x3d.html", "r9-9900x3d": _AC + "9000-series/amd-ryzen-9-9900x3d.html",
@@ -327,7 +395,39 @@ VURL = {
     "i5-13400f": _IC + "230501/intel-core-i513400f-processor-20m-cache-up-to-4-60-ghz/specifications.html",
     "i5-12400f": _IC + "134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html",
     "i3-12100f": _IC + "132223/intel-core-i312100f-processor-12m-cache-up-to-4-30-ghz/specifications.html",
+    # agregados 26-oct-2026
+    "r5-7600x3d": _AS + "ryzen-7000-series/amd-ryzen-5-7600x3d.html", "r9-7900": _AS + "ryzen-7000-series/amd-ryzen-9-7900.html",
+    "r7-7700": _AS + "ryzen-7000-series/amd-ryzen-7-7700.html", "r5-9600": _AC + "9000-series/amd-ryzen-5-9600.html",
+    "r7-8700g": _AC + "8000-series/amd-ryzen-7-8700g.html", "r5-8600g": _AC + "8000-series/amd-ryzen-5-8600g.html",
+    "r5-8500g": _AC + "8000-series/amd-ryzen-5-8500g.html", "r7-8700f": _AS + "ryzen-8000-series/amd-ryzen-7-8700f.html",
+    "r5-8400f": _AS + "ryzen-8000-series/amd-ryzen-5-8400f.html", "r9-5950x": _AS + "ryzen-5000-series/amd-ryzen-9-5950x.html",
+    "r9-5900xt": _AC + "5000-series/amd-ryzen-9-5900xt.html", "r9-5900x": _AS + "ryzen-5000-series/amd-ryzen-9-5900x.html",
+    "r7-5700g": _AS + "ryzen-5000-series/amd-ryzen-7-5700g.html", "r7-5700": _AS + "ryzen-5000-series/amd-ryzen-7-5700.html",
+    "r5-5600xt": _AC + "5000-series/amd-ryzen-5-5600xt.html", "r5-5600gt": _AS + "ryzen-5000-series/amd-ryzen-5-5600gt.html",
+    "r5-5600g": _AS + "ryzen-5000-series/amd-ryzen-5-5600g.html", "r5-5600t": _AC + "5000-series/amd-ryzen-5-5600t.html",
+    "r5-4500": _AS + "ryzen-4000-series/amd-ryzen-5-4500.html", "r3-4100": _AS + "ryzen-4000-series/amd-ryzen-3-4100.html",
+    "r5-3400g": _AS + "ryzen-3000-series/amd-ryzen-5-3400g.html", "r3-3200g": _AS + "ryzen-3000-series/amd-ryzen-3-3200g.html",
+    "u7-270kp": _IC + "245692/intel-core-ultra-7-processor-270k-plus-36m-cache-up-to-5-50-ghz/specifications.html",
+    "u5-250kp": _IC + "245689/intel-core-ultra-5-processor-250kf-plus-30m-cache-up-to-5-30-ghz/specifications.html",
+    "u9-285": _IC + "241061/intel-core-ultra-9-processor-285-36m-cache-up-to-5-60-ghz/specifications.html",
+    "u7-265": _IC + "241064/intel-core-ultra-7-processor-265f-30m-cache-up-to-5-30-ghz/specifications.html",
+    "i9-14900": _IC + "236793/intel-core-i9-processor-14900-36m-cache-up-to-5-80-ghz/specifications.html",
+    "i7-14700": _IC + "236781/intel-core-i7-processor-14700-33m-cache-up-to-5-40-ghz/specifications.html",
+    "i3-14100": _IC + "236774/intel-core-i3-processor-14100-12m-cache-up-to-4-70-ghz/specifications.html",
+    "i3-13100": _IC + "230575/intel-core-i313100-processor-12m-cache-up-to-4-50-ghz/specifications.html",
+    "i9-12900k": _IC + "134599/intel-core-i912900k-processor-30m-cache-up-to-5-20-ghz/specifications.html",
+    "i9-12900": _IC + "134597/intel-core-i912900-processor-30m-cache-up-to-5-10-ghz/specifications.html",
+    "i7-12700": _IC + "134591/intel-core-i712700-processor-25m-cache-up-to-4-90-ghz/specifications.html",
+    "i5-10400": _IC + "199271/intel-core-i510400-processor-12m-cache-up-to-4-30-ghz/specifications.html",
+    "pg-7400": _IC + "219435/intel-pentium-gold-g7400-processor-6m-cache-3-70-ghz/specifications.html",
 }
+# Procesadores agregados: todos los campos se leyeron en la ficha oficial (26-oct-2026). Intel sin "Maximum Turbo Power"
+# publicado (i5-10400, Pentium G7400) no lo marca como verificado: la web muestra "sin datos".
+NEW_CPU = {"r5-7600x3d", "r9-7900", "r7-7700", "r5-9600", "r7-8700g", "r5-8600g", "r5-8500g", "r7-8700f", "r5-8400f",
+           "r9-5950x", "r9-5900xt", "r9-5900x", "r7-5700g", "r7-5700", "r5-5600xt", "r5-5600gt", "r5-5600g", "r5-5600t",
+           "r5-4500", "r3-4100", "r5-3400g", "r3-3200g", "u7-270kp", "u5-250kp", "u9-285", "u7-265", "i9-14900",
+           "i7-14700", "i3-14100", "i3-13100", "i9-12900k", "i9-12900", "i7-12700", "i5-10400", "pg-7400"}
+VERIFY_DATE_NEW = "2026-10-26"
 _GPU_V = ["vram", "tgp", "psu"]
 VERIFIED = {}
 for _i in GS:
@@ -342,6 +442,12 @@ for _i in ("rx-7900xtx", "rx-7900xt"):
     VERIFIED[_i] = [f for f in VERIFIED[_i] if f != "bus"]       # la ficha de AMD no publica el bus
 VERIFIED["rx-7600"].append("arq")
 VERIFIED["arc-b580"] = ["mt", "bus", "gbps"] + _GPU_V
+# agregadas el 26-oct-2026 (lo que dice la ficha oficial; lo demás queda "pendiente")
+VERIFIED["rx-9070gre"] = ["sp", "mt", "bus", "gbps"] + _GPU_V          # la ficha no nombra la arquitectura
+VERIFIED["rtx-3050-6"] = ["sp", "mt", "bus"] + _GPU_V                   # ni la velocidad de memoria ni la arquitectura
+VERIFIED["arc-b570"] = ["arq", "mt", "bus", "gbps", "vram", "tgp"]      # Intel no publica fuente mínima ni "shaders"
+VERIFIED["rx-9060"] = VERIFIED["rx-9050"] = ["sp", "mt", "bus", "gbps"] + _GPU_V
+NEW_GPU = {"rx-9070gre", "rtx-3050-6", "arc-b570", "rx-9060", "rx-9050"}
 for _c in C:
     _i, _v = _c[0], _c[2]
     _f = ["cores", "threads", "boost", "l3", "tdp"]
@@ -352,6 +458,9 @@ for _c in C:
         _f.append("maxp")
         if _i not in ("i5-12400f", "i5-13400f", "i5-14400f", "i3-12100f"): _f.append("igpu")
     VERIFIED[_i] = _f
+for _i in NEW_CPU:
+    _v = next(c for c in C if c[0] == _i)
+    VERIFIED[_i] = ["cores", "threads", "boost", "l3", "tdp", "socket", "mem", "igpu"] + (["maxp"] if _v[2] == "Intel" and _v[6] else [])
 assert set(VURL) >= set(VERIFIED), set(VERIFIED) - set(VURL)
 
 
@@ -366,20 +475,22 @@ def build():
         gpus.append(dict(id=i, name=n, vendor=v, vram=vr, tgp=t, psu=p, p=k, rt=None, src="nvidia" if v == "NVIDIA" else "amd_gpu", m=m, x=x,
                          se={"conf": "baja" if vr <= 4 else "media", "n": LEG_NOTE + (LEG_NOTE_LOWVRAM if vr <= 4 else "")}))
         GS[i] = spec
-    for g in gpus:
+    gpux = [dict(id=i, name=n, vendor=v, vram=vr, tgp=t, psu=p, p=list(perf) if perf else None, rt=list(rt) if rt else None, src=s, m=m, x=x)
+            for i, n, v, vr, t, p, perf, rt, s, m, x in GX]
+    for g in gpus + gpux:
         a, sp, mt, bus, gb = GS[g["id"]]
         g["spec"] = dict(arq=a, sp=sp, mt=mt, bus=bus, gbps=gb, bw=round(bus / 8 * gb))
         g["ver"] = VERIFIED.get(g["id"], [])
-        if g["ver"]: g["vurl"], g["vdate"] = VURL[g["id"]], VERIFY_DATE
+        if g["ver"]: g["vurl"], g["vdate"] = VURL[g["id"]], (VERIFY_DATE_NEW if g["id"] in NEW_GPU else VERIFY_DATE)
     for c in cpus:
         n, t, b, l3, ig = CS[c["id"]]
         c["spec"] = dict(cores=n, threads=t, boost=b, l3=l3, igpu=ig)
         c["ver"] = VERIFIED.get(c["id"], [])
-        if c["ver"]: c["vurl"], c["vdate"] = VURL[c["id"]], VERIFY_DATE
+        if c["ver"]: c["vurl"], c["vdate"] = VURL[c["id"]], (VERIFY_DATE_NEW if c["id"] in NEW_CPU else VERIFY_DATE)
         if c["id"] in EST:
             conf, note = EST[c["id"]]
             c["se"] = {"conf": conf, "n": note}      # puntaje estimado: no figura en la tabla de Tom's
-    out = {"sources": SOURCES, "gpus": gpus, "cpus": cpus, "games": GAMES,
+    out = {"sources": SOURCES, "gpus": gpus, "gpux": gpux, "cpus": cpus, "games": GAMES,
            "ref": {"gpu_fps_ref": 203.8, "cpu_score_ref": 97.0,
                    "notas": "FPS de CPU estimado = 203,8 x (puntaje del CPU / 97). Ver README."}}
     path = Path(__file__).parent / "site" / "data" / "hardware.json"

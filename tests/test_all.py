@@ -77,7 +77,7 @@ def test_servicios():
 def test_hardware_json():
     import re, subprocess, sys
     import make_hardware as mh
-    ids = [g[0] for g in mh.G] + [c[0] for c in mh.C] + [l[0] for l in mh.LEG]
+    ids = [g[0] for g in mh.G] + [c[0] for c in mh.C] + [l[0] for l in mh.LEG] + [g[0] for g in mh.GX]
     assert len(ids) == len(set(ids))
     for g in mh.G:
         assert g[4] > 0 and g[5] >= g[4] and all(x > 0 for x in g[6]), g[0]   # la fuente nunca es menor al consumo
@@ -89,11 +89,18 @@ def test_hardware_json():
         assert l[4] > 0 and l[5] >= l[4] and 10 < l[6] < 100, l[0]
         re.compile(l[7]); re.compile(l[8] or "x")
     for c in mh.C:
-        assert c[7] is not None or c[0] == "i3-12100f", c[0]   # sin puntaje solo si no hay fuente
-        assert c[6] >= c[5] and c[3] in ("AM4", "AM5", "LGA1700", "LGA1851"), c[0]
+        # sin puntaje de juegos solo si no hay medición (i3-12100F y los agregados por la auditoría, todos con ficha oficial)
+        assert c[7] is not None or c[0] == "i3-12100f" or c[0] in mh.NEW_CPU, c[0]
+        assert (c[6] is None or c[6] >= c[5]) and c[3] in ("AM4", "AM5", "LGA1700", "LGA1851", "LGA1200"), c[0]
         re.compile(c[9])
         # el tipo de memoria debe ser coherente con el socket
         assert (c[3] in ("AM5", "LGA1851")) == (c[4] == "DDR5") or c[3] == "LGA1700", c[0]
+        assert c[3] != "LGA1200" or c[4] == "DDR4", c[0]
+    for g in mh.GX:                              # placas solo para comparar
+        assert g[4] > 0 and (g[5] is None or g[5] >= g[4]) and g[0] in mh.VURL and g[0] in mh.GS, g[0]
+        re.compile(g[9]); re.compile(g[10] or "x")
+    for i in mh.NEW_CPU:                         # cada procesador agregado tiene ficha oficial y especificaciones
+        assert i in mh.VURL and i in mh.CS and mh.VERIFIED.get(i), i
 
 
 def test_categorias_pc_armadas():
@@ -558,3 +565,24 @@ def test_estructura_del_sitio():
     # abrir un producto en otra pestaña: enlace real en cada tarjeta y botón en la ventana de detalle
     assert 'class="stretch"' in p and "Abrir en otra pestaña" in p and "DET.url" in p
     assert (site / "js" / "detail.js").exists() and "Dónde comprarlo" in (site / "producto.html").read_text(encoding="utf-8")
+
+
+def test_correccion_de_categorias():
+    """Mini PCs, consolas, electrodomésticos y accesorios que las tiendas ponen en categorías de componentes."""
+    from scrapers.common import fix_category as f
+    assert f("Mini Pc Acemagic Ryzen 5 3500U 8Gb Ssd 256Gb", "procesadores") == "pcs-armadas"
+    assert f("Consola Lenovo Legion Go S Ryzen Z2 Go 16Gb", "procesadores") == "otros"
+    assert f("Multiprocesadora Atma C/Vaso 9 En 1 650W 1,8L", "procesadores") is None
+    assert f("Procesadora Manual Liliana Twistmix Roja", "procesadores") is None
+    assert f("Procesador AMD Ryzen 5 5600", "procesadores") == "procesadores"
+    assert f("Soporte GPU Gaming City Altura Regulable", "placas-de-video") == "accesorios"
+    assert f("Combo Actualización AMD Ryzen 7 8700G 16GB", "procesadores") == "pcs-armadas"
+    assert f("Combo Tablet Xiaomi Redmi Pad 2 11\" 8GB 256GB", "almacenamiento") == "otros"
+    assert f("Notebook Lenovo IdeaPad", "notebooks") == "notebooks"
+    import build_data
+    g = build_data.build([
+        {"store": "A", "name": "Multiprocesadora Atma 650W", "url": "u1", "price_cash": 100, "price_list": 110, "stock": True,
+         "sku": None, "pn": None, "image": None, "category": "procesadores", "cuotas": None, "rating": None, "prev_cash": None},
+        {"store": "A", "name": "Mini Pc CX Ryzen 5 3500U 8Gb", "url": "u2", "price_cash": 100, "price_list": 110, "stock": True,
+         "sku": None, "pn": None, "image": None, "category": "procesadores", "cuotas": None, "rating": None, "prev_cash": None}])
+    assert [x["category"] for x in g] == ["pcs-armadas"]

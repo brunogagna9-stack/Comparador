@@ -49,7 +49,7 @@
     const k = n.match(/(\d+)\s?x\s?(\d+)\s?gb/i);
     if (k) { out.mods = +k[1]; out.gb = +k[1] * +k[2]; }
     else { const t = n.match(/(\d+)\s?gb/i); if (t) { out.gb = +t[1]; out.mods = 1; } }
-    const mh = n.match(/(\d{3,5})\s?mhz/i); if (mh) out.mhz = +mh[1];
+    const mh = n.match(/(\d{3,5})\s?(?:mhz|mt\/?s)\b/i) || n.match(/ddr[45][- ](\d{4})\b/i); if (mh) out.mhz = +mh[1];
     const cl = n.match(/\bcl\s?-?(\d{2})\b/i); if (cl) out.cl = +cl[1];
     if (out.mhz && out.cl) out.lat = Math.round(out.cl * 2000 / out.mhz * 10) / 10; // latencia real en ns
     return out;
@@ -64,14 +64,21 @@
     else if (/sata/i.test(n)) o.iface = "SATA";
     const g = n.match(/gen\s?([345])/i); if (g) o.gen = "PCIe " + g[1] + ".0";
     const sp = n.match(/(\d{3,5})\s?mb\/s/i); if (sp) o.mbs = +sp[1];
+    if (!o.iface && o.kind === "Memoria flash") { const u = n.match(/uhs-?(i{1,2})\b|usb[ -]?(3\.\d|c)\b/i); if (u) o.iface = u[1] ? "UHS-" + u[1].toUpperCase() : "USB " + u[2].toUpperCase(); }
+    const rpm = n.match(/(\d{4,5})\s?rpm/i); if (rpm) o.rpm = +rpm[1];
+    // la generación PCIe solo existe en discos NVMe: en SATA, discos rígidos y memorias flash "no aplica"
+    const ext = /externo|port[aá]til|usb|micro ?sd/i.test(n);
+    if (!o.iface && ext && /externo|port[aá]til/i.test(n) && /usb|tipo[ -]?c|type[ -]?c/i.test(n)) o.iface = "USB (externo)";
+    o.genNA = o.kind === "HDD" || o.kind === "Memoria flash" || o.iface === "SATA" || ext;
     o.external = /externo|port[aá]til|usb|micro ?sd/i.test(n);
     return o;
   }
   const CERT = { white: 1, bronze: 2, silver: 3, gold: 4, platinum: 5, titanium: 6 };
   function psuSpec(n) {
     const w = n.match(/(\d{3,4})\s?w\b/i), c = n.match(/80\s?\+?\s?plus\s?(white|bronze|silver|gold|platinum|titanium)?/i);
+    const cy = !c && n.match(/cybenetics\s?(bronze|silver|gold|platinum|titanium|diamond)/i);
     const cert = c ? (c[1] ? c[1].toLowerCase() : "white") : null;
-    return { w: w ? +w[1] : null, cert, certRank: cert ? CERT[cert] : null, modular: /modular/i.test(n) && !/no modular|semi/i.test(n),
+    return { w: w ? +w[1] : null, cert, certRank: cert ? CERT[cert] : null, cyb: cy ? "Cybenetics " + cy[1][0].toUpperCase() + cy[1].slice(1).toLowerCase() : null, modular: /modular/i.test(n) && !/no modular|semi/i.test(n),
       atx3: (n.match(/atx\s?3\.\d/i) || [null])[0], bulk: /bulk/i.test(n) };
   }
   const CHIPSETS = "a320 a520 b450 b550 x570 a620 b650 b650e x670 x670e b840 b850 x870 x870e h510 b560 z590 h610 b660 b760 z690 z790 h810 b860 z890".split(" ");
@@ -86,7 +93,8 @@
     if (t) o.chipset = (t.map(x => x.toUpperCase()).find(x => CHIPSETS.includes(x.toLowerCase())) || null);
     if (!o.chipset) { const m = n.match(/\b([ABXHZ]\d{3}E?)M?\b/i); if (m && CHIPSETS.includes(m[1].toLowerCase())) o.chipset = m[1].toUpperCase(); }
     if (!o.socket && o.chipset) o.socket = CHIP_SOCKET[o.chipset.toLowerCase()] || null; // deducido del chipset
-    const d = n.match(/ddr([45])/i); if (d) o.ddr = "DDR" + d[1];
+    const d = n.match(/ddr([45])/i) || n.match(/\bd([45])\b/i); if (d) o.ddr = "DDR" + d[1];
+    else if (o.socket) { const only = { AM4: "DDR4", LGA1200: "DDR4", AM5: "DDR5", LGA1851: "DDR5" }[o.socket]; if (only) { o.ddr = only; o.ddrBySocket = true; } }
     if (/mini[- ]?itx|\bitx\b|\b[abxhz]\d{3}e?i\b/i.test(n)) o.form = "Mini-ITX";
     else if (/e-?atx/i.test(n)) o.form = "E-ATX";
     else if (/m-?atx|micro[- ]?atx|\b[abxhz]\d{3}e?m\b/i.test(n)) o.form = "Micro-ATX";
@@ -97,13 +105,16 @@
     "fullhd": [1920, 1080, "FHD 1080p"], "ultrahd": [3840, 2160, "4K UHD"], "1440p": [2560, 1440, "QHD 1440p"], "2k": [2560, 1440, "QHD 1440p"], "4k": [3840, 2160, "4K UHD"], "uhd": [3840, 2160, "4K UHD"] };
   function monitorSpec(n) {
     const o = { inch: null, hz: null, panel: null, ms: null, res: null, px: null, curved: /curv/i.test(n) };
-    const i = n.match(/(\d{2}(?:[.,]\d)?)\s?("|”|''|pulg|in\b)/i); if (i) o.inch = num(i[1]);
-    else { const j = n.match(/\b(2[0-9]|3[0-9]|4[0-9])(?:[.,]\d)?\s?"/); if (j) o.inch = num(j[1]); }
+    const i = n.match(/(\d{2}(?:[.,]\d)?)\s?("|”|“|″|''|´|'|pulg|in\b)/i); if (i) o.inch = num(i[1]);
+    else { const j = n.match(/\b(2[0-9]|3[0-9]|4[0-9])(?:[.,]\d)?\s?"/) || n.match(/\b(1[89]|[234]\d)([.,]\d)?\s+(?=led\b|ips\b|va\b|fhd\b|qhd\b|uhd\b|full\b|curvo\b|gamer\b|\d{2,3}\s?hz\b)/i); if (j) o.inch = num(j[1] + (j[2] || "")); }
     const h = n.match(/(\d{2,3})\s?hz/i); if (h) o.hz = +h[1];
-    const p = n.match(/\b(qd-oled|oled|ips|va|tn|mini ?led)\b/i); if (p) o.panel = p[1].toUpperCase();
+    const p = n.match(/\b(qd-?oled|w-?oled|oled|nano ?ips|fast ?ips|ah-?ips|ips|hva|sva|mva|va|tn|pls|mini ?led)\b/i);
+    if (p) { const k = p[1].toUpperCase().replace(/\s|-/g, ""); o.panel = { QDOLED: "QD-OLED", WOLED: "OLED (WOLED)", NANOIPS: "IPS (Nano IPS)", FASTIPS: "IPS (Fast IPS)", AHIPS: "IPS", HVA: "VA (HVA)", SVA: "VA (SVA)", MVA: "VA (MVA)", MINILED: "Mini LED" }[k] || k; }
     const m = n.match(/(\d(?:[.,]\d)?)\s?ms/i); if (m) o.ms = num(m[1]);
     const r = n.match(/\b(4k|uhd|wqhd|qhd|1440p|2k|fhd|1080p|full ?hd|ultra ?hd)\b/i);
     if (r) { const e = RESMAP[r[1].toLowerCase().replace(/\s/g, "")]; o.res = e[2]; o.px = e[0] * e[1]; }
+    else { const x = n.match(/\b(1920|2560|3440|3840|1366|1600)\s?[x×]\s?(1080|1440|2160|768|900|1200)\b/i);
+      if (x) { o.px = +x[1] * +x[2]; o.res = { "1920x1080": "FHD 1080p", "2560x1440": "QHD 1440p", "3840x2160": "4K UHD", "3440x1440": "UWQHD 3440×1440" }[x[1] + "x" + x[2]] || x[1] + "×" + x[2]; } }
     return o;
   }
   const CPU_RX = /(ryzen\s?(?:ai\s?)?[3579]\s?\d{3,5}\w*|core\s?ultra\s?[579]\s?\w+|core\s?[3579]\s?\d{3}\w*|core\s?i[3579][- ]?\w+|\bi[3579][- ]\w+|\bi[3579]\s\d{4,5}\w*|\br[3579][- ]\d{4}\w*|intel\s?n\d+|celeron\s?\w+|pentium\s?\w+|snapdragon\s?\w+|apple m\d)/i;
@@ -183,8 +194,12 @@
     const cpuTests = HW.cpus.map(c => [c, rxm(c.m)]);
     C.hwGpu = (name, vram) => { if (NOT_PC.test(name)) return null; const v = vram === undefined ? vramOf(name) : vram; // en PC armadas la VRAM sale del análisis del título, no del primer "GB"
       const hit = gpuTests.find(([g, t]) => t(name) && (v == null || v === g.vram)); return hit ? hit[0] : null; };
+    /* Placas que solo se comparan (sin datos suficientes para recomendarlas). Solo las usan Comparar y la página de producto. */
+    const gpuxTests = (HW.gpux || []).map(g => [g, rxm(g.m, g.x)]);
+    C.hwGpuX = (name, vram) => { if (NOT_PC.test(name)) return null; const v = vram === undefined ? vramOf(name) : vram;
+      const hit = gpuxTests.find(([g, t]) => t(name) && (v == null || v === g.vram)); return hit ? hit[0] : null; };
     /* "Sin Cooler" / "con cooler Wraith" describen al procesador, no lo convierten en un cooler */
-    const cpuClean = n => n.replace(/\b(?:sin|con|incluye|no incluye|s\/|c\/)\s?(?:cooler|disipador|ventilador|fan)(?:\s+(?:wraith|stock|original|stealth|prism))?(?:\s+(?:stealth|spire))?/ig, " ");
+    const cpuClean = n => n.replace(/\((?:simil|similar|equivalente|tipo)\b[^)]*\)|\b(?:simil|similar a|equivalente a)\s+\S+(?:\s+\S+)?/ig, " ").replace(/\+?\s*\bwraith\s+(?:stealth|spire|prism|max)\b(?:\s+cooler)?/ig, " ").replace(/\+\s*(?:cooler|disipador)\b/ig, " ").replace(/\b(?:sin|con|incluye|no incluye|s\/|c\/)\s?(?:cooler|disipador|ventilador|fan)(?:\s+(?:wraith|stock|original|stealth|prism))?(?:\s+(?:stealth|spire))?/ig, " ");
     C.hwCpu = name => { name = cpuClean(name); if (/cooler|disipador|fan|pasta|\bkit\b/i.test(name)) return null; const hit = cpuTests.find(([c, t]) => t(name)); return hit ? hit[0] : null; };
 
     const isPc = n => /^pc\b|\bpc (armada|gamer|powered)|powered by|notebook|combo|\bkit\b|all in one/i.test(n);
@@ -207,7 +222,7 @@
       const ok = l.find(c => C.cpuFps(c) >= factor * Gv);
       return ok ? { c: ok, short: false } : { c: l[l.length - 1], short: true };
     };
-    C.psuFor = (g, c) => { const base = c.maxp + g.tgp + 100, min = Math.max(g.psu, CT.up50(base)), sug = Math.max(min, CT.up50(base * 1.25)); return { min, sug, base }; };
+    C.psuFor = (g, c) => { const base = (c.maxp || c.tdp * 2) + g.tgp + 100, min = Math.max(g.psu, CT.up50(base)), sug = Math.max(min, CT.up50(base * 1.25)); return { min, sug, base }; };
     C.pickPair = (g, res) => {
       const Gv = g.p[res], mk = f => { const a = C.pickCpu(Gv, f, "AMD"), b = C.pickCpu(Gv, f, "Intel");
         return !a.short && !b.short ? (a.c.s <= b.c.s ? a : b) : (a.short ? b : a); };
@@ -225,7 +240,7 @@
         { slot: "gpu", label: "Placa de video", key: "gpu:" + g.id, title: "Placa de video: " + g.name,
           why: `${g.vram} GB de VRAM · consumo ${g.tgp} W (${g.vendor}).`, shop: C.findGpu(g) },
         { slot: "cpu", label: "Procesador", key: "cpu:" + c.id, title: "Procesador: " + c.name,
-          why: `${c.socket} · ${c.mem} · ${c.tdp} W base, hasta ~${c.maxp} W${c.vendor === "AMD" ? " (estimado)" : ""}.` +
+          why: `${c.socket} · ${c.mem} · ${c.tdp} W base, ${c.maxp ? `hasta ~${c.maxp} W${c.vendor === "AMD" ? " (estimado)" : ""}` : "potencia máxima no publicada"}.` +
             (c.s ? ` Puntaje de juegos ${c.s}/100${c.se ? " (estimado)" : ""} (≈${Math.round(C.cpuFps(c))} FPS máx. en el suite).` : "") +
             (short ? " Es el más potente de la lista y aun así podría limitar a esta placa." : ""), shop: C.findCpu(c) },
         { slot: "psu", label: "Fuente de poder", key: "psu:" + psuW, title: `Fuente de poder: ${psuW} W o más`,

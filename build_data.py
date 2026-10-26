@@ -221,7 +221,14 @@ def clean_name(name):
 
 
 def build(all_items, extra_images=None):
-    from scrapers.common import is_service, is_non_hardware
+    from scrapers.common import is_service, is_non_hardware, fix_category
+    fixed = []
+    for i in all_items:
+        cat = fix_category(i["name"], i["category"])
+        if cat is None:
+            continue                       # electrodomésticos u otros productos que no son de PC
+        fixed.append(dict(i, category=cat) if cat != i["category"] else i)
+    all_items = fixed
     groups = []
     for offers in group([i for i in all_items if price_of(i) and not is_service(i["name"])
                          and not is_non_hardware(i["name"], i["category"])]):

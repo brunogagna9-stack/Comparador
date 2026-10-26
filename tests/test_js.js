@@ -92,8 +92,8 @@ t("gráficos integrados: modelos con F no los traen; no se inventa si no se sabe
 t("las placas del catálogo se ligan solo al modelo exacto", () => {
   assert.strictEqual(C.hwGpu("Placa de Video RTX 5070 TI 16GB").id, "rtx-5070ti"); assert.strictEqual(C.hwGpu("Placa de Video RTX 5070 12GB").id, "rtx-5070");
   assert.strictEqual(C.hwGpu("PC Gamer RX 7600 Ryzen 5 4500 16GB 512GB", null).id, "rx-7600");
-  assert.strictEqual(C.hwCpu("PC Gamer RX 7600 Ryzen 5 4500"), null); // RX 7600 NO es el Ryzen 5 7600
-  assert.strictEqual(C.hwCpu("Procesador AMD Ryzen 5 5600GT AM4"), null);
+  assert.strictEqual(C.hwCpu("PC Gamer RX 7600 Ryzen 5 4500").id, "r5-4500"); // RX 7600 NO es el Ryzen 5 7600
+  assert.strictEqual(C.hwCpu("Procesador AMD Ryzen 5 5600GT AM4").id, "r5-5600gt");   // el 5600GT no es el 5600 ni el 5600X
 });
 
 /* ---------- Buscador inteligente ---------- */
@@ -273,7 +273,10 @@ const CU = (() => { const c = CT.makeFinder(CT.create(HW, PR, META)); CT.makeUpg
 t("todo procesador con puntaje da sugerencias de placa en los tres resoluciones", () => {
   HW.cpus.filter(c => c.s).forEach(c => { const cf = CU.cpuFps(c); assert(cf > 0, c.id);
     [0].forEach(r => assert(HW.gpus.some(g => g.p[r] <= cf), "sin sugerencia para " + c.id)); });
-  const sin = HW.cpus.filter(c => !c.s).map(c => c.id); assert.deepStrictEqual(sin, ["i3-12100f"], "solo el 12100F queda sin puntaje (no hay fuente)");
+  // sin puntaje: el 12100F y los agregados por la auditoría que Tom's Hardware no mide (tienen ficha oficial, no puntaje inventado)
+  const sin = HW.cpus.filter(c => !c.s);
+  assert(sin.every(c => c.id === "i3-12100f" || (c.vurl && c.vdate === "2026-10-26")), "todo procesador sin puntaje tiene ficha oficial");
+  assert(!sin.some(c => c.se), "ninguno tiene puntaje estimado");
 });
 t("el Ryzen 7 5800X existe, se reconoce y no se confunde con X3D / XT", () => {
   const id = n => (CU.hwCpu(n) || {}).id;
@@ -372,13 +375,16 @@ t("comparar con un solo producto no falla (página de detalle) y lista solo dato
   const cmp = K.compare([K.item(g)], { res: 1 });
   assert(cmp.rows.length > 3 && cmp.uses.every(u => u.winner == null));
 });
-t("sin ficha técnica no hay ganador inventado: solo hechos de precio y memoria", () => {
+t("con datos incompletos no hay ganador inventado: solo hechos de precio y memoria", () => {
   const K = CT.makeCompare(CT.create(HW, PR, {}, null));
   const a = PR.find(x => /RTX 3050 6GB/.test(x.name)), b = PR.find(x => /RTX 3060 8GB/.test(x.name));
   if (!a || !b) return;
   const cmp = K.compare([K.item(a), K.item(b)], { res: 1 });
-  assert(K.coverage(cmp).every(c => c.have <= 1), "ninguna de las dos tiene ficha");
-  assert(cmp.uses.every(u => u.winner == null), "sin datos no hay ganador");
+  const cov = K.coverage(cmp);
+  assert(cov[0].have > 3, "la RTX 3050 6GB tiene ficha oficial (sin rendimiento medido)");
+  assert(cov[1].have <= 1, "la RTX 3060 8GB no está en la base");
+  assert(cmp.uses.every(u => u.winner == null), "sin datos de las dos no hay ganador");
+  assert(cmp.rows.find(r => r.id === "fps").cells[0].tag === "nd", "no se inventa rendimiento");
   const f = K.facts(cmp).map(x => x.text).join("|");
   assert(/Precio: más barato en/.test(f) && /VRAM/.test(f) && !/FPS/.test(f));
   assert(!K.notes(cmp).some(x => /promedio de 11 juegos/.test(x)), "no se nombran FPS si no hay FPS");
@@ -392,5 +398,52 @@ t("con ficha de ambas, los hechos señalan al ganador de cada fila", () => {
 });
 t("la dirección de la página de producto escapa el id", () => {
   assert.strictEqual(DET.url("a b&c"), "producto.html?id=a%20b%26c");
+});
+/* ---------- Auditoría de fichas (26-oct-2026) ---------- */
+t("procesadores agregados: se reconocen con sus variantes y con «+ Wraith Stealth Cooler»", () => {
+  const K = CT.create(HW, [], {}, null);
+  const id = n => (K.hwCpu(n) || {}).id;
+  assert.strictEqual(id("Procesador Amd Ryzen 5 5600Xt 4.4Ghz Turbo Am4 6 Núcleos 12 Hilos Sin Gráficos"), "r5-5600xt");
+  assert.strictEqual(id("Procesador AMD Ryzen 5 8600G 5.0GHz Turbo AM5 + Wraith Stealth Cooler"), "r5-8600g");
+  assert.strictEqual(id("Procesador AMD Ryzen 3 4100 + Wraith Stealth Cooler AM4"), "r3-4100");
+  assert.strictEqual(id("Procesador Intel Core i9 14900F 5.8GHz Turbo Socket 1700"), "i9-14900");
+  assert.strictEqual(id("Procesador Intel Core i9-14900K"), "i9-14900k");
+  assert.strictEqual(id("Procesador Intel Core Ultra 7 265F 20/20 5.30GHz LGA1851"), "u7-265");
+  assert.strictEqual(id("Procesador Intel Core Ultra 7 265K"), "u7-265k");
+  assert.strictEqual(id("Procesador AMD Ryzen 7 7700 5.3GHz Turbo AM5"), "r7-7700");
+  assert.strictEqual(id("Procesador AMD Ryzen 7 7700X"), "r7-7700x");
+  assert.strictEqual(id("Procesador AMD Ryzen 7 5700X3D"), "r7-5700x3d");
+  assert.strictEqual(id("Procesador AMD Ryzen 5 PRO 5650G 6/12 4.4GHz AM4 Bulk (Simil 5600GT)"), undefined, "un «símil» no es el mismo modelo");
+  assert.strictEqual(id("Cooler AMD Wraith Stealth"), undefined);
+  const c = HW.cpus.find(x => x.id === "r5-5600xt");
+  assert(c.vurl && c.ver.includes("cores") && c.s == null, "ficha oficial verificada, sin puntaje inventado");
+});
+t("placas agregadas y nombres pegados (RX 9070 16GB XT, RX 9070 GRE, RTX 3050 6GB)", () => {
+  const K = CT.create(HW, [], {}, null);
+  const id = n => (K.hwGpu(n) || K.hwGpuX(n) || {}).id;
+  assert.strictEqual(id("Placa De Video Gigabyte Radeon Rx 9070 16gb Xt Gaming"), "rx-9070xt");
+  assert.strictEqual(id("Placa de Video ASUS Prime AMD Radeon RX 9070 GRE OC 12GB"), "rx-9070gre");
+  assert.strictEqual(id("Placa de Video Gigabyte Radeon RX 9070 16GB"), "rx-9070");
+  assert.strictEqual(id("Placa de Video ZOTAC GeForce RTX 3050 Twin Edge 6GB"), "rtx-3050-6");
+  assert.strictEqual(id("Placa de Video MSI GeForce RTX 3050 Ventus 2X 8GB"), "rtx-3050");
+  assert.strictEqual(id("Placa de Video XFX Radeon RX 9060 8GB GDDR6 SWIFT"), "rx-9060");
+  assert.strictEqual(id("Placa de Video XFX Radeon RX 9060 XT 8GB"), "rx-9060xt-8");
+  assert(!HW.gpus.some(g => g.id === "rtx-3050-6"), "las placas sin rendimiento no entran en las recomendaciones");
+});
+t("lectura de títulos: pulgadas con ″, ´ o sin comillas, paneles, MT/s, DDR por socket y «No aplica»", () => {
+  assert.strictEqual(CT.parse("Monitor LG 22″ 100Hz FHD 1MS VA", "monitores").inch, 22);
+  assert.strictEqual(CT.parse("Monitor 24 LED CX CX238K FHD 120Hz", "monitores").inch, 24);
+  assert.strictEqual(CT.parse("Monitor KTC 27\" QHD HVA 144Hz", "monitores").panel, "VA (HVA)");
+  assert.strictEqual(CT.parse("Memoria Patriot DDR5 16GB CL36 6000MTS", "memorias-ram").mhz, 6000);
+  const m = CT.parse("Mother Asrock B450M-HDV AM4", "motherboards"); assert(m.ddr === "DDR4" && m.ddrBySocket);
+  assert.strictEqual(CT.parse("Mother B760M-A D4 Asus Prime", "motherboards").ddr, "DDR4");
+  assert.strictEqual(CT.parse("Mother B760M Gigabyte LGA1700", "motherboards").ddr, null, "LGA1700 admite DDR4 y DDR5: no se adivina");
+  assert(CT.parse("Disco Rigido WD 8TB Purple SATA 5640RPM", "almacenamiento").genNA);
+  assert.strictEqual(CT.parse("Fuente Corsair 750W Cybenetics Gold", "fuentes").cyb, "Cybenetics Gold");
+  const K = CT.makeCompare(CT.create(HW, [], {}, null));
+  const hdd = { id: "x", name: "Disco Rigido WD 2TB Blue SATA 7200RPM", category: "almacenamiento", offers: [{ store: "A", price_cash: 1, stock: true }] };
+  const r = K.compare([K.item(hdd)], { res: 1 }).rows;
+  assert.strictEqual(r.find(x => x.id === "gen").cells[0].disp, "No aplica");
+  assert.strictEqual(r.find(x => x.id === "rpm").cells[0].v, 7200);
 });
 console.log(n + " pruebas de JavaScript OK");

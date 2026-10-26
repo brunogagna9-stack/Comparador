@@ -113,6 +113,27 @@ _NON_HW = re.compile(r"\brobot\b|transformers|\bfunda\b|\bcelular\b|\btoner\b|ca
                      r"smart ?tv|televisor|\bsoporte (de )?tv\b|soporte tv|\bheladera|\bpeluche|\bperfume", re.I)
 
 
+# Correcciones de categoría que valen para TODAS las tiendas (la categoría de la tienda a veces es demasiado amplia:
+# mini PCs y consolas dentro de "procesadores", accesorios dentro de "placas de video", etc.). Primera regla que coincide.
+_FIX = [
+    (re.compile(r"^(multi)?procesadora\b|licuadora|batidora|\bpicadora\b", re.I), None),      # electrodomésticos: fuera
+    (re.compile(r"^consola\b|steam ?deck|legion go\b|rog ally|^(combo )?tablet\b|^celular\b", re.I), "otros"),
+    (re.compile(r"^mini ?pc\b|^barebone\b|\bnuc\b.*\bmini\b|^(combo|kit)\b.*\b(ryzen|core ?i[3579]|core ultra|intel core|athlon|pentium)\b", re.I), "pcs-armadas"),
+    (re.compile(r"^(mouse|teclado|auricular(es)?|joystick|gamepad)\b", re.I), "perifericos"),
+    (re.compile(r"^(mochila|bolso|maletín|funda)\b|^base (refrigerante |para notebook|notebook)", re.I), "perifericos"),
+    (re.compile(r"^soporte (gpu|para placa|vga)|^(kit|pack) (de )?(accesorios|cables)|^cables? sata|^carcasa\b|^lector de tarjetas|^cable\b", re.I), "accesorios"),
+]
+
+
+def fix_category(name, category):
+    """Devuelve la categoría corregida, o None si el producto no es hardware de PC (se descarta)."""
+    n = (name or "").strip()
+    for rx, cat in _FIX:
+        if rx.search(n):
+            return cat
+    return category
+
+
 def is_non_hardware(name, category):
     """Productos de la categoría 'otros' que no son hardware de PC (robots, fundas, toners, televisores…)."""
     return category == "otros" and bool(_NON_HW.search(name or ""))

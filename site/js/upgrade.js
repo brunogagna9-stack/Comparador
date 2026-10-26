@@ -47,6 +47,8 @@
         if (pw) { o.psu = { w: +pw[1], text: tok }; o.seen.push(["Fuente", pw[1] + " W", tok]); continue; }
         const mb = CT.parse(tok, "motherboards");
         if (mb.chipset || mb.socket) { o.mobo = { chipset: mb.chipset, socket: mb.socket, ddr: mb.ddr, text: tok }; o.seen.push(["Placa madre", (mb.chipset || "") + (mb.socket ? " · " + mb.socket : ""), tok]); continue; }
+        // una placa que conocemos pero sin rendimiento medido (p. ej. RTX 3050 6GB): no confundir sus "6 GB" con la RAM
+        if (/\brtx\b|\bgtx\b|radeon|geforce|\brx\s?\d|\barc\b|vega|\bgt\s?\d/i.test(tok)) { const gx = C.hwGpuX ? C.hwGpuX(tok) : null; o.gpuText = o.gpuText || (gx ? gx.name : tok); continue; }
         if (/ddr[345]|\b\d{1,3}\s?gb\b|\b\d\s?x\s?\d{1,2}\b/i.test(tok)) {
           const r = CT.parse(tok, "memorias-ram");
           if (r.gb) { o.ram = { gb: r.gb, ddr: r.ddr, mhz: r.mhz, text: tok }; o.seen.push(["Memoria", r.gb + " GB" + (r.ddr ? " " + r.ddr : ""), tok]); continue; }
