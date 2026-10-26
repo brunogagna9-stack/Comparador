@@ -78,3 +78,48 @@ body .ex .note{font-weight:600}
 main{max-width:1280px}
 footer.fine{max-width:1280px}
 .t-nd{background:var(--soft);color:var(--tx);border:1px dashed var(--mut)}.t-pend{color:var(--tx)}
+
+/* ---- animaciones (actualización 14). Todas se apagan si el sistema pide "reducir movimiento". ---- */
+@media (prefers-reduced-motion:no-preference){
+  html:not(.noanim) .ct-rv{opacity:0;transform:translateY(16px);transition:opacity .5s ease,transform .55s cubic-bezier(.2,.7,.2,1);transition-delay:var(--d,0ms)}
+  html:not(.noanim) .ct-rv.ct-in{opacity:1;transform:none}
+  html:not(.noanim) .card.ct-rv{transition-duration:.3s,.35s}
+  main{animation:ct-fade .35s ease both}
+  @keyframes ct-fade{from{opacity:0}to{opacity:1}}
+  .modal.on{animation:ct-fade .18s ease both}
+  .modal.on .box{animation:ct-pop .26s cubic-bezier(.2,.8,.2,1) both}
+  @keyframes ct-pop{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+  header.site .cart .cn.bump{animation:ct-bump .45s cubic-bezier(.3,1.6,.5,1)}
+  @keyframes ct-bump{0%{transform:scale(1)}40%{transform:scale(1.45)}100%{transform:scale(1)}}
+  header.site .cart.bump svg{animation:ct-shake .5s ease}
+  @keyframes ct-shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-12deg)}60%{transform:rotate(9deg)}}
+  header.site nav a{position:relative}
+  .card .im img{transition:transform .35s ease}.card:hover .im img{transform:scale(1.06)}
+  .card .addl{transition:transform .15s,background .2s}.card .addl:active{transform:scale(.9)}
+  .card .addl.on{animation:ct-pop .3s ease}
+  .tile .ic,.cat i{transition:transform .25s cubic-bezier(.3,1.6,.5,1)}
+  .tile:hover .ic{transform:rotate(-8deg) scale(1.12)}.cat:hover i{transform:scale(1.2)}
+  .tile em{transition:letter-spacing .2s}.tile:hover em{letter-spacing:.3px}
+  .hero{background-size:180% 180%;animation:ct-hero 14s ease-in-out infinite alternate}
+  @keyframes ct-hero{from{background-position:0% 40%}to{background-position:100% 60%}}
+  .hero:before{animation:ct-float 9s ease-in-out infinite alternate}.hero:after{animation:ct-float 12s ease-in-out infinite alternate-reverse}
+  @keyframes ct-float{from{transform:translate(0,0)}to{transform:translate(-26px,18px)}}
+  .br .t i,.bar i,.bar .fill{transform-origin:left center;animation:ct-grow .8s cubic-bezier(.2,.7,.2,1) both}
+  @keyframes ct-grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+  .radar svg polygon[fill-opacity]{transform-origin:center;transform-box:fill-box;animation:ct-radar .7s cubic-bezier(.2,.7,.2,1) both}
+  @keyframes ct-radar{from{transform:scale(.2);opacity:0}to{transform:none;opacity:1}}
+  .dd:not([hidden]){animation:ct-drop .16s ease-out}
+  @keyframes ct-drop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+  .pager button{transition:transform .12s,background .15s}.pager button:active:not(:disabled){transform:scale(.92)}
+  #totop.on{animation:ct-pop .25s ease}
+  .chart svg path{stroke-dasharray:3000;stroke-dashoffset:3000;animation:ct-draw 1.4s ease forwards}
+  @keyframes ct-draw{to{stroke-dashoffset:0}}
+  .seg button,.btn,.tab,.sec,.pri{transition:transform .1s,background .15s,box-shadow .15s}
+  .btn:active,.tab:active,.sec:active,.pri:active{transform:translateY(1px) scale(.98)}
+}
+/* tarjetas "esqueleto" mientras cargan los productos */
+.sk{border-radius:16px;background:var(--card);border:1px solid var(--line);overflow:hidden;position:relative;min-height:290px}
+.sk:after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,color-mix(in srgb,var(--tx) 7%,transparent) 50%,transparent 70%);background-size:200% 100%;animation:ct-shim 1.2s linear infinite}
+.sk i{display:block;margin:10px;height:58%;border-radius:12px;background:var(--soft)}.sk b{display:block;margin:10px;height:12px;border-radius:6px;background:var(--soft);width:70%}.sk b+b{width:45%}
+@keyframes ct-shim{from{background-position:100% 0}to{background-position:-100% 0}}
+@media (prefers-reduced-motion:reduce){.sk:after{animation:none}}

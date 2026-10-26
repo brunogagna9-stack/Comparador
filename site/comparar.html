@@ -128,7 +128,7 @@ function verdict(cmp){
   if(others.length)h+=`<div class="sec" style="margin-top:8px;font-size:12px;color:var(--mut);font-weight:700;text-transform:uppercase">Según el criterio</div><ul class="ul2">${others.map(u=>`<li><b>${esc(u.use.label)}:</b> ${esc(nm(u.winner))}</li>`).join("")}</ul>`;
   const inc=uses.filter(u=>u.winner==null&&u.use.id!==S.use);if(anyWin&&inc.length)h+=`<p class="note">Sin resultado claro en: ${inc.map(u=>esc(u.use.label)).join("; ")}.</p>`;
   const notes=C.notes(cmp);
-  h+=`<div class="sec" style="margin-top:10px;font-size:12px;color:var(--mut);font-weight:700;text-transform:uppercase">Tené en cuenta</div><ul class="ul2">${notes.map(t=>`<li>${esc(t)}</li>`).join("")}</ul></div>`;
+  h+=(notes.length?`<div class="sec" style="margin-top:10px;font-size:12px;color:var(--mut);font-weight:700;text-transform:uppercase">Tené en cuenta</div><ul class="ul2">${notes.map(t=>`<li>${esc(t)}</li>`).join("")}</ul>`:"")+`</div>`;
   return h;
 }
 
@@ -146,15 +146,16 @@ function table(cmp){
   return h+`</tbody></table></div>${empty.length?`<details class="nod"><summary>${empty.length} ${empty.length===1?"característica sin datos":"características sin datos"} para estos productos</summary><p>${empty.map(r=>esc(r.label)).join(" · ")}. No tenemos el dato (o no está verificado) y no lo inferimos.</p></details>`:""}<p class="note">Precios en pesos argentinos${META.updated?`, actualizados el ${esc(fdate(META.updated))} h`:""}. Verde = mejor valor de esa fila. “Sin datos” significa que no tenemos el dato y no lo inferimos.</p>`;
 }
 
+const PERI=["mouses","teclados","auriculares"];
 function coverage(cmp){
   if(cmp.mixed)return"";
   const cov=C.coverage(cmp),max=Math.max(...cov.map(c=>c.have)),bad=cov.map((c,i)=>({c,i})).filter(({c})=>c.have<=1&&c.total>2);
   if(!bad.length)return"";
   const none=bad.length===cov.length;
   return `<div class="panel cov" role="note"><h2>${none?"No tenemos fichas técnicas verificadas de estos productos":"Falta la ficha técnica de "+(bad.length===1?"uno de los productos":"algunos productos")}</h2>
-  <p>${none?"Solo se puede comparar":"De "+(bad.length===1?"ese producto":"esos productos")+" solo se puede comparar"} lo que publica la tienda (precio, disponibilidad y, si figura en el título, la memoria).${max>1?" El rendimiento y el resto de las especificaciones no se comparan para no mezclar datos de otro modelo.":""}</p>
+  ${PERI.includes(cmp.cat)?`<p>Para ${esc((CT.CATS[cmp.cat]||"").toLowerCase())} usamos la ficha técnica que publica la tienda para ese producto exacto (hoy, Compragamer) y lo que dice el título. ${none?"Estos productos":"Ese producto"} no tiene${none?"n":""} ficha publicada y el título no detalla más: solo se compara precio y disponibilidad.</p>`:`<p>${none?"Solo se puede comparar":"De "+(bad.length===1?"ese producto":"esos productos")+" solo se puede comparar"} lo que publica la tienda (precio, disponibilidad y, si figura en el título, la memoria).${max>1?" El rendimiento y el resto de las especificaciones no se comparan para no mezclar datos de otro modelo.":""}</p>`}
   <ul>${bad.map(({c,i})=>`<li><span style="color:${COL[i]}">●</span> ${esc(c.name.slice(0,80))}</li>`).join("")}</ul>
-  <p class="note" style="margin-top:6px">Suele pasar con variantes poco comunes (por ejemplo, la misma placa con menos memoria, que rinde distinto) o con modelos muy nuevos. Preferimos decir «sin datos» antes que inventar.</p></div>`;
+  ${PERI.includes(cmp.cat)?"":`<p class="note" style="margin-top:6px">Suele pasar con variantes poco comunes (por ejemplo, la misma placa con menos memoria, que rinde distinto) o con modelos muy nuevos. Preferimos decir «sin datos» antes que inventar.</p>`}</div>`;
 }
 function drawOut(){
   const out=$("#out");

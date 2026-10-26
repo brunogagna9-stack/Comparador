@@ -35,8 +35,8 @@ td.n,th.n{text-align:right;white-space:nowrap}tr.best td{background:var(--best)}
 <script src="js/lib.js"></script><script src="js/rep.js"></script><script src="js/compare.js"></script><script src="js/detail.js"></script>
 <script>
 const $=s=>document.querySelector(s),{ARS,esc}=CT;
-const CATS={procesadores:"Procesadores",motherboards:"Motherboards","placas-de-video":"Placas de video","memorias-ram":"Memorias RAM",almacenamiento:"Almacenamiento",refrigeracion:"Refrigeración",fuentes:"Fuentes",gabinetes:"Gabinetes",monitores:"Monitores",notebooks:"Notebooks","pcs-armadas":"PCs armadas",perifericos:"Periféricos",redes:"Redes",accesorios:"Cables y accesorios",otros:"Otros"};
-const ICON={procesadores:"🧠",motherboards:"🔌","placas-de-video":"🎮","memorias-ram":"🧮",almacenamiento:"💽",refrigeracion:"❄️",fuentes:"⚡",gabinetes:"🖥️",monitores:"🖥️",notebooks:"💻","pcs-armadas":"🖥️",perifericos:"⌨️",redes:"📡",accesorios:"🔌",otros:"📦"};
+const CATS={procesadores:"Procesadores",motherboards:"Motherboards","placas-de-video":"Placas de video","memorias-ram":"Memorias RAM",almacenamiento:"Almacenamiento",refrigeracion:"Refrigeración",fuentes:"Fuentes",gabinetes:"Gabinetes",monitores:"Monitores",notebooks:"Notebooks","pcs-armadas":"PCs armadas",mouses:"Mouse",teclados:"Teclados",auriculares:"Auriculares",perifericos:"Otros periféricos",redes:"Redes",accesorios:"Cables y accesorios",otros:"Otros"};
+const ICON={procesadores:"🧠",motherboards:"🔌","placas-de-video":"🎮","memorias-ram":"🧮",almacenamiento:"💽",refrigeracion:"❄️",fuentes:"⚡",gabinetes:"🖥️",monitores:"🖥️",notebooks:"💻","pcs-armadas":"🖥️",mouses:"🖱️",teclados:"⌨️",auriculares:"🎧",perifericos:"🕹️",redes:"📡",accesorios:"🔌",otros:"📦"};
 const price=o=>o.price_cash??o.price_list;
 let FOLLOW={};try{FOLLOW=JSON.parse(localStorage.getItem("seg")||"{}")}catch{}
 let LIST=[];try{LIST=JSON.parse(localStorage.getItem("lista")||"[]")}catch{}

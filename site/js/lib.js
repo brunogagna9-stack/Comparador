@@ -141,6 +141,40 @@
     if (o.ssd == null) { const bare = nums.find(x => !x.used && x.val >= 120); if (bare) o.ssd = bare.val; }
     return o;
   }
+  /* ---- periféricos: lo que dice el TÍTULO (la ficha de la tienda, si existe, tiene prioridad) ---- */
+  const WIRELESS = /inal[aá]mbric|wireless|\bbluetooth\b|2[.,]4 ?ghz|lightspeed|hyperspeed|\bwifi\b/i;
+  function mouseSpec(n) {
+    const o = { dpi: null, botones: null, peso: null, polling: null, sensor: null, wireless: WIRELESS.test(n) ? true : /\bcable|cableado|usb\b/i.test(n) ? false : null,
+      rgb: /\brgb\b|rainbow|argb|lightsync|chroma/i.test(n) ? "RGB" : /retro-?ilumin|retrolumin|\bled\b|colores/i.test(n) ? "Iluminado" : null, clicks: null };
+    const d = n.match(/(\d{1,2}[.,]?\d{3}|\d{3,5})\s?(?:dpi|cpi)\b/i); if (d) o.dpi = +d[1].replace(/[.,]/, "");
+    const b = n.match(/(\d{1,2})\s?botones/i); if (b) o.botones = +b[1];
+    const w = n.match(/\b(\d{2,3})\s?(?:g|gr|gramos)\b/i); if (w && +w[1] >= 30 && +w[1] <= 200) o.peso = +w[1];
+    const h = n.match(/(\d{3,4})\s?hz\b/i); if (h) o.polling = +h[1];
+    const se = n.match(/\b(hero(?: 2| 25k| 16k)?|focus ?pro(?: 3[05]k)?|paw ?\d{4}|pmw ?\d{4}|true move \w+|tracker|[oó]ptico|l[aá]ser)\b/i);
+    if (se) o.sensor = se[1].replace(/^optico$/i, "Óptico").replace(/^laser$/i, "Láser");
+    const c = n.match(/(\d{1,3})\s?(?:millones|m)\s?(?:de\s)?(?:clics|clicks)/i); if (c) o.clicks = +c[1];
+    return o;
+  }
+  function keyboardSpec(n) {
+    const o = { mec: /mec[aá]nic|mechanical/i.test(n) ? "Mecánico" : /membrana|membrane/i.test(n) ? "Membrana" : /[oó]ptico/i.test(n) ? "Óptico-mecánico" : null,
+      switch: null, formato: null, rgb: /\brgb\b|rainbow|argb|lightsync|chroma/i.test(n) ? "RGB" : /retro-?ilumin|retrolumin|\bled\b|\d colores/i.test(n) ? "Retroiluminado" : null, wireless: WIRELESS.test(n) ? true : null, idioma: null };
+    const sw = n.match(/\b(outemu|gateron|kailh|cherry ?mx|huano|jixian|akko|tte|redragon)?\s?(red|blue|brown|black|yellow|silver|speed silver|white|banana|lemon)\s?(?:switch(?:es)?)?\b/i);
+    if (sw && /switch|outemu|gateron|kailh|cherry|huano|jixian|akko|mec[aá]nic/i.test(n)) o.switch = [sw[1], sw[2]].filter(Boolean).map(x => x[0].toUpperCase() + x.slice(1).toLowerCase()).join(" ");
+    const f = n.match(/\b(60|65|75|80|96|98|100)\s?%|\b(tkl|tenkeyless)\b|\bfull ?size\b/i);
+    if (f) o.formato = f[1] ? f[1] + " %" : f[2] ? "TKL (sin pad numérico)" : "Completo";
+    if (/espa[ñn]ol|\besp?\b|latam|\bla\b|ñ/i.test(n)) o.idioma = "Español"; else if (/ingl[eé]s|\bus\b|english/i.test(n)) o.idioma = "Inglés";
+    const c = n.match(/(\d{1,3})\s?(?:millones|m)\s?(?:de\s)?(?:pulsaciones|keystrokes)/i); o.vida = c ? +c[1] : null;
+    return o;
+  }
+  function headsetSpec(n) {
+    const o = { wireless: WIRELESS.test(n) ? true : null, surround: /7[.,]1/.test(n) ? "7.1 (virtual o real, según el modelo)" : null,
+      driver: null, mic: /micr[oó]fono|\bmic\b|headset/i.test(n) || null, anc: /cancelaci[oó]n (activa )?de ruido|\banc\b|noise cancel/i.test(n) || null,
+      conexion: null, rgb: /\brgb\b|argb/i.test(n) || null, tipo: /in-?ear|earbuds|intraural/i.test(n) ? "In-ear" : /headset|vincha|over-?ear|on-?ear/i.test(n) ? "Vincha (over-ear)" : null };
+    const d = n.match(/\b(\d{2})\s?mm\b/i); if (d && +d[1] >= 6 && +d[1] <= 60) o.driver = +d[1];
+    const con = []; if (/usb/i.test(n)) con.push("USB"); if (/3[.,]5 ?mm|jack|\bp2\b/i.test(n)) con.push("Jack 3,5 mm"); if (/bluetooth/i.test(n)) con.push("Bluetooth"); if (/2[.,]4 ?ghz|receptor|lightspeed|hyperspeed/i.test(n)) con.push("Inalámbrico 2,4 GHz");
+    if (con.length) o.conexion = con.join(" + ");
+    return o;
+  }
   CT.parse = function (name, cat) {
     switch (cat) {
       case "memorias-ram": return ramSpec(name);
@@ -149,6 +183,9 @@
       case "motherboards": return moboSpec(name);
       case "monitores": return monitorSpec(name);
       case "notebooks": case "pcs-armadas": return systemSpec(name);
+      case "mouses": return mouseSpec(name);
+      case "teclados": return keyboardSpec(name);
+      case "auriculares": return headsetSpec(name);
       case "placas-de-video": return { vram: vramOf(name) };
       default: return {};
     }
@@ -219,14 +256,28 @@
     C.pickCpu = (Gv, factor, vendor) => {
       /* para RECOMENDAR una compra solo se usan procesadores con puntaje medido (los estimados sirven para evaluar lo que ya se tiene) */
       const l = HW.cpus.filter(c => c.s && !c.se && (!vendor || c.vendor === vendor)).sort((a, b) => a.s - b.s);
-      const ok = l.find(c => C.cpuFps(c) >= factor * Gv);
-      return ok ? { c: ok, short: false } : { c: l[l.length - 1], short: true };
+      // entre los que alcanzan, el más barato con stock (si ninguno tiene precio, el de menor puntaje que alcanza)
+      const okAll = l.filter(c => C.cpuFps(c) >= factor * Gv);
+      if (!okAll.length) return { c: l[l.length - 1], short: true };
+      const price = c => { const x = C.findCpu ? C.findCpu(c)[0] : null; return x ? x.p : Infinity; };
+      const best = okAll.reduce((m, c) => price(c) < price(m) ? c : m, okAll[0]);
+      return { c: best, short: false };
     };
     C.psuFor = (g, c) => { const base = (c.maxp || c.tdp * 2) + g.tgp + 100, min = Math.max(g.psu, CT.up50(base)), sug = Math.max(min, CT.up50(base * 1.25)); return { min, sug, base }; };
-    C.pickPair = (g, res) => {
-      const Gv = g.p[res], mk = f => { const a = C.pickCpu(Gv, f, "AMD"), b = C.pickCpu(Gv, f, "Intel");
-        return !a.short && !b.short ? (a.c.s <= b.c.s ? a : b) : (a.short ? b : a); };
-      return { cMin: mk(.8), cSug: mk(1.0) };
+    /* Procesador para cada nivel (mínimo / sugerido). vendor = "AMD" | "Intel" fuerza la marca; sin vendor se elige
+       la plataforma más barata completa (procesador + placa madre + memoria + resto) entre las dos que alcanzan. */
+    C.pickPair = (g, res, vendor) => {
+      const Gv = g.p[res];
+      const mk = (f, kind) => {
+        if (vendor) return C.pickCpu(Gv, f, vendor);
+        const a = C.pickCpu(Gv, f, "AMD"), b = C.pickCpu(Gv, f, "Intel");
+        if (a.short !== b.short) return a.short ? b : a;
+        const cost = x => { const t = C.total(C.parts(g, x.c, x.short, kind, res)); return t.missing.length ? Infinity : t.total; };
+        const ca = cost(a), cb = cost(b);
+        if (ca !== cb) return ca < cb ? a : b;
+        return a.c.s <= b.c.s ? a : b;
+      };
+      return { cMin: mk(.8, "min"), cSug: mk(1.0, "sug") };
     };
     const MOBO_WHY = { AM5: "Chipset A620 (básico) o B650/B850 (recomendado). Solo DDR5.", AM4: "Chipset A520/B450 (básico) o B550 (recomendado). Solo DDR4; verificá la BIOS para el modelo exacto.",
       LGA1851: "Chipset B860 (recomendado) o Z890 (para overclock). Solo DDR5.", LGA1700: "Chipset B660/B760 (recomendado) o Z690/Z790 (para overclock). Acepta DDR4 o DDR5 según la placa: la memoria debe coincidir con ella." };
@@ -265,8 +316,8 @@
       parts.forEach(p => { const best = p.shop && p.shop[0]; if (best) { total += best.p; priced++; } else missing.push(p.label); });
       return { total, priced, count: parts.length, missing };
     };
-    C.armado = (g, res) => {
-      const { cMin, cSug } = C.pickPair(g, res);
+    C.armado = (g, res, vendor) => {
+      const { cMin, cSug } = C.pickPair(g, res, vendor);
       const min = C.parts(g, cMin.c, cMin.short, "min", res), sug = C.parts(g, cSug.c, cSug.short, "sug", res);
       const sp = C.split(min, sug);
       return { cMin, cSug, min, sug, ...sp, totalMin: C.total(min), totalSug: C.total(sug) };

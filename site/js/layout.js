@@ -80,9 +80,28 @@
 
   const CTL = window.CTL = {
     // Actualiza el numerito del carrito (se muestra solo si hay productos en la lista).
-    count(n) { const el = document.getElementById("lcount"); if (!el) return; el.textContent = n > 99 ? "99+" : String(n); el.dataset.n = String(n); },
+    count(n) { const el = document.getElementById("lcount"); if (!el) return; const prev = +el.dataset.n || 0;
+      el.textContent = n > 99 ? "99+" : String(n); el.dataset.n = String(n);
+      if (n > prev) { const b = document.getElementById("lbtn"); [el, b].forEach(x => { x.classList.remove("bump"); void x.offsetWidth; x.classList.add("bump"); }); } },
     listCount
   };
+  /* Aparición suave al hacer scroll: tarjetas, paneles y secciones (también lo que se dibuja después con JS).
+     Con "reducir movimiento" o en navegadores automatizados (pruebas) no se oculta nada. */
+  const RV = ".panel,.col,.card,.tile,.cat,.dp,.how>div,.trust>div,.bc,.rc,.vc,.sec-h,.hero .stat,table.gt tr,.part,.opts>*";
+  function setupReveal() {
+    const off = matchMedia("(prefers-reduced-motion:reduce)").matches || navigator.webdriver && !/[?&]anim=1/.test(location.search);
+    if (off || !("IntersectionObserver" in window)) { document.documentElement.classList.add("noanim"); return; }
+    const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("ct-in"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -6% 0px" });
+    const scan = root => { const els = root.querySelectorAll ? root.querySelectorAll(RV) : [];
+      els.forEach(el => { if (el.classList.contains("ct-rv") || el.closest(".modal,#ctas-p,header.site,footer.site")) return;
+        const sib = el.parentElement ? [...el.parentElement.children].indexOf(el) : 0;
+        el.style.setProperty("--d", Math.min(sib, 8) * 45 + "ms"); el.classList.add("ct-rv"); io.observe(el); }); };
+    scan(document);
+    new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(nd => { if (nd.nodeType === 1) { if (nd.matches && nd.matches(RV)) { scan(nd.parentElement || document); } else scan(nd); } })))
+      .observe(document.body, { childList: true, subtree: true });
+    // red de seguridad: si algo quedó oculto (por ejemplo, al imprimir), se muestra
+    addEventListener("beforeprint", () => document.querySelectorAll(".ct-rv").forEach(e => e.classList.add("ct-in")));
+  }
   if (document.body) mountHeader(); else document.addEventListener("DOMContentLoaded", mountHeader);
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mountFooter); else mountFooter();
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => { mountFooter(); setupReveal(); }); else { mountFooter(); setupReveal(); }
 })();

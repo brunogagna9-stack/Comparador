@@ -106,7 +106,7 @@ aside details>*:not(summary){margin-top:6px}
     <div id="alert"></div>
     <div class="tabs" id="tabs"></div>
     <div class="summary" id="sum"></div>
-    <div class="grid" id="grid"></div>
+    <div class="grid" id="grid" aria-busy="true"><div class="sk" aria-hidden="true"><i></i><b></b><b></b></div><div class="sk" aria-hidden="true"><i></i><b></b><b></b></div><div class="sk" aria-hidden="true"><i></i><b></b><b></b></div><div class="sk" aria-hidden="true"><i></i><b></b><b></b></div><div class="sk" aria-hidden="true"><i></i><b></b><b></b></div><div class="sk" aria-hidden="true"><i></i><b></b><b></b></div><div class="sk" aria-hidden="true"><i></i><b></b><b></b></div><div class="sk" aria-hidden="true"><i></i><b></b><b></b></div></div>
     <nav class="pager" id="pager" aria-label="Páginas de resultados"></nav><div class="pinfo" id="pinfo"></div>
   </main>
 </div>
@@ -114,8 +114,8 @@ aside details>*:not(summary){margin-top:6px}
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="Detalle"><div class="box" id="box"></div></div>
 <script>
 const $=s=>document.querySelector(s),ARS=n=>n==null?"—":"$"+Math.round(n).toLocaleString("es-AR");
-const CATS={procesadores:"Procesadores",motherboards:"Motherboards","placas-de-video":"Placas de video","memorias-ram":"Memorias RAM",almacenamiento:"Almacenamiento",refrigeracion:"Refrigeración",fuentes:"Fuentes",gabinetes:"Gabinetes",monitores:"Monitores",notebooks:"Notebooks","pcs-armadas":"PCs armadas",perifericos:"Periféricos",redes:"Redes",accesorios:"Cables y accesorios",otros:"Otros"};
-const ICON={procesadores:"🧠",motherboards:"🔌","placas-de-video":"🎮","memorias-ram":"🧮",almacenamiento:"💽",refrigeracion:"❄️",fuentes:"⚡",gabinetes:"🖥️",monitores:"🖥️",notebooks:"💻","pcs-armadas":"🖥️",perifericos:"⌨️",redes:"📡",accesorios:"🔌",otros:"📦"};
+const CATS={procesadores:"Procesadores",motherboards:"Motherboards","placas-de-video":"Placas de video","memorias-ram":"Memorias RAM",almacenamiento:"Almacenamiento",refrigeracion:"Refrigeración",fuentes:"Fuentes",gabinetes:"Gabinetes",monitores:"Monitores",notebooks:"Notebooks","pcs-armadas":"PCs armadas",mouses:"Mouse",teclados:"Teclados",auriculares:"Auriculares",perifericos:"Otros periféricos",redes:"Redes",accesorios:"Cables y accesorios",otros:"Otros"};
+const ICON={procesadores:"🧠",motherboards:"🔌","placas-de-video":"🎮","memorias-ram":"🧮",almacenamiento:"💽",refrigeracion:"❄️",fuentes:"⚡",gabinetes:"🖥️",monitores:"🖥️",notebooks:"💻","pcs-armadas":"🖥️",mouses:"🖱️",teclados:"⌨️",auriculares:"🎧",perifericos:"🕹️",redes:"📡",accesorios:"🔌",otros:"📦"};
 const FB={};   // id -> imagen de respaldo (miniatura) si la de alta resolución falla
 function imgFail(el){const id=el.dataset.id,fb=FB[id];
   if(fb&&el.src!==fb){el.src=fb;return}
@@ -167,7 +167,7 @@ function filtered(skip){
 function sorter(){
   const spread=g=>{if(g.dif)return 0;const p=g.offers.map(price);return Math.max(...p)-Math.min(...p)};
   const pct=g=>chgOk(g)?g.chg.pct:0;
-  const W={"placas-de-video":40,procesadores:40,motherboards:30,"memorias-ram":30,almacenamiento:25,monitores:25,notebooks:25,fuentes:20,"pcs-armadas":20,gabinetes:15,refrigeracion:15,perifericos:10,redes:8};
+  const W={"placas-de-video":40,procesadores:40,motherboards:30,"memorias-ram":30,almacenamiento:25,monitores:25,notebooks:25,fuentes:20,"pcs-armadas":20,gabinetes:15,refrigeracion:15,mouses:12,teclados:12,auriculares:12,perifericos:10,redes:8};
   const rel=g=>(W[g.category]||0)+Math.min(g.offers.length,4)*25+(g.offers.some(o=>o.stock===true)?20:0)+(g.image?10:0)+(chgOk(g)&&g.chg.pct<0?8:0)+(g.offers.some(o=>o.anom)?-30:0);
   return {rel:(a,b)=>rel(b)-rel(a)||best(a)-best(b),price:(a,b)=>best(a)-best(b),priceDesc:(a,b)=>best(b)-best(a),down:(a,b)=>pct(a)-pct(b),up:(a,b)=>pct(b)-pct(a),
     stores:(a,b)=>b.offers.length-a.offers.length||best(a)-best(b),spread:(a,b)=>spread(b)-spread(a)}[S.sort];
@@ -201,6 +201,7 @@ function render(){
   $("#sum").textContent=`${rows.length.toLocaleString("es-AR")} resultados`+(S.tab==="bajaron"||S.tab==="subieron"?` · cambios de los últimos ${META.recent_days||14} días`:"");
   const pages=Math.max(1,Math.ceil(rows.length/PER));if(S.page>pages)S.page=pages;if(S.page<1)S.page=1;
   const from=(S.page-1)*PER;
+  $("#grid").removeAttribute("aria-busy");
   $("#grid").innerHTML=rows.slice(from,from+PER).map(card).join("")||`<div class="empty">${S.tab==="seguidos"?"Todavía no seguís productos. Tocá la ☆ de cualquier producto.":S.tab==="todos"?"Sin resultados.":"Todavía no hay cambios de precio registrados. Aparecen a medida que se actualizan los datos."}</div>`;
   renderPager(pages,rows.length,from);syncUrl();
   renderSide();

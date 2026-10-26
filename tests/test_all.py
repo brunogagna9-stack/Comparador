@@ -586,3 +586,33 @@ def test_correccion_de_categorias():
         {"store": "A", "name": "Mini Pc CX Ryzen 5 3500U 8Gb", "url": "u2", "price_cash": 100, "price_list": 110, "stock": True,
          "sku": None, "pn": None, "image": None, "category": "procesadores", "cuotas": None, "rating": None, "prev_cash": None}])
     assert [x["category"] for x in g] == ["pcs-armadas"]
+
+
+def test_fichas_perifericos():
+    """Mouse, teclados y auriculares: categoría propia y ficha de la tienda normalizada (etiquetas con o sin tildes)."""
+    from scrapers import specs
+    from scrapers.common import fix_category as f
+    assert f("Mouse Gamer Logitech G502 Hero", "perifericos") == "mouses"
+    assert f("Mouse Pad Redragon Flick L", "perifericos") == "perifericos"
+    assert f("Combo Teclado y Mouse Logitech MK120", "perifericos") == "perifericos"
+    assert f("Teclado Mecanico Redragon Kumara K552", "perifericos") == "teclados"
+    assert f("Auriculares HyperX Cloud II", "perifericos") == "auriculares"
+    m, miss = specs.normalize({"caracteristicas": [
+        {"etiqueta": "DPI Máximos", "valor": "25600"}, {"etiqueta": "Cantidad de botones", "valor": "11"},
+        {"etiqueta": "Peso", "valor": "121", "unidades": "gr"}, {"etiqueta": "Tipo de sensor", "valor": "Óptico"},
+        {"etiqueta": "Frecuencia de respuesta", "valor": "1000"}, {"etiqueta": "Agarre claw grip", "valor": "1"}]}, "Mouse G502", "mouses")
+    assert m["dpi_max"]["v"] == 25600 and m["botones"]["v"] == 11 and m["peso_g"]["v"] == 121 and m["claw"]["v"] is True
+    assert "vida_util_clicks" in miss, "lo que la tienda no publica queda como faltante, no se inventa"
+    m, _ = specs.normalize({"caracteristicas": [{"etiqueta": "Peso", "valor": "900", "unidades": "gr"}]}, "Mouse X", "mouses")
+    assert m["peso_g"]["l"] == "pend", "un mouse de 900 g es un error de la ficha: queda pendiente"
+    k, _ = specs.normalize({"caracteristicas": [{"etiqueta": "Tipo de switch", "valor": "Outemu Red"},
+        {"etiqueta": "Tipo de mecanismo", "valor": "Mecánico"}, {"etiqueta": "N-key rollover", "valor": "1"}]}, "Teclado", "teclados")
+    assert k["switch"]["v"] == "Outemu Red" and k["mecanismo"]["v"] == "Mecánico" and k["nkro"]["v"] is True
+    a, _ = specs.normalize({"caracteristicas": [{"etiqueta": "Impedancia", "valor": "32", "unidades": "Ω"},
+        {"etiqueta": "Respuesta mínima", "valor": "20"}, {"etiqueta": "Respuesta máxima", "valor": "20000"},
+        {"etiqueta": "Tamaño de los parlantes", "valor": "53"}]}, "Auriculares", "auriculares")
+    assert a["impedancia"]["v"] == 32 and a["f_max"]["v"] == 20000 and a["driver_mm"]["v"] == 53
+    # las fichas se ligan a periféricos de Compragamer por su categoría corregida
+    items = specs.build_items([{"id_producto": 5, "caracteristicas": [{"etiqueta": "DPI máximos", "valor": "16000"}]}],
+        [{"store": "Compragamer", "category": "perifericos", "name": "Mouse Logitech G305", "pid": 5, "sku": "910-005281", "url": "u"}], "2026-10-26")
+    assert list(items.values())[0]["f"]["dpi_max"]["v"] == 16000

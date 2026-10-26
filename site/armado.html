@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="css/layout.css">
 
 <style>
+.vencmp .vc{border:1px solid var(--line2);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:4px;background:var(--card2)}.vencmp .vc.on{border-color:var(--acc);box-shadow:0 0 0 2px color-mix(in srgb,var(--acc) 30%,transparent)}.vencmp .vh{font-weight:800;font-size:16px}.vencmp .btn{margin-top:6px;align-self:flex-start}
 @media(max-width:640px){table.gt,table.gt tbody,table.gt tr,table.gt td{display:block;width:100%}table.gt tr:first-child{display:none}table.gt tr{padding:12px 14px;border-bottom:1px solid var(--line2)}table.gt td{border:0;padding:3px 0}table.gt td:nth-child(2){padding:6px 0}}
 </style>
 </head>
@@ -20,6 +21,7 @@
 <div class="panel"><div class="row">
   <div class="f" style="max-width:260px"><label>Empezar por</label><div class="seg" id="mode"><button data-v="gpu" class="on">Placa de video</button><button data-v="cpu">Procesador</button></div></div>
   <div class="f"><label id="lsel">Placa de video</label><select id="sel"></select></div>
+  <div class="f" style="max-width:330px" id="vbox"><label>Marca del procesador</label><div class="seg" id="ven"><button data-v="" class="on">La más conveniente</button><button data-v="AMD">AMD</button><button data-v="Intel">Intel</button></div></div>
   <div class="f" style="max-width:300px"><label>Resolución de tu monitor</label><div class="seg" id="res"><button data-v="0" class="on">1080p</button><button data-v="1">1440p</button><button data-v="2">4K</button></div></div>
 </div></div>
 
@@ -40,7 +42,7 @@
 <script src="js/lib.js"></script><script src="js/rep.js"></script>
 <script>
 const $=s=>document.querySelector(s),{ARS,esc,RES}=CT;
-let HW,PR=[],META={},C,S={mode:"gpu",res:0,id:null};
+let HW,PR=[],META={},C,S={mode:"gpu",res:0,id:null,ven:""};
 const fdate=iso=>{try{return new Date(iso).toLocaleString("es-AR",{timeZone:"America/Argentina/Buenos_Aires",day:"numeric",month:"long",hour:"2-digit",minute:"2-digit",hour12:false})}catch{return ""}};
 
 function shopHtml(items,extra){
@@ -86,9 +88,14 @@ function gameRow(gm,g,c){
 function render(){
   let h="";
   if(S.mode==="gpu"){
-    const g=HW.gpus.find(x=>x.id===S.id),Gv=g.p[S.res],A=C.armado(g,S.res);
+    const g=HW.gpus.find(x=>x.id===S.id),Gv=g.p[S.res],A=C.armado(g,S.res,S.ven||undefined);
     h+=`<div class="panel"><b>${esc(g.name)}</b> a ${RES[S.res]}: promedio de ~${Math.round(Gv)} FPS en juegos exigentes (Ultra, sin DLSS/FSR). Consumo ${g.tgp} W; el fabricante pide una fuente de al menos <b>${g.psu} W</b> para todo el equipo.</div>`;
     h+=`<div class="warn"><b>Importante:</b> este es un cálculo orientativo. Antes de comprar, revisá el checklist de abajo y los manuales del fabricante.</div>`;
+    {// las dos marcas lado a lado: cuánto sale cada plataforma completa (mínimo y sugerido)
+      const vv=["AMD","Intel"].map(v=>{const X=C.armado(g,S.res,v);return {v,X}});
+      const fmt=(X,k)=>{const t=k==="min"?X.totalMin:X.totalSug,c=k==="min"?X.cMin:X.cSug;return `${esc(c.c.name)} · ${t.missing.length?"precio incompleto":ARS(t.total)}${c.short?" (podría limitar a la placa)":""}`};
+      h+=`<div class="panel vencmp"><b>AMD o Intel para esta placa</b><div class="grid2" style="margin-top:8px">${vv.map(({v,X})=>`<div class="vc${S.ven===v?" on":""}"><div class="vh">${v}</div><div><span class="note">Mínimo:</span> ${fmt(X,"min")}</div><div><span class="note">Sugerido:</span> ${fmt(X,"sug")}</div><button class="btn" data-ven="${v}" type="button">${S.ven===v?"✓ Mostrando "+v:"Ver armado con "+v}</button></div>`).join("")}</div><p class="note" style="margin:8px 0 0">«La más conveniente» elige, en cada nivel, la plataforma completa más barata con stock (procesador, placa madre, memoria, fuente y el resto). Solo se recomiendan procesadores con rendimiento medido.</p></div>`;
+    }
     h+=build(g,A);
     h+=`<h2>Rendimiento estimado en juegos</h2><div class="panel" style="padding:0;overflow:auto"><table class="gt"><tr><th>Juego y requisitos oficiales</th><th>Veredicto</th><th>Detalle (hardware sugerido: ${esc(A.cSug.c.name)})</th></tr>${HW.games.map(gm=>gameRow(gm,g,A.cSug.c)).join("")}</table></div>
     <p class="note">Cómo se estima: el FPS de la placa sale del promedio de 11 juegos (incluye CS2 y Cyberpunk 2077) de Tom's Hardware (junio 2026); el del procesador se escala desde su puntaje en juegos. El rendimiento real en cada juego puede variar. Para los juegos livianos solo comparamos contra sus requisitos oficiales.</p>`;
@@ -107,8 +114,11 @@ function render(){
   }
   $("#out").innerHTML=h;
   document.querySelectorAll("[data-g]").forEach(e=>e.onclick=()=>{S.mode="gpu";S.id=e.dataset.g;setMode();window.scrollTo(0,0)});
+  document.querySelectorAll("[data-ven]").forEach(e=>e.onclick=()=>setVen(S.ven===e.dataset.ven?"":e.dataset.ven));
 }
+function setVen(v){S.ven=v;document.querySelectorAll("#ven button").forEach(b=>b.classList.toggle("on",b.dataset.v===v));render()}
 function setMode(){
+  $("#vbox").style.display=S.mode==="gpu"?"":"none";
   document.querySelectorAll("#mode button").forEach(b=>b.classList.toggle("on",b.dataset.v===S.mode));
   $("#lsel").textContent=S.mode==="gpu"?"Placa de video":"Procesador";
   const l=S.mode==="gpu"?HW.gpus:HW.cpus.filter(c=>c.s);if(!l.find(x=>x.id===S.id))S.id=l[0].id;
@@ -125,6 +135,7 @@ function setMode(){
   document.querySelectorAll("#mode button").forEach(b=>b.onclick=()=>{S.mode=b.dataset.v;S.id=null;setMode()});
   document.querySelectorAll("#res button").forEach(b=>b.onclick=()=>{S.res=+b.dataset.v;document.querySelectorAll("#res button").forEach(x=>x.classList.toggle("on",x===b));render()});
   $("#sel").onchange=e=>{S.id=e.target.value;render()};
+  document.querySelectorAll("#ven button").forEach(b=>b.onclick=()=>setVen(b.dataset.v));
   setMode();
 })();
 </script>

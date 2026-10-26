@@ -81,6 +81,7 @@ GX = [
     ("rtx-3050-6", "GeForce RTX 3050 6GB", "NVIDIA", 6, 70, 300, None, None, "nvidia", r"rtx[ -]?3050", r"\b8 ?gb"),
     ("arc-b570", "Intel Arc B570", "Intel", 10, 150, None, (63.5, 44.3, 19.6), (19.8, 13.1), "intel_gpu", r"arc[ -]?b570", ""),
     ("rx-9060", "Radeon RX 9060", "AMD", 8, 132, 450, None, None, "amd_gpu", r"rx[ -]?9060(?![ -]?xt)", r"\bxt\b"),
+    ("r9700", "Radeon AI PRO R9700 (profesional)", "AMD", 32, 300, 750, None, None, "amd_gpu", r"ai ?pro ?r9700", ""),
     ("rx-9050", "Radeon RX 9050", "AMD", 8, 92, 450, None, None, "amd_gpu", r"\br(?:x)?[ -]?9050\b", ""),
 ]
 
@@ -291,7 +292,7 @@ GS = {
     "rx-6600xt": ("RDNA 2", 2048, "GDDR6", 128, 16),
     "arc-b580": ("Xe2 (Battlemage)", 2560, "GDDR6", 192, 19),
     "rx-9070gre": ("RDNA 4", 3072, "GDDR6", 192, 18),
-    "rtx-3050-6": ("Ampere", 2304, "GDDR6", 96, 14), "rx-9060": ("RDNA 4", 1792, "GDDR6", 128, 18), "rx-9050": ("RDNA 4", 1024, "GDDR6", 128, 18), "arc-b570": ("Xe2 (Battlemage)", 2304, "GDDR6", 160, 19),
+    "rtx-3050-6": ("Ampere", 2304, "GDDR6", 96, 14), "rx-9060": ("RDNA 4", 1792, "GDDR6", 128, 18), "rx-9050": ("RDNA 4", 1024, "GDDR6", 128, 18), "r9700": ("RDNA 4", 4096, "GDDR6", 256, 20), "arc-b570": ("Xe2 (Battlemage)", 2304, "GDDR6", 160, 19),
 }
 # CPU: (nucleos, hilos, boost GHz, caché L3 MB, gráficos integrados)
 CS = {
@@ -363,6 +364,7 @@ VURL = {
     "rx-9070gre": _AG + "9000-series/amd-radeon-rx-9070-gre.html", "rtx-3050-6": _NV + "30-series/rtx-3050/",
     "arc-b570": _IC + "241676/intel-arc-b570-graphics/specifications.html",
     "rx-9060": _AG + "9000-series/amd-radeon-rx-9060.html", "rx-9050": _AG + "9000-series/amd-radeon-rx-9050.html",
+    "r9700": "https://www.amd.com/en/products/graphics/workstations/radeon-ai-pro/ai-9000-series/amd-radeon-ai-pro-r9700.html",
     # CPUs AMD (ficha de producto en amd.com)
     "r7-9850x3d": _AC + "9000-series/amd-ryzen-7-9850x3d.html", "r9-9950x3d": _AC + "9000-series/amd-ryzen-9-9950x3d.html",
     "r7-9800x3d": _AC + "9000-series/amd-ryzen-7-9800x3d.html", "r9-9900x3d": _AC + "9000-series/amd-ryzen-9-9900x3d.html",
@@ -447,7 +449,8 @@ VERIFIED["rx-9070gre"] = ["sp", "mt", "bus", "gbps"] + _GPU_V          # la fich
 VERIFIED["rtx-3050-6"] = ["sp", "mt", "bus"] + _GPU_V                   # ni la velocidad de memoria ni la arquitectura
 VERIFIED["arc-b570"] = ["arq", "mt", "bus", "gbps", "vram", "tgp"]      # Intel no publica fuente mínima ni "shaders"
 VERIFIED["rx-9060"] = VERIFIED["rx-9050"] = ["sp", "mt", "bus", "gbps"] + _GPU_V
-NEW_GPU = {"rx-9070gre", "rtx-3050-6", "arc-b570", "rx-9060", "rx-9050"}
+VERIFIED["r9700"] = ["arq", "sp", "mt", "bus", "vram", "tgp", "psu"]      # velocidad: 640 GB/s ÷ 32 = 20 Gbps (calculado)
+NEW_GPU = {"r9700", "rx-9070gre", "rtx-3050-6", "arc-b570", "rx-9060", "rx-9050"}
 for _c in C:
     _i, _v = _c[0], _c[2]
     _f = ["cores", "threads", "boost", "l3", "tdp"]

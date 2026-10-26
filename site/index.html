@@ -97,7 +97,7 @@
 <script src="js/lib.js"></script><script src="js/rep.js"></script>
 <script>
 const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])),ARS=n=>n==null?"—":"$"+Math.round(n).toLocaleString("es-AR");
-const CATS={procesadores:["Procesadores","🧠"],motherboards:["Motherboards","🔌"],"placas-de-video":["Placas de video","🎮"],"memorias-ram":["Memorias RAM","🧮"],almacenamiento:["Almacenamiento","💽"],refrigeracion:["Refrigeración","❄️"],fuentes:["Fuentes","⚡"],gabinetes:["Gabinetes","🖥️"],monitores:["Monitores","🖥️"],notebooks:["Notebooks","💻"],"pcs-armadas":["PCs armadas","🖥️"],perifericos:["Periféricos","⌨️"],redes:["Redes","📡"],accesorios:["Cables y accesorios","🔌"],otros:["Otros","📦"]};
+const CATS={procesadores:["Procesadores","🧠"],motherboards:["Motherboards","🔌"],"placas-de-video":["Placas de video","🎮"],"memorias-ram":["Memorias RAM","🧮"],almacenamiento:["Almacenamiento","💽"],refrigeracion:["Refrigeración","❄️"],fuentes:["Fuentes","⚡"],gabinetes:["Gabinetes","🖥️"],monitores:["Monitores","🖥️"],notebooks:["Notebooks","💻"],"pcs-armadas":["PCs armadas","🖥️"],mouses:["Mouse","🖱️"],teclados:["Teclados","⌨️"],auriculares:["Auriculares","🎧"],perifericos:["Otros periféricos","🕹️"],redes:["Redes","📡"],accesorios:["Cables y accesorios","🔌"],otros:["Otros","📦"]};
 const QUICK=["RTX 4060","Ryzen 5 5600","SSD 1TB","DDR4 16GB","Monitor 24"];
 $("#quick").insertAdjacentHTML("beforeend",QUICK.map(q=>`<a href="productos.html?q=${encodeURIComponent(q)}">${esc(q)}</a>`).join(""));
 $("#hs").addEventListener("submit",e=>{e.preventDefault();const q=$("#hq").value.trim();location.href="productos.html"+(q?"?q="+encodeURIComponent(q):"")});
@@ -110,6 +110,9 @@ async function j(u,d){try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)thr
   const stores=new Set();list.forEach(g=>(g.offers||[]).forEach(o=>stores.add(o.store)));
   const drops=list.filter(g=>g.offers&&g.offers.length&&chgOk(g)&&g.chg.pct<0).sort((a,b)=>a.chg.pct-b.chg.pct);
   if(list.length)$("#stats").innerHTML=`<div class="stat"><b>${list.length.toLocaleString("es-AR")}</b><span>productos</span></div><div class="stat"><b>${stores.size}</b><span>tiendas con datos</span></div><div class="stat"><b>${drops.length}</b><span>bajaron de precio</span></div>`;
+  // los números de la portada cuentan hacia arriba (salvo con "reducir movimiento")
+  if(!matchMedia("(prefers-reduced-motion:reduce)").matches)document.querySelectorAll(".stat b").forEach(b=>{const end=+b.textContent.replace(/\D/g,"");if(!end)return;const t0=performance.now(),D=900;
+    const step=t=>{const k=Math.min(1,(t-t0)/D),e=1-Math.pow(1-k,3);b.textContent=Math.round(end*e).toLocaleString("es-AR");if(k<1)requestAnimationFrame(step)};requestAnimationFrame(step)});
   const cc={};list.forEach(g=>cc[g.category]=(cc[g.category]||0)+1);
   $("#cats").innerHTML=Object.keys(CATS).filter(k=>cc[k]).map(k=>`<a class="cat" href="productos.html?cat=${k}"><i>${CATS[k][1]}</i><span>${CATS[k][0]}<small>${cc[k].toLocaleString("es-AR")} productos</small></span></a>`).join("")||`<div class="empty">Los productos aparecen apenas se lean las tiendas.</div>`;
   const top=drops.slice(0,4);

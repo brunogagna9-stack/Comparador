@@ -119,18 +119,33 @@ _FIX = [
     (re.compile(r"^(multi)?procesadora\b|licuadora|batidora|\bpicadora\b", re.I), None),      # electrodomésticos: fuera
     (re.compile(r"^consola\b|steam ?deck|legion go\b|rog ally|^(combo )?tablet\b|^celular\b", re.I), "otros"),
     (re.compile(r"^mini ?pc\b|^barebone\b|\bnuc\b.*\bmini\b|^(combo|kit)\b.*\b(ryzen|core ?i[3579]|core ultra|intel core|athlon|pentium)\b", re.I), "pcs-armadas"),
-    (re.compile(r"^(mouse|teclado|auricular(es)?|joystick|gamepad)\b", re.I), "perifericos"),
+    (re.compile(r"^(joystick|gamepad)\b", re.I), "perifericos"),
     (re.compile(r"^(mochila|bolso|maletín|funda)\b|^base (refrigerante |para notebook|notebook)", re.I), "perifericos"),
     (re.compile(r"^soporte (gpu|para placa|vga)|^(kit|pack) (de )?(accesorios|cables)|^cables? sata|^carcasa\b|^lector de tarjetas|^cable\b", re.I), "accesorios"),
 ]
 
 
+# Periféricos que se comparan con su propia ficha (mouse, teclado, auriculares). Los combos y accesorios quedan en "perifericos".
+_PERI = [
+    (re.compile(r"\b(mouse|rat[oó]n)\b(?!\s?-?pad)", re.I), "mouses"),
+    (re.compile(r"\bteclado\b", re.I), "teclados"),
+    (re.compile(r"\b(auriculares?|headset|headphones?|earbuds|in-?ear|vincha)\b", re.I), "auriculares"),
+]
+_NOT_SINGLE = re.compile(r"\bcombo\b|\bkit\b|\bpack\b|\+|\by\s+(mouse|teclado|auricular)|soporte|funda|repuesto|cable\b|almohadillas?|"
+                         r"pad\b|mouse ?pad|alfombrilla|keycaps?|switch(es)? para|bungee|limpiador|teclado num[eé]rico", re.I)
+
+
 def fix_category(name, category):
     """Devuelve la categoría corregida, o None si el producto no es hardware de PC (se descarta)."""
     n = (name or "").strip()
+    lead = re.match(r"^(mouse|teclado|auriculares?|headset)\b", n, re.I)
     for rx, cat in _FIX:
         if rx.search(n):
             return cat
+    if (category == "perifericos" or lead) and not _NOT_SINGLE.search(n):
+        hits = [cat for rx, cat in _PERI if rx.search(n)]
+        if len(hits) == 1:          # un solo tipo de periférico en el título: se compara con su ficha propia
+            return hits[0]
     return category
 
 

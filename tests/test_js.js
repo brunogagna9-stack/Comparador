@@ -446,4 +446,22 @@ t("lectura de títulos: pulgadas con ″, ´ o sin comillas, paneles, MT/s, DDR 
   assert.strictEqual(r.find(x => x.id === "gen").cells[0].disp, "No aplica");
   assert.strictEqual(r.find(x => x.id === "rpm").cells[0].v, 7200);
 });
+t("mouse, teclados y auriculares: ficha de la tienda primero, título después, y criterios sin inventar", () => {
+  const mk = (id, name, cat, p, spec) => ({ id, name, category: cat, offers: [{ store: "A", price_cash: p, stock: true }], ...(spec ? { spec } : {}) });
+  const PRm = [mk("a", "Mouse Gamer Logitech G502 Hero 25600 DPI 11 Botones RGB 121g", "mouses", 50000),
+               mk("b", "Mouse Logitech G Pro X Superlight 2 Lightspeed", "mouses", 150000, "k1")];
+  const SP = { items: { k1: { s: "Compragamer", sku: "X1", d: "2026-10-26", url: "u", f: { polling: { v: 8000, u: "Hz" }, dpi_max: { v: 44000 }, peso_g: { v: 60 }, botones: { v: 5 } } } } };
+  const K = CT.makeCompare(CT.create(HW, PRm, {}, SP));
+  const cmp = K.compare(PRm.map(K.item), { res: 1 }), row = id => cmp.rows.find(r => r.id === id);
+  assert.strictEqual(row("dpi").cells[1].v, 44000); assert(/Ficha de la tienda/.test(row("dpi").cells[1].note));
+  assert.strictEqual(row("dpi").cells[0].v, 25600); assert(/título/.test(row("dpi").cells[0].note));
+  assert.strictEqual(row("peso").cells[0].v, 121);
+  assert(cmp.uses.find(u => u.use.id === "liviano").winner === 1, "el más liviano gana en «Más liviano»");
+  assert.strictEqual(row("clicks").cells[0].tag, "nd", "la vida útil no se inventa");
+  const kb = CT.parse("Teclado Mecanico Redragon Kumara K552 RGB Outemu Red ESP TKL", "teclados");
+  assert(kb.mec === "Mecánico" && kb.switch === "Outemu Red" && kb.idioma === "Español" && /TKL/.test(kb.formato));
+  const hs = CT.parse("Auriculares HyperX Cloud II 7.1 USB 53mm Microfono", "auriculares");
+  assert(hs.driver === 53 && hs.mic && /USB/.test(hs.conexion));
+  assert(CT.CATS.mouses && CT.CATS.teclados && CT.CATS.auriculares);
+});
 console.log(n + " pruebas de JavaScript OK");

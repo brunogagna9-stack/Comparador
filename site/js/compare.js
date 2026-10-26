@@ -23,7 +23,7 @@
   CT.CATS = {
     "placas-de-video": "Placas de video", procesadores: "Procesadores", motherboards: "Placas madre", "memorias-ram": "Memorias RAM",
     almacenamiento: "SSD y discos", fuentes: "Fuentes", gabinetes: "Gabinetes", refrigeracion: "Refrigeración", monitores: "Monitores",
-    notebooks: "Notebooks", "pcs-armadas": "PC armadas",
+    notebooks: "Notebooks", "pcs-armadas": "PC armadas", mouses: "Mouse", teclados: "Teclados", auriculares: "Auriculares",
   };
 
   CT.makeCompare = function (C) {
@@ -140,6 +140,46 @@
         { id: "gar", label: "Garantía de la tienda", help: "Meses informados por la tienda. Confirmá si es garantía oficial del fabricante.", dir: "max", chart: " meses", get: it => { const r = C.sf(it.g, "garantia"); return r ? Object.assign(mk(r.v, r.v + " meses", r.tag), { note: spNote(r) }) : ND; } },
         { id: "bat", label: "Batería y autonomía", help: "Ni Compragamer ni las otras tiendas conectadas publican la capacidad (Wh) en su ficha. No usamos la autonomía de marketing como si fuera real: confirmala en la hoja técnica del fabricante.", get: () => ND },
       ],
+      mouses: () => [
+        P("dpi", "Sensibilidad máxima (DPI)", "Puntos por pulgada. Más DPI no es mejor por sí solo: la mayoría juega entre 400 y 3200. Sirve en monitores grandes o 4K.", "dpi_max", it => it.sp.dpi, v => fmt(v) + " DPI", "max"),
+        P("sensor", "Sensor", "Óptico: el estándar actual, preciso en casi cualquier superficie. Láser: funciona sobre vidrio pero suele ser menos preciso para jugar. Los sensores con nombre (HERO, Focus Pro, PAW3395…) son de gama alta.", ["sensor_modelo", "sensor"], it => it.sp.sensor),
+        P("polling", "Frecuencia de respuesta (polling)", "Veces por segundo que el mouse informa su posición. 1000 Hz es lo normal en gaming; 4000-8000 Hz solo se nota con monitores muy rápidos.", "polling", it => it.sp.polling, v => fmt(v) + " Hz", "max"),
+        P("botones", "Cantidad de botones", "Botones programables extra: útiles en MMO, MOBA o para atajos de trabajo.", "botones", it => it.sp.botones, v => v + " botones", "max"),
+        P("peso", "Peso", "Más liviano = más fácil de mover rápido (juegos competitivos). Más pesado = más estable para algunos usuarios.", "peso_g", it => it.sp.peso, v => fmt(v) + " g", "min"),
+        P("ips", "Velocidad máxima de seguimiento", "IPS: pulgadas por segundo que el sensor sigue sin perder precisión. Más de 300 IPS sobra para cualquier uso.", "ips", () => null, v => fmt(v) + " IPS", "max"),
+        P("accel", "Aceleración máxima", "En G: cuánto movimiento brusco tolera el sensor sin errores.", "accel", () => null, v => fmt(v) + " G", "max"),
+        P("switch", "Switches de los clics", "Tipo de interruptor de los botones (mecánico u óptico). Los ópticos no sufren el «doble clic» por desgaste.", "switch", () => null),
+        P("clicks", "Vida útil de los clics", "Millones de clics que garantiza el fabricante. La tienda casi nunca lo publica: si figura es porque está en el título.", "vida_util_clicks", it => it.sp.clicks, v => v + " millones", "max"),
+        P("wl", "Conexión", "Inalámbrico 2,4 GHz (con receptor) tiene latencia de juego; Bluetooth es para oficina.", "inalambrico", it => it.sp.wireless == null ? null : it.sp.wireless ? "Inalámbrico" : "Con cable", null, null, wlText),
+        P("rgb", "Iluminación", "Estética: no cambia el rendimiento.", "rgb", it => it.sp.rgb === true ? "RGB" : it.sp.rgb || null, null, null, boolText),
+        { id: "agarre", label: "Agarre recomendado", help: "Palm: toda la mano apoyada. Claw: la palma apoyada y los dedos en garra. Finger: solo las puntas de los dedos.", get: it => { const g = ["palm", "claw", "finger"].filter(k => { const r = C.sf(it.g, k); return r && r.v; }); return g.length ? Object.assign(txt(g.map(x => x[0].toUpperCase() + x.slice(1)).join(", "), "pend"), { note: spNote(C.sf(it.g, g[0])) }) : ND; } },
+      ],
+      teclados: () => [
+        P("mec", "Tipo de teclado", "Mecánico: cada tecla tiene un switch propio, dura más y se siente más preciso. Membrana: más silencioso y barato.", "mecanismo", it => it.sp.mec),
+        P("switch", "Switches", "Red: lineal y suave (juegos). Brown: táctil, con un «bump» (escritura y juegos). Blue: táctil y ruidoso (escritura). La marca (Outemu, Gateron, Kailh, Cherry…) cambia la calidad.", ["switch_modelo", "switch"], it => it.sp.switch),
+        P("formato", "Formato", "Completo (con pad numérico), TKL (sin pad numérico), 75 %, 65 % o 60 %: cuanto más chico, más espacio libre para el mouse.", "formato", it => it.sp.formato),
+        P("rgb", "Iluminación", "RGB permite elegir colores; «Rainbow» suele ser un patrón fijo.", "rgb", it => it.sp.rgb === true ? "RGB" : it.sp.rgb || null, null, null, boolText),
+        P("idioma", "Idioma / distribución", "Español trae la Ñ en su lugar. En inglés (US) la Ñ se escribe con combinación de teclas.", ["distribucion", "idioma"], it => it.sp.idioma),
+        P("material", "Material", "Una placa de aluminio suele ser más rígida y durable que una de plástico.", "material", () => null),
+        P("nkro", "Anti-ghosting / N-key rollover", "Registra varias teclas a la vez sin perder pulsaciones (importante en juegos).", ["nkro", "antighost"], () => null, null, null, null, boolText),
+        P("antisalp", "Resistente a salpicaduras", "Protección ante derrames leves. No es sumergible.", "antisalp", () => null, null, null, null, boolText),
+        P("wl", "Conexión", "Con cable, inalámbrico 2,4 GHz o Bluetooth.", ["inalambrico", "bluetooth"], it => it.sp.wireless ? "Inalámbrico" : null, null, null, null, wlText),
+        P("vida", "Vida útil de las teclas", "Millones de pulsaciones por tecla que garantiza el fabricante del switch. La tienda no lo publica: si figura es porque está en el título.", "vida_util_pulsaciones", it => it.sp.vida, v => v + " millones", "max"),
+        P("peso", "Peso", "Un teclado pesado se mueve menos sobre el escritorio.", "peso_g", () => null, v => fmt(v) + " g"),
+      ],
+      auriculares: () => [
+        P("tipo", "Tipo", "Vincha (over-ear): más cómodos para horas y mejor aislamiento. In-ear: livianos y portátiles.", "tipo", it => it.sp.tipo),
+        P("driver", "Tamaño de los parlantes (drivers)", "En milímetros. Más grande suele dar graves más llenos, pero la calidad depende del diseño.", "driver_mm", it => it.sp.driver, v => v + " mm", "max"),
+        P("imp", "Impedancia", "En ohmios (Ω). Hasta ~64 Ω suenan bien en cualquier PC o celular; más de 150 Ω suelen necesitar un amplificador.", "impedancia", () => null, v => fmt(v) + " Ω"),
+        { id: "freq", label: "Respuesta en frecuencia", help: "Rango de sonidos que reproduce, en Hz. 20 Hz – 20.000 Hz cubre todo el oído humano; valores mayores son marketing.", get: it => { const a = C.sf(it.g, "f_min"), b = C.sf(it.g, "f_max"); return a && b ? Object.assign(txt(`${fmt(a.v)} Hz – ${fmt(b.v)} Hz`, "pend"), { note: spNote(a) }) : ND; } },
+        P("sens", "Sensibilidad", "Volumen que alcanza con la misma potencia (en dB). Más alto = suena más fuerte con poca potencia.", "sens", () => null, v => fmt(v) + " dB", "max"),
+        P("anc", "Cancelación de ruido", "Activa (ANC): un circuito anula el ruido exterior. Pasiva: solo aísla por las almohadillas.", "anc", it => it.sp.anc ? "Sí (según el título)" : null, null, null, boolText),
+        P("mic", "Micrófono", "Necesario para hablar en juegos o reuniones.", "mic", it => it.sp.mic ? "Sí" : null, null, null, boolText),
+        P("surround", "Sonido envolvente", "7.1 suele ser virtual (por software). Ayuda a ubicar sonidos en juegos.", "surround", it => it.sp.surround),
+        P("con", "Conexión", "USB, jack 3,5 mm, Bluetooth o inalámbrico 2,4 GHz. Bluetooth tiene más demora para jugar.", "conexion", it => it.sp.conexion),
+        P("rgb", "Iluminación", "Estética: no cambia el sonido.", "rgb", it => it.sp.rgb === true ? "RGB" : it.sp.rgb || null, null, null, boolText),
+        P("compat", "Compatible con", "Dispositivos con los que la tienda indica que funcionan.", "compat", () => null),
+      ],
       "pcs-armadas": res => [
         { id: "cpu", label: "Procesador", help: "Leído del título de la tienda.", get: it => txt(it.sp.cpu, "pend") },
         { id: "gpu", label: "Placa de video", help: "Leída del título de la tienda.", get: it => txt(it.sp.gpu, "pend") },
@@ -150,6 +190,23 @@
         { id: "ssd", label: "Almacenamiento", help: "Leído del título.", dir: "max", chart: " GB", get: it => it.sp.ssd ? mk(it.sp.ssd, it.sp.ssd >= 1000 ? fmt(it.sp.ssd / 1000, 2) + " TB" : it.sp.ssd + " GB", "pend") : ND },
       ],
     };
+    /* Fila de periférico: primero la FICHA de la tienda (dato publicado para ese SKU), si no, lo que dice el título.
+       Las dos quedan "pendiente de verificar" (no es la ficha del fabricante); la nota dice de dónde salió. */
+    const boolText = v => v === true ? "Sí" : v === false ? "No" : v;
+    const wlText = v => v === true ? "Sí" : v === false ? "Con cable" : v;
+    function P(id, label, help, fields, fromTitle, fmtv, dir, _x, show) {
+      const fs = Array.isArray(fields) ? fields : [fields];
+      return { id, label, help, dir: dir || undefined, chart: dir ? "" : undefined, get: it => {
+        for (const f of fs) { const r = C.sf(it.g, f); if (r && r.v !== "" && r.v != null) {
+          const val = show ? show(r.v) : r.v, isNum = typeof r.v === "number";
+          if (r.v === false && !show) continue;
+          const d = isNum && fmtv ? fmtv(r.v) : String(val);
+          return { v: isNum && dir ? r.v : null, text: d, disp: d, tag: r.tag === "ver" ? "pend" : r.tag, note: "Ficha de la tienda: " + spNote(r) }; } }
+        const t = fromTitle(it); if (t == null || t === "") return ND;
+        const d = typeof t === "number" && fmtv ? fmtv(t) : String(show ? show(t) : t);
+        return { v: typeof t === "number" && dir ? t : null, text: d, disp: d, tag: "pend", note: "Leído del título de la tienda." };
+      } };
+    }
     const BASIC = [{ id: "name", label: "Producto", help: "Nombre en la tienda.", get: it => ({ v: null, text: it.name, disp: it.name, tag: "ver" }) }];
 
     /* Criterios de decisión: cada "uso" pondera solo métricas con dato; sin datos suficientes el resultado es inconcluso. */
@@ -188,6 +245,17 @@
       notebooks: [
         { id: "multi", label: "Multitarea y almacenamiento", w: [["ram", .5], ["ssd", .5]] },
         { id: "port", label: "Más liviana", w: [["peso", 1]] },
+        { id: "valor", label: "Menor precio", w: [["price", 1]] },
+      ],
+      mouses: [
+        { id: "comp", label: "Juego competitivo", w: [["polling", .4], ["peso", .4], ["dpi", .2]] },
+        { id: "liviano", label: "Más liviano", w: [["peso", 1]] },
+        { id: "botones", label: "Más botones (MMO, trabajo)", w: [["botones", 1]] },
+        { id: "valor", label: "Menor precio", w: [["price", 1]] },
+      ],
+      teclados: [{ id: "valor", label: "Menor precio", w: [["price", 1]] }],
+      auriculares: [
+        { id: "graves", label: "Parlantes más grandes", w: [["driver", 1]] },
         { id: "valor", label: "Menor precio", w: [["price", 1]] },
       ],
       "pcs-armadas": [
@@ -268,6 +336,9 @@
       if (cat === "notebooks") out.push("Procesador, memoria y almacenamiento se leen del título de la tienda; peso, medidas, panel y garantía, de la ficha técnica de la tienda para ese SKU cuando existe. La capacidad de batería no la publica ninguna tienda conectada. El rendimiento real depende de la refrigeración y de los vatios que el fabricante le dé a cada chip.");
       if (cat === "pcs-armadas") out.push("El rendimiento es una estimación a partir de la placa y el procesador del título; confirmá con la tienda la versión exacta y la fuente incluida.");
       if (cat === "almacenamiento" || cat === "memorias-ram") out.push("Las velocidades son las anunciadas por la tienda o el fabricante (picos teóricos); en el uso diario una diferencia grande de cifras suele sentirse poco.");
+      if (cat === "mouses") out.push("Más DPI no significa mejor puntería: lo que más se nota en juegos es el sensor, el peso y la forma que le quede cómoda a tu mano.");
+      if (cat === "teclados") out.push("El tipo de switch es una preferencia personal: si podés, probá el teclado (o un probador de switches) antes de comprar.");
+      if (cat === "auriculares") out.push("La comodidad (peso, almohadillas, presión de la vincha) pesa tanto como el sonido para usarlos varias horas: no figura en ninguna ficha.");
       if (cat === "fuentes") out.push("La potencia y la certificación 80 Plus no garantizan calidad de componentes ni protecciones: priorizá marcas con reseñas independientes.");
       const missing = cmp.rows.filter(x => x.cells.some(c => c.tag === "nd") && !x.cells.every(c => c.tag === "nd") && !["store", "stock"].includes(x.id)).map(x => x.label);
       if (missing.length) out.push("Sin datos para alguno de los productos en: " + missing.slice(0, 6).join(", ") + (missing.length > 6 ? "…" : "") + ". No inferimos esos valores.");
