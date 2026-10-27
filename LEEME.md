@@ -264,3 +264,15 @@ Lo que falta en `fichas_incompletas.csv` es sobre todo el **puntaje de rendimien
   No se carga con «ahorro de datos». Con «reducir movimiento» del sistema se muestra la PC armada y quieta.
   Sin WebGL o si falla la carga, la portada queda exactamente como antes.
 - En celulares aparece debajo del buscador (290 px de alto). `?t3d=12` en la dirección salta a ese segundo (para revisar).
+
+
+## Actualización 21 — Animación 3D, versión 2 (más vistosa)
+- Escenario oscuro tipo vitrina (tarjeta con bordes redondeados a la derecha del encabezado), brillo real del RGB (*bloom*),
+  reflejos metálicos, piezas con bordes redondeados, textura de pistas en la placa madre y partículas de fondo.
+- Nuevas piezas y detalles: refrigeración líquida (bomba con aro de luz, caños y radiador arriba con 3 ventiladores), placa de video
+  en montaje vertical mirando al vidrio con 3 ventiladores, ventiladores con aspas translúcidas que toman el color de la luz,
+  cables mallados blancos, línea de luz en la cubierta de la fuente.
+- La cámara se acerca a cada pieza mientras se instala y hace un pulso de luz al encastrar; al terminar se aleja, la PC se enciende
+  con una ola de color de atrás hacia adelante, muestra una «vista explotada» y vuelve a empezar (~25 s).
+- Archivos nuevos de Three.js 0.160.0 (licencia MIT) en `site/js/vendor/addons/` (posprocesado, reflejos y bordes redondeados).
+- Si el equipo va lento (primeros segundos), se apaga el brillo y baja la resolución automáticamente. `?hq=1` lo desactiva (para revisar).
