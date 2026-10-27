@@ -276,3 +276,19 @@ Lo que falta en `fichas_incompletas.csv` es sobre todo el **puntaje de rendimien
   con una ola de color de atrás hacia adelante, muestra una «vista explotada» y vuelve a empezar (~25 s).
 - Archivos nuevos de Three.js 0.160.0 (licencia MIT) en `site/js/vendor/addons/` (posprocesado, reflejos y bordes redondeados).
 - Si el equipo va lento (primeros segundos), se apaga el brillo y baja la resolución automáticamente. `?hq=1` lo desactiva (para revisar).
+
+
+## Actualización 22 — Animación 3D versión 3 + fluidez a 120 Hz
+- Más efectos: piso espejado que refleja la PC, chispas cuando cada pieza encastra, líquido que circula por los caños de la
+  refrigeración, pulsos de luz que viajan por los cables de la placa de video, RGB arcoíris en movimiento (memorias, placa de video,
+  cubierta), logo «ComparáTech» iluminado en la cubierta de la fuente, botón de encendido con luz, destello que recorre el vidrio
+  al encender, aspas curvas, antialiasing con el brillo activado y una órbita de cámara más cinematográfica.
+- **Fluidez:** la animación siempre corre a la frecuencia de la pantalla (60, 120, 144 Hz…): el navegador la marca, no se puede
+  forzar más de lo que da el monitor. Para sostener 120 cuadros por segundo:
+  - mide la frecuencia real de la pantalla y, si no llega a dibujar cada cuadro a tiempo, baja la calidad de a un escalón
+    (sin piso espejado → 80 % de resolución → resolución 1x → sin brillo); si después va holgada, prueba volver a subir una vez;
+  - compila todos los sombreadores antes de empezar (evita «tirones» cuando aparece cada pieza) y comparte geometrías;
+  - no crea objetos nuevos en cada cuadro;
+  - se sacó el desenfoque (`backdrop-filter`) de la etiqueta de la animación y de las insignias de Productos, que obligaban al
+    navegador a recalcular el desenfoque en cada cuadro/desplazamiento.
+- En celulares arranca sin piso espejado (ahorra batería). `?hq=1` fuerza la máxima calidad (para revisar).
