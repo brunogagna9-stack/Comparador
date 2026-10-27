@@ -12,6 +12,7 @@ import html as _html
 import json
 import re
 from .common import get, parse_ars, product, canon_category
+from .goldentech import _plain
 
 # nombre en el comparador -> (sitio, listado)
 TN_STORES = {
@@ -66,6 +67,8 @@ def parse(html, store):
         p = product(store, name, url, cash, lst, stock=stock, image=img if isinstance(img, str) else None,
                     category=canon_category(name))
         p["store_sku"] = ld.get("sku") or None
+        if p["category"] in ("perifericos", "mouses", "teclados", "auriculares") and ld.get("description"):
+            p["desc"] = _plain(str(ld["description"]))        # texto de la propia tienda (ver descspecs.py)
         out.append(p)
     return out
 

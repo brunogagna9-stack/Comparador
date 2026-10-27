@@ -78,7 +78,7 @@
     const w = n.match(/(\d{3,4})\s?w\b/i), c = n.match(/80\s?\+?\s?plus\s?(white|bronze|silver|gold|platinum|titanium)?/i);
     const cy = !c && n.match(/cybenetics\s?(bronze|silver|gold|platinum|titanium|diamond)/i);
     const cert = c ? (c[1] ? c[1].toLowerCase() : "white") : null;
-    return { w: w ? +w[1] : null, cert, certRank: cert ? CERT[cert] : null, cyb: cy ? "Cybenetics " + cy[1][0].toUpperCase() + cy[1].slice(1).toLowerCase() : null, modular: /modular/i.test(n) && !/no modular|semi/i.test(n),
+    return { w: w ? +w[1] : null, cert, certRank: cert ? CERT[cert] : null, cyb: cy ? "Cybenetics " + cy[1][0].toUpperCase() + cy[1].slice(1).toLowerCase() : null, modular: /modular/i.test(n) && !/no modular|semi/i.test(n), semi: /semi[- ]?modular/i.test(n),
       atx3: (n.match(/atx\s?3\.\d/i) || [null])[0], bulk: /bulk/i.test(n) };
   }
   const CHIPSETS = "a320 a520 b450 b550 x570 a620 b650 b650e x670 x670e b840 b850 x870 x870e h510 b560 z590 h610 b660 b760 z690 z790 h810 b860 z890".split(" ");

@@ -22,6 +22,13 @@ def _money(prices, key):
         return None
 
 
+def _plain(h):
+    """Descripción de la tienda en texto plano (una línea por ítem de lista), hasta 1500 caracteres."""
+    h = re.sub(r"(?i)</(li|p|h\d|div|tr)>|<br\s*/?>", "\n", h)
+    t = html.unescape(re.sub(r"<[^>]+>", " ", h))
+    return "\n".join(x for x in (re.sub(r"[ \t\xa0]+", " ", l).strip() for l in t.split("\n")) if x)[:1500]
+
+
 def parse(items, store=STORE):
     out = []
     for it in items:
@@ -39,6 +46,10 @@ def parse(items, store=STORE):
                     image=(imgs[0].get("thumbnail") or imgs[0].get("src")) if imgs else None,
                     category=canon_category(name, cats))
         p["store_sku"] = it.get("sku") or None
+        if p["category"] in ("perifericos", "mouses", "teclados", "auriculares"):
+            d = _plain(it.get("description") or it.get("short_description") or "")
+            if d:
+                p["desc"] = d
         out.append(p)
     return out
 

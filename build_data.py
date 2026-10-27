@@ -406,11 +406,39 @@ def main(only):
     except Exception as e:  # las fichas nunca deben romper la actualización de precios
         spec_items, spec_status = {}, {"ok": False, "error": str(e)[:300]}
     spec_status["vinculadas"] = specs.attach(groups, spec_items)
+    # Placas madre: ficha oficial de ASRock/MSI/Gigabyte/ASUS. APAGADO por defecto: los términos de uso de ASRock, MSI y ASUS
+    # prohíben los programas automáticos. Solo se enciende (MB_SPECS=1) con permiso escrito del fabricante.
+    if os.environ.get("MB_SPECS") == "1":
+        try:
+            from scrapers import mbspecs
+            mb_items, mb_status = mbspecs.refresh(groups, RAW)
+            spec_items.update(mb_items)
+            spec_status["placas_madre"] = mb_status
+        except Exception as e:
+            spec_status["placas_madre"] = {"ok": False, "error": str(e)[:300]}
+    else:
+        spec_status["placas_madre"] = {"ok": True, "apagado": "sin permiso de los fabricantes"}
+    try:   # monitores, memorias, almacenamiento y fuentes: Open Icecat (licencia abierta; requiere el secreto ICECAT_USER)
+        from scrapers import icecat
+        ic_items, ic_status = icecat.refresh(groups, RAW)
+        spec_items.update(ic_items)
+        spec_status["icecat"] = ic_status
+    except Exception as e:
+        spec_status["icecat"] = {"ok": False, "error": str(e)[:300]}
+    try:   # mouses/teclados/auriculares sin ficha de Compragamer: datos de la descripción de la propia tienda (marcados «según la tienda»)
+        from scrapers import descspecs
+        ds_items, ds_status = descspecs.refresh(groups, all_items)
+        spec_items.update(ds_items)
+        spec_status["descripciones_tienda"] = ds_status
+    except Exception as e:
+        spec_status["descripciones_tienda"] = {"ok": False, "error": str(e)[:300]}
     for g in groups:
         g.pop("_pns", None)
     (DATA / "specs.json").write_text(json.dumps({
         "v": 1, "updated": dt.datetime.now(dt.timezone.utc).isoformat(timespec="minutes"),
-        "sources": {"Compragamer": "https://static.compragamer.com/productos_caracteristicas"},
+        "sources": {"Compragamer": "https://static.compragamer.com/productos_caracteristicas",
+                    "Descripciones de las tiendas": "Texto que cada tienda publica de su producto (no es del fabricante)",
+                    "Icecat": "Specs Icecat — Open Icecat (https://icecat.biz), datos «tal cual» (AS IS) bajo la licencia Open Icecat"},
         "items": {k: v for k, v in spec_items.items() if k in {g.get("spec") for g in groups}}},
         ensure_ascii=False, separators=(",", ":")))
     update_history(groups, hist, today)

@@ -119,9 +119,24 @@ _FIX = [
     (re.compile(r"^(multi)?procesadora\b|licuadora|batidora|\bpicadora\b", re.I), None),      # electrodomésticos: fuera
     (re.compile(r"^consola\b|steam ?deck|legion go\b|rog ally|^(combo )?tablet\b|^celular\b", re.I), "otros"),
     (re.compile(r"^mini ?pc\b|^barebone\b|\bnuc\b.*\bmini\b|^(combo|kit)\b.*\b(ryzen|core ?i[3579]|core ultra|intel core|athlon|pentium)\b", re.I), "pcs-armadas"),
+    # Combos/kits que mezclan varios productos (gabinete + fuente, placa de video + fuente…): no son ni fuente ni gabinete
+    (re.compile(r"^(combo|kit)\b.*\b(gabinete|placa de video|rtx|radeon|rx ?\d{4}|5060|teclado|mouse)\b.*\bfuente\b|"
+                r"^(combo|kit)\b.*\bfuente\b.*\b(gabinete|placa de video|teclado|mouse)\b|^kit (gabinete|asus)\b|^combo (gabinete|placa)\b", re.I), "otros"),
+    (re.compile(r"^(gabinete|gab)\b", re.I), "gabinetes"),
+    (re.compile(r"^(conectores|kit herramientas|vertical graphics|hub\b|trafo\b|cargador\b|spliter|splitter|google chromecast|kit hpe)|"
+                r"para olt\b|\bsin fuente\b", re.I), "accesorios"),
+    # Producto que EMPIEZA con su tipo: manda sobre la categoría de la tienda y sobre palabras sueltas del título
+    # («Procesador … (Sin Cooler)» es un procesador, no refrigeración; «Memoria … C/ Disipador» es una memoria).
+    (re.compile(r"^(procesador(es)?|microprocesador(es)?|proces\.|cpu)\b|^micro\s+(amd|intel|ryzen|core|athlon|pentium|celeron)\b", re.I), "procesadores"),
+    (re.compile(r"^memorias?\s+(micro ?)?(sd|flash)", re.I), "almacenamiento"),
+    (re.compile(r"^memorias?\b.*\b(ddr[2345]|ram)\b|^ram\b", re.I), "memorias-ram"),
+    (re.compile(r"^(disco|ssd|hdd?|unidad (de estado )?s[oó]lid[ao]|pen ?drive|micro ?sd\w*)\b", re.I), "almacenamiento"),
+    (re.compile(r"^(silla|mousepad|pad mouse|alfombrilla)\b", re.I), "perifericos"),
+    (re.compile(r"^(fan|ventilador|cooler (para )?gabinete|cooler (cpu|gamemax)|watercool\w*|water ?cooler|disipador|pasta)\b", re.I), "refrigeracion"),
+    (re.compile(r"^proyector\b", re.I), "otros"),
     (re.compile(r"^(joystick|gamepad)\b", re.I), "perifericos"),
     (re.compile(r"^(mochila|bolso|maletín|funda)\b|^base (refrigerante |para notebook|notebook)", re.I), "perifericos"),
-    (re.compile(r"^soporte (gpu|para placa|vga)|^(kit|pack) (de )?(accesorios|cables)|^cables? sata|^carcasa\b|^lector de tarjetas|^cable\b", re.I), "accesorios"),
+    (re.compile(r"^soporte (para )?(gpu|placa|vga)|^kit de herramientas|^(kit|pack) (de )?(accesorios|cables)|^cables? sata|^carcasa\b|^lector de tarjetas|^cable\b", re.I), "accesorios"),
 ]
 
 
@@ -129,7 +144,7 @@ _FIX = [
 _PERI = [
     (re.compile(r"\b(mouse|rat[oó]n)\b(?!\s?-?pad)", re.I), "mouses"),
     (re.compile(r"\bteclado\b", re.I), "teclados"),
-    (re.compile(r"\b(auriculares?|headset|headphones?|earbuds|in-?ear|vincha)\b", re.I), "auriculares"),
+    (re.compile(r"\b(auricular(es)?|headset|headphones?|earbuds|in-?ear|vincha)\b", re.I), "auriculares"),
 ]
 _NOT_SINGLE = re.compile(r"\bcombo\b|\bkit\b|\bpack\b|\+|\by\s+(mouse|teclado|auricular)|soporte|funda|repuesto|cable\b|almohadillas?|"
                          r"pad\b|mouse ?pad|alfombrilla|keycaps?|switch(es)? para|bungee|limpiador|teclado num[eé]rico", re.I)
@@ -138,7 +153,7 @@ _NOT_SINGLE = re.compile(r"\bcombo\b|\bkit\b|\bpack\b|\+|\by\s+(mouse|teclado|au
 def fix_category(name, category):
     """Devuelve la categoría corregida, o None si el producto no es hardware de PC (se descarta)."""
     n = (name or "").strip()
-    lead = re.match(r"^(mouse|teclado|auriculares?|headset)\b", n, re.I)
+    lead = re.match(r"^(mouse|teclado|auricular(es)?|headset)\b", n, re.I)
     for rx, cat in _FIX:
         if rx.search(n):
             return cat

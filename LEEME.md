@@ -190,3 +190,77 @@ De la lista de 30 tiendas pedida, 7 ya estaban (ArmyTech, SCP Hardstore, Click G
 **Fichas oficiales nuevas**: Pentium Gold G5400, Pentium G4560 y Celeron G4900 (LGA1151, intel.com); Intel Arc A380 (intel.com); GeForce GT 1030 GDDR5 y DDR4 (nvidia.com). En la GT 1030 la ficha de NVIDIA tiene la potencia y el ancho de banda de las dos versiones cruzados: esos datos quedan «pendientes» (se usa 30 W, el mayor, para calcular la fuente). El Ryzen 5 3500X sigue sin ficha: la página de AMD no publica sus especificaciones.
 
 Lo que falta en `fichas_incompletas.csv` es sobre todo el **puntaje de rendimiento medido** (no se inventa) y datos que la tienda no pone en el título (motherboards, fuentes, discos, monitores).
+
+
+## Actualización 16 — Fichas de placas madre oficiales + corrección de categorías
+- Nuevo `scrapers/mbspecs.py`: para placas madre **ASRock, MSI, Gigabyte y ASUS** lee la ficha en la página oficial del fabricante
+  y guarda socket, chipset, tipo de memoria, formato y Wi-Fi. Solo se guarda si el nombre del modelo en la página coincide **exacto**.
+  «Wi-Fi: No» únicamente cuando la ficha se leyó completa y no lista fila inalámbrica.
+- Hasta 150 páginas por corrida (de las placas que más tiendas venden a las que menos), con pausa y caché
+  (45 días si se leyó, 10 si no existe) en `raw/mbspecs_cache.json`. Un error nunca frena la actualización de precios
+  (se anota en meta.json → specs → placas_madre: consultadas, leidas, sin_ficha).
+- `compare.js`: las filas Socket/Chipset/Memoria/Formato/Wi-Fi usan la ficha oficial (con fuente y fecha) y, si no hay, el título.
+- **Corrección importante de categorías** (`fix_category`): ahora manda el tipo con el que empieza el título.
+  Antes ~470 procesadores («Sin Cooler»), memorias, SSD, sillas y auriculares figuraban en Refrigeración, y ~150 gabinetes y
+  combos en Fuentes; los combos/kits mezclados pasan a «otros». También se corrigió «Auricular» (singular) que no se detectaba.
+- Fuentes: «Semi-modular» ya no figura como «No indicado».
+- **Pendiente de confirmar en vivo:** desde el entorno de desarrollo no se pueden abrir asrock.com, msi.com, gigabyte.com ni asus.com;
+  los lectores se probaron con páginas guardadas desde el navegador. ASUS arma su ficha con JavaScript: si el servidor no la entrega
+  lista, no se guarda nada (no se inventa). La primera corrida en GitHub mostrará cuántas se leyeron.
+- **No hecho:** ficha oficial de fuentes. Cada marca (Cooler Master, Corsair, Thermaltake…) tiene direcciones que no se pueden
+  deducir del título; el título ya trae potencia (97 %) y certificación (89 %). Queda para cuando haya una fuente con códigos exactos.
+
+
+## Actualización 18 — Fichas desde la descripción de la tienda + placas madre apagadas por términos de uso
+- **Corrección de rumbo:** se leyeron las condiciones de uso de los fabricantes. Las de **ASRock, MSI y ASUS prohíben «data mining, robots
+  o herramientas similares»** (Gigabyte no lo menciona pero restringe copiar su contenido). Aunque robots.txt lo permite, el lector de
+  fichas de placas madre (`scrapers/mbspecs.py`) queda **APAGADO por defecto**. Solo se enciende con `MB_SPECS=1` y permiso escrito.
+  Lo mismo vale para Logitech, Razer, HyperX/HP, Corsair, Fantech y MSI monitores: no se leen sin permiso (ver el informe de fuentes).
+- Nuevo `scrapers/descspecs.py`: mouses, teclados y auriculares que no tienen ficha de Compragamer toman sus datos (DPI, botones, peso,
+  sensor, conexión; switch, formato, RGB; driver, impedancia, respuesta, micrófono…) de la **descripción que la propia tienda escribe**.
+  No se pide nada nuevo: WooCommerce (goldentech/woo) y Tiendanube ya entregan ese texto junto con el precio (se guarda en `desc`, solo
+  para periféricos, hasta 1.500 caracteres).
+- Todo dato sale **«Pendiente de verificar»** con la nota «Según la descripción de <tienda>; no es del fabricante». Hacen falta al menos 2
+  datos para guardar una ficha, nunca se pisa una ficha de Compragamer, y si dos tiendas del mismo producto se contradicen en un dato, ese
+  dato se descarta. Estado en meta.json → specs → descripciones_tienda → vinculadas.
+- Aún no cubre las tiendas con plataformas propias (cardeco, XT-PC, Compufan, WIZ TECH, Logg, Venex…): se suman si sus fichas de producto lo permiten.
+
+
+## Actualización 19 — Fichas de Open Icecat (monitores, memorias, almacenamiento y fuentes)
+- Nuevo `scrapers/icecat.py`: consulta la API documentada de Open Icecat (https://live.icecat.biz/api) por **marca + código de
+  producto** tomado del título. No necesita contraseña: alcanza con el **nombre de usuario de Icecat**, que se guarda como secreto
+  de GitHub `ICECAT_USER` (no va en el sitio). Sin ese secreto, no se consulta nada.
+- **Paso que hace el dueño (una sola vez):**
+  1. En GitHub: Settings → Secrets and variables → Actions → New repository secret. Nombre `ICECAT_USER`, valor: tu usuario de Icecat.
+  2. En `.github/workflows/actualizar.yml`, debajo de `run: python build_data.py`, agregar:
+     ```
+             env:
+               ICECAT_USER: ${{ secrets.ICECAT_USER }}
+     ```
+     (la versión completa del archivo está en este zip, en `.github/workflows/actualizar.yml`).
+- Solo se acepta una ficha si la **categoría de Icecat coincide** con la del producto y si **capacidad / pulgadas / potencia** del
+  título coinciden con la ficha. Etiqueta «Verificado» con la nota «Specs Icecat (Open Icecat): datos del fabricante, se muestran
+  tal cual», que exige la licencia (atribución, «AS IS», sin cobrar por los datos, sin entrenar modelos, lo derivado con la misma licencia).
+- Hasta 400 consultas por corrida (pausa de 1 s), de los productos más vendidos a los menos, con caché `raw/icecat_cache.json`
+  (60 días si se encontró, 20 si no). Ante 429/5xx o usuario inválido se corta solo Icecat; los precios se publican igual.
+  Estado: meta.json → specs → icecat (consultas, vinculadas, sin_ficha, solo_pago, rechazadas).
+- Cobertura medida el 2026-10-27 con 240 productos reales del sitio y este mismo procedimiento (usuario público de prueba):
+  **monitores ~30 %**, memorias ~3 %, almacenamiento ~2 %, fuentes ~3 %. El límite principal es que muchos títulos de las tiendas
+  no traen el código del fabricante (y la API no busca por nombre). Cuando el título sí lo trae, Icecat lo tiene casi siempre
+  para Kingston, LG, AOC, BenQ, Philips, ViewSonic, Gigabyte y Seagate. Los periféricos casi no figuran (Logitech, Corsair, Razer y Redragon solo
+  están en el plan pago de Icecat).
+- `compare.js`: memorias (capacidad, generación, módulos, velocidad, CL, voltaje, XMP, latencia real), almacenamiento (capacidad,
+  interfaz, lectura, escritura, TBW, RPM), fuentes (potencia, 80 Plus, modular, ATX, conector 16 pines) y monitores (tamaño,
+  resolución, Hz, panel, ms, brillo, HDR, FreeSync, G-SYNC, entradas, altura, VESA) usan la ficha de Icecat y, si no hay, el título.
+
+
+## Actualización 20 — Animación 3D del armado de una PC en la portada
+- `site/js/hero3d.js` + `site/js/vendor/three.module.min.js` (Three.js 0.160.0, licencia MIT en `three.LICENSE.txt`, copiado al sitio
+  para no depender de otro servidor). La PC se dibuja con formas simples, sin modelos ni imágenes externas.
+- En el espacio libre de la derecha del encabezado se arma un gabinete pieza por pieza: placa madre, procesador, memorias, SSD M.2,
+  refrigeración, placa de video, fuente, ventiladores y cables. Al final «se enciende» (luces RGB y ventiladores girando), se desarma
+  y vuelve a empezar (~18 s). Cada paso muestra el nombre de la pieza con un enlace a sus precios. Se puede girar arrastrando.
+- Rendimiento: se carga después de la página, se pausa fuera de pantalla o con la pestaña oculta, resolución limitada.
+  No se carga con «ahorro de datos». Con «reducir movimiento» del sistema se muestra la PC armada y quieta.
+  Sin WebGL o si falla la carga, la portada queda exactamente como antes.
+- En celulares aparece debajo del buscador (290 px de alto). `?t3d=12` en la dirección salta a ese segundo (para revisar).

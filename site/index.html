@@ -46,6 +46,28 @@
 .trust{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:var(--sh);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 28px}
 .trust h3{margin:0 0 3px;font-size:15px}.trust p{margin:0;color:var(--mut)}.trust .ok{color:var(--ok);font-weight:800;margin-right:4px}
 .empty{color:var(--mut);padding:10px 2px}
+/* animación 3D del armado (js/hero3d.js) */
+.hero>.pc3d{position:absolute;z-index:1;right:0;top:0;bottom:0;width:44%;min-height:380px;touch-action:pan-y;cursor:grab;opacity:0;transition:opacity .8s}
+.hero>.pc3d.ready{opacity:1}
+.hero>.pc3d:active{cursor:grabbing}
+.pc3d canvas{display:block;width:100%;height:100%}
+.pc3d .cap{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:7px;pointer-events:none;width:max-content;max-width:92%}
+.pc3d .step{display:flex;align-items:center;gap:10px;background:rgba(10,14,32,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:6px 8px 6px 14px;font-size:13.5px;pointer-events:auto;min-height:34px}
+.pc3d .step:empty{visibility:hidden}
+.pc3d .step .n{opacity:.75;font-size:12px}
+.pc3d .step b{font-size:14.5px}
+.pc3d .step a{color:#fff;background:rgba(255,255,255,.18);border-radius:999px;padding:4px 11px;font-weight:700;font-size:12.5px;white-space:nowrap}
+.pc3d .step a:hover{background:rgba(255,255,255,.32)}
+.pc3d .dots{display:flex;gap:5px}.pc3d .dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.3);transition:background .3s,transform .3s}
+.pc3d .dots i.on{background:#fff;transform:scale(1.15)}
+.pc3d .hint{position:absolute;right:16px;top:14px;font-size:11.5px;opacity:.7;pointer-events:none}
+.hero.has3d{min-height:400px}
+.hero.has3d h1,.hero.has3d p.lead,.hero.has3d .hs,.hero.has3d .quick,.hero.has3d .stats{max-width:min(var(--mw,640px),54%)}
+.hero.has3d h1{--mw:26ch}.hero.has3d p.lead{--mw:56ch}
+@media(max-width:1000px){.hero>.pc3d{position:relative;width:auto;height:330px;min-height:0;margin:18px -18px -22px;right:auto;top:auto;bottom:auto}
+  .hero.has3d h1,.hero.has3d p.lead,.hero.has3d .hs,.hero.has3d .quick,.hero.has3d .stats{max-width:none}.hero.has3d{min-height:0}}
+@media(max-width:800px){.hero>.pc3d{height:290px}.pc3d .hint{display:none}.pc3d .step{font-size:12.5px}.pc3d .step b{font-size:13.5px}}
+
 @media(max-width:1100px){.tiles{grid-template-columns:repeat(3,minmax(0,1fr))}.drops{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:800px){.hero{padding:26px 18px 22px;border-radius:18px;margin-top:12px}.hero h1{font-size:27px}.hero p.lead{font-size:15px}.hs input{padding:9px 12px}.hs button{padding:0 16px}
   .tiles{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.tile{padding:14px}.how,.trust{grid-template-columns:1fr}.stat{min-width:0;flex:1 1 30%;padding:8px 10px}.stat b{font-size:18px}.sec-h{margin-top:26px}.sec-h h2{font-size:19px}}
@@ -60,6 +82,10 @@
     <form class="hs" id="hs" role="search"><input id="hq" type="search" placeholder="¿Qué buscás? Ej.: rtx 4060, ryzen 5 5600, ssd 1tb…" aria-label="Buscar productos" autocomplete="off"><button type="submit">Buscar</button></form>
     <div class="quick" id="quick"><span>Más buscados:</span></div>
     <div class="stats" id="stats"></div>
+    <div class="pc3d" id="pc3d" role="img" aria-label="Animación: se arma una PC pieza por pieza (placa madre, procesador, memorias, disco, refrigeración, placa de video, fuente y ventiladores)">
+      <div class="hint">Arrastrá para girar</div>
+      <div class="cap"><div class="step" id="pc3d-step" aria-live="off"></div><div class="dots" id="pc3d-dots"></div></div>
+    </div>
   </section>
 
   <div class="sec-h"><h2>¿Qué querés hacer?</h2></div>
@@ -119,6 +145,12 @@ async function j(u,d){try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)thr
   if(top.length){$("#dropsec").hidden=false;
     $("#drops").innerHTML=top.map(g=>{const o=g.offers[0];return `<a class="dp" href="productos.html?q=${encodeURIComponent(g.name.split(/\s+/).slice(0,6).join(" "))}"><div class="im">${g.image?`<img loading="lazy" src="${esc(g.image)}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'ph',textContent:'${(CATS[g.category]||[,'📦'])[1]}'}))">`:`<span class="ph">${(CATS[g.category]||[,"📦"])[1]}</span>`}<span class="bd">▼ ${Math.abs(g.chg.pct).toLocaleString("es-AR")}%</span></div><div class="st">${esc(o.store)}</div><div class="nm">${esc(g.name)}</div><div class="pr">${ARS(price(o))}<span class="old">${ARS(g.chg.prev)}</span></div></a>`}).join("")}
 })();
+</script>
+<script type="module">
+/* animación 3D: se carga después de la página, solo si hay WebGL y el usuario no pidió ahorrar datos */
+const go = () => { const c = navigator.connection; if (c && c.saveData) { document.getElementById("pc3d").remove(); return; }
+  document.querySelector(".hero").classList.add("has3d"); import("./js/hero3d.js").catch(() => { document.getElementById("pc3d")?.remove(); document.querySelector(".hero").classList.remove("has3d"); }); };
+if (document.readyState === "complete") go(); else addEventListener("load", go);
 </script>
 <script src="js/assistant.js"></script>
 <script>CT.CTAssistant.mount({section:"inicio",context:()=>({})});</script>

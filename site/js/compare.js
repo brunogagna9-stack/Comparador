@@ -32,6 +32,10 @@
     C.item = g => {
       const o = C.bestOffer(g) || g.offers.slice().sort((a, b) => price(a) - price(b))[0];
       const it = { g, o, p: o ? price(o) : null, inStock: !!C.bestOffer(g), name: g.name, cat: g.category, sp: CT.parse(g.name, g.category) };
+      if (["memorias-ram", "almacenamiento", "monitores", "fuentes"].includes(g.category)) {   // ficha del fabricante (Icecat): manda sobre el título
+        const sp = C.spec(g); if (sp && sp.s === "Icecat") { it.sp = Object.assign({}, it.sp); for (const k of ["gb", "mhz", "cl", "w", "inch", "hz", "ms", "rpm", "mbs", "mods"]) if (sp.f[k] && typeof sp.f[k].v === "number") it.sp[k] = sp.f[k].v;
+          if (it.sp.mhz && it.sp.cl) it.sp.lat = Math.round(it.sp.cl * 2000 / it.sp.mhz * 10) / 10; }
+      }
       if (g.category === "placas-de-video") it.hwg = C.hwGpu(g.name) || C.hwGpuX(g.name);
       if (g.category === "procesadores") it.hwc = C.hwCpu(g.name);
       if (g.category === "pcs-armadas") { it.hwg = C.hwGpu(g.name, it.sp.vram ?? null); it.hwc = C.hwCpu(g.name); }
@@ -84,43 +88,59 @@
         { id: "spp", label: "Valor: puntaje por cada $100.000", help: "Puntaje de juegos ÷ precio × 100.000.", dir: "max", derived: true, chart: "", get: it => it.hwc && it.hwc.s && it.p ? mk(Math.round(perPrice(it.hwc.s, it.p, 1e5) * 100) / 100, fmt(perPrice(it.hwc.s, it.p, 1e5), 2), "est") : ND },
       ],
       "memorias-ram": () => [
-        { id: "gb", label: "Capacidad total", help: "Suma de todos los módulos del kit.", dir: "max", chart: " GB", get: it => it.sp.gb ? mk(it.sp.gb, it.sp.gb + " GB", "pend") : ND },
-        { id: "ddr", label: "Generación", help: "DDR4 y DDR5 no son intercambiables: la placa madre define cuál usar.", get: it => txt(it.sp.ddr, "pend") },
-        { id: "mods", label: "Módulos", help: "Dos módulos funcionan en dual channel (mejor rendimiento).", get: it => it.sp.mods ? { v: it.sp.mods, text: it.sp.mods + (it.sp.mods > 1 ? " módulos" : " módulo"), disp: it.sp.mods + (it.sp.mods > 1 ? " módulos" : " módulo"), tag: "pend" } : ND },
-        { id: "mhz", label: "Velocidad", help: "Frecuencia anunciada en MHz.", dir: "max", chart: " MHz", get: it => it.sp.mhz ? mk(it.sp.mhz, it.sp.mhz + " MHz", "pend") : ND },
-        { id: "cl", label: "Latencia CAS (CL)", help: "Ciclos de espera. Menor es mejor a igual velocidad.", dir: "min", chart: "", get: it => it.sp.cl ? mk(it.sp.cl, "CL" + it.sp.cl, "pend") : ND },
+        OFF({ id: "gb", label: "Capacidad total", help: "Suma de todos los módulos del kit.", dir: "max", chart: " GB", get: it => it.sp.gb ? mk(it.sp.gb, it.sp.gb + " GB", "pend") : ND }, "gb", v => v + " GB"),
+        OFF({ id: "ddr", label: "Generación", help: "DDR4 y DDR5 no son intercambiables: la placa madre define cuál usar.", get: it => txt(it.sp.ddr, "pend") }, "ddr"),
+        OFF({ id: "mods", label: "Módulos", help: "Dos módulos funcionan en dual channel (mejor rendimiento).", get: it => it.sp.mods ? { v: it.sp.mods, text: it.sp.mods + (it.sp.mods > 1 ? " módulos" : " módulo"), disp: it.sp.mods + (it.sp.mods > 1 ? " módulos" : " módulo"), tag: "pend" } : ND }, "mods", v => v + (v > 1 ? " módulos" : " módulo")),
+        OFF({ id: "mhz", label: "Velocidad", help: "Frecuencia anunciada (MHz o MT/s, es lo mismo en la práctica).", dir: "max", chart: " MHz", get: it => it.sp.mhz ? mk(it.sp.mhz, it.sp.mhz + " MHz", "pend") : ND }, "mhz", v => fmt(v) + " MHz"),
+        OFF({ id: "cl", label: "Latencia CAS (CL)", help: "Ciclos de espera. Menor es mejor a igual velocidad.", dir: "min", chart: "", get: it => it.sp.cl ? mk(it.sp.cl, "CL" + it.sp.cl, "pend") : ND }, "cl", v => "CL" + v),
+        OFF({ id: "volt", label: "Voltaje", help: "Tensión de trabajo del módulo. 1,35 V en DDR4 o 1,25-1,4 V en DDR5 suelen indicar perfiles de velocidad (XMP/EXPO).", get: () => ND }, "volt", v => String(v).replace(".", ",") + " V"),
+        OFF({ id: "xmp", label: "Perfil XMP", help: "Perfil de fábrica para activar la velocidad anunciada desde el BIOS.", get: () => ND }, "xmp", SI),
         { id: "lat", label: "Latencia real", help: "CL × 2000 ÷ MHz, en nanosegundos. Permite comparar memorias de distinta velocidad.", dir: "min", derived: true, chart: " ns", get: it => it.sp.lat ? mk(it.sp.lat, fmt(it.sp.lat, 1) + " ns", "est") : ND },
         { id: "ppg", label: "Precio por GB", help: "Precio ÷ capacidad.", dir: "min", derived: true, chart: "$", get: it => it.sp.gb && it.p ? mk(Math.round(it.p / it.sp.gb), ARS(it.p / it.sp.gb), "est") : ND },
       ],
       almacenamiento: () => [
-        { id: "gb", label: "Capacidad", help: "Espacio total.", dir: "max", chart: " GB", get: it => it.sp.gb ? mk(it.sp.gb, it.sp.gb >= 1000 ? fmt(it.sp.gb / 1000, 2) + " TB" : it.sp.gb + " GB", "pend") : ND },
+        OFF({ id: "gb", label: "Capacidad", help: "Espacio total.", dir: "max", chart: " GB", get: it => it.sp.gb ? mk(it.sp.gb, it.sp.gb >= 1000 ? fmt(it.sp.gb / 1000, 2) + " TB" : it.sp.gb + " GB", "pend") : ND }, "gb", v => v >= 1000 ? fmt(v / 1000, 2) + " TB" : v + " GB"),
         { id: "kind", label: "Tipo", help: "SSD (rápido, sin partes móviles), HDD (barato por GB, lento).", get: it => txt(it.sp.kind, "pend") },
-        { id: "iface", label: "Interfaz", help: "NVMe (M.2) es mucho más rápido que SATA; verificá que tu placa tenga ranura M.2.", get: it => txt(it.sp.iface, "pend") },
+        OFF({ id: "iface", label: "Interfaz", help: "NVMe (M.2) es mucho más rápido que SATA; verificá que tu placa tenga ranura M.2.", get: it => txt(it.sp.iface, "pend") }, "iface"),
         { id: "gen", label: "Generación PCIe", help: "Gen4 duplica el máximo teórico de Gen3. Tu placa madre limita la velocidad.", get: it => it.sp.genNA ? NA : txt(it.sp.gen, "pend") },
-        { id: "rpm", label: "Velocidad de giro", help: "Solo en discos rígidos (HDD): 7200 RPM es más rápido que 5400.", dir: "max", chart: " RPM", get: it => it.sp.kind === "HDD" ? (it.sp.rpm ? mk(it.sp.rpm, it.sp.rpm + " RPM", "pend") : ND) : it.sp.kind ? NA : ND },
-        { id: "mbs", label: "Velocidad anunciada", help: "Velocidad máxima de lectura que publica la tienda/fabricante. Es un pico, no el uso real.", dir: "max", chart: " MB/s", get: it => it.sp.mbs ? mk(it.sp.mbs, fmt(it.sp.mbs) + " MB/s", "pend") : ND },
+        OFF({ id: "rpm", label: "Velocidad de giro", help: "Solo en discos rígidos (HDD): 7200 RPM es más rápido que 5400.", dir: "max", chart: " RPM", get: it => it.sp.kind === "HDD" ? (it.sp.rpm ? mk(it.sp.rpm, it.sp.rpm + " RPM", "pend") : ND) : it.sp.kind ? NA : ND }, "rpm", v => v + " RPM"),
+        OFF({ id: "mbs", label: "Velocidad anunciada", help: "Velocidad máxima de lectura que publica la tienda/fabricante. Es un pico, no el uso real.", dir: "max", chart: " MB/s", get: it => it.sp.mbs ? mk(it.sp.mbs, fmt(it.sp.mbs) + " MB/s", "pend") : ND }, "mbs", v => fmt(v) + " MB/s"),
+        OFF({ id: "mbsw", label: "Velocidad de escritura", help: "Pico de escritura según el fabricante.", dir: "max", chart: " MB/s", get: () => ND }, "mbs_w", v => fmt(v) + " MB/s"),
+        OFF({ id: "tbw", label: "Durabilidad (TBW)", help: "Terabytes que se pueden escribir según la garantía del fabricante. Más es mejor.", dir: "max", chart: " TB", get: () => ND }, "tbw", v => fmt(v) + " TB"),
         { id: "ppg", label: "Precio por GB", help: "Precio ÷ capacidad.", dir: "min", derived: true, chart: "$", get: it => it.sp.gb && it.p ? mk(Math.round(it.p / it.sp.gb * 10) / 10, ARS(it.p / it.sp.gb), "est") : ND },
       ],
       fuentes: () => [
-        { id: "w", label: "Potencia", help: "Potencia total que entrega. Elegí según el consumo de tu placa de video y procesador.", dir: "max", chart: " W", get: it => it.sp.w ? mk(it.sp.w, it.sp.w + " W", "pend") : ND },
-        { id: "cert", label: "Certificación de eficiencia", help: "80 Plus: Bronze < Silver < Gold < Platinum < Titanium. Cybenetics es otra certificación, con otra escala: no se compara con 80 Plus. Ninguna mide la calidad de los componentes internos.", dir: "max", chart: "", get: it => it.sp.cyb ? txt(it.sp.cyb, "pend") : it.sp.cert ? { v: it.sp.certRank, text: it.sp.cert[0].toUpperCase() + it.sp.cert.slice(1), disp: it.sp.cert[0].toUpperCase() + it.sp.cert.slice(1), tag: "pend" } : ND },
-        { id: "mod", label: "Cables modulares", help: "Los modulares ordenan mejor el gabinete.", get: it => ({ v: null, text: it.sp.modular ? "Sí" : "No indicado", disp: it.sp.modular ? "Sí" : "No indicado", tag: it.sp.modular ? "pend" : "nd" }) },
-        { id: "atx", label: "Estándar ATX", help: "ATX 3.x trae el conector 12V-2x6 de las placas de gama alta modernas.", get: it => txt(it.sp.atx3, "pend") },
+        OFF({ id: "w", label: "Potencia", help: "Potencia total que entrega. Elegí según el consumo de tu placa de video y procesador.", dir: "max", chart: " W", get: it => it.sp.w ? mk(it.sp.w, it.sp.w + " W", "pend") : ND }, "w", v => v + " W"),
+        OFF({ id: "cert", label: "Certificación de eficiencia", help: "80 Plus: Bronze < Silver < Gold < Platinum < Titanium. Cybenetics es otra certificación, con otra escala: no se compara con 80 Plus. Ninguna mide la calidad de los componentes internos.", dir: "max", chart: "", get: it => it.sp.cyb ? txt(it.sp.cyb, "pend") : it.sp.cert ? { v: it.sp.certRank, text: it.sp.cert[0].toUpperCase() + it.sp.cert.slice(1), disp: it.sp.cert[0].toUpperCase() + it.sp.cert.slice(1), tag: "pend" } : ND }, "cert", null,
+          v => ({ white: 1, bronze: 2, silver: 3, gold: 4, platinum: 5, titanium: 6 })[(String(v).match(/white|bronze|silver|gold|platinum|titanium/i) || ["white"])[0].toLowerCase()] || null),
+        OFF({ id: "mod", label: "Cables modulares", help: "Los modulares ordenan mejor el gabinete.", get: it => { const t = it.sp.modular ? "Sí" : it.sp.semi ? "Semi-modular" : "No indicado"; return { v: null, text: t, disp: t, tag: it.sp.modular || it.sp.semi ? "pend" : "nd" }; } }, "modular"),
+        OFF({ id: "atx", label: "Estándar ATX", help: "ATX 3.x trae el conector 12V-2x6 de las placas de gama alta modernas.", get: it => txt(it.sp.atx3, "pend") }, "atx"),
+        OFF({ id: "pcie16", label: "Conector 16 pines (12V-2x6)", help: "Cantidad de conectores de 16 pines para placas de video modernas de gama alta (RTX 4070 Ti en adelante, por ejemplo).", get: () => ND }, "pcie16", v => String(v)),
         { id: "ppw", label: "Precio por vatio", help: "Precio ÷ potencia.", dir: "min", derived: true, chart: "$", get: it => it.sp.w && it.p ? mk(Math.round(it.p / it.sp.w * 10) / 10, ARS(it.p / it.sp.w), "est") : ND },
       ],
       motherboards: () => [
-        { id: "socket", label: "Socket", help: "Debe coincidir con el del procesador.", get: it => txt(it.sp.socket, "pend") },
-        { id: "chipset", label: "Chipset", help: "Define funciones: overclock, cantidad de PCIe y USB.", get: it => txt(it.sp.chipset, "pend") },
-        { id: "ddr", label: "Memoria", help: "DDR4 o DDR5, según la placa. En AM4 y LGA1200 solo existe DDR4; en AM5 y LGA1851 solo DDR5.", get: it => it.sp.ddr ? Object.assign(txt(it.sp.ddr + (it.sp.ddrBySocket ? " (por el socket)" : ""), "pend"), it.sp.ddrBySocket ? { note: "Deducido del socket: ese socket solo admite " + it.sp.ddr } : {}) : ND },
-        { id: "form", label: "Formato", help: "Debe entrar en tu gabinete: Mini-ITX < Micro-ATX < ATX < E-ATX.", get: it => txt(it.sp.form, "pend") },
-        { id: "wifi", label: "Wi-Fi integrado", help: "Si no lo trae necesitás una placa de red aparte.", get: it => ({ v: null, text: it.sp.wifi ? "Sí" : "No indicado", disp: it.sp.wifi ? "Sí" : "No indicado", tag: it.sp.wifi ? "pend" : "nd" }) },
+        { id: "socket", label: "Socket", help: "Debe coincidir con el del procesador.", get: it => { const r = C.sf(it.g, "socket"); return r ? Object.assign(txt(r.v, r.tag), { note: spNote(r) }) : txt(it.sp.socket, "pend"); } },
+        { id: "chipset", label: "Chipset", help: "Define funciones: overclock, cantidad de PCIe y USB.", get: it => { const r = C.sf(it.g, "chipset"); return r ? Object.assign(txt(r.v, r.tag), { note: spNote(r) }) : txt(it.sp.chipset, "pend"); } },
+        { id: "ddr", label: "Memoria", help: "DDR4 o DDR5, según la placa. En AM4 y LGA1200 solo existe DDR4; en AM5 y LGA1851 solo DDR5.", get: it => { const r = C.sf(it.g, "ddr"); if (r) return Object.assign(txt(r.v, r.tag), { note: spNote(r) }); return it.sp.ddr ? Object.assign(txt(it.sp.ddr + (it.sp.ddrBySocket ? " (por el socket)" : ""), "pend"), it.sp.ddrBySocket ? { note: "Deducido del socket: ese socket solo admite " + it.sp.ddr } : {}) : ND; } },
+        { id: "form", label: "Formato", help: "Debe entrar en tu gabinete: Mini-ITX < Micro-ATX < ATX < E-ATX.", get: it => { const r = C.sf(it.g, "form"); return r ? Object.assign(txt(r.v, r.tag), { note: spNote(r) }) : txt(it.sp.form, "pend"); } },
+        { id: "wifi", label: "Wi-Fi integrado", help: "Si no lo trae necesitás una placa de red aparte.", get: it => { const r = C.sf(it.g, "wifi"); if (r) { const t = r.v ? "Sí" : "No"; return { v: null, text: t, disp: t, tag: r.tag, note: spNote(r) }; }
+          return { v: null, text: it.sp.wifi ? "Sí" : "No indicado", disp: it.sp.wifi ? "Sí" : "No indicado", tag: it.sp.wifi ? "pend" : "nd" }; } },
       ],
       monitores: () => [
-        { id: "inch", label: "Tamaño", help: "Diagonal en pulgadas.", dir: "max", chart: '"', get: it => it.sp.inch ? mk(it.sp.inch, fmt(it.sp.inch, 1) + '"', "pend") : ND },
-        { id: "res", label: "Resolución", help: "Más píxeles = más nitidez, pero exige más a la placa de video.", dir: "max", chart: "", get: it => it.sp.px ? { v: it.sp.px, text: it.sp.res, disp: it.sp.res, tag: "pend" } : ND },
-        { id: "hz", label: "Tasa de refresco", help: "Imágenes por segundo que puede mostrar. 144 Hz o más se nota en juegos competitivos.", dir: "max", chart: " Hz", get: it => it.sp.hz ? mk(it.sp.hz, it.sp.hz + " Hz", "pend") : ND },
-        { id: "panel", label: "Panel", help: "IPS: mejores colores. VA: mejor contraste. TN: rápido pero con peor imagen. OLED: máximo contraste.", get: it => txt(it.sp.panel, "pend") },
-        { id: "ms", label: "Tiempo de respuesta", help: "Menor es mejor. El valor de la tienda suele ser el más optimista (GtG).", dir: "min", chart: " ms", get: it => it.sp.ms ? mk(it.sp.ms, fmt(it.sp.ms, 1) + " ms", "pend") : ND },
+        OFF({ id: "inch", label: "Tamaño", help: "Diagonal en pulgadas.", dir: "max", chart: '"', get: it => it.sp.inch ? mk(it.sp.inch, fmt(it.sp.inch, 1) + '"', "pend") : ND }, "inch", v => fmt(v, 1) + '"'),
+        OFF({ id: "res", label: "Resolución", help: "Más píxeles = más nitidez, pero exige más a la placa de video.", dir: "max", chart: "", get: it => it.sp.px ? { v: it.sp.px, text: it.sp.res, disp: it.sp.res, tag: "pend" } : ND }, "res",
+          v => String(v).replace(/\s*x\s*/i, " × "), v => { const m = String(v).match(/(\d+)\s*x\s*(\d+)/i); return m ? +m[1] * +m[2] : null; }),
+        OFF({ id: "hz", label: "Tasa de refresco", help: "Imágenes por segundo que puede mostrar. 144 Hz o más se nota en juegos competitivos.", dir: "max", chart: " Hz", get: it => it.sp.hz ? mk(it.sp.hz, it.sp.hz + " Hz", "pend") : ND }, "hz", v => v + " Hz"),
+        OFF({ id: "panel", label: "Panel", help: "IPS: mejores colores. VA: mejor contraste. TN: rápido pero con peor imagen. OLED: máximo contraste.", get: it => txt(it.sp.panel, "pend") }, "panel"),
+        OFF({ id: "ms", label: "Tiempo de respuesta", help: "Menor es mejor. El valor de la tienda suele ser el más optimista (GtG).", dir: "min", chart: " ms", get: it => it.sp.ms ? mk(it.sp.ms, fmt(it.sp.ms, 1) + " ms", "pend") : ND }, "ms", v => fmt(v, 1) + " ms"),
+        OFF({ id: "brillo", label: "Brillo", help: "En nits (cd/m²). 250-300 alcanza en interiores; para HDR real hacen falta 600 o más.", dir: "max", chart: " nits", get: () => ND }, "brillo", v => fmt(v) + " nits"),
+        OFF({ id: "hdr", label: "HDR", help: "Alto rango dinámico. Con menos de 400 nits el efecto es limitado.", get: () => ND }, "hdr", SI),
+        OFF({ id: "fs", label: "FreeSync (AMD)", help: "Sincroniza la imagen con la placa de video AMD para evitar cortes. Premium y Premium Pro son niveles más exigentes.", get: () => ND }, "freesync"),
+        OFF({ id: "gs", label: "G-SYNC (NVIDIA)", help: "Lo mismo para placas NVIDIA. «Compatible» quiere decir que NVIDIA lo validó sin un módulo propio.", get: () => ND }, "gsync"),
+        { id: "puertos", label: "Entradas de video", help: "Cantidad de HDMI y DisplayPort según el fabricante.", get: it => { const h = C.sf(it.g, "hdmi"), d = C.sf(it.g, "dp"); if (!h && !d) return ND;
+          const t = [h ? h.v + " HDMI" : null, d ? d.v + " DisplayPort" : null].filter(Boolean).join(" · "); return { v: null, text: t, disp: t, tag: (h || d).tag, note: spNote(h || d) }; } },
+        OFF({ id: "altura", label: "Altura regulable", help: "Permite subir o bajar la pantalla sin un soporte aparte.", get: () => ND }, "altura", SI),
+        OFF({ id: "vesa", label: "Montaje VESA", help: "Agujeros estándar para colgarlo de un brazo o la pared.", get: () => ND }, "vesa", SI),
       ],
       notebooks: () => [
         { id: "cpu", label: "Procesador", help: "Los procesadores de notebook no equivalen a los de escritorio con nombre parecido.", get: it => txt(it.sp.cpu, "pend") },
@@ -193,6 +213,11 @@
     /* Fila de periférico: primero la FICHA de la tienda (dato publicado para ese SKU), si no, lo que dice el título.
        Las dos quedan "pendiente de verificar" (no es la ficha del fabricante); la nota dice de dónde salió. */
     const boolText = v => v === true ? "Sí" : v === false ? "No" : v;
+    /* fila que prefiere el dato de la ficha del fabricante (Icecat, etiqueta «verificado» con fuente) y si no, lo del título */
+    const OFF = (row, field, show, num) => Object.assign({}, row, { get: it => { const r = C.sf(it.g, field);
+      if (r && r.v != null && r.v !== "") { const d = show ? show(r.v) : String(r.v); return { v: num ? num(r.v) : typeof r.v === "number" && row.dir ? r.v : null, text: d, disp: d, tag: r.tag, note: spNote(r) }; }
+      return row.get(it); } });
+    const SI = v => v === true ? "Sí" : v === false ? "No" : String(v);
     const wlText = v => v === true ? "Sí" : v === false ? "Con cable" : v;
     function P(id, label, help, fields, fromTitle, fmtv, dir, _x, show) {
       const fs = Array.isArray(fields) ? fields : [fields];

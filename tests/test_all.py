@@ -699,3 +699,173 @@ def test_fichas_perifericos():
     items = specs.build_items([{"id_producto": 5, "caracteristicas": [{"etiqueta": "DPI máximos", "valor": "16000"}]}],
         [{"store": "Compragamer", "category": "perifericos", "name": "Mouse Logitech G305", "pid": 5, "sku": "910-005281", "url": "u"}], "2026-10-26")
     assert list(items.values())[0]["f"]["dpi_max"]["v"] == 16000
+
+
+def test_fichas_placas_madre():
+    """Ficha oficial de ASRock/MSI: solo con modelo exacto, Wi-Fi 'No' solo si la ficha se leyó completa, y con caché."""
+    import tempfile
+    from scrapers import mbspecs as mb
+    rd = lambda f: open("tests/fixtures/" + f).read()
+    a = mb.parse_asrock(rd("mb_asrock_wifi.html"), "B760M PG Riptide WiFi")
+    assert (a["socket"], a["chipset"], a["ddr"], a["form"], a["wifi"]) == ("LGA1700", "B760", "DDR5", "Micro-ATX", True)
+    b = mb.parse_asrock(rd("mb_asrock_nowifi.html"), "B450M-HDV R4.0")
+    assert (b["socket"], b["ddr"], b["wifi"]) == ("AM4", "DDR4", False)
+    assert mb.parse_asrock(rd("mb_asrock_nowifi.html"), "B450M-HDV") is None        # modelo parecido NO alcanza
+    m = mb.parse_msi(rd("mb_msi.html"), "B550M-A PRO")
+    assert (m["socket"], m["chipset"], m["ddr"], m["form"]) == ("AM4", "B550", "DDR4", "Micro-ATX")
+    assert mb.parse_msi(rd("mb_msi.html"), "B550M-A") is None
+    assert mb.model_candidates("Mother MSI MAG B650 TOMAHAWK WIFI AM5 DDR5", "MSI")[0] == "MAG B650 TOMAHAWK WIFI"
+    calls = []
+    def fake(u):
+        calls.append(u)
+        if "B450M-HDV%20R4.0" in u and "/AMD/" in u:
+            return rd("mb_asrock_nowifi.html")
+        raise RuntimeError("404")
+    groups = [{"name": "Mother ASRock B450M-HDV R4.0 AM4", "category": "motherboards"},
+              {"name": "Mother Gigabyte B450M DS3H", "category": "motherboards"}]
+    with tempfile.TemporaryDirectory() as d:
+        items, st = mb.refresh(groups, d, fetch=fake, today="2026-10-27")
+        assert len(items) == 1 and groups[0]["spec"].startswith("mb:asrock:") and "spec" not in groups[1]
+        it = next(iter(items.values()))
+        assert it["f"]["wifi"]["v"] is False and "no lista Wi-Fi" in it["f"]["wifi"]["n"] and it["url"].startswith("https://www.asrock.com/")
+        n = len(calls)
+        mb.refresh([dict(g) for g in groups], d, fetch=fake, today="2026-10-28")
+        assert len(calls) == n                                                          # segunda corrida: todo sale de la caché
+
+
+def test_fichas_placas_madre_gigabyte_asus():
+    from scrapers import mbspecs as mb
+    import tempfile
+    rd = lambda f: open("tests/fixtures/" + f).read()
+    g = mb.parse_gigabyte(rd("mb_gigabyte_nowifi.html"), "B550M DS3H")
+    assert (g["socket"], g["chipset"], g["ddr"], g["form"], g["wifi"]) == ("AM4", "B550", "DDR4", "Micro-ATX", False)
+    w = mb.parse_gigabyte(rd("mb_gigabyte_wifi.html"), "B650 EAGLE AX")
+    assert (w["socket"], w["ddr"], w["form"], w["wifi"]) == ("AM5", "DDR5", "ATX", True)
+    assert mb.parse_gigabyte(rd("mb_gigabyte_wifi.html"), "B650 EAGLE") is None
+    assert mb.gigabyte_rev_slug(rd("mb_gigabyte_base.html"), "B550M-DS3H") == "B550M-DS3H-rev-10-11-12-13"
+    a = mb.parse_asus(rd("mb_asus.html"), "PRIME B550M-K")
+    assert (a["socket"], a["chipset"], a["ddr"], a["form"], a["wifi"]) == ("AM4", "B550", "DDR4", "Micro-ATX", False)
+    assert mb.parse_asus(rd("mb_asus.html"), "PRIME B550M") is None
+    assert mb.parse_asus("<html><body><div id='app'></div></body></html>", "PRIME B550M-K") is None   # página sin armar: no inventa nada
+    assert mb.asus_urls("TUF GAMING B550M-PLUS WIFI II").endswith("/tuf-gaming/tuf-gaming-b550m-plus-wifi-ii/techspec/")
+    def fake(u):
+        if u.endswith("/Motherboard/B550M-DS3H"):
+            return rd("mb_gigabyte_base.html")
+        if u.endswith("/sp"):
+            return rd("mb_gigabyte_nowifi.html")
+        raise RuntimeError("404")
+    gr = [{"name": "Mother Gigabyte B550M DS3H AM4", "category": "motherboards"}]
+    with tempfile.TemporaryDirectory() as d:
+        items, st = mb.refresh(gr, d, fetch=fake, today="2026-10-27")
+        it = next(iter(items.values()))
+        assert it["url"].endswith("B550M-DS3H-rev-10-11-12-13/sp") and "Rev. 1.0/1.1/1.2/1.3" in it["sku"]
+
+
+def test_categoria_por_tipo_al_inicio():
+    """El tipo con el que EMPIEZA el título manda: un procesador «Sin Cooler» no es refrigeración, un gabinete no es fuente."""
+    f = fix_category
+    assert f("Procesador Amd Ryzen 7 9800X3D 5.2 Ghz - AM5 (Sin Cooler)", "refrigeracion") == "procesadores"
+    assert f("Micro AMD Ryzen 5 5600 Sin Cooler", "refrigeracion") == "procesadores"
+    assert f("Memoria RAM DDR4 HIKSEMI 8GB 3200MHz Armor C/ Disipador Black", "refrigeracion") == "memorias-ram"
+    assert f("Disco SSD NVMe 1TB WD Black SN850X Sin Disipador", "refrigeracion") == "almacenamiento"
+    assert f("Micro SDXC Lexar 633x 64GB", "almacenamiento") == "almacenamiento"
+    assert f("Auricular Gamer Cooler Master CH351 Black", "refrigeracion") == "auriculares"
+    assert f("SILLA GAMER COOLERMASTER CALIBER R2C BLACK", "refrigeracion") == "perifericos"
+    assert f("Gabinete Corsair AIR 5400 LX LINK Mid-Tower TG Black", "fuentes") == "gabinetes"
+    assert f("GAB MSI MAG FORGE M100A FAN RGB SIN FUENTE", "fuentes") == "gabinetes"
+    assert f("Fan Gamemax 120 Rainbow Infinity C9 ARGB", "gabinetes") == "refrigeracion"
+    assert f("Cooler Gabinete Sentey F70 120 Argb", "gabinetes") == "refrigeracion"
+    assert f("Combo Placa De Video Rtx 3050 6gb + Fuente Certificada 600w", "fuentes") == "otros"
+    assert f("Kit Gabinete Sentey TM10 Mesh Fuente 600W Teclado Mouse", "fuentes") == "otros"
+    assert f("Conectores CORSAIR ICHUE LINK Juego de x5", "fuentes") == "accesorios"
+    assert f("Proyector Epson PowerLite X49", "monitores") == "otros"
+    # lo que sí es de la categoría no se toca
+    assert f("Fuente ASUS TUF Gaming 750W 80 Plus Gold", "fuentes") == "fuentes"
+    assert f("Gamemax Gx-1050 Pro - Fuente 1050W 80 Plus Platinum", "fuentes") == "fuentes"
+    assert f("Cooler Master Hyper 212 Black Edition", "refrigeracion") == "refrigeracion"
+    assert f("Water Cooler Corsair H100", "refrigeracion") == "refrigeracion"
+
+
+def test_fichas_desde_descripcion_de_tienda():
+    """Mouses/teclados/auriculares sin ficha: datos de la descripción de la tienda, marcados 'según la tienda', sin pisar nada."""
+    from scrapers import descspecs as ds
+    m196 = "Intro\nEspecificaciones Técnicas:\nConectividad: Bluetooth\nTecnología del sensor: Óptica\nNúmero de botones: 3\nPeso: 83 g"
+    f = ds.parse_desc(m196, "mouses")
+    assert f["botones"]["v"] == 3 and f["peso_g"] == {"v": 83, "u": "g"} and f["sensor"]["v"] == "Óptico"
+    assert ds.parse_desc("DPI: 800/1600/3200 polling 1000 Hz", "mouses")["dpi_max"]["v"] == 3200      # los Hz no se confunden con DPI
+    assert ds.parse_desc("Resolución 26K DPI", "mouses")["dpi_max"]["v"] == 26000
+    assert ds.parse_desc("Peso: 0,1 kg", "mouses")["peso_g"]["v"] == 100
+    assert ds.parse_desc("Driver 50 mm, impedancia 32 Ohm, 20Hz-20kHz, micrófono", "auriculares")["f_max"]["v"] == 20000
+    assert ds.parse_desc("Nada técnico acá", "mouses") == {}
+    assert "dpi_max" not in ds.parse_desc("DPI 100000", "mouses")                                       # fuera de rango no entra
+    g = lambda i, spec=None: {"id": i, "name": "Mouse Logitech M196", "category": "mouses", "spec": spec,
+                              "offers": [{"store": "Click Gaming", "url": "u1"}, {"store": "Try", "url": "u2"}]}
+    items = [{"url": "u1", "desc": m196}, {"url": "u2", "desc": "Mouse con 3 botones y 83 gramos. Peso: 83 g"}]
+    groups = [g("a"), g("b", "cg1"), {"id": "c", "name": "Fuente", "category": "fuentes", "offers": [{"url": "u1"}]}]
+    out, st = ds.refresh(groups, items, today="2026-10-27")
+    assert groups[0]["spec"] == "ds:a" and groups[1]["spec"] == "cg1" and "spec" not in groups[2]          # no pisa a Compragamer
+    it = out["ds:a"]
+    assert it["sheet"] is False and it["f"]["botones"]["l"] == "pend" and "no es del fabricante" in it["f"]["botones"]["n"]
+    # contradicción entre tiendas: se descarta ese dato
+    items2 = [{"url": "u1", "desc": "Peso: 83 g\n3 botones\nsensor óptico"}, {"url": "u2", "desc": "Peso: 99 g\n3 botones"}]
+    out2, _ = ds.refresh([g("x")], items2, today="2026-10-27")
+    assert "peso_g" not in out2["ds:x"]["f"] and out2["ds:x"]["f"]["botones"]["v"] == 3
+    # con menos de 2 datos no se guarda ninguna ficha
+    out3, _ = ds.refresh([g("y")], [{"url": "u1", "desc": "Peso: 83 g"}], today="2026-10-27")
+    assert out3 == {}
+
+
+def test_goldentech_guarda_descripcion_de_perifericos():
+    from scrapers import goldentech
+    it = {"name": "Mouse Bluetooth Logitech M196 Rosa", "permalink": "x", "type": "simple", "is_in_stock": True, "images": [],
+          "prices": {"price": "20000", "regular_price": "20000", "currency_code": "ARS", "currency_minor_unit": 0},
+          "categories": [{"name": "Inalambrico"}], "description": "<ul><li>Peso: 83 g</li><li>Número de botones: 3</li></ul>"}
+    p = goldentech.parse([it], "Click Gaming")[0]
+    assert "Peso: 83 g" in p["desc"] and "\n" in p["desc"]
+    it2 = dict(it, name="Placa de video RTX 4060", categories=[{"name": "Placas"}])
+    assert "desc" not in goldentech.parse([it2], "Click Gaming")[0]       # solo periféricos: no engorda los datos del resto
+
+
+def test_icecat():
+    """Open Icecat: categoría y capacidad deben coincidir; pago/no está se registran; caché; sin usuario no consulta nada."""
+    import tempfile
+    from scrapers import icecat as ic
+    fx = json.load(open("tests/fixtures/icecat.json"))
+    f, info = ic.parse(fx["27GP850-B"], "monitores")
+    assert (f["inch"]["v"], f["hz"]["v"], f["panel"]["v"], f["freesync"]["v"], f["hdmi"]["v"]) == (27, 165, "IPS", "FreeSync Premium", 2)
+    assert info["id"] == 89731591
+    assert ic.parse(fx["AP-750G"], "monitores")[0] is None                                   # categoría distinta: no se usa
+    r, _ = ic.parse(fx["KF432C16BB/8"], "memorias-ram")
+    assert (r["gb"]["v"], r["ddr"]["v"], r["mhz"]["v"], r["cl"]["v"], r["mods"]["v"]) == (8, "DDR4", 3200, 16, 1)
+    p, _ = ic.parse(fx["AP-750G"], "fuentes")
+    assert (p["w"]["v"], p["cert"]["v"], p["modular"]["v"], p["atx"]["v"]) == (750, "80 PLUS Gold", "Totalmente modular", "ATX 3.0")
+    h, _ = ic.parse(fx["ST1000DM010"], "almacenamiento")
+    assert (h["gb"]["v"], h["rpm"]["v"]) == (1000, 7200)
+    assert ic.consistent("Memoria Kingston 8GB DDR4", "memorias-ram", r) and not ic.consistent("Memoria Kingston 16GB DDR4", "memorias-ram", r)
+    assert not ic.consistent("Monitor LG 32\" 27GP850-B", "monitores", f) and not ic.consistent("Fuente ASUS 850W AP-750G", "fuentes", p)
+    assert ic.codes("MONITOR 27 ASUS VA27EHF-J BLACK IPS 100HZ HDMI") == ["VA27EHF-J", "VA27EHF"]
+    assert "2x16GB" not in ic.codes("Memoria Team DDR4 32GB (2x16GB) 3200MHz T-Create")
+    calls = []
+    def fake(brand, code):
+        calls.append(code)
+        return {"27GP850-B": ("ok", fx["27GP850-B"]), "KF432C16BB/8": ("ok", fx["KF432C16BB/8"]), "G203-PAGO": ("pago", None)}.get(code, ("no", None))
+    groups = [{"id": "a", "name": "Monitor Gamer LG UltraGear 27GP850-B 27\" QHD 165Hz", "category": "monitores", "offers": [1, 2]},
+              {"id": "b", "name": "Memoria Kingston Fury Beast 16GB DDR4 KF432C16BB/8", "category": "memorias-ram", "offers": [1]},   # 16 ≠ 8: se rechaza
+              {"id": "c", "name": "Monitor Samsung LS24C310 24\"", "category": "monitores", "offers": [1]},
+              {"id": "d", "name": "Fuente Seasonic 650W", "category": "fuentes", "offers": [1], "spec": "cg1"}]
+    with tempfile.TemporaryDirectory() as d:
+        assert ic.refresh(groups, d, user="") == ({}, {"ok": True, "apagado": "falta el secreto ICECAT_USER"})
+        items, st = ic.refresh(groups, d, fetch=fake, today="2026-10-27")
+        assert groups[0]["spec"] == "ic:89731591" and "spec" not in groups[1] and "spec" not in groups[2] and groups[3]["spec"] == "cg1"
+        it = items["ic:89731591"]
+        assert it["s"] == "Icecat" and it["url"] is None and "Specs Icecat" in it["f"]["hz"]["n"] and "l" not in it["f"]["hz"]
+        assert st["vinculadas"] == 1 and st["rechazadas"] == 1 and st["sin_ficha"] == 2
+        n = len(calls)
+        g2 = [dict(g, spec=None) if g["id"] != "d" else g for g in groups]
+        items2, st2 = ic.refresh(g2, d, fetch=fake, today="2026-10-28")
+        assert len(calls) == n and st2["consultas"] == 0 and g2[0]["spec"] == "ic:89731591"           # todo sale de la caché
+    def stop(brand, code):
+        raise ic._Stop("Icecat respondió 429")
+    with tempfile.TemporaryDirectory() as d:
+        items, st = ic.refresh([dict(groups[0], spec=None)], d, fetch=stop, today="2026-10-27")
+        assert items == {} and st["ok"] is False and "429" in st["error"]

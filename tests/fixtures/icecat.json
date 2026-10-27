@@ -1,0 +1,802 @@
+{
+"27GP850-B": {
+"data": {
+"GeneralInfo": {
+"IcecatId": 89731591,
+"Title": "LG 27GP850-B pantalla para PC 68,6 cm (27\") 2560 x 1440 Pixeles Quad HD LED Negro, Rojo",
+"Brand": "LG",
+"BrandPartCode": "27GP850-B",
+"Category": {
+"CategoryID": "222",
+"Name": {
+"Value": "Pantallas para PC"
+}
+}
+},
+"FeaturesGroups": [
+{
+"Features": [
+{
+"Feature": {
+"ID": "944",
+"Name": {
+"Value": "Diagonal de la pantalla"
+},
+"Measure": {
+"Signs": {
+"_": "\""
+}
+}
+},
+"Value": "27",
+"PresentationValue": "68,6 cm (27\")"
+},
+{
+"Feature": {
+"ID": "1585",
+"Name": {
+"Value": "Resolución de la pantalla"
+},
+"Measure": {
+"Signs": {
+"_": "Pixeles"
+}
+}
+},
+"Value": "2560 x 1440",
+"PresentationValue": "2560 x 1440 Pixeles"
+},
+{
+"Feature": {
+"ID": "15285",
+"Name": {
+"Value": "Tipo de pantalla"
+},
+"Measure": {
+"Signs": {
+"_": ""
+}
+}
+},
+"Value": "IPS",
+"PresentationValue": "IPS"
+},
+{
+"Feature": {
+"ID": "36441",
+"Name": {
+"Value": "Brillo de la pantalla (típico)"
+},
+"Measure": {
+"Signs": {
+"_": "cd / m²"
+}
+}
+},
+"Value": "320",
+"PresentationValue": "320 cd / m²"
+},
+{
+"Feature": {
+"ID": "1516",
+"Name": {
+"Value": "Tiempo de respuesta"
+},
+"Measure": {
+"Signs": {
+"_": "ms"
+}
+}
+},
+"Value": "1",
+"PresentationValue": "1 ms"
+},
+{
+"Feature": {
+"ID": "34",
+"Name": {
+"Value": "Razón de contraste (típica)"
+},
+"Measure": {
+"Signs": {
+"_": ""
+}
+}
+},
+"Value": "1000:1",
+"PresentationValue": "1000:1"
+},
+{
+"Feature": {
+"ID": "7450",
+"Name": {
+"Value": "Máxima velocidad de actualización"
+},
+"Measure": {
+"Signs": {
+"_": "Hz"
+}
+}
+},
+"Value": "165",
+"PresentationValue": "165 Hz"
+},
+{
+"Feature": {
+"ID": "36310",
+"Name": {
+"Value": "Alto Rango Dinámico (HDR)"
+},
+"Measure": {
+"Signs": {
+"_": ""
+}
+}
+},
+"Value": "Y",
+"PresentationValue": "Si"
+},
+{
+"Feature": {
+"ID": "20783",
+"Name": {
+"Value": "NVIDIA G-SYNC"
+},
+"Measure": {
+"Signs": {
+"_": ""
+}
+}
+},
+"Value": "Y",
+"PresentationValue": "Si"
+},
+{
+"Feature": {
+"ID": "42448",
+"Name": {
+"Value": "Tipo de G-SYNC de NVIDIA"
+},
+"Measure": {
+"Signs": {
+"_": ""
+}
+}
+},
+"Value": "G-SYNC Compatible",
+"PresentationValue": "G-SYNC Compatible"
+},
+{
+"Feature": {
+"ID": "29607",
+"Name": {
+"Value": "AMD FreeSync"
+},
+"Measure": {
+"Signs": {
+"_": ""
+}
+}
+},
+"Value": "Y",
+"PresentationValue": "Si"
+},
+{
+"Feature": {
+"ID": "42449",
+"Name": {
+"Value": "Tipo de FreeSync de AMD"
+},
+"Measure": {
+"Signs": {
+"_": ""
+}
+}
+},
+"Value": "FreeSync Premium",
+"PresentationValue": "FreeSync Premium"
+},
+{
+"Feature": {
+"ID": "3566",
+"Name": {
+"Value": "Número de puertos HDMI"
+},
+"Measure": {
+"Signs": {
+"_": ""
+}
+}
+},
+"Value": "2",
+"PresentationValue": "2"
+},
+{
+"Feature": {
+"ID": "6611",
+"Name": {
+"Value": "Cantidad de DisplayPorts"
+},
+"Measure": {
+"Signs": {
+"_": ""
+}
+}
+},
+"Value": "1",
+"PresentationValue": "1"
+},
+{
+"Feature": {
+"ID": "16767",
+"Name": {
+"Value": "montaje VESA"
+},
+"Measure": {
+"Signs": {
+"_": ""
+}
+}
+},
+"Value": "Y",
+"PresentationValue": "Si"
+},
+{
+"Feature": {
+"ID": "1954",
+"Name": {
+"Value": "Ajustes de altura"
+},
+"Measure": {
+"Signs": {
+"_": ""
+}
+}
+},
+"Value": "Y",
+"PresentationValue": "Si"
+}
+]
+}
+]
+}
+},
+"KF432C16BB/8": {
+"data": {
+"GeneralInfo": {
+"IcecatId": 92899550,
+"Title": "Kingston Technology FURY Beast 8GB 3200MT/s DDR4 CL16 DIMM Black",
+"Brand": "Kingston Technology",
+"BrandPartCode": "KF432C16BB/8",
+"Category": {
+"CategoryID": "911",
+"Name": {
+"Value": "Módulos de memoria"
+}
+}
+},
+"FeaturesGroups": [
+{
+"Features": [
+{
+"Feature": {
+"ID": "1635",
+"Name": {
+"Value": "Latencia CAS"
+},
+"Measure": {
+"Signs": {
+"_": ""
+}
+}
+},
+"Value": "16",
+"PresentationValue": "16"
+},
+{
+"Feature": {
+"ID": "11381",
+"Name": {
+"Value": "Memoria interna"
+},
+"Measure": {
+"Signs": {
+"_": "GB"
+}
+}
+},
+"Value": "8",
+"PresentationValue": "8 GB"
+},
+{
+"Feature": {
+"ID": "16023",
+"Name": {
+"Value": "Diseño de memoria (módulos x tamaño)"
+},
+"Measure": {
+"Signs": {
+"_": "GB"
+}
+}
+},
+"Value": "1 x 8",
+"PresentationValue": "1 x 8 GB"
+},
+{
+"Feature": {
+"ID": "427",
+"Name": {
+"Value": "Tipo de memoria interna"
+},
+"Measure": {
+"Signs": {
+"_": ""
+}
+}
+},
+"Value": "DDR4",
+"PresentationValue": "DDR4"
+},
+{
+"Feature": {
+"ID": "37536",
+"Name": {
+"Value": "Rango de memoria de transferencia de datos"
+},
+"Measure": {
+"Signs": {
+"_": "MT/s"
+}
+}
+},
+"Value": "3200",
+"PresentationValue": "3200 MT/s"
+},
+{
+"Feature": {
+"ID": "6266",
+"Name": {
+"Value": "Voltaje de memoria"
+},
+"Measure": {
+"Signs": {
+"_": "V"
+}
+}
+},
+"Value": "1.35",
+"PresentationValue": "1.35 V"
+},
+{
+"Feature": {
+"ID": "21116",
+"Name": {
+"Value": "Intel® Extreme Memory Profile (XMP)"
+},
+"Measure": {
+"Signs": {
+"_": ""
+}
+}
+},
+"Value": "Y",
+"PresentationValue": "Si"
+},
+{
+"Feature": {
+"ID": "94",
+"Name": {
+"Value": "Peso"
+},
+"Measure": {
+"Signs": {
+"_": "g"
+}
+}
+},
+"Value": "34.17",
+"PresentationValue": "34,17 g"
+}
+]
+}
+]
+}
+},
+"SNV3S/500G": {
+"data": {
+"GeneralInfo": {
+"IcecatId": 121673590,
+"Title": "Kingston Technology 500G NV3 M.2 2280 NVMe SSD",
+"Brand": "Kingston Technology",
+"BrandPartCode": "SNV3S/500G",
+"Category": {
+"CategoryID": "1563",
+"Name": {
+"Value": "Unidades internas de estado sólido"
+}
+}
+},
+"FeaturesGroups": [
+{
+"Features": [
+{
+"Feature": {
+"ID": "5586",
+"Name": {
+"Value": "SDD, capacidad"
+},
+"Measure": {
+"Signs": {
+"_": "GB"
+}
+}
+},
+"Value": "500",
+"PresentationValue": "500 GB"
+},
+{
+"Feature": {
+"ID": "21731",
+"Name": {
+"Value": "Factor de forma de disco SSD"
+},
+"Measure": {
+"Signs": {
+"_": ""
+}
+}
+},
+"Value": "M.2",
+"PresentationValue": "M.2"
+},
+{
+"Feature": {
+"ID": "21",
+"Name": {
+"Value": "Interfaz"
+},
+"Measure": {
+"Signs": {
+"_": ""
+}
+}
+},
+"Value": "PCI Express 4.0",
+"PresentationValue": "PCI Express 4.0"
+},
+{
+"Feature": {
+"ID": "29388",
+"Name": {
+"Value": "NVMe"
+},
+"Measure": {
+"Signs": {
+"_": ""
+}
+}
+},
+"Value": "Y",
+"PresentationValue": "Si"
+},
+{
+"Feature": {
+"ID": "1644",
+"Name": {
+"Value": "Velocidad de lectura"
+},
+"Measure": {
+"Signs": {
+"_": "MB/s"
+}
+}
+},
+"Value": "5000",
+"PresentationValue": "5000 MB/s"
+},
+{
+"Feature": {
+"ID": "1645",
+"Name": {
+"Value": "Velocidad de escritura"
+},
+"Measure": {
+"Signs": {
+"_": "MB/s"
+}
+}
+},
+"Value": "3000",
+"PresentationValue": "3000 MB/s"
+},
+{
+"Feature": {
+"ID": "17534",
+"Name": {
+"Value": "calificación TBW"
+},
+"Measure": {
+"Signs": {
+"_": ""
+}
+}
+},
+"Value": "160",
+"PresentationValue": "160"
+},
+{
+"Feature": {
+"ID": "94",
+"Name": {
+"Value": "Peso"
+},
+"Measure": {
+"Signs": {
+"_": "g"
+}
+}
+},
+"Value": "5.7",
+"PresentationValue": "5,7 g"
+}
+]
+}
+]
+}
+},
+"AP-750G": {
+"data": {
+"GeneralInfo": {
+"IcecatId": 122365437,
+"Title": "ASUS Prime AP-750G unidad de fuente de alimentación 750 W 20+4 pin ATX ATX Negro, Blanco",
+"Brand": "ASUS",
+"BrandPartCode": "90YE00U1-B0NA00",
+"Category": {
+"CategoryID": "963",
+"Name": {
+"Value": "Unidades de fuentes de alimentación"
+}
+}
+},
+"FeaturesGroups": [
+{
+"Features": [
+{
+"Feature": {
+"ID": "10713",
+"Name": {
+"Value": "Potencia total"
+},
+"Measure": {
+"Signs": {
+"_": "W"
+}
+}
+},
+"Value": "750",
+"PresentationValue": "750 W"
+},
+{
+"Feature": {
+"ID": "5676",
+"Name": {
+"Value": "Eficiencia"
+},
+"Measure": {
+"Signs": {
+"_": "%"
+}
+}
+},
+"Value": "92",
+"PresentationValue": "92%"
+},
+{
+"Feature": {
+"ID": "45531",
+"Name": {
+"Value": "Conectores de alimentación PCI Express (16 pines)"
+},
+"Measure": {
+"Signs": {
+"_": ""
+}
+}
+},
+"Value": "1",
+"PresentationValue": "1"
+},
+{
+"Feature": {
+"ID": "8529",
+"Name": {
+"Value": "Tipo de cableado"
+},
+"Measure": {
+"Signs": {
+"_": ""
+}
+}
+},
+"Value": "Fully-Modular",
+"PresentationValue": "Totalmente modular"
+},
+{
+"Feature": {
+"ID": "8110",
+"Name": {
+"Value": "Certificación 80 PLUS"
+},
+"Measure": {
+"Signs": {
+"_": ""
+}
+}
+},
+"Value": "80 PLUS Gold",
+"PresentationValue": "80 PLUS Gold"
+},
+{
+"Feature": {
+"ID": "34322",
+"Name": {
+"Value": "Factor de forma de fuente de alimentación (PSU)"
+},
+"Measure": {
+"Signs": {
+"_": ""
+}
+}
+},
+"Value": "ATX",
+"PresentationValue": "ATX"
+},
+{
+"Feature": {
+"ID": "8107",
+"Name": {
+"Value": "Versión ATX"
+},
+"Measure": {
+"Signs": {
+"_": ""
+}
+}
+},
+"Value": "3.0",
+"PresentationValue": "3.0"
+},
+{
+"Feature": {
+"ID": "94",
+"Name": {
+"Value": "Peso"
+},
+"Measure": {
+"Signs": {
+"_": "g"
+}
+}
+},
+"Value": "1466",
+"PresentationValue": "1,47 kg"
+}
+]
+}
+]
+}
+},
+"ST1000DM010": {
+"data": {
+"GeneralInfo": {
+"IcecatId": 32927915,
+"Title": "Seagate Barracuda ST1000DM010 disco duro interno 1 TB 7200 RPM 64 MB 3.5\" Serial ATA III",
+"Brand": "Seagate",
+"BrandPartCode": "ST1000DM010",
+"Category": {
+"CategoryID": "219",
+"Name": {
+"Value": "Discos duros internos"
+}
+}
+},
+"FeaturesGroups": [
+{
+"Features": [
+{
+"Feature": {
+"ID": "7",
+"Name": {
+"Value": "Capacidad del HDD"
+},
+"Measure": {
+"Signs": {
+"_": "GB"
+}
+}
+},
+"Value": "1000",
+"PresentationValue": "1 TB"
+},
+{
+"Feature": {
+"ID": "430",
+"Name": {
+"Value": "Velocidad de rotación del HDD"
+},
+"Measure": {
+"Signs": {
+"_": "RPM"
+}
+}
+},
+"Value": "7200",
+"PresentationValue": "7200 RPM"
+},
+{
+"Feature": {
+"ID": "37958",
+"Name": {
+"Value": "Tamaño de unidad de almacenamiento de búfer"
+},
+"Measure": {
+"Signs": {
+"_": "MB"
+}
+}
+},
+"Value": "64",
+"PresentationValue": "64 MB"
+},
+{
+"Feature": {
+"ID": "21",
+"Name": {
+"Value": "Interfaz"
+},
+"Measure": {
+"Signs": {
+"_": ""
+}
+}
+},
+"Value": "Serial ATA III",
+"PresentationValue": "Serial ATA III"
+},
+{
+"Feature": {
+"ID": "17980",
+"Name": {
+"Value": "Velocidad de transferencia de impulso sostenido del HDD"
+},
+"Measure": {
+"Signs": {
+"_": "MiB/s"
+}
+}
+},
+"Value": "210",
+"PresentationValue": "210 MiB/s"
+},
+{
+"Feature": {
+"ID": "94",
+"Name": {
+"Value": "Peso"
+},
+"Measure": {
+"Signs": {
+"_": "g"
+}
+}
+},
+"Value": "400",
+"PresentationValue": "400 g"
+}
+]
+}
+]
+}
+}
+}

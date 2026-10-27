@@ -464,4 +464,25 @@ t("mouse, teclados y auriculares: ficha de la tienda primero, título después, 
   assert(hs.driver === 53 && hs.mic && /USB/.test(hs.conexion));
   assert(CT.CATS.mouses && CT.CATS.teclados && CT.CATS.auriculares);
 });
+/* ---------- Fichas de Icecat (actualización 19) ---------- */
+t("comparador: monitores y memorias usan la ficha de Icecat (verificado, con atribución) y si no, el título", () => {
+  const mon = [{ id: "mi1", name: "Monitor LG UltraGear 27GP850-B 27\" 144Hz", category: "monitores", spec: "ic:1", offers: [{ store: "X", url: "u1", price_cash: 400000, stock: true }] },
+               { id: "mi2", name: "Monitor Samsung 24\" FHD 75Hz IPS", category: "monitores", offers: [{ store: "X", url: "u2", price_cash: 200000, stock: true }] },
+               { id: "ri1", name: "Memoria Kingston Fury Beast 8GB DDR4 KF432C16BB/8", category: "memorias-ram", spec: "ic:2", offers: [{ store: "X", url: "u3", price_cash: 30000, stock: true }] },
+               { id: "ri2", name: "Memoria Patriot 8GB DDR4 3600MHz CL18", category: "memorias-ram", offers: [{ store: "X", url: "u4", price_cash: 28000, stock: true }] }];
+  const n = "Specs Icecat (Open Icecat): datos del fabricante, se muestran tal cual.";
+  const SP = { v: 1, items: {
+    "ic:1": { n: "LG 27GP850-B", s: "Icecat", d: "2026-10-27", sku: "27GP850-B", f: { inch: { v: 27, n }, res: { v: "2560 x 1440", n }, hz: { v: 165, u: "Hz", n }, panel: { v: "IPS", n }, brillo: { v: 320, n }, hdmi: { v: 2, n }, dp: { v: 1, n }, hdr: { v: true, n } }, miss: [] },
+    "ic:2": { n: "Kingston", s: "Icecat", d: "2026-10-27", sku: "KF432C16BB/8", f: { gb: { v: 8, n }, ddr: { v: "DDR4", n }, mhz: { v: 3200, n }, cl: { v: 16, n }, volt: { v: 1.35, n } }, miss: [] } } };
+  const K = CT.makeCompare(CT.create(HW, mon, {}, SP));
+  const cm = K.compare([K.item(mon[0]), K.item(mon[1])], { res: 1 }), row = (c, id) => c.rows.find(r => r.id === id);
+  assert.strictEqual(row(cm, "hz").cells[0].v, 165, "la ficha manda sobre el título (144 Hz)"); assert.strictEqual(row(cm, "hz").cells[0].tag, "ver");
+  assert(/Specs Icecat/.test(row(cm, "hz").cells[0].note)); assert.strictEqual(row(cm, "hz").cells[1].v, 75); assert.strictEqual(row(cm, "hz").cells[1].tag, "pend");
+  assert.strictEqual(row(cm, "res").cells[0].v, 2560 * 1440); assert(/2560 × 1440/.test(row(cm, "res").cells[0].text));
+  assert(/2 HDMI · 1 DisplayPort/.test(row(cm, "puertos").cells[0].text)); assert.strictEqual(row(cm, "puertos").cells[1].tag, "nd");
+  const cr = K.compare([K.item(mon[2]), K.item(mon[3])], { res: 1 });
+  assert.strictEqual(row(cr, "cl").cells[0].v, 16); assert.strictEqual(row(cr, "lat").cells[0].v, 10, "latencia real con los datos de la ficha");
+  assert(/1,35 V/.test(row(cr, "volt").cells[0].text)); assert.strictEqual(row(cr, "volt").cells[1].tag, "nd");
+  assert(JSON.stringify(cm).indexOf("NaN") < 0 && JSON.stringify(cr).indexOf("NaN") < 0);
+});
 console.log(n + " pruebas de JavaScript OK");
