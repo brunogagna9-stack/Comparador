@@ -10,8 +10,10 @@ Archivos que genera en site/data/:
 """
 import hashlib
 import json
+import os
 import re
 import sys
+import time
 import datetime as dt
 from pathlib import Path
 
@@ -347,6 +349,19 @@ def annotate_changes(groups, hist, today):
         g["low"] = top.get("low", False)
 
 
+BUDGET_MIN = float(os.environ.get("BUDGET_MIN", "85"))   # minutos para recolectar (el trabajo de GitHub corta a los 120)
+
+
+def store_order(scrapers, meta_path):
+    """Primero las tiendas que la corrida anterior no llegó a leer; después el resto en el orden de SCRAPERS."""
+    try:
+        prev = json.loads(meta_path.read_text()).get("stores", {})
+    except Exception:
+        prev = {}
+    first = [s for s in scrapers if (prev.get(s) or {}).get("skipped")]
+    return first + [s for s in scrapers if s not in first]
+
+
 def main(only):
     from scrapers import SCRAPERS, common
     DATA.mkdir(parents=True, exist_ok=True)
@@ -354,11 +369,21 @@ def main(only):
     hist = load_history()
     seed_from_raw(hist)
     status, all_items = {}, []
-    for store, fn in SCRAPERS.items():
+    t0 = time.monotonic()
+    for store in store_order(SCRAPERS, DATA / "meta.json"):
+        fn = SCRAPERS[store]
         raw = RAW / f"{store}.json"
         if only and store not in only:
             if raw.exists():
                 all_items += read_raw(raw)
+            continue
+        if (time.monotonic() - t0) / 60 > BUDGET_MIN:
+            # Sin tiempo en esta corrida (el trabajo de GitHub tiene un límite): se usan los datos anteriores
+            # de la tienda, marcados como desactualizados, y la próxima corrida empieza por ella.
+            items = read_raw(raw) if raw.exists() else []
+            status[store] = {"ok": False, "count": len(items), "stale": bool(items), "skipped": True,
+                             "error": "No alcanzó el tiempo de esta corrida: se muestran los precios de la lectura anterior."}
+            all_items += items
             continue
         common.LOG.clear()
         try:

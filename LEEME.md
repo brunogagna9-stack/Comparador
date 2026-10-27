@@ -169,3 +169,24 @@ Se auditaron los 5.900 productos publicados para ver cuáles no tenían ficha t�
 - **Armado de PC con AMD o Intel**: nuevo selector «Marca del procesador» (la más conveniente / AMD / Intel) y un cuadro que muestra cuánto cuesta cada plataforma completa. «La más conveniente» elige la plataforma más barata con stock, y entre los procesadores que alcanzan, el más barato (antes elegía siempre el de menor puntaje, que casi siempre era Intel). Solo se recomiendan procesadores con rendimiento medido: los Ryzen AM4 (5600X, 5700X3D…) tienen puntaje estimado y por eso no entran como recomendación.
 - Radeon AI PRO R9700 (profesional) agregada para comparar.
 - **Animaciones**: aparición suave de tarjetas y paneles al hacer scroll, ventana de detalle con efecto de entrada, carrito que «salta» al agregar, contadores de la portada, fondo del encabezado en movimiento, barras y radar que crecen en Comparar, historial de precio que se dibuja, tarjetas «esqueleto» mientras cargan los productos. Se desactivan solas si el sistema pide reducir el movimiento.
+
+## Actualización 15: 19 tiendas nuevas y más fichas oficiales (26-oct-2026)
+
+De la lista de 30 tiendas pedida, 7 ya estaban (ArmyTech, SCP Hardstore, Click Gaming, Katech, The Gamer Shop, Gaming City y Full H4rd, esta última sigue bloqueada por la tienda). Antes de sumar cada una se revisó su robots.txt y se leyó el catálogo como lo ve un visitante.
+
+**Se agregan 19 tiendas** (ahora son 37 lectores):
+- WooCommerce por la API pública (`scrapers/woo.py`): Backup Computación, Max Tecno, HF Tecnología, Liontech Gaming, Dinobyte.
+- WooCommerce por el listado HTML porque su robots.txt prohíbe la API (`scrapers/woohtml.py`): HardCore.
+- Tiendanube (`scrapers/tiendanube.py`): 37 Bytes, ShopGamer, Integrados Argentinos, Slot One, Vertex Retail (vrx.com.ar, solo «Computación y Gaming»). Contado = el precio «con Transferencia» que publica la tienda.
+- Una misma plataforma de tarjetas «card-ecommerce» (`scrapers/cardeco.py`): Rocket Hard, Acuario Insumos, Megasoft, Hyper Gaming, Noxie Store. Contado = «Precio especial» (Rocket Hard aclara en la ficha que es efectivo o transferencia; en las otras se avisa que hay que confirmarlo).
+- WIZ TECH (`scrapers/wiztech.py`, catálogo JSON del sitio), XT-PC (`scrapers/xtpc.py`) y Compufan Store (`scrapers/compufan.py`). WIZ TECH y Compufan publican un solo precio sin decir el medio de pago: se muestra como precio de **lista**, no como contado.
+
+**No se agregan**: IgnaTech (su robots.txt prohíbe recorrer los listados por página), Portal Tech & Gaming (responde 403 y su robots.txt bloquea lectores automáticos), Gamer Factory (API privada con detección de bots), Full H4rd (403). «Space» no se pudo identificar: falta el sitio web exacto.
+
+**Reputación**: las tiendas nuevas quedan «Sin datos» hasta cargar un puntaje público verificable.
+
+**Tiempo de la actualización**: con 37 tiendas la recolección tarda más. `build_data.py` tiene un presupuesto de 85 minutos (variable `BUDGET_MIN`); si no alcanza, las tiendas que faltan muestran los precios de la lectura anterior (marcadas como desactualizadas) y la corrida siguiente empieza por ellas. No hace falta tocar `actualizar.yml`.
+
+**Fichas oficiales nuevas**: Pentium Gold G5400, Pentium G4560 y Celeron G4900 (LGA1151, intel.com); Intel Arc A380 (intel.com); GeForce GT 1030 GDDR5 y DDR4 (nvidia.com). En la GT 1030 la ficha de NVIDIA tiene la potencia y el ancho de banda de las dos versiones cruzados: esos datos quedan «pendientes» (se usa 30 W, el mayor, para calcular la fuente). El Ryzen 5 3500X sigue sin ficha: la página de AMD no publica sus especificaciones.
+
+Lo que falta en `fichas_incompletas.csv` es sobre todo el **puntaje de rendimiento medido** (no se inventa) y datos que la tienda no pone en el título (motherboards, fuentes, discos, monitores).

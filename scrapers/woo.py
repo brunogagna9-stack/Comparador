@@ -14,6 +14,12 @@ WOO_STORES = {
     "SCP Hardstore": "https://www.scphardstore.com",
     "Click Gaming": "https://clickgaming.com.ar",
     "The Gamer Shop": "https://thegamershop.com.ar",
+    # actualización 15 (robots.txt revisado el 2026-10-26: ninguna prohíbe la API ni pide pausa)
+    "Backup Computación": "https://backupcomputacion.com.ar",
+    "Max Tecno": "https://maxtecno.com.ar",
+    "HF Tecnología": "https://hftecnologia.com.ar",
+    "Liontech Gaming": "https://www.liontech-gaming.com",
+    "Dinobyte": "https://dinobyte.ar",
 }
 
 
@@ -21,7 +27,7 @@ def parse(items, store):
     return _parse(items, store)
 
 
-def scrape_store(store, base, max_pages=60):
+def scrape_store(store, base, max_pages=80):   # Max Tecno tiene ~6.000 productos (61 páginas de 100)
     out, page = [], 1
     while page <= max_pages:
         items = get(f"{base}/wp-json/wc/store/v1/products?per_page={PER_PAGE}&page={page}", as_json=True)

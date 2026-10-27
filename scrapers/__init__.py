@@ -1,4 +1,4 @@
-from . import compragamer, mexx, maximus, gezatek, fullh4rd, logg, goldentech, armytech, katech, venex, gamingcity, netgaming, woo
+from . import compragamer, mexx, maximus, gezatek, fullh4rd, logg, goldentech, armytech, katech, venex, gamingcity, netgaming, woo, woohtml, tiendanube, cardeco, wiztech, xtpc, compufan
 
 SCRAPERS = {
     "Compragamer": compragamer.scrape,
@@ -13,6 +13,12 @@ SCRAPERS = {
     "Venex": venex.scrape,
     "Gaming City": gamingcity.scrape,
     "NET Gaming": netgaming.scrape,
-    **{name: woo.make(name) for name in woo.WOO_STORES},   # 6 tiendas WooCommerce (ver scrapers/woo.py)
+    **{name: woo.make(name) for name in woo.WOO_STORES},   # tiendas WooCommerce por su API (ver scrapers/woo.py)
+    **{name: woohtml.make(name) for name in woohtml.HTML_STORES},   # WooCommerce con la API prohibida en robots.txt
+    **{name: tiendanube.make(name) for name in tiendanube.TN_STORES},
+    **{name: cardeco.make(name) for name in cardeco.CE_STORES},
+    "WIZ TECH": wiztech.scrape,
+    "XT-PC": xtpc.scrape,
+    "Compufan Store": compufan.scrape,
     # Mercado Libre: no se recolecta por scraping (ver README, requiere programa de afiliados / API oficial)
 }

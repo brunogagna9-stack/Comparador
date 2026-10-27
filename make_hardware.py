@@ -83,6 +83,10 @@ GX = [
     ("rx-9060", "Radeon RX 9060", "AMD", 8, 132, 450, None, None, "amd_gpu", r"rx[ -]?9060(?![ -]?xt)", r"\bxt\b"),
     ("r9700", "Radeon AI PRO R9700 (profesional)", "AMD", 32, 300, 750, None, None, "amd_gpu", r"ai ?pro ?r9700", ""),
     ("rx-9050", "Radeon RX 9050", "AMD", 8, 92, 450, None, None, "amd_gpu", r"\br(?:x)?[ -]?9050\b", ""),
+    # agregadas en la actualización 15 (sin puntaje medido: solo ficha)
+    ("arc-a380", "Intel Arc A380", "Intel", 6, 75, None, None, None, "intel_gpu", r"arc[ -]?a380", ""),
+    ("gt-1030", "GeForce GT 1030 (GDDR5)", "NVIDIA", 2, 30, 300, None, None, "nvidia", r"gt[ -]?1030", r"\bddr4\b"),
+    ("gt-1030-d4", "GeForce GT 1030 (DDR4)", "NVIDIA", 2, 30, 300, None, None, "nvidia", r"gt[ -]?1030.*\bddr4\b", ""),
 ]
 
 # id, nombre, fabricante, socket, memoria, potencia base/TDP (W), potencia máxima (W), puntaje juegos o None, fuente, regex
@@ -169,6 +173,9 @@ C = [
     ("i7-12700", "Core i7-12700", "Intel", "LGA1700", "DDR4/DDR5", 65, 180, None, "intel_cpu", r"12700f?\b"),
     ("i5-10400", "Core i5-10400", "Intel", "LGA1200", "DDR4", 65, None, None, "intel_cpu", r"10400f?\b"),
     ("pg-7400", "Pentium Gold G7400", "Intel", "LGA1700", "DDR4/DDR5", 46, None, None, "intel_cpu", r"\bg7400\b"),
+    ("pg-5400", "Pentium Gold G5400", "Intel", "LGA1151", "DDR4", 58, None, None, "intel_cpu", r"\bg5400\b"),
+    ("p-4560", "Pentium G4560", "Intel", "LGA1151", "DDR4/DDR3L", 54, None, None, "intel_cpu", r"\bg4560\b"),
+    ("c-4900", "Celeron G4900", "Intel", "LGA1151", "DDR4", 54, None, None, "intel_cpu", r"\bg4900\b"),
 ]
 
 # Puntajes ESTIMADOS (no figuran en la tabla de Tom's Hardware). Nunca se usan para recomendar una compra:
@@ -293,6 +300,8 @@ GS = {
     "arc-b580": ("Xe2 (Battlemage)", 2560, "GDDR6", 192, 19),
     "rx-9070gre": ("RDNA 4", 3072, "GDDR6", 192, 18),
     "rtx-3050-6": ("Ampere", 2304, "GDDR6", 96, 14), "rx-9060": ("RDNA 4", 1792, "GDDR6", 128, 18), "rx-9050": ("RDNA 4", 1024, "GDDR6", 128, 18), "r9700": ("RDNA 4", 4096, "GDDR6", 256, 20), "arc-b570": ("Xe2 (Battlemage)", 2304, "GDDR6", 160, 19),
+    "arc-a380": ("Xe HPG (Alchemist)", None, "GDDR6", 96, 15.5),
+    "gt-1030": ("Pascal", 384, "GDDR5", 64, None), "gt-1030-d4": ("Pascal", 384, "DDR4", 64, None),   # NVIDIA no da la unidad de la velocidad
 }
 # CPU: (nucleos, hilos, boost GHz, caché L3 MB, gráficos integrados)
 CS = {
@@ -326,6 +335,7 @@ CS = {
     "i3-14100": (4, 8, 4.7, 12, True), "i3-13100": (4, 8, 4.5, 12, True), "i9-12900k": (16, 24, 5.2, 30, True),
     "i9-12900": (16, 24, 5.1, 30, True), "i7-12700": (12, 20, 4.9, 25, True), "i5-10400": (6, 12, 4.3, 12, True),
     "pg-7400": (2, 4, 3.7, 6, True),
+    "pg-5400": (2, 4, 3.7, 4, True), "p-4560": (2, 4, 3.5, 3, True), "c-4900": (2, 2, 3.1, 2, True),   # sin turbo: la máxima es la base
 }
 # Campos comprobados contra la ficha oficial del fabricante (resto = "pendiente de verificar").
 # Comprobación completa del 24-oct-2026: cada ficha se leyó y se comparó número por número (ver VURL).
@@ -422,13 +432,19 @@ VURL = {
     "i7-12700": _IC + "134591/intel-core-i712700-processor-25m-cache-up-to-4-90-ghz/specifications.html",
     "i5-10400": _IC + "199271/intel-core-i510400-processor-12m-cache-up-to-4-30-ghz/specifications.html",
     "pg-7400": _IC + "219435/intel-pentium-gold-g7400-processor-6m-cache-3-70-ghz/specifications.html",
+    "pg-5400": _IC + "129951/intel-pentium-gold-g5400-processor-4m-cache-3-70-ghz/specifications.html",
+    "p-4560": _IC + "97143/intel-pentium-processor-g4560-3m-cache-3-50-ghz/specifications.html",
+    "c-4900": _IC + "129487/intel-celeron-g4900-processor-2m-cache-3-10-ghz/specifications.html",
+    "arc-a380": _IC + "227959/intel-arc-a380-graphics/specifications.html",
+    "gt-1030": _NV + "gt-1030/specifications/", "gt-1030-d4": _NV + "gt-1030/specifications/",
 }
 # Procesadores agregados: todos los campos se leyeron en la ficha oficial (26-oct-2026). Intel sin "Maximum Turbo Power"
 # publicado (i5-10400, Pentium G7400) no lo marca como verificado: la web muestra "sin datos".
 NEW_CPU = {"r5-7600x3d", "r9-7900", "r7-7700", "r5-9600", "r7-8700g", "r5-8600g", "r5-8500g", "r7-8700f", "r5-8400f",
            "r9-5950x", "r9-5900xt", "r9-5900x", "r7-5700g", "r7-5700", "r5-5600xt", "r5-5600gt", "r5-5600g", "r5-5600t",
            "r5-4500", "r3-4100", "r5-3400g", "r3-3200g", "u7-270kp", "u5-250kp", "u9-285", "u7-265", "i9-14900",
-           "i7-14700", "i3-14100", "i3-13100", "i9-12900k", "i9-12900", "i7-12700", "i5-10400", "pg-7400"}
+           "i7-14700", "i3-14100", "i3-13100", "i9-12900k", "i9-12900", "i7-12700", "i5-10400", "pg-7400",
+           "pg-5400", "p-4560", "c-4900"}
 VERIFY_DATE_NEW = "2026-10-26"
 _GPU_V = ["vram", "tgp", "psu"]
 VERIFIED = {}
@@ -450,7 +466,12 @@ VERIFIED["rtx-3050-6"] = ["sp", "mt", "bus"] + _GPU_V                   # ni la 
 VERIFIED["arc-b570"] = ["arq", "mt", "bus", "gbps", "vram", "tgp"]      # Intel no publica fuente mínima ni "shaders"
 VERIFIED["rx-9060"] = VERIFIED["rx-9050"] = ["sp", "mt", "bus", "gbps"] + _GPU_V
 VERIFIED["r9700"] = ["arq", "sp", "mt", "bus", "vram", "tgp", "psu"]      # velocidad: 640 GB/s ÷ 32 = 20 Gbps (calculado)
-NEW_GPU = {"r9700", "rx-9070gre", "rtx-3050-6", "arc-b570", "rx-9060", "rx-9050"}
+VERIFIED["arc-a380"] = ["arq", "mt", "bus", "gbps", "vram", "tgp"]      # Intel: «Xe-cores», no shaders; sin fuente mínima
+# GT 1030: la ficha de NVIDIA tiene las columnas GDDR5/DDR4 inconsistentes (potencia 20/30 W y ancho de banda 16,8/48 GB/s
+# invertidos respecto de la memoria): no se marcan como verificados ni la potencia ni la velocidad. Se usa 30 W (el mayor)
+# para calcular la fuente, del lado seguro. La arquitectura tampoco figura en la ficha.
+VERIFIED["gt-1030"] = VERIFIED["gt-1030-d4"] = ["sp", "mt", "bus", "vram", "psu"]
+NEW_GPU = {"r9700", "rx-9070gre", "rtx-3050-6", "arc-b570", "rx-9060", "rx-9050", "arc-a380", "gt-1030", "gt-1030-d4"}
 for _c in C:
     _i, _v = _c[0], _c[2]
     _f = ["cores", "threads", "boost", "l3", "tdp"]
@@ -482,7 +503,7 @@ def build():
             for i, n, v, vr, t, p, perf, rt, s, m, x in GX]
     for g in gpus + gpux:
         a, sp, mt, bus, gb = GS[g["id"]]
-        g["spec"] = dict(arq=a, sp=sp, mt=mt, bus=bus, gbps=gb, bw=round(bus / 8 * gb))
+        g["spec"] = dict(arq=a, sp=sp, mt=mt, bus=bus, gbps=gb, bw=round(bus / 8 * gb) if bus and gb else None)
         g["ver"] = VERIFIED.get(g["id"], [])
         if g["ver"]: g["vurl"], g["vdate"] = VURL[g["id"]], (VERIFY_DATE_NEW if g["id"] in NEW_GPU else VERIFY_DATE)
     for c in cpus:

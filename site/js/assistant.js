@@ -39,7 +39,11 @@
   const STORE_ALIASES = {
     Compragamer: /compra ?gamer/, MEXX: /\bmexx\b/, Maximus: /maximus/, Gezatek: /gezatek/, Fullh4rd: /full ?h4rd|fullhard|full hard/,
     Logg: /\blogg\b/, GoldenTech: /golden ?tech/, Armytech: /army ?tech/,
-    Katech: /\bkatech\b/, Venex: /\bvenex\b/, "Gaming City": /gaming ?city/, "NET Gaming": /net ?gaming/, Hardloots: /hard ?loots/, BitHard: /bit ?hard/, Try: /\btry\b(?!\w)/, "SCP Hardstore": /scp ?hard ?store/, "Click Gaming": /click ?gaming/, "The Gamer Shop": /gamer ?shop/,
+    Katech: /\bkatech\b/, Venex: /\bvenex\b/, "Gaming City": /gaming ?city/, "NET Gaming": /net ?gaming/, Hardloots: /hard ?loots/, BitHard: /bit ?hard/, Try: /\btry\b(?!\w)/, "SCP Hardstore": /scp ?hard ?store/, "Click Gaming": /click ?gaming/, "The Gamer Shop": /the gamer ?shop/,
+    "Backup Computación": /backup ?(computaci|store|tienda)/, "Max Tecno": /max ?tecno/, "HF Tecnología": /\bhf\b/, "Liontech Gaming": /lion ?tech/, Dinobyte: /dino ?byte/, HardCore: /hard ?core/,
+    "37 Bytes": /37 ?bytes/, ShopGamer: /shop ?gamer/, "Integrados Argentinos": /integrados/, "Slot One": /slot ?one/, "Vertex Retail": /vertex|\bvrx\b/,
+    "Rocket Hard": /rocket ?hard/, "Acuario Insumos": /acuario/, Megasoft: /mega ?soft/, "Hyper Gaming": /hyper ?gaming/, "Noxie Store": /noxie/,
+    "WIZ TECH": /wiz ?tech/, "XT-PC": /xt-? ?pc/, "Compufan Store": /compufan/,
   };
 
   const USO_WORDS = [

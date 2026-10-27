@@ -172,5 +172,149 @@
     }
    ]
   }
+ ],
+ "Max Tecno": [
+  {
+   "id": 961135,
+   "name": "Motherboard ASRock Z890 STEEL LEGEND Wi-Fi Socket Intel® Socket 1851 12/13/",
+   "type": "simple",
+   "permalink": "https://maxtecno.com.ar/producto/motherboard-asrock-z890-steel-legend-wi-fi-socket-intel-socket-1851-12-13/",
+   "sku": "NT_4710483947520",
+   "is_in_stock": true,
+   "prices": {
+    "price": "58280475",
+    "regular_price": "58280475",
+    "sale_price": "58280475",
+    "currency_code": "ARS",
+    "currency_minor_unit": 2
+   },
+   "images": [],
+   "categories": [
+    {
+     "name": "Componentes PC"
+    }
+   ]
+  }
+ ],
+ "Backup Computación": [
+  {
+   "id": 5072,
+   "name": "Memoria DDR5 HIKSEMI 8Gb 4800 Mhz Hiker",
+   "type": "simple",
+   "permalink": "https://backupcomputacion.com.ar/producto/memoria-ddr5-hiksemi-8gb-4800-mhz-hiker/",
+   "sku": "6974202727352",
+   "is_in_stock": true,
+   "prices": {
+    "price": "34870000",
+    "regular_price": "34870000",
+    "sale_price": "34870000",
+    "currency_code": "ARS",
+    "currency_minor_unit": 2
+   },
+   "images": [
+    {
+     "src": "https://backupcomputacion.com.ar/wp-content/uploads/2026/10/000000000041887989907artttti-2--300x300.png",
+     "thumbnail": "https://backupcomputacion.com.ar/wp-content/uploads/2026/10/000000000041887989907artttti-2--300x300.png"
+    }
+   ],
+   "categories": [
+    {
+     "name": "Memoria DDR5"
+    },
+    {
+     "name": "Memorias RAM"
+    }
+   ]
+  }
+ ],
+ "HF Tecnología": [
+  {
+   "id": 3687,
+   "name": "Tablet Lenovo Idea Tab MediaTek Dimensity 6300 8GB RAM 256GB SSD 11&#8243; WQXGA IPS Android",
+   "type": "simple",
+   "permalink": "https://hftecnologia.com.ar/producto/tablet-lenovo-idea-tab-mediatek-dimensity-6300-8gb-ram-256gb-ssd-11-wqxga-ips-android/",
+   "sku": "Lenovo Idea Tab MTK 8GB &#8211; 256GB",
+   "is_in_stock": true,
+   "prices": {
+    "price": "619990",
+    "regular_price": "619990",
+    "sale_price": "619990",
+    "currency_code": "ARS",
+    "currency_minor_unit": 0
+   },
+   "images": [
+    {
+     "src": "https://hftecnologia.com.ar/wp-content/uploads/2026/10/1-134-300x300.jpg",
+     "thumbnail": "https://hftecnologia.com.ar/wp-content/uploads/2026/10/1-134-300x300.jpg"
+    }
+   ],
+   "categories": [
+    {
+     "name": "Tablet Android"
+    }
+   ]
+  }
+ ],
+ "Liontech Gaming": [
+  {
+   "id": 51427,
+   "name": "GABINETE GAMER RAIDMAX MESHIAN X603 LITE BLACK ARGB CONTROL HUB E-ATX",
+   "type": "simple",
+   "permalink": "https://www.liontech-gaming.com/product/gabinete-gamer-raidmax-meshian-x603-lite-black-argb-control-hub-e-atx/",
+   "sku": "06971",
+   "is_in_stock": true,
+   "prices": {
+    "price": "10199999",
+    "regular_price": "11015998",
+    "sale_price": "10199999",
+    "currency_code": "ARS",
+    "currency_minor_unit": 2
+   },
+   "images": [
+    {
+     "src": "https://www.liontech-gaming.com/wp-content/uploads/2026/10/raidmax-gabinete-300x300.png",
+     "thumbnail": "https://www.liontech-gaming.com/wp-content/uploads/2026/10/raidmax-gabinete-300x300.png"
+    }
+   ],
+   "categories": [
+    {
+     "name": "Componentes de PC"
+    },
+    {
+     "name": "Gabinetes de PC"
+    }
+   ]
+  }
+ ],
+ "Dinobyte": [
+  {
+   "id": 4623,
+   "name": "Disco Solido Western Digital Green 480GB",
+   "type": "simple",
+   "permalink": "https://dinobyte.ar/producto/disco-solido-western-digital-green-480gb/",
+   "sku": "DIS046",
+   "is_in_stock": true,
+   "prices": {
+    "price": "16654800",
+    "regular_price": "16654800",
+    "sale_price": "16654800",
+    "currency_code": "ARS",
+    "currency_minor_unit": 2
+   },
+   "images": [
+    {
+     "src": "https://dinobyte.ar/wp-content/uploads/DIS046-1-300x300.jpg",
+     "thumbnail": "https://dinobyte.ar/wp-content/uploads/DIS046-1-300x300.jpg"
+    }
+   ],
+   "categories": [
+    {
+     "name": "Discos"
+    },
+    {
+     "name": "Discos Solidos (SSD) 2.5\""
+    }
+   ]
+  }
  ]
 }

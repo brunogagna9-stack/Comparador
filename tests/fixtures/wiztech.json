@@ -1,0 +1,5 @@
+{"Ok": true, "Result": [
+ {"IdProducto": 1046, "Marca": "Logitech", "Componente": "Auricular", "Modelo": "ASTRO A10 White", "Cantidad": 5, "Precio": 84000, "Codigo": "Q4ZM6D", "ImgSrc": "assets/images/products/auricular/a10_a.webp", "HabilitadoWeb": 1, "Encargar": 0, "ProductUrl": "catalogo/producto/auricular/1046/logitech-astro-a10-white", "PrecioOferta": null, "Consultar": false},
+ {"IdProducto": 1681, "Marca": "Apple", "Componente": "Celular", "Modelo": "iPhone 17", "Cantidad": 5, "Precio": 1, "Codigo": "5JHZ5E", "ImgSrc": "assets/images/products/celular/iphone_17_a.webp", "HabilitadoWeb": 1, "Encargar": 1, "ProductUrl": "catalogo/producto/celular/1681/apple-iphone-17", "PrecioOferta": null, "Consultar": true},
+ {"IdProducto": 900, "Marca": "MSI", "Componente": "Placa de video", "Modelo": "RTX 5080 Gaming Trio OC 16GB", "Cantidad": 0, "Precio": 3269000, "Codigo": "MSI5080", "ImgSrc": "assets/images/products/vga/5080.webp", "HabilitadoWeb": 1, "Encargar": 1, "ProductUrl": "catalogo/producto/placa-de-video/900/msi-rtx-5080-gaming-trio-oc-16gb", "PrecioOferta": null, "Consultar": false}
+]}

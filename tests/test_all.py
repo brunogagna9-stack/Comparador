@@ -1,6 +1,6 @@
 import json, sys
 sys.path.insert(0, ".")
-from scrapers.common import parse_ars, canon_category
+from scrapers.common import parse_ars, canon_category, fix_category
 from scrapers import mexx, maximus, gezatek, fullh4rd, logg, compragamer
 import build_data as bd
 
@@ -91,7 +91,7 @@ def test_hardware_json():
     for c in mh.C:
         # sin puntaje de juegos solo si no hay medición (i3-12100F y los agregados por la auditoría, todos con ficha oficial)
         assert c[7] is not None or c[0] == "i3-12100f" or c[0] in mh.NEW_CPU, c[0]
-        assert (c[6] is None or c[6] >= c[5]) and c[3] in ("AM4", "AM5", "LGA1700", "LGA1851", "LGA1200"), c[0]
+        assert (c[6] is None or c[6] >= c[5]) and c[3] in ("AM4", "AM5", "LGA1700", "LGA1851", "LGA1200", "LGA1151"), c[0]
         re.compile(c[9])
         # el tipo de memoria debe ser coherente con el socket
         assert (c[3] in ("AM5", "LGA1851")) == (c[4] == "DDR5") or c[3] == "LGA1700", c[0]
@@ -118,6 +118,12 @@ def test_hardware_especificaciones():
     import json, re
     from pathlib import Path
     hw = json.loads((Path("site/data/hardware.json")).read_text())
+    # actualización 15: fichas oficiales nuevas; lo que la ficha no aclara NO figura como verificado
+    gx = {g["id"]: g for g in hw["gpux"]}
+    assert gx["gt-1030"]["spec"]["bw"] is None and "tgp" not in gx["gt-1030"]["ver"], "ficha de NVIDIA inconsistente: sin verificar"
+    assert gx["arc-a380"]["spec"]["bw"] == 186 and "sp" not in gx["arc-a380"]["ver"]
+    cp = {c["id"]: c for c in hw["cpus"]}
+    assert cp["p-4560"]["socket"] == "LGA1151" and cp["c-4900"]["spec"]["threads"] == 2 and cp["pg-5400"]["s"] is None
     for g in hw["gpus"]:
         sp = g["spec"]
         assert sp["bw"] == round(sp["bus"] / 8 * sp["gbps"]), g["id"]
@@ -263,7 +269,8 @@ def test_stores_json_reputacion_verificable():
         if not s["reputation"]:
             assert any("ficha" in n.lower() or "reputación" in n.lower() for n in s.get("notes", [])), name + ": explicar por qué no hay puntaje"
     con = {n for n, s in d.items() if s["reputation"]}
-    assert len(con) == 17 and {"Gaming City", "Hardloots"} == set(d) - con, "solo estas dos tiendas quedan sin puntaje verificado"
+    nuevas = {n for n, s in d.items() if s["checked"] == "2026-10-26"}   # actualización 15: reputación todavía sin fuente
+    assert len(con) == 17 and {"Gaming City", "Hardloots"} | nuevas == set(d) - con, "solo estas tiendas quedan sin puntaje verificado"
     assert "average" not in json.dumps(d).lower()
 
 def test_logg_marcado_actual():
@@ -436,6 +443,82 @@ def test_tiendas_woocommerce_nuevas():
     cfg = json.load(open("site/data/config.json"))["stores"]
     for n in woo.WOO_STORES:
         assert n in stores and n in cfg, n
+
+
+def test_tiendas_nuevas_actualizacion_15():
+    """Tiendanube, plataforma «card-ecommerce», WooCommerce por HTML, WIZ TECH, XT-PC y Compufan: precios, stock y registro."""
+    from scrapers import SCRAPERS, woo, woohtml, tiendanube, cardeco, wiztech, xtpc, compufan
+    F = json.load(open("tests/fixtures/woo_stores.json"))
+    mt = woo.parse(F["Max Tecno"], "Max Tecno")[0]
+    assert mt["price_cash"] == 582804.75 and mt["category"] == "motherboards"
+    lt = woo.parse(F["Liontech Gaming"], "Liontech Gaming")[0]
+    assert lt["price_cash"] == 101999.99 and lt["price_list"] == 110159.98 and lt["category"] == "gabinetes"
+    hf = woo.parse(F["HF Tecnología"], "HF Tecnología")[0]
+    assert "&#" not in hf["name"] and fix_category(hf["name"], hf["category"]) == "otros", "una tablet no es almacenamiento"
+    # WooCommerce por HTML (HardCore prohíbe la API en robots.txt)
+    h = open("tests/fixtures/hardcore.html").read()
+    hc = woohtml.parse(h, "HardCore")
+    assert woohtml.last_page(h) == 25 and len(hc) == 2, "el «armá tu PC» configurable no tiene precio único"
+    assert hc[0]["price_cash"] == 2355 and hc[0]["price_list"] is None and hc[0]["stock"] is True
+    assert hc[1]["price_cash"] == 21195 and hc[1]["price_list"] == 25120 and fix_category(hc[1]["name"], hc[1]["category"]) == "mouses"
+    # Tiendanube: precio con transferencia (centavos) o desde data-variants; sin descuento -> un solo precio
+    tn = tiendanube.parse(open("tests/fixtures/tiendanube.html").read(), "37 Bytes")
+    assert [round(i["price_cash"], 2) for i in tn] == [314998.9, 499999.1, 3082.85, 120000]
+    assert [i["price_list"] for i in tn] == [384145, 609755, 4742.84, None]
+    assert [i["stock"] for i in tn] == [True, True, True, False] and tn[0]["category"] == "almacenamiento"
+    assert tn[1]["category"] == "memorias-ram" and tn[0]["url"].startswith("https://www.37bytes.com.ar/productos/")
+    # card-ecommerce: «Precio especial» = contado; lista = el mayor entre «Precio lista» y el de tarjeta
+    ce = cardeco.parse(open("tests/fixtures/cardeco.html").read(), "Noxie Store", "placas-de-video")
+    assert [(i["price_cash"], i["price_list"], i["stock"]) for i in ce] == [(121547, 158011, True), (20404, 24076, True), (15999, None, False)]
+    assert [i["category"] for i in ce] == ["placas-de-video", "fuentes", "almacenamiento"] and ce[0]["store_sku"] == "GT 710 2GD3 LP"
+    # WIZ TECH: un solo precio -> lista (no se afirma contado); «consultar» y celulares fuera; «a pedido» sin stock confirmado
+    wz = wiztech.parse(json.load(open("tests/fixtures/wiztech.json")))
+    assert len(wz) == 2 and wz[0]["price_cash"] is None and wz[0]["price_list"] == 84000 and wz[0]["category"] == "auriculares"
+    assert wz[1]["stock"] is None and wz[1]["category"] == "placas-de-video" and wz[1]["url"].startswith("https://wiztech.com.ar/catalogo/")
+    # XT-PC: precio especial (débito/transferencia/efectivo) = contado; sin stock en el listado
+    xt = xtpc.parse(open("tests/fixtures/xtpc.html").read(), "placas-de-video")
+    assert xt[0]["price_cash"] == 93477.6 and xt[0]["price_list"] == 102825.31 and xt[0]["stock"] is None
+    assert xt[0]["url"] == "https://www.xt-pc.com.ar/prod/31476/placa-de-video-radeon-r5-230-2gb-ddr3-low-profile-akr230d3s2gl1"
+    # Compufan: precio sin medio de pago aclarado -> lista; imagen por https
+    cf = compufan.parse(open("tests/fixtures/compufan.html").read(), "Con placa de video")
+    assert cf[0]["price_list"] == 888599 and cf[0]["price_cash"] is None and cf[0]["category"] == "pcs-armadas" and cf[0]["image"].startswith("https://")
+    assert compufan.page_url("https://www.compufanstore.com.ar/ARTICULOS/X/CAT_ID=63/SCAT_ID=3948/m=0/BUS=/compufanstore.aspx", 2) == \
+        "https://www.compufanstore.com.ar/ARTICULOS/X;CAT_ID=63;SCAT_ID=3948;m=0;BUS=;A_PAGENUMBER=2;/compufanstore.aspx"
+    # registro: cada tienda nueva tiene lector, ficha en stores.json y entrada en config.json
+    stores = json.load(open("site/data/stores.json"))["stores"]
+    cfg = json.load(open("site/data/config.json"))["stores"]
+    nuevas = list(woohtml.HTML_STORES) + list(tiendanube.TN_STORES) + list(cardeco.CE_STORES) + ["WIZ TECH", "XT-PC", "Compufan Store"]
+    for n in nuevas + list(woo.WOO_STORES):
+        assert n in SCRAPERS and n in stores and n in cfg, n
+    assert stores["IgnaTech"]["integration"] == stores["Portal Tech & Gaming"]["integration"] == "no disponible"
+
+
+def test_xtpc_corta_en_el_relleno():
+    """Pasada la última página XT-PC muestra siempre los mismos productos de relleno: no se agregan."""
+    from scrapers import xtpc
+    fx = open("tests/fixtures/xtpc.html").read()
+    pag = lambda n: fx.replace("31476", f"9{n}1").replace("12149", f"9{n}2")
+    def fake(u):
+        n = int(u.rsplit("/", 1)[1])
+        if n == 999 or ("/3/" in u and n > 6):
+            return pag(0)                                          # relleno
+        return pag(n) * 6 if "/3/" in u else "<html></html>"       # 12 productos por página
+    orig, xtpc.get = xtpc.get, fake
+    try:
+        got = xtpc.scrape()
+    finally:
+        xtpc.get = orig
+    assert len(got) == 12 and not any("/prod/901/" in i["url"] for i in got), "6 páginas reales x 2 productos, sin el relleno"
+
+
+def test_presupuesto_de_tiempo():
+    """Las tiendas que no se leyeron por falta de tiempo van primero en la corrida siguiente."""
+    import build_data, tempfile, pathlib
+    with tempfile.TemporaryDirectory() as d:
+        m = pathlib.Path(d) / "meta.json"
+        m.write_text(json.dumps({"stores": {"C": {"ok": False, "skipped": True}, "A": {"ok": True}}}))
+        assert build_data.store_order({"A": 1, "B": 2, "C": 3}, m) == ["C", "A", "B"]
+        assert build_data.store_order({"A": 1, "B": 2}, pathlib.Path(d) / "no.json") == ["A", "B"]
 
 
 def test_venex_parse():
