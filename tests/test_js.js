@@ -485,4 +485,27 @@ t("comparador: monitores y memorias usan la ficha de Icecat (verificado, con atr
   assert(/1,35 V/.test(row(cr, "volt").cells[0].text)); assert.strictEqual(row(cr, "volt").cells[1].tag, "nd");
   assert(JSON.stringify(cm).indexOf("NaN") < 0 && JSON.stringify(cr).indexOf("NaN") < 0);
 });
+/* ---------- Encontrá tu equipo (actualización 24) ---------- */
+t("encontrá: editar video + muchos FPS por componentes ya no queda vacío (busca un procesador que cumpla núcleos y puntaje)", () => {
+  const F = CT.makeFinder(CT.create(HW, PR, {}, null));
+  const r = F.recommend({ usos: ["multitarea", "video", "streaming", "gaming_comp", "gaming_pesado"], tipo: "componentes", budget: null, res: "1080", have: null });
+  const s = r.sections.find(x => x.key === "build");
+  assert(s && s.cands.length > 0, "hay armados posibles"); assert.strictEqual(r.insufficient, null);
+  s.cands.forEach(c => { assert(c.c.s >= 70, "puntaje"); assert(c.c.spec.cores >= 8, "núcleos"); });
+});
+t("encontrá: siempre tres columnas en orden económica · equilibrada · rendimiento, con precios crecientes", () => {
+  const F = CT.makeFinder(CT.create(HW, PR, {}, null));
+  [{ usos: ["oficina"] }, { usos: ["gaming_casual"] }, { usos: ["gaming_pesado"], res: "1440" }].forEach(a => {
+    const r = F.recommend({ tipo: "nose", budget: null, have: null, res: "1080", ...a });
+    r.sections.filter(s => s.picks.length === 3).forEach(s => {
+      assert.deepStrictEqual(s.picks.map(p => p.k), ["eco", "bal", "perf"], a.usos + " " + s.key);
+      assert(s.picks[0].c.total <= s.picks[1].c.total && s.picks[1].c.total <= s.picks[2].c.total, "precios crecientes " + s.key);
+    });
+  });
+});
+t("encontrá: sin presupuesto, el aviso no habla de presupuesto", () => {
+  const F = CT.makeFinder(CT.create(HW, [], {}, null));
+  const r = F.recommend({ usos: ["gaming_pesado"], tipo: "componentes", budget: null, res: "4k", have: null });
+  assert(r.insufficient && !r.insufficient.budget && Array.isArray(r.insufficient.hard) && r.insufficient.hard.length);
+});
 console.log(n + " pruebas de JavaScript OK");

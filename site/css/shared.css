@@ -49,7 +49,7 @@ footer.fine{max-width:1100px;margin:0 auto;padding:0 16px 40px;color:var(--mut);
 
 /* ---- rediseño (actualización 5) ---- */
 body{background:radial-gradient(1200px 400px at 50% -120px,color-mix(in srgb,var(--acc) 14%,transparent),transparent),var(--bg);background-attachment:fixed;-webkit-font-smoothing:antialiased;letter-spacing:-.005em}
-header{background:color-mix(in srgb,var(--card) 88%,transparent);backdrop-filter:saturate(1.6) blur(10px);position:sticky;top:0;z-index:30;border-bottom:1px solid var(--line)}
+header{background:color-mix(in srgb,var(--card) 97%,transparent);position:sticky;top:0;z-index:30;border-bottom:1px solid var(--line)}
 .logo{font-weight:800;font-size:20px;letter-spacing:-.4px}.logo span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
 .nav a{color:var(--mut);padding:7px 12px;border-radius:999px;border-bottom:0;transition:background .15s,color .15s}.nav a:hover{background:var(--soft);color:var(--tx)}
 .nav a.on{background:var(--tx);color:var(--bg);border:0}

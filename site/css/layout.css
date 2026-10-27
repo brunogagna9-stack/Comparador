@@ -5,14 +5,14 @@
   --acc:#2556d9;--grad:linear-gradient(135deg,#2556d9 0%,#7c3aed 100%);--gradt:linear-gradient(135deg,#2556d9 0%,#7c3aed 100%);
   --sh:0 1px 2px rgba(15,23,42,.10),0 8px 22px rgba(15,23,42,.10);--r:14px;
   --ok:#0b6b49;--warn:#8a5200;--bad:#c4301f;--soft:#e8edf6;--okbg:#dff3e8;--warnbg:#fff1cc;--badbg:#ffe0db;
-  --up:#c4301f;--down:#0f7a55;--best:#dcf3e8;--hbg:rgba(255,255,255,.92);--hh:58px;
+  --up:#c4301f;--down:#0f7a55;--best:#dcf3e8;--hbg:rgba(255,255,255,.97);--hh:58px;
 }
 @media (prefers-color-scheme:dark){:root{
   --bg:#05080f;--card:#1a2440;--card2:#222e4f;--tx:#f1f4fb;--mut:#aab6cf;--line:#3a496b;--line2:#5a6c94;
   --acc:#8fb0ff;--grad:linear-gradient(135deg,#3a68e8 0%,#7448e0 100%);--gradt:linear-gradient(135deg,#8fb0ff 0%,#c3a4ff 100%);
   --sh:0 0 0 1px rgba(255,255,255,.03),0 10px 28px rgba(0,0,0,.55);
   --ok:#52d1a3;--warn:#efbb55;--bad:#ff8f84;--soft:#252f4e;--okbg:#12362d;--warnbg:#3a2f12;--badbg:#401f1c;
-  --up:#ff8f84;--down:#52d1a3;--best:#143a30;--hbg:rgba(10,15,30,.92);
+  --up:#ff8f84;--down:#52d1a3;--best:#143a30;--hbg:rgba(10,15,30,.97);
 }}
 *{box-sizing:border-box}
 body{margin:0;color:var(--tx);font:14px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;-webkit-font-smoothing:antialiased}
@@ -21,7 +21,7 @@ a{color:var(--acc);text-decoration:none}button{font:inherit;cursor:pointer}
 body{background:radial-gradient(1100px 380px at 50% -140px,color-mix(in srgb,var(--acc) 12%,transparent),transparent),var(--bg);background-attachment:fixed}
 
 /* ---- encabezado único ---- */
-header.site{position:sticky;top:0;z-index:40;background:var(--hbg);backdrop-filter:saturate(1.5) blur(10px);border-bottom:1px solid var(--line)}
+header.site{position:sticky;top:0;z-index:40;background:var(--hbg);border-bottom:1px solid var(--line)}
 header.site .hin{max-width:1280px;margin:auto;padding:0 16px;height:var(--hh);display:flex;align-items:center;gap:14px}
 header.site .logo{font-weight:800;font-size:19px;letter-spacing:-.4px;color:var(--tx);white-space:nowrap}
 header.site .logo span{background:var(--gradt);-webkit-background-clip:text;background-clip:text;color:transparent}

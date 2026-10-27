@@ -13,6 +13,12 @@ if shutil.which("node"):
     subprocess.run(["node", "tests/test_js.js"], check=True)   # armado, buscador y comparador
     subprocess.run(["node", "tests/test_assistant.js"], check=True)   # asistente virtual
     subprocess.run(["node", "tests/test_worker.mjs"], check=True)     # proxy opcional de IA
+    # la animación 3D es un módulo: se revisa que no tenga errores de sintaxis (si los tuviera, la portada no la muestra)
+    import tempfile, os as _os
+    with tempfile.TemporaryDirectory() as _d:
+        _m = _os.path.join(_d, "hero3d.mjs"); shutil.copy("site/js/hero3d.js", _m)
+        subprocess.run(["node", "--check", _m], check=True)
+    print("animación 3D: sintaxis OK")
 else:
     print("AVISO: node no está instalado; se omiten las pruebas de JavaScript")
 print("tests OK")

@@ -92,12 +92,16 @@
     const off = matchMedia("(prefers-reduced-motion:reduce)").matches || navigator.webdriver && !/[?&]anim=1/.test(location.search);
     if (off || !("IntersectionObserver" in window)) { document.documentElement.classList.add("noanim"); return; }
     const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("ct-in"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -6% 0px" });
-    const scan = root => { const els = root.querySelectorAll ? root.querySelectorAll(RV) : [];
-      els.forEach(el => { if (el.classList.contains("ct-rv") || el.closest(".modal,#ctas-p,header.site,footer.site")) return;
+    /* late = lo que se dibuja después por una acción de la persona (elegir una opción, filtrar, cambiar de paso…):
+       si ya está a la vista aparece directamente, sin desvanecerse (solo se anima lo que entra al desplazar). */
+    const scan = (root, late) => { const els = [...(root.querySelectorAll ? root.querySelectorAll(RV) : [])]
+        .filter(el => !el.classList.contains("ct-rv") && !el.closest(".modal,#ctas-p,header.site,footer.site,[data-norv]"));
+      const vh = innerHeight, show = late ? els.map(el => el.getBoundingClientRect().top < vh) : [];   // primero se mide todo…
+      els.forEach((el, i) => { if (show[i]) return;                                                     // …después se escribe
         const sib = el.parentElement ? [...el.parentElement.children].indexOf(el) : 0;
         el.style.setProperty("--d", Math.min(sib, 8) * 45 + "ms"); el.classList.add("ct-rv"); io.observe(el); }); };
-    scan(document);
-    new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(nd => { if (nd.nodeType === 1) { if (nd.matches && nd.matches(RV)) { scan(nd.parentElement || document); } else scan(nd); } })))
+    scan(document, false);
+    new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(nd => { if (nd.nodeType === 1) { if (nd.matches && nd.matches(RV)) { scan(nd.parentElement || document, true); } else scan(nd, true); } })))
       .observe(document.body, { childList: true, subtree: true });
     // red de seguridad: si algo quedó oculto (por ejemplo, al imprimir), se muestra
     addEventListener("beforeprint", () => document.querySelectorAll(".ct-rv").forEach(e => e.classList.add("ct-in")));

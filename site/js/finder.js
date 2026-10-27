@@ -61,16 +61,17 @@
       if (!under.length) return { picks: [], under: 0 };
       const byTotal = under.slice().sort((a, b) => a.total - b.total || b.score - a.score);
       const eco = byTotal[0];
-      const perfPool = budget ? under : under.filter(c => c.total <= eco.total * 1.8);
+      const perfPool = budget ? under : under.filter(c => c.total <= eco.total * 2.5);   // sin presupuesto: hasta 2,5 veces la económica
       const perf = perfPool.slice().sort((a, b) => b.score - a.score || a.total - b.total)[0];
-      const rest = under.filter(c => c !== eco && c !== perf);
+      // la equilibrada queda en el medio: más cara que la económica y más barata que la de mayor rendimiento
+      const mid = under.filter(c => c !== eco && c !== perf && c.total >= eco.total && c.total <= perf.total);
+      const rest = mid.length ? mid : under.filter(c => c !== eco && c !== perf && c.total <= perf.total);
       const bal = rest.slice().sort((a, b) => b.score / b.total - a.score / a.total)[0];
       const picks = [];
       const add = (k, c) => { if (c && !picks.find(p => p.c === c)) picks.push({ k, label: lbl[k], c }); };
       add("eco", eco); add("bal", bal); add("perf", perf);
       if (picks.length === 1) picks[0].label = lbl.one;
-      const pref = { barato: "eco", equilibrado: "bal", rendimiento: "perf" }[enfoque];
-      if (pref) picks.sort((x, y) => (y.k === pref) - (x.k === pref));
+      // siempre en el mismo orden: económica · equilibrada · mayor rendimiento (para comparar si conviene gastar más)
       picks.forEach(p => { p.similar = byTotal.filter(c => c !== p.c).sort((x, y) => Math.abs(x.total - p.c.total) - Math.abs(y.total - p.c.total)).slice(0, 3); });
       return { picks, under: under.length };
     };
@@ -118,16 +119,28 @@
 
     /* ---------- 4. PC por componentes (reusa la lógica del armado) ---------- */
     const finalize = (title, parts, extra) => { const t = C.total(parts); return { kind: "build", title, parts, total: t.total, priced: t.priced, missing: t.missing, ...extra }; };
+    /* El procesador que elige el armado (el más barato que no limita a la placa) puede no cumplir lo que pide el uso
+       (p. ej. 8 núcleos para editar video o puntaje alto para muchos FPS). En ese caso se busca el más barato con stock que
+       sí lo cumpla; si ninguno alcanza a la placa, se usa el más rápido de los que cumplen y se avisa (short). */
+    const fitCpu = (cc, g, res, factor, n) => {
+      const ok = c => c.s && !c.se && (!n.cpuScore || c.s >= n.cpuScore) && (!n.cores || (c.spec && c.spec.cores >= n.cores));
+      if (ok(cc.c)) return cc;
+      const pool = HW.cpus.filter(c => ok(c) && C.findCpu(c).length);
+      if (!pool.length) return null;
+      const Gv = g.p[res], price1 = c => C.findCpu(c)[0].p;
+      const enough = pool.filter(c => C.cpuFps(c) >= factor * Gv).sort((x, y) => price1(x) - price1(y));
+      if (enough.length) return { c: enough[0], short: false };
+      return { c: pool.sort((x, y) => C.cpuFps(y) - C.cpuFps(x))[0], short: true };
+    };
     C.recBuilds = (a, n) => {
       const cands = [], res = n.res;
       if (n.gaming) {
         HW.gpus.filter(g => !g.se).forEach(g => {
           if (n.gpuReq.some(r => g.p[r.res] < r.fps)) return;
           if (!C.findGpu(g).length) return;
-          const { cMin, cSug } = C.pickPair(g, res);
-          [["min", cMin], ["sug", cSug]].forEach(([kind, cc]) => {
-            if (n.cpuScore && !(cc.c.s >= n.cpuScore)) return;
-            if (n.cores && cc.c.spec.cores < n.cores) return;
+          const pp = C.pickPair(g, res);
+          [["min", fitCpu(pp.cMin, g, res, 0.8, n)], ["sug", fitCpu(pp.cSug, g, res, 1.0, n)]].forEach(([kind, cc]) => {
+            if (!cc) return;
             const parts = C.parts(g, cc.c, cc.short, kind, res, { ram: kind === "min" ? n.ram.min : n.ram.rec, ssd: n.ssd });
             const b = finalize("", parts, { g, c: cc.c, cfg: kind, short: cc.short });
             const cf = cc.c.s ? C.cpuFps(cc.c) : null, fps = cf ? Math.min(g.p[res], cf) : g.p[res];
@@ -274,7 +287,8 @@
           const cs = [...C.recBuilds({ usos: ["gaming_casual"], res: "1080" }, r).cands, ...C.recPcs({ usos: ["gaming_casual"], res: "1080" }, r).cands].filter(c => c.total <= a.budget).sort((x, y) => y.score - x.score);
           if (cs[0]) alt.push({ c: cs[0], n: r });
         }
-        out.insufficient = { minTotal, budget: a.budget, alt, reason: all.length ? "con tu presupuesto no hay productos que cumplan lo que necesitás" : "no encontramos en el catálogo productos con stock que cumplan esos requisitos" };
+        out.insufficient = { minTotal, budget: a.budget, alt, reason: all.length ? "con tu presupuesto no hay productos que cumplan lo que necesitás" : "no encontramos en el catálogo productos con stock que cumplan esos requisitos",
+          hard: [n.cores ? `procesador de ${n.cores} núcleos o más` : null, n.cpuScore ? "procesador rápido para muchos FPS" : null, n.gpuReq.length ? `placa de video para ~${Math.max(...n.gpuReq.map(r => r.fps))} FPS` : null, `${n.ram.min} GB de RAM`, `SSD de ${n.ssd >= 1000 ? "1 TB" : n.ssd + " GB"}`].filter(Boolean) };
       }
       out.updated = upd;
       return out;

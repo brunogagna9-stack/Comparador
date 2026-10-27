@@ -15,6 +15,7 @@ import { RenderPass } from "./vendor/addons/RenderPass.js";
 import { UnrealBloomPass } from "./vendor/addons/UnrealBloomPass.js";
 import { OutputPass } from "./vendor/addons/OutputPass.js";
 import { Reflector } from "./vendor/addons/Reflector.js";
+import { mergeGeometries } from "./vendor/addons/BufferGeometryUtils.js";
 
 const host = document.getElementById("pc3d");
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -139,7 +140,7 @@ function start() {
     g.scale.setScalar(r);
     if (axis === "x") g.rotation.y = Math.PI / 2;
     if (axis === "y") g.rotation.x = Math.PI / 2;
-    fanBlades.push(bl);
+    bl.userData.spin = true; fanBlades.push(bl);
     return g;
   }
 
@@ -275,6 +276,28 @@ function start() {
   strands([[-0.78, -0.58, z0 + 0.06], [-0.84, 0.2, z0 + 0.02], [-0.72, 0.86, z0]], 4, 0.018, "z");                          // CPU
   strands([[0.22, -0.58, 0.18], [0.28, -0.4, 0.2], [0.3, -0.02, 0.2]], 6, 0.018, "x", dataMat);                           // placa de video (con pulsos de luz)
 
+  /* ---------- unir mallas fijas: cada pieza pasa de decenas de «dibujos» a uno por material ---------- */
+  function bake(root) {
+    root.updateMatrixWorld(true);
+    const inv = new THREE.Matrix4().copy(root.matrixWorld).invert(), byMat = new Map(), drop = [];
+    root.traverse(o => {
+      if (!o.isMesh || o === root) return;
+      for (let p = o.parent; p && p !== root; p = p.parent) if (p.userData.spin) return;   // lo que gira se deja aparte
+      const g = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
+      for (const k of Object.keys(g.attributes)) if (!["position", "normal", "uv"].includes(k)) g.deleteAttribute(k);
+      if (!g.attributes.uv) return;
+      g.applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld));
+      (byMat.get(o.material) || byMat.set(o.material, []).get(o.material)).push(g); drop.push(o);
+    });
+    drop.forEach(o => o.parent.remove(o));
+    byMat.forEach((gs, m) => { const g = mergeGeometries(gs, false); if (g) root.add(new THREE.Mesh(g, m)); });
+    return root;
+  }
+  // las aspas de cada ventilador también se unen entre sí (giran juntas)
+  function bakeBlades(bl) { const gs = []; bl.updateMatrixWorld(true); const inv = new THREE.Matrix4().copy(bl.matrixWorld).invert(); let m = null;
+    bl.traverse(o => { if (!o.isMesh) return; m = o.material; const g = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone(); g.applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld)); gs.push(g); });
+    bl.clear(); if (gs.length) bl.add(new THREE.Mesh(mergeGeometries(gs, false), m)); }
+
   /* ---------- guion ---------- */
   const STEPS = [
     { o: mobo, name: "Placa madre", cat: "motherboards", from: [0, 0.1, 1.8], rot: [0, 0.8, 0] },
@@ -288,6 +311,8 @@ function start() {
     { o: cables, name: "Cables", cat: null, from: [0, -0.5, 0.8], rot: [0, 0, 0] },
   ];
   const tmpBox = new THREE.Box3();
+  fanBlades.forEach(bakeBlades);
+  [caseG, ...STEPS.map(s => s.o)].forEach(bake);
   STEPS.forEach((s, i) => {
     s.home = s.o.position.clone(); s.homeRot = s.o.rotation.clone();
     rig.add(s.o); s.o.updateMatrixWorld(true);
@@ -396,7 +421,7 @@ function start() {
     rgbLight1.intensity = on * 2.2; rgbLight2.intensity = on * 1.8;
     // destello sobre el vidrio: al encender y cada 6 s mientras está encendida
     const sw = onT < 0 || out > 0 ? -1 : (onT % 6) / 1.1;
-    if (sw >= 0 && sw <= 1) { sweepTex.offset.x = 0.75 - sw * 1.5; sweepMat.opacity = Math.sin(sw * Math.PI) * 0.5; } else sweepMat.opacity = 0;
+    if (sw >= 0 && sw <= 1) { sweepTex.offset.x = 0.75 - sw * 1.5; sweepMat.opacity = Math.sin(sw * Math.PI) * 0.22; } else sweepMat.opacity = 0;
     // cámara: se acerca a la pieza que se instala; después, plano general
     if (tt < T_ON && cur >= 0) { const s = STEPS[cur]; wantTgt.copy(s.focus).lerp(ORIGIN, 0.35); wantPos.copy(dirFor(s.yaw).multiplyScalar(near)).add(wantTgt); }
     else { const o = tt - T_ON; wantTgt.set(0, -0.05, 0);
@@ -413,6 +438,11 @@ function start() {
   /* ---------- bucle ---------- */
   const clock = new THREE.Clock();
   let running = false, raf = 0;
+  // ?perf=1: mide cuánto tarda cada cuadro (para diagnosticar)
+  const perf = /perf/.test(location.search), pbuf = { js: [], dt: [] };
+  function perfLog(js, dt) { pbuf.js.push(js); pbuf.dt.push(dt); if (pbuf.js.length >= 120) { const avg = a => a.reduce((x, y) => x + y, 0) / a.length;
+    window.__pc3dPerf = { renderMs: +avg(pbuf.js).toFixed(2), fps: Math.round(1 / avg(pbuf.dt)), calls: renderer.info.render.calls, tris: renderer.info.render.triangles, tier, bloom: useBloom };
+    console.log("[pc3d]", JSON.stringify(window.__pc3dPerf)); pbuf.js = []; pbuf.dt = []; } }
   /* Calidad adaptable: mide la frecuencia real de la pantalla (60, 120, 144 Hz…) y, si no llega a dibujar cada cuadro a
      tiempo, baja un escalón: 0 = todo · 1 = sin piso espejado · 2 = 80 % de resolución · 3 = resolución 1x · 4 = sin brillo.
      Si después de bajar va holgado varios segundos, prueba volver a subir una vez. */
@@ -452,7 +482,11 @@ function start() {
     rig.rotation.y = userYaw - 0.12; rig.rotation.x = userPitch;
     rig.position.y = reduce ? 0 : Math.sin(now * 0.9) * 0.02;
     camera.position.copy(camPos); camera.lookAt(camTgt);
+    if (performance.now() - lastScroll < 180) return;                      // desplazando: se saltea el dibujo
+    if (perf) { renderer.info.autoReset = false; renderer.info.reset(); }
+    const r0 = performance.now();
     if (useBloom) composer.render(); else renderer.render(scene, camera);
+    if (perf) perfLog(performance.now() - r0, rawDt);
     adapt(rawDt);
   }
   if (small) { tier = 1; }
@@ -460,10 +494,15 @@ function start() {
   STEPS.forEach(s => { s.o.visible = true; }); bursts.forEach(b => { b.pts.visible = true; });
   try { renderer.compile(scene, camera); if (useBloom) composer.render(); } catch (e) { /* sin importancia */ }
   STEPS.forEach(s => { s.o.visible = false; }); bursts.forEach(b => { b.pts.visible = false; });
+  // mientras la persona desplaza la página no se dibuja (el último cuadro queda quieto): así el desplazamiento va fluido
+  let lastScroll = -1;
+  addEventListener("scroll", () => { lastScroll = performance.now(); }, { passive: true });
+  addEventListener("wheel", () => { lastScroll = performance.now(); }, { passive: true });
   function play() { if (running) return; running = true; clock.getDelta(); frame(); }
   function stop() { running = false; cancelAnimationFrame(raf); }
   const vis = { inView: true };
-  new IntersectionObserver(es => { vis.inView = es[0].isIntersecting; vis.inView && !document.hidden ? play() : stop(); }, { threshold: 0.05 }).observe(host);
+  // solo se anima si se ve al menos un cuarto de la vitrina (si apenas asoma, no gasta placa de video)
+  new IntersectionObserver(es => { vis.inView = es[0].intersectionRatio >= 0.25; vis.inView && !document.hidden ? play() : stop(); }, { threshold: [0, 0.25, 0.5] }).observe(host);
   document.addEventListener("visibilitychange", () => { document.hidden || !vis.inView ? stop() : play(); });
   host.classList.add("ready");
   play();

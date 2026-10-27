@@ -292,3 +292,36 @@ Lo que falta en `fichas_incompletas.csv` es sobre todo el **puntaje de rendimien
   - se sacó el desenfoque (`backdrop-filter`) de la etiqueta de la animación y de las insignias de Productos, que obligaban al
     navegador a recalcular el desenfoque en cada cuadro/desplazamiento.
 - En celulares arranca sin piso espejado (ahorra batería). `?hq=1` fuerza la máxima calidad (para revisar).
+
+
+## Actualización 23 — Desplazamiento fluido
+- Medido el 2026-10-27 en la PC del dueño (RTX 2060 SUPER, pantalla de ~165 Hz) con la versión 3 publicada: el hilo principal de la
+  página no se traba (sin tareas largas, 163-165 cuadros por segundo con la animación). La traba al desplazar viene de que la placa
+  de video tiene que dibujar la animación (brillo, piso espejado, antialiasing) y, a la vez, mover la página: en Chrome las dos cosas
+  pasan por el mismo proceso de la placa de video.
+- Cambios:
+  - mientras se desplaza la página (rueda, barra o dedo) la animación no dibuja; retoma 0,18 s después de parar;
+  - la animación solo corre si se ve al menos un cuarto de la vitrina;
+  - cada pieza se une en una sola malla por material: de ~400 a ~145 dibujos por cuadro (mismo aspecto);
+  - se quitó el desenfoque (`backdrop-filter`) del encabezado fijo de todas las páginas (el fondo ya era 92 % opaco; ahora 97 %),
+    que la placa de video recalculaba en cada cuadro del desplazamiento;
+  - destello del vidrio más suave.
+- Diagnóstico: `?perf=1` en la dirección de la portada escribe en la consola del navegador los cuadros por segundo, el tiempo de
+  dibujo y la cantidad de dibujos. `tests/run_tests.py` ahora revisa también la sintaxis de `site/js/hero3d.js`.
+
+
+## Actualización 24 — «Encontrá tu equipo»: sin parpadeo, siempre con resultado y tres columnas
+- **Parpadeo:** al elegir una opción, el panel se volvía a dibujar y la animación de aparición lo hacía desvanecerse y volver.
+  Ahora (en todo el sitio) lo que se redibuja por una acción de la persona y ya está a la vista aparece directo; solo se anima lo que
+  entra al desplazar. El asistente de preguntas además queda excluido (`data-norv`).
+- **Sin resultado / mensaje de presupuesto equivocado:** con usos como edición de video + muchos FPS por componentes no aparecía
+  nada, y el aviso decía «Con tu presupuesto no alcanza» aunque no se había puesto presupuesto. Causa: el armado elegía el
+  procesador más barato que no limita a la placa, sin mirar que el uso pedía 8 núcleos y puntaje alto, y descartaba todo.
+  Ahora, si ese procesador no cumple, se busca el más barato con stock que sí cumpla (si ninguno alcanza a la placa, el más rápido
+  de los que cumplen, avisado). Probado con el catálogo real del 27/10: 24 armados posibles. Sin presupuesto, el aviso ya no
+  habla de presupuesto y dice qué combinación de requisitos no se encontró.
+- **Se quitó la pregunta «¿Qué preferís?».** Los resultados se muestran siempre en tres columnas, en el mismo orden:
+  económica · equilibrada · mayor rendimiento (precios crecientes). Cada columna dice cuánto más cuesta que la económica y,
+  en juegos, cuántos FPS más rinde (estimado), con una conclusión: «la mejora acompaña al precio», «mejora moderada» o
+  «pagás bastante más por poca mejora». Sin presupuesto, «mayor rendimiento» se busca hasta 2,5 veces el precio de la económica.
+- Los botones de presupuesto ($600.000, $1.000.000…) ahora quedan marcados al elegirlos.
