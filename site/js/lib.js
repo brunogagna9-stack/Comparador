@@ -219,9 +219,19 @@
       if (!l.length) return null;
       return l.sort((a, b) => CT.price(a) - CT.price(b))[0];
     };
+    /* Para RECOMENDAR (armado, encontrá tu equipo) no se usa un precio que difiere 3 veces o más del resto de las tiendas
+       (casi siempre es un error de publicación o un producto mal cruzado): con 3 o más tiendas se descarta el que se aleja
+       de la mediana; con solo 2 no se sabe cuál está bien y el producto no se recomienda. */
+    C.recOffer = g => {
+      if (!g.dif) return C.bestOffer(g);
+      const l = g.offers.filter(o => o.stock !== false && CT.price(o)); if (l.length < 3) return null;
+      const ps = l.map(CT.price).sort((a, b) => a - b), med = ps[Math.floor(ps.length / 2)];
+      const ok = l.filter(o => CT.price(o) >= med * 0.45 && CT.price(o) <= med * 2.2);
+      return ok.length ? ok.sort((a, b) => CT.price(a) - CT.price(b))[0] : null;
+    };
     C.cheapest = (list, n = 3) => {
       const seen = new Set(), out = [];
-      list.map(g => { const o = C.bestOffer(g); return o ? { g, o, p: CT.price(o) } : null; }).filter(Boolean)
+      list.map(g => { const o = C.recOffer(g); return o ? { g, o, p: CT.price(o) } : null; }).filter(Boolean)
         .sort((a, b) => a.p - b.p).forEach(x => { const k = x.g.id + "|" + x.o.url; if (!seen.has(k) && seen.size < n) { seen.add(k); out.push(x); } });
       return out;
     };
@@ -250,6 +260,69 @@
       return C.cheapest(inCat("memorias-ram").filter(p => { const s = ramSpec(p.name); return ddr.test(p.name) && !s.laptop && s.gb && s.gb >= gb && s.gb <= gb * 2; })); };
     C.findSsd = gb => C.cheapest(inCat("almacenamiento").filter(p => { const s = storageSpec(p.name);
       return s.kind === "SSD" && !s.external && s.gb && s.gb >= gb && s.gb <= gb * 2.1 && /nvme|m\.2|sata/i.test(p.name); }));
+
+    /* ---------- compatibilidad extra del armado (actualización 26) ---------- */
+    // ¿El procesador trae disipador en la caja? true / false / null (no se sabe). Manda lo que dice el título de la tienda.
+    CT.coolerIncluded = (c, listing) => {
+      const n = listing || "";
+      if (/\b(tray|oem)\b|s\/\s?cooler|sin (cooler|disipador)|no incluye (cooler|disipador)/i.test(n)) return false;
+      if (/c\/\s?cooler|con (cooler|disipador)|incluye (cooler|disipador)|wraith|laminar/i.test(n)) return true;
+      const id = c.id || "";
+      if (/x3d|k\b|kp$|k-|\dk$/i.test(id) || /\bK( Plus)?$|KF$/i.test(c.name)) return false;
+      if (c.vendor === "Intel") return true;                                         // los Intel sin K traen el cooler Laminar
+      if (/^r\d-(5500|5600|5600g|5600gt|5600t|5600x|5600xt|5700|5700g|4500|4100|3400g|3200g|7600|7700|7900|8500g|8600g|8700g|8400f|8700f)$/.test(id)) return true;
+      if (/^r\d-\d{4}x/.test(id)) return false;                                     // Ryzen X (5700X en adelante, 7000X, 9000X) sin cooler
+      return null;
+    };
+    const COOLER_BAD = /procesador|micro\b|\bryzen\b|core i\d|\bgabinete\b|pasta|grasa|silicona|t[eé]rmic|thermal|compuesto|pad t|\bkit\b|combo|mouse|soporte|bracket|ventilador para gabinete|pack|fan x?\d|notebook|base/i;
+    const isAio = n => /water|watercool|l[ií]quid|\baio\b|all-in-one|\blc\s?(ii|iii|iv|\d)|\bml\d{3}|\blc\b/i.test(n);
+    const aioSize = n => { const m = n.match(/\b(120|240|280|360|420)\s?(mm)?\b/); return m ? +m[1] : null; };
+    const statedTdp = n => { const m = n.match(/\b(\d{2,3})\s?w\b/i); return m ? +m[1] : null; };
+    const GOOD_AIR = /hyper\s?212|ak\s?(400|500|620)|frozn|se-2\d\d|assassin|peerless|phantom spirit|gammaxx|ag400|ag620|rc400|rc\s?700|tower|torre|heatpipe/i;
+    // si el título nombra sockets, tiene que nombrar el del procesador (AM5 acepta los de AM4; LGA1851, los de LGA1700)
+    const coolerFits = (n, socket) => { const l = n.toLowerCase(), named = /am4|am5|1700|1851|1200|115\d|lga|intel|amd/.test(l);
+      if (!named) return true;
+      const ok = { AM5: /am5|am4|\bamd\b/, AM4: /am4|\bamd\b/, LGA1851: /1851|1700|\bintel\b/, LGA1700: /1700|\bintel\b/, LGA1200: /1200|115\d|\bintel\b/ }[socket];
+      return ok ? ok.test(l) : true; };
+    C.coolerTier = c => { const w = c.maxp || (c.tdp ? c.tdp * 1.35 : 90); return w <= 95 ? 1 : w <= 170 ? 2 : 3; };
+    C.findCooler = c => { const w = c.maxp || (c.tdp ? c.tdp * 1.35 : 90), tier = C.coolerTier(c);
+      return C.cheapest(inCat("refrigeracion").filter(p => { const n = p.name; if (COOLER_BAD.test(n) || !/cooler|\bdisipador\b|water|aio|l[ií]quid|refrigeraci/i.test(n)) return false;
+        if (isAio(n)) { const z = aioSize(n); return z && (tier === 3 ? z >= 360 : tier === 2 ? z >= 240 : z >= 240); }
+        if (tier === 3) return false;                                                   // >170 W: solo líquida de 360 o más
+        const t = statedTdp(n); if (t != null) return t >= w + (tier === 2 ? 20 : 0);
+        return GOOD_AIR.test(n); }).filter(p => coolerFits(p.name, c.socket)), 3); };   // sin potencia declarada solo se aceptan modelos de torre conocidos
+    // Placas madre: ¿soportan ese procesador de fábrica o pueden necesitar actualizar la BIOS? y ¿alcanzan para su consumo?
+    CT.biosNeed = (c, chipset) => {
+      const ch = (chipset || "").toLowerCase(), id = c.id || "";
+      if (!ch) return "unk";
+      if (c.socket === "AM5" && /^r\d-(9\d{3}|8\d{3})/.test(id) && /^(a620|b650e?|x670e?)$/.test(ch)) return "bios";
+      if (c.socket === "AM4" && /^r\d-(5\d{3}|4\d{3})/.test(id) && /^(a320|b350|x370|b450|x470)$/.test(ch)) return "bios";
+      if (c.socket === "LGA1700" && /^i\d-1[34]\d{3}/.test(id) && /^(h610|b660|h670|z690)$/.test(ch)) return "bios";
+      return "ok";
+    };
+    C.findMoboFor = c => {
+      const heavy = (c.maxp || 0) > 160, entry = /^(a620|h610|a520|a320|h810)$/;
+      const all = inCat("motherboards").filter(p => moboSpec(p.name).socket === c.socket);
+      const notEntry = heavy ? all.filter(p => !entry.test((moboSpec(p.name).chipset || "").toLowerCase())) : all;
+      const pool = notEntry.length ? notEntry : all;
+      const shop = C.cheapest(pool, 400).map(x => { const ch = moboSpec(x.g.name).chipset, b = CT.biosNeed(c, ch);
+        return Object.assign(x, { bios: b, note: b === "bios" ? `⚠ es anterior a ${c.name}: si es de stock viejo puede necesitar actualizar la BIOS (muchas lo hacen sin procesador, con BIOS Flashback / Q-Flash Plus); preguntá a la tienda` : b === "unk" ? "chipset no indicado en el título: confirmá que soporte este procesador" : "" }); });
+      const ok = shop.filter(x => x.bios === "ok"), cheapest = shop[0];
+      // se prefiere una placa que lo soporte de fábrica si no cuesta mucho más (hasta +50 % o +$60.000)
+      const first = ok.length && cheapest && ok[0].p - cheapest.p <= Math.max(cheapest.p * 0.5, 60000) ? ok[0] : cheapest;
+      return first ? [first, ...shop.filter(x => x !== first && (x.bios !== "bios" || first.bios === "bios"))].slice(0, 3) : [];
+    };
+    // Gabinete según el tamaño de la placa madre elegida
+    C.findCase = moboName => { const f = moboName ? moboSpec(moboName).form : null, atx = f !== "Micro-ATX" && f !== "Mini-ITX";   // tamaño desconocido: se asume ATX
+      return C.cheapest(inCat("gabinetes").filter(p => /^(gabinete|gab)\b/i.test(p.name) && !/kit|combo|fuente|\b\d{3,4}\s?w\b|teclado|mouse|tec\+|slim|\bitx\b|sin vidrio/i.test(p.name)
+        && (!atx || !/m-?atx|micro|mini[- ]?tower|matx/i.test(p.name))), 3); };
+    // Placas de video que en la mayoría de los modelos usan el conector de 16 pines (12V-2x6 / 12VHPWR)
+    CT.uses16pin = g => g.vendor === "NVIDIA" && /rtx\s?[45]0\d0/i.test(g.name) && g.tgp >= 200;
+    C.findPsuFor = (w, g) => { const base = C.findPsu(w);
+      if (!g || !CT.uses16pin(g) || !base.length) return base;
+      const a3 = inCat("fuentes").filter(p => { const s = psuSpec(p.name); return s.w && s.w >= w && s.w <= w + 250 && s.cert && /atx\s?3|12vhpwr|12v-?2x6|pcie\s?5/i.test(p.name) && !/combo|gabinete/i.test(p.name); });
+      const best3 = C.cheapest(a3, 3);
+      return best3.length && best3[0].p <= base[0].p * 1.2 ? best3.map(x => Object.assign(x, { note: "ATX 3.x: trae el conector de 16 pines" })) : base.map(x => Object.assign(x, { note: "usá el adaptador de 16 pines que viene con la placa de video" })); };
 
     /* ---------- lógica de armado (la misma que usaba armado.html) ---------- */
     C.cpuFps = c => c.s ? HW.ref.gpu_fps_ref * c.s / HW.ref.cpu_score_ref : null;
@@ -294,15 +367,34 @@
           why: `${c.socket} · ${c.mem} · ${c.tdp} W base, ${c.maxp ? `hasta ~${c.maxp} W${c.vendor === "AMD" ? " (estimado)" : ""}` : "potencia máxima no publicada"}.` +
             (c.s ? ` Puntaje de juegos ${c.s}/100${c.se ? " (estimado)" : ""} (≈${Math.round(C.cpuFps(c))} FPS máx. en el suite).` : "") +
             (short ? " Es el más potente de la lista y aun así podría limitar a esta placa." : ""), shop: C.findCpu(c) },
-        { slot: "psu", label: "Fuente de poder", key: "psu:" + psuW, title: `Fuente de poder: ${psuW} W o más`,
+        { slot: "psu", label: "Fuente de poder", key: "psu:" + psuW + (CT.uses16pin(g) ? ":16" : ""), title: `Fuente de poder: ${psuW} W o más`,
           why: "Incluye procesador al máximo + placa + ~100 W del resto. " + (kind === "min" ? "Es el piso: no bajes de este valor." : "Con ~25 % de margen para que trabaje holgada y dure más.") +
-            " Debe tener los conectores de la placa y certificación 80 Plus.", shop: C.findPsu(psuW), watts: psuW },
-        { slot: "mobo", label: "Placa madre", key: "mobo:" + c.socket, title: `Placa madre (socket ${c.socket})`, why: MOBO_WHY[c.socket], shop: C.findMobo(c) },
+            (CT.uses16pin(g) ? " Esta placa usa en la mayoría de los modelos el conector de 16 pines (12V-2x6): se prefieren fuentes ATX 3.x que lo traen; si no, se usa el adaptador que viene con la placa." : " Debe tener los conectores de la placa (8 pines PCIe) y certificación 80 Plus."), shop: C.findPsuFor(psuW, g), watts: psuW },
+        C.moboPart(c),
         { slot: "ram", label: "Memoria RAM", key: "ram:" + ramGb + ":" + c.mem, title: `Memoria RAM: ${ramGb} GB ${c.mem === "DDR4/DDR5" ? "(DDR4 o DDR5 según la placa)" : c.mem}`,
           why: "En dos módulos (dual channel). " + (kind === "min" ? "16 GB es lo que piden hoy los juegos exigentes." : "32 GB da margen para juegos nuevos y varias aplicaciones a la vez."), shop: C.findRam(c, ramGb) },
         { slot: "ssd", label: "Almacenamiento", key: "ssd:" + ssdGb, title: `Almacenamiento: SSD ${ssdLabel} (NVMe preferido)`,
           why: "Cyberpunk 2077 y Black Myth: Wukong exigen SSD; ocupan 70 y 130 GB.", shop: C.findSsd(ssdGb) },
-      ];
+      ].concat(C.extraParts(c, g));
+    };
+    /* placa madre con aviso de BIOS y sin placas de entrada para procesadores de alto consumo */
+    C.moboPart = c => { const shop = C.findMoboFor(c), b = shop[0];
+      const heavy = (c.maxp || 0) > 160;
+      return { slot: "mobo", label: "Placa madre", key: "mobo:" + (b ? b.g.id : c.socket) + (b && b.bios === "bios" ? ":bios" : ""), title: `Placa madre (socket ${c.socket})`,
+        why: MOBO_WHY[c.socket] + (heavy ? ` Para un procesador de ~${c.maxp} W se evitan las placas de entrada (A620/H610), que suelen quedar justas de alimentación.` : "") +
+          (b && b.bios === "bios" ? ` ⚠ La más conveniente puede necesitar actualizar la BIOS para ${c.name}.` : ""), shop }; };
+    /* disipador (si el procesador no lo trae) y gabinete */
+    C.extraParts = (c, g) => {
+      const out = [], cpuL = C.findCpu(c)[0], inc = CT.coolerIncluded(c, cpuL ? cpuL.g.name : "");
+      if (inc !== true) { const tier = C.coolerTier(c), w = c.maxp || Math.round((c.tdp || 65) * 1.35);
+        out.push({ slot: "cooler", label: "Disipador del procesador", key: "cooler:" + tier + ":" + inc, title: `Disipador del procesador${inc === null ? " (si no lo trae)" : ""}`,
+          why: (inc === false ? "Este procesador (o la publicación más barata) viene sin disipador. " : "No sabemos si la caja trae disipador: confirmalo con la tienda; si lo trae, podés sacarlo del total. ") +
+            (tier === 1 ? `Consume hasta ~${w} W: alcanza un disipador de aire común.` : tier === 2 ? `Consume hasta ~${w} W: hace falta un disipador de aire tipo torre o una líquida de 240 mm.` : `Consume hasta ~${w} W: conviene una refrigeración líquida de 360 mm.`) +
+            " Verificá que incluya el soporte para el socket " + c.socket + ".", shop: C.findCooler(c), optional: inc === null }); }
+      const mobo = C.findMoboFor(c)[0], f = mobo ? moboSpec(mobo.g.name).form : null;
+      out.push({ slot: "case", label: "Gabinete", key: "case:" + (f || "?"), title: `Gabinete${f ? " (para placa " + f + ")" : " (para placa ATX)"}`,
+        why: (g ? `Medí el largo máximo de placa de video que acepta: las de 2 ventiladores miden ~250 mm y las de 3, 300–340 mm. ` : "") + "Que entre la fuente (ATX) y, si elegís líquida, que tenga lugar para el radiador.", shop: C.findCase(mobo && mobo.g.name) });
+      return out;
     };
     /* Separa lo compartido de lo propio de cada configuración (comparando slot por slot). */
     C.split = (minP, sugP) => {

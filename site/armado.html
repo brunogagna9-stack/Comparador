@@ -29,17 +29,18 @@
 
 <h2>Antes de comprar: checklist anti-errores</h2>
 <div class="panel"><ul class="chk">
-<li><b>Fuente:</b> la potencia es solo una parte. Verificá que tenga los <b>conectores</b> que pide la placa (8 pines o 12V-2x6) y que sea de marca y certificación 80 Plus reconocida. Evitá fuentes "genéricas" aunque digan muchos watts.</li>
-<li><b>Placa madre:</b> confirmá en el sitio del fabricante que el <b>procesador exacto</b> figura en su lista de compatibilidad y qué <b>versión de BIOS</b> necesita. Con placas más viejas puede hacer falta actualizarla antes.</li>
+<li><b>Fuente:</b> la potencia es solo una parte. Para placas de video con conector de 16 pines (12V-2x6, la mayoría de las RTX 40/50 de gama media-alta) preferimos fuentes ATX 3.x que lo traen; si no, se usa el adaptador que viene con la placa. Que sea de marca y con certificación 80 Plus reconocida.</li>
+<li><b>Placa madre:</b> elegimos una que soporte el procesador de fábrica cuando no cuesta mucho más, y evitamos las de entrada (A620/H610) con procesadores de alto consumo. Si aparece el aviso ⚠ de BIOS, preguntá a la tienda si ya viene actualizada; muchas se actualizan sin procesador (BIOS Flashback / Q-Flash Plus). Igual confirmá el modelo exacto en la lista de compatibilidad del fabricante.</li>
 <li><b>Memoria:</b> el tipo (DDR4 o DDR5) lo define la placa madre, no el procesador; no se pueden mezclar.</li>
-<li><b>Gabinete y cooler:</b> medí el largo de la placa de video y el alto del cooler. Los procesadores terminados en K suelen venderse sin cooler.</li>
+<li><b>Disipador:</b> si el procesador no lo trae (modelos X, X3D, K o publicaciones «tray/OEM») lo sumamos al armado según su consumo. Verificá que incluya el soporte para tu socket y, en los de aire, el alto máximo que acepta el gabinete.</li>
+<li><b>Gabinete:</b> lo sumamos según el tamaño de la placa madre. Medí el largo máximo de placa de video que acepta (las de 3 ventiladores miden 300–340 mm) y, si elegís refrigeración líquida, que tenga lugar para el radiador.</li>
 <li><b>Datos:</b> los consumos y requisitos vienen de los fabricantes; el rendimiento es una estimación. Ante cualquier duda, el manual del fabricante manda.</li>
 </ul></div>
 
 <h2>De dónde salen los datos</h2>
 <div class="panel note" id="src"></div>
 </main>
-<script src="js/lib.js"></script><script src="js/rep.js"></script>
+<script src="js/lib.js"></script><script src="js/rep.js"></script><script src="js/quickview.js"></script>
 <script>
 const $=s=>document.querySelector(s),{ARS,esc,RES}=CT;
 let HW,PR=[],META={},C,S={mode:"gpu",res:0,id:null,ven:""};
@@ -48,7 +49,8 @@ const fdate=iso=>{try{return new Date(iso).toLocaleString("es-AR",{timeZone:"Ame
 function shopHtml(items,extra){
   if(!PR.length)return '<div class="note">Sin datos de precios cargados.</div>';
   if(!items.length)return '<div class="note">No encontré opciones con stock ahora mismo en el comparador.</div>';
-  return '<div class="shop">'+items.map(x=>`<div><span><a href="${esc(x.o.url)}" target="_blank" rel="noopener nofollow">${esc(x.g.name.slice(0,70))}</a> <span class="note">· ${esc(x.o.store)}${REP.badge(x.o.store)}${x.o.stock===true?"":" · stock sin confirmar"}${extra?extra(x):""}</span></span><b>${ARS(x.p)}</b></div>`).join("")+'</div>';
+  // el nombre abre la vista rápida (Seguir precio / Agregar a mi lista); ☆ y + lo hacen directo desde la fila
+  return '<div class="shop">'+items.map(x=>`<div><span>${QV.link(x.g,x.g.name.slice(0,70))} <span class="note">· <a href="${esc(x.o.url)}" target="_blank" rel="noopener nofollow">${esc(x.o.store)} ↗</a>${REP.badge(x.o.store)}${x.o.stock===true?"":" · stock sin confirmar"}${extra?extra(x):""}</span>${x.note?`<div class="note" style="color:${x.bios==="bios"?"var(--warn)":"inherit"}">${esc(x.note)}</div>`:""}</span><span style="white-space:nowrap"><b>${ARS(x.p)}</b>${QV.btns(x.g.id)}</span></div>`).join("")+'</div>';
 }
 const partHtml=p=>`<div class="part"><b>${esc(p.title)}</b><div class="why">${esc(p.why)}</div>${shopHtml(p.shop,p.slot==="psu"?x=>{const m=x.g.name.match(/(\d{3,4})\s?w/i);return m?" · "+m[1]+" W":""}:null)}</div>`;
 function totalHtml(t){
@@ -58,10 +60,11 @@ function totalHtml(t){
 }
 function build(g,A){
   const r=S.res;
-  const col=(title,tag,own,tot,cpu)=>`<div class="col"><h3>${title}</h3><div class="tg">${tag}</div>
+  const ids=parts=>parts.map(p=>p.shop&&p.shop[0]&&p.shop[0].g.id).filter(Boolean);
+  const col=(title,tag,own,tot,cpu)=>{const all=ids([...A.shared,...own]);return `<div class="col"><h3>${title}</h3><div class="tg">${tag}</div>
     ${own.length?own.map(partHtml).join(""):'<div class="note">No hay diferencias: esta configuración usa solo los componentes compartidos.</div>'}
     ${A.shared.length?`<div class="note up">+ los ${A.shared.length} componentes compartidos (arriba), ya incluidos en el total.</div>`:""}
-    ${totalHtml(tot)}</div>`;
+    ${totalHtml(tot)}${all.length?`<button type="button" class="qv-all" data-qall="${all.join(",")}"></button><div class="note">Agrega la opción más barata de cada pieza (incluidas las compartidas) a tu lista del carrito.</div>`:""}</div>`};
   let h="";
   if(A.shared.length)h+=`<div class="col shared" style="margin-bottom:14px"><h3>Componentes compartidos por ambas configuraciones</h3><div class="tg">Son idénticos en el mínimo y en el sugerido: aparecen una sola vez. Cada configuración los cuenta en su propio total.</div>${A.shared.map(partHtml).join("")}</div>`;
   h+=`<div class="cols">${col("Hardware mínimo","Sin cuello de botella importante a "+RES[r],A.onlyMin,A.totalMin)}${col("Hardware sugerido","Equilibrado y con margen a "+RES[r],A.onlySug,A.totalSug)}</div>`;
@@ -112,7 +115,7 @@ function render(){
       h+=`<div class="cols"><div class="col"><h3>Placas sugeridas (equilibradas)</h3><div class="tg">El procesador no limita a la placa</div>${li(ok)}</div><div class="col"><h3>Placas posibles (límite)</h3><div class="tg">Leve cuello de botella (hasta 20 %)</div>${li(ok8)}</div></div><p class="note">Tocá una placa para ver el armado completo con fuente, placa madre y memoria. ¿Ya tenés este procesador y querés saber qué cambiar? Probá <a href="actualizar.html">¿Qué actualizar?</a></p>`;
     }
   }
-  $("#out").innerHTML=h;
+  $("#out").innerHTML=h;QV.sync();
   document.querySelectorAll("[data-g]").forEach(e=>e.onclick=()=>{S.mode="gpu";S.id=e.dataset.g;setMode();window.scrollTo(0,0)});
   document.querySelectorAll("[data-ven]").forEach(e=>e.onclick=()=>setVen(S.ven===e.dataset.ven?"":e.dataset.ven));
 }
@@ -130,7 +133,7 @@ function setMode(){
   const j=async(u,d)=>{try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw 0;return await r.json()}catch{return d}};
   let m;[HW,PR,m]=await Promise.all([j("data/hardware.json",null),j("data/products.json",[]),j("data/meta.json",{}),REP.load()]);META=m;
   if(!HW){$("#out").textContent="No se pudieron cargar los datos de hardware.";return}
-  C=CT.create(HW,PR,META);S.id="rtx-5070";
+  C=CT.create(HW,PR,META);S.id="rtx-5070";QV.setData(PR);
   $("#src").innerHTML=`Consumos y fuentes requeridas: <a href="${HW.sources.nvidia}">NVIDIA</a>, <a href="${HW.sources.amd_gpu}">AMD</a>, <a href="${HW.sources.intel_gpu}">Intel</a>. Procesadores: <a href="${HW.sources.amd_cpu}">AMD</a> e <a href="${HW.sources.intel_cpu}">Intel ARK</a> (la potencia máxima de AMD es el TDP × 1,35, un valor estimado). Rendimiento de placas: <a href="${HW.sources.tom_gpu}">Tom's Hardware (jerarquía de GPU, jun 2026)</a>. Procesadores: <a href="${HW.sources.tom_cpu}">Tom's Hardware (jerarquía de CPU, oct 2026)</a>. Requisitos de juegos: enlaces en cada fila. Precios: los mismos del comparador.`;
   document.querySelectorAll("#mode button").forEach(b=>b.onclick=()=>{S.mode=b.dataset.v;S.id=null;setMode()});
   document.querySelectorAll("#res button").forEach(b=>b.onclick=()=>{S.res=+b.dataset.v;document.querySelectorAll("#res button").forEach(x=>x.classList.toggle("on",x===b));render()});

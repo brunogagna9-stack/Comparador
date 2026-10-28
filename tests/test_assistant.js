@@ -66,7 +66,7 @@ const t = async (name, fn) => { try { await fn(); n++; } catch (e) { console.err
     const B = mk(); const urls = new Set(PR.flatMap(g => g.offers.map(o => o.url)));
     let r = await B.ask("quiero jugar", { section: "encontra" }); assert(/qué juegos/.test(txt(r)) && r.follow.length);
     r = await B.ask("Valorant y Fortnite", {}); assert(/presupuesto/.test(txt(r)));
-    r = await B.ask("tengo 1.800.000 pesos", {}); const low = txt(r); assert(/No encontré opciones/.test(low) && /\$1\.940\.000/.test(low), "presupuesto insuficiente: lo dice y da el mínimo real: " + low);   // armado RTX 5060 Ti + Ryzen 5 9600X (desde la act. 24 se busca un procesador que cumpla el puntaje si el del armado no alcanza)
+    r = await B.ask("tengo 1.800.000 pesos", {}); const low = txt(r); assert(/No encontré opciones/.test(low) && /\$2\.030\.000/.test(low), "presupuesto insuficiente: lo dice y da el mínimo real: " + low);   // armado RTX 5060 Ti + Ryzen 5 9600X + disipador + gabinete (act. 24: procesador que cumpla el puntaje; act. 26: se suman disipador y gabinete)
     const B2 = mk(); await B2.ask("quiero jugar", {}); await B2.ask("Valorant y Fortnite", {}); r = await B2.ask("presupuesto 3 millones", {}); const s = txt(r); assert(/opciones/.test(s) && /\$/.test(s), s);
     const prices = [...s.matchAll(/\$([\d.]+)/g)].map(m => +m[1].replace(/\./g, "")); assert(prices.length && prices.every(p => p <= 3000000), "respeta el presupuesto: " + prices);
     assert(r.links[0].href === "encontra.html");

@@ -41,7 +41,7 @@ details summary{cursor:pointer;color:var(--acc);font-size:13px}
 <div id="out"></div>
 </main>
 <footer class="fine" id="fine"></footer>
-<script src="js/lib.js"></script><script src="js/rep.js"></script><script src="js/compare.js"></script><script src="js/finder.js"></script>
+<script src="js/lib.js"></script><script src="js/rep.js"></script><script src="js/compare.js"></script><script src="js/finder.js"></script><script src="js/quickview.js"></script>
 <script>
 const $=s=>document.querySelector(s),{ARS,esc,RES}=CT;
 let HW,PR=[],META={},C;
@@ -127,10 +127,11 @@ function whyTxt(p,n){
   if(n.gaming&&p.c.fps)t+=` Para tu resolución (${RES[n.res]}) estimamos ~${Math.round(p.c.fps)} FPS promedio en juegos exigentes.`;
   return t;
 }
-function simH(p){return p.similar&&p.similar.length?`<details><summary>Opciones similares (${p.similar.length})</summary>${p.similar.map(c=>`<div class="rrow"><span>${c.kind==="build"?esc(buildName(c)):`<a href="${esc(c.o.url)}" target="_blank" rel="noopener nofollow">${esc(c.g.name.slice(0,60))}</a>`}</span><b>${ARS(c.total)}</b></div>`).join("")}</details>`:""}
+function simH(p){return p.similar&&p.similar.length?`<details><summary>Opciones similares (${p.similar.length})</summary>${p.similar.map(c=>`<div class="rrow"><span>${c.kind==="build"?esc(buildName(c)):QV.link(c.g,c.g.name.slice(0,60))}</span><span style="white-space:nowrap"><b>${ARS(c.total)}</b>${c.kind==="build"?"":QV.btns(c.g.id)}</span></div>`).join("")}</details>`:""}
 const buildName=c=>c.g?`${c.g.name} + ${c.c.name}`:c.c.name;
 function partsH(parts){return parts.map(pt=>{const [b,...rest]=pt.shop||[];
-  return `<div class="rrow"><span>${esc(pt.label)}: ${b?`<a href="${esc(b.o.url)}" target="_blank" rel="noopener nofollow">${esc(b.g.name.slice(0,58))}</a> <span class="note">· ${esc(b.o.store)}${REP.badge(b.o.store)}</span>`:'<span class="ux">sin precio en el comparador</span>'}</span><b>${b?ARS(b.p):"—"}</b></div>${rest.length?`<details style="margin:-2px 0 4px 8px"><summary>${rest.length} alternativa${rest.length>1?"s":""}</summary>${rest.map(r=>`<div class="rrow"><span><a href="${esc(r.o.url)}" target="_blank" rel="noopener nofollow">${esc(r.g.name.slice(0,58))}</a> <span class="note">· ${esc(r.o.store)}${REP.badge(r.o.store)}</span></span><b>${ARS(r.p)}</b></div>`).join("")}</details>`:""}`}).join("")}
+  const row=x=>`${QV.link(x.g,x.g.name.slice(0,58))} <span class="note">· <a href="${esc(x.o.url)}" target="_blank" rel="noopener nofollow">${esc(x.o.store)} ↗</a>${REP.badge(x.o.store)}</span>${x.note?`<div class="note"${x.bios==="bios"?' style="color:var(--warn)"':""}>${esc(x.note)}</div>`:""}`;
+  return `<div class="rrow"><span>${esc(pt.label)}: ${b?row(b):'<span class="ux">sin precio en el comparador</span>'}</span><span style="white-space:nowrap"><b>${b?ARS(b.p):"—"}</b>${b?QV.btns(b.g.id):""}</span></div>${rest.length?`<details style="margin:-2px 0 4px 8px"><summary>${rest.length} alternativa${rest.length>1?"s":""}</summary>${rest.map(r=>`<div class="rrow"><span>${row(r)}</span><span style="white-space:nowrap"><b>${ARS(r.p)}</b>${QV.btns(r.g.id)}</span></div>`).join("")}</details>`:""}`}).join("")}
 /* cuánto más cuesta y cuánto más rinde frente a la opción económica de la misma sección */
 function vsH(p,eco,n){
   if(!eco||p===eco)return p.k==="eco"?`<div class="vs"><b>Punto de partida</b> para comparar las otras dos columnas.</div>`:"";
@@ -149,10 +150,11 @@ function cardH(p,n,eco){
   const c=p.c,isB=c.kind==="build";
   const head=isB?`PC por componentes · ${esc(buildName(c))}`:esc(c.g.name);
   const kindTxt={build:"Componentes individuales (armado por tu cuenta)",pc:"PC armada",notebook:"Notebook"}[c.kind];
-  let h=`<div class="rc"><div class="lab">${p.label}</div><h3>${isB?head:`<a href="${esc(c.o.url)}" target="_blank" rel="noopener nofollow">${head}</a>`}</h3>
+  let h=`<div class="rc"><div class="lab">${p.label}</div><h3>${isB?head:QV.link(c.g)}</h3>${isB?"":`<div>${QV.btns(c.g.id)} <a class="note" href="${esc(c.o.url)}" target="_blank" rel="noopener nofollow">Ir a ${esc(c.o.store)} ↗</a></div>`}
    <div><span class="pr">${ARS(c.total)}${isB&&c.missing.length?"+":""}</span> ${tagH("ver")}<div class="note">${kindTxt} · ${isB?"suma de las opciones más baratas con stock":esc(c.o.store)+REP.badge(c.o.store)+" · "+stockTxt(c.o)} · ARS</div><div class="note">${dateTxt()}</div></div>${vsH(p,eco,n)}`;
-  if(isB){h+=`<div class="sec">Piezas, especificaciones y precios</div>${partsH(c.parts)}${c.missing.length?`<div class="stale">Sin precio en el comparador: ${c.missing.map(esc).join(", ")}. El total es parcial.</div>`:""}`;
-    h+=`<div class="note">No incluye gabinete, refrigeración extra ni periféricos. Antes de comprar, revisá compatibilidad en <a href="armado.html">Armado de PC</a>.</div>`}
+  if(isB){const all=c.parts.map(x=>x.shop&&x.shop[0]&&x.shop[0].g.id).filter(Boolean);
+    h+=`<div class="sec">Piezas, especificaciones y precios</div>${partsH(c.parts)}${all.length?`<button type="button" class="qv-all" data-qall="${all.join(",")}"></button>`:""}${c.missing.length?`<div class="stale">Sin precio en el comparador: ${c.missing.map(esc).join(", ")}. El total es parcial.</div>`:""}`;
+    h+=`<div class="note">Incluye gabinete y, si el procesador no lo trae, disipador. No incluye periféricos ni sistema operativo. Placa madre y procesador: socket y memoria verificados; la BIOS, avisada cuando puede hacer falta actualizarla.</div>`}
   if(p.specs.length)h+=`<div class="sec">Especificaciones principales</div>${specsH(p.specs)}`;
   if(p.pros.length)h+=`<div class="sec">Ventajas</div><div class="pro">${li(p.pros)}</div>`;
   if(p.cons.length)h+=`<div class="sec">Desventajas</div><div class="con">${li(p.cons)}</div>`;
@@ -214,7 +216,7 @@ function showResults(){
   }
   h+=extrasH(n)+gamesNote();
   h+=`<div class="legend" style="margin-top:14px">${["ver","bench","est","pend","nd"].map(tagH).join(" ")}</div>`;
-  $("#app").style.display="none";$("#out").innerHTML=h;
+  $("#app").style.display="none";$("#out").innerHTML=h;QV.sync();
   $("#redo").onclick=()=>{draw();window.scrollTo(0,0)};
   window.scrollTo(0,0);
 }
@@ -222,7 +224,7 @@ function showResults(){
   const j=async(u,d)=>{try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw 0;return await r.json()}catch{return d}};
   let m,SP;[HW,PR,m,SP]=await Promise.all([j("data/hardware.json",null),j("data/products.json",[]),j("data/meta.json",{}),j("data/specs.json",null),REP.load()]);META=m;
   if(!HW||!PR.length){$("#app").innerHTML='<div class="panel">No se pudieron cargar los datos de productos. Probá recargar la página.</div>';return}
-  C=CT.makeFinder(CT.create(HW,PR,META,SP));
+  C=CT.makeFinder(CT.create(HW,PR,META,SP));QV.setData(PR);
   $("#fine").textContent="Las recomendaciones usan solo productos y precios reales del comparador. Las especificaciones de PC armadas y notebooks se leen del título de la tienda y están pendientes de verificar. No es asesoramiento profesional: confirmá siempre con la tienda antes de comprar.";
   draw();
 })();

@@ -325,3 +325,36 @@ Lo que falta en `fichas_incompletas.csv` es sobre todo el **puntaje de rendimien
   en juegos, cuántos FPS más rinde (estimado), con una conclusión: «la mejora acompaña al precio», «mejora moderada» o
   «pagás bastante más por poca mejora». Sin presupuesto, «mayor rendimiento» se busca hasta 2,5 veces el precio de la económica.
 - Los botones de presupuesto ($600.000, $1.000.000…) ahora quedan marcados al elegirlos.
+
+
+## Actualización 25 — Seguir precio y agregar al carrito desde Armado de PC y Encontrá tu equipo
+- Nuevo `site/js/quickview.js` (vista rápida compartida). En **Armado de PC** y en los resultados de **Encontrá tu equipo**:
+  - tocar el nombre de un producto abre una ventana con precio, tiendas, stock, **☆ Seguir precio**, **+ Agregar a mi lista** y
+    «Ver ficha e historial» (Ctrl+clic abre la ficha completa en otra pestaña);
+  - cada fila tiene botones chicos ☆ (seguir) y + (agregar a la lista del carrito);
+  - cada configuración (mínima, sugerida, y cada armado de Encontrá tu equipo) tiene «🛒 Agregar las N piezas a mi lista»;
+  - el nombre de la tienda sigue llevando directo a la tienda (↗).
+- Usa el mismo guardado que Productos («seg» y «lista» en el navegador): el contador del carrito se actualiza al instante, los
+  precios seguidos avisan en Productos y la lista se ve al tocar el carrito. Se sincroniza entre pestañas abiertas.
+
+
+## Actualización 26 — Compatibilidad del armado: disipador, BIOS, gabinete, conector de la fuente
+Vale para **Armado de PC** y para las PC por componentes de **Encontrá tu equipo** (misma lógica, `site/js/lib.js`).
+- **Disipador:** `CT.coolerIncluded` decide si el procesador trae cooler (manda el título de la publicación: «tray/OEM/S/Cooler»
+  = no, «C/Cooler/Wraith» = sí; si no, por modelo: X, X3D y K no lo traen; los Intel sin K y los Ryzen sin X sí; si no se sabe,
+  se suma con «(si no lo trae)»). Se elige por consumo: hasta ~95 W aire común con potencia declarada suficiente o torre conocida;
+  hasta ~170 W torre o líquida de 240 mm; más, líquida de 360 mm. Si el título nombra sockets, tiene que incluir el del procesador
+  (AM5 acepta los de AM4; LGA1851, los de LGA1700). Se excluyen pastas, ventiladores de gabinete y procesadores.
+- **BIOS:** `CT.biosNeed` marca las combinaciones donde la placa es anterior al procesador (Ryzen 8000/9000 en A620/B650/X670,
+  Ryzen 4000/5000 en placas 300/400, Intel 13/14 en H610/B660/H670/Z690). Se elige una placa que lo soporte de fábrica si no
+  cuesta mucho más (+50 % o +$60.000); si no, se avisa con ⚠ y qué preguntar a la tienda (BIOS Flashback / Q-Flash Plus).
+  Medido con el catálogo real del 27/10 (92 armados): ninguna placa elegida queda con aviso de BIOS.
+- **Placas de entrada:** con procesadores de más de ~160 W no se eligen A620/H610/A520 (alimentación justa).
+- **Gabinete:** se suma según el tamaño de la placa madre (si el título no lo dice, se asume ATX para no quedarse corto), sin kits
+  ni gabinetes con fuente incluida. Se avisa medir el largo de la placa de video y el lugar del radiador.
+- **Fuente:** para placas que usan el conector de 16 pines (RTX 40/50 de ≥200 W) se prefieren fuentes ATX 3.x (hasta +20 % de
+  precio); si no, se avisa que se usa el adaptador incluido con la placa.
+- **Precios dudosos:** para recomendar no se usa un precio 3 veces menor o mayor que el resto de las tiendas (p. ej. una
+  ROG Strix X870-A a $120.150 cuando las demás la tienen a ~$600.000): con 3 o más tiendas se descarta el que se aleja de la
+  mediana; con 2, el producto no se recomienda.
+- Los totales ahora incluyen disipador (cuando hace falta) y gabinete, así que son más altos y más reales.

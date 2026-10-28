@@ -157,14 +157,14 @@
             const w = CT.up50((c.maxp || c.tdp * 2) + 150), ram = gb;
             const parts = [
               { slot: "cpu", label: "Procesador", title: "Procesador: " + c.name, why: `${c.socket} · ${c.cores || c.spec.cores} núcleos · gráficos integrados (sin placa de video).`, shop: cpuShop, key: "cpu:" + c.id },
-              { slot: "mobo", label: "Placa madre", title: `Placa madre (socket ${c.socket})`, why: "Verificá que la BIOS soporte este procesador.", shop: C.findMobo(c), key: "mobo:" + c.socket },
+              C.moboPart(c),
               { slot: "ram", label: "Memoria RAM", title: `Memoria RAM: ${ram} GB ${c.mem}`, why: "En dos módulos si es posible.", shop: C.findRam(c, ram), key: "ram:" + ram },
               { slot: "ssd", label: "Almacenamiento", title: `SSD ${n.ssd >= 1000 ? "1 TB" : n.ssd >= 500 ? "500 GB" : "250 GB"}`, why: "NVMe preferido.", shop: C.findSsd(n.ssd >= 1000 ? 1000 : n.ssd >= 500 ? 500 : 250), key: "ssd" },
               { slot: "psu", label: "Fuente de poder", title: `Fuente de poder: ${w} W o más`, why: "Procesador al máximo + resto del equipo; 80 Plus.", shop: C.findPsu(w), key: "psu:" + w },
-            ];
+            ].concat(C.extraParts(c, null));
             const b = finalize("", parts, { c, cfg: kind });
             Object.assign(b, { score: c.spec.threads + ram / 4 });
-            if (b.priced >= 4) cands.push(b);
+            if (b.priced >= parts.length - 1 && !b.missing.includes("Procesador") && !b.missing.includes("Placa madre")) cands.push(b);
           });
         });
       }

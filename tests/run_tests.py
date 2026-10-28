@@ -19,6 +19,7 @@ if shutil.which("node"):
         _m = _os.path.join(_d, "hero3d.mjs"); shutil.copy("site/js/hero3d.js", _m)
         subprocess.run(["node", "--check", _m], check=True)
     print("animación 3D: sintaxis OK")
+    subprocess.run(["node", "--check", "site/js/quickview.js"], check=True)   # vista rápida (Seguir precio / Agregar a mi lista)
 else:
     print("AVISO: node no está instalado; se omiten las pruebas de JavaScript")
 print("tests OK")

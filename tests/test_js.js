@@ -17,7 +17,7 @@ const gpu = id => HW.gpus.find(g => g.id === id);
 /* ---------- Armado: componentes compartidos ---------- */
 t("detecta componentes compartidos entre mínimo y sugerido", () => {
   const A = C.armado(gpu("rtx-5070ti"), 2);
-  assert.deepStrictEqual(A.shared.map(p => p.slot), ["gpu", "cpu", "psu", "mobo"]);
+  assert.deepStrictEqual(A.shared.map(p => p.slot), ["gpu", "cpu", "psu", "mobo", "case"]);   // el i5-14400F trae cooler: no se suma disipador
   assert.deepStrictEqual(A.onlyMin.map(p => p.slot), ["ram", "ssd"]);
   assert.deepStrictEqual(A.onlySug.map(p => p.slot), ["ram", "ssd"]);
 });
@@ -38,7 +38,7 @@ t("los totales cuentan lo compartido en CADA configuración y no suman ambas com
   assert.strictEqual(A.totalMin.total, sum(A.shared) + sum(A.onlyMin));
   assert.strictEqual(A.totalSug.total, sum(A.shared) + sum(A.onlySug));
   assert(A.totalMin.total + A.totalSug.total > A.totalMin.total && A.totalMin.total !== A.totalMin.total + A.totalSug.total);
-  assert.strictEqual(A.totalMin.count, 6); assert.strictEqual(A.totalMin.priced, 6);
+  assert.strictEqual(A.totalMin.count, 7); assert.strictEqual(A.totalMin.priced, 7);
 });
 t("no se pierden opciones, precios ni enlaces de los productos", () => {
   const A = C.armado(gpu("rtx-5070ti"), 2), urls = new Set(PR.flatMap(g => g.offers.map(o => o.url)));
@@ -57,12 +57,12 @@ t("una variante de VRAM distinta no se asigna a otra placa (RTX 3060 8GB ≠ 12G
 });
 t("componentes sin precio: total parcial y se informa cuáles faltan", () => {
   const pr = PR.filter(g => g.category !== "fuentes"), c2 = mkCtx(pr), A = c2.armado(gpu("rtx-5070ti"), 2);
-  assert(A.totalMin.missing.includes("Fuente de poder")); assert.strictEqual(A.totalMin.priced, 5);
+  assert(A.totalMin.missing.includes("Fuente de poder")); assert.strictEqual(A.totalMin.priced, 6);
   assert.strictEqual(A.totalMin.total, sum(A.min));
 });
 t("sin ninguna coincidencia: no rompe y no inventa precios", () => {
   const c2 = mkCtx([]), A = c2.armado(gpu("rtx-5070ti"), 2);
-  assert.strictEqual(A.totalMin.total, 0); assert.strictEqual(A.totalMin.missing.length, 6); assert(A.shared.length > 0);
+  assert.strictEqual(A.totalMin.total, 0); assert.strictEqual(A.totalMin.missing.length, 7); assert(A.shared.length > 0);
 });
 t("productos sin stock no se ofrecen", () => { assert.strictEqual(C.findGpu(gpu("rtx-5090")).length, 0); });
 
@@ -507,5 +507,34 @@ t("encontrá: sin presupuesto, el aviso no habla de presupuesto", () => {
   const F = CT.makeFinder(CT.create(HW, [], {}, null));
   const r = F.recommend({ usos: ["gaming_pesado"], tipo: "componentes", budget: null, res: "4k", have: null });
   assert(r.insufficient && !r.insufficient.budget && Array.isArray(r.insufficient.hard) && r.insufficient.hard.length);
+});
+/* ---------- Compatibilidad del armado (actualización 26) ---------- */
+t("disipador: se suma si el procesador no lo trae (X, X3D, K o publicación «tray/sin cooler»)", () => {
+  const cpu = id => HW.cpus.find(c => c.id === id);
+  assert.strictEqual(CT.coolerIncluded(cpu("r5-9600x"), "Procesador AMD Ryzen 5 9600X"), false);
+  assert.strictEqual(CT.coolerIncluded(cpu("r7-9800x3d"), ""), false);
+  assert.strictEqual(CT.coolerIncluded(cpu("i5-14600k"), ""), false);
+  assert.strictEqual(CT.coolerIncluded(cpu("i5-14400f"), "Procesador Intel Core i5 14400F"), true);
+  assert.strictEqual(CT.coolerIncluded(cpu("i5-14400f"), "Procesador Intel Core i5 14400F Tray"), false, "la publicación tray manda");
+  assert.strictEqual(CT.coolerIncluded(cpu("r5-5600"), "Ryzen 5 5600 C/Cooler"), true);
+  assert.strictEqual(CT.coolerIncluded(cpu("r5-9600"), ""), null, "si no se sabe, se dice");
+  const P = C.parts(gpu("rtx-5070ti"), cpu("r7-9800x3d"), false, "sug", 0), co = P.find(p => p.slot === "cooler");
+  assert(co && /240|torre/.test(co.why) && co.shop.every(x => !/procesador|gabinete|pasta/i.test(x.g.name)), JSON.stringify(co && co.shop.map(x => x.g.name)));
+  assert(!C.parts(gpu("rtx-5070ti"), cpu("i5-14400f"), false, "sug", 0).some(p => p.slot === "cooler"));
+});
+t("BIOS: avisa las combinaciones que pueden necesitar actualizarla y prefiere placas compatibles de fábrica", () => {
+  const cpu = id => HW.cpus.find(c => c.id === id);
+  assert.strictEqual(CT.biosNeed(cpu("r5-9600x"), "B650"), "bios"); assert.strictEqual(CT.biosNeed(cpu("r5-9600x"), "B850"), "ok");
+  assert.strictEqual(CT.biosNeed(cpu("r5-5600"), "B450"), "bios"); assert.strictEqual(CT.biosNeed(cpu("r5-5600"), "B550"), "ok");
+  assert.strictEqual(CT.biosNeed(cpu("i5-14400f"), "H610"), "bios"); assert.strictEqual(CT.biosNeed(cpu("i5-14400f"), "B760"), "ok");
+  assert.strictEqual(CT.biosNeed(cpu("r5-7600"), "A620"), "ok"); assert.strictEqual(CT.biosNeed(cpu("r5-7600"), ""), "unk");
+  const mb = C.parts(gpu("rtx-5070ti"), cpu("i5-14400f"), false, "sug", 0).find(p => p.slot === "mobo");
+  mb.shop.forEach(x => { if (x.bios === "bios") assert(/BIOS/.test(x.note)); });
+});
+t("fuente: con placas de 16 pines se prefieren ATX 3.x o se avisa del adaptador; el gabinete acompaña a la placa madre", () => {
+  assert(CT.uses16pin(gpu("rtx-5070ti")) && !CT.uses16pin(gpu("rx-9070xt")));
+  const P = C.parts(gpu("rtx-5070ti"), HW.cpus.find(c => c.id === "i5-14400f"), false, "sug", 0);
+  const ps = P.find(p => p.slot === "psu"); assert(/16 pines/.test(ps.why) && ps.shop.every(x => /16 pines/.test(x.note)));
+  const cs = P.find(p => p.slot === "case"); assert(cs && cs.shop.every(x => /^gab/i.test(x.g.name) && !/kit|fuente/i.test(x.g.name)));
 });
 console.log(n + " pruebas de JavaScript OK");
