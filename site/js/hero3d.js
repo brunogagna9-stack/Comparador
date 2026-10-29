@@ -447,7 +447,7 @@ function start() {
      tiempo, baja un escalón: 0 = todo · 1 = sin piso espejado · 2 = 80 % de resolución · 3 = resolución 1x · 4 = sin brillo.
      Si después de bajar va holgado varios segundos, prueba volver a subir una vez. */
   const fixedHQ = /hq/.test(location.search), baseDpr = dpr, intervals = [];
-  let refresh = 1 / 60, tier = 0, win = [], winStart = 0, goodWins = 0, retried = false, warm = 0;
+  let refresh = 1 / 60, tier = 0, win = [], winStart = 0, goodWins = 0, retried = false, warm = 0, halfRate = false;
   function applyTier() {
     mirror.visible = tier < 1; floorTint.material.opacity = tier < 1 ? 1 : 0;
     dpr = tier >= 3 ? Math.min(baseDpr, 1) : tier >= 2 ? Math.max(1, baseDpr * 0.8) : baseDpr;
@@ -461,7 +461,9 @@ function start() {
     if (winStart < 1) return;
     const late = win.filter(d => d > refresh * 1.45).length / win.length;
     win = []; winStart = 0;
-    if (late > 0.2 && tier < 4) { tier++; goodWins = 0; applyTier(); }
+    const hi = refresh < 1 / 90;                                        // pantalla de 120/144 Hz o más
+    if (late > 0.2 && hi && !halfRate) { halfRate = true; goodWins = 0; }   // primero: la mitad de cuadros, parejos (72 por segundo en 144 Hz)
+    else if (late > 0.2 && tier < 4) { tier++; goodWins = 0; applyTier(); }
     else if (late < 0.03 && tier > 0 && !retried && ++goodWins >= 6) { tier--; retried = true; goodWins = 0; applyTier(); }
   }
   function frame() {
@@ -482,7 +484,10 @@ function start() {
     rig.rotation.y = userYaw - 0.12; rig.rotation.x = userPitch;
     rig.position.y = reduce ? 0 : Math.sin(now * 0.9) * 0.02;
     camera.position.copy(camPos); camera.lookAt(camTgt);
-    if (performance.now() - lastScroll < 180) return;                      // desplazando: se saltea el dibujo
+    // Mientras se desplaza la página se dibuja un cuadro sí y uno no (antes se congelaba y después "saltaba", y eso se veía
+    // trabado). En pantallas de 120 Hz o más, si el escalón de calidad lo pide, también se dibuja día por medio de forma pareja.
+    const scrolling = performance.now() - lastScroll < 200;
+    if ((scrolling || halfRate) && (++skip & 1)) return;
     if (perf) { renderer.info.autoReset = false; renderer.info.reset(); }
     const r0 = performance.now();
     if (useBloom) composer.render(); else renderer.render(scene, camera);
@@ -495,15 +500,24 @@ function start() {
   try { renderer.compile(scene, camera); if (useBloom) composer.render(); } catch (e) { /* sin importancia */ }
   STEPS.forEach(s => { s.o.visible = false; }); bursts.forEach(b => { b.pts.visible = false; });
   // mientras la persona desplaza la página no se dibuja (el último cuadro queda quieto): así el desplazamiento va fluido
-  let lastScroll = -1;
+  let lastScroll = -1, skip = 0;
   addEventListener("scroll", () => { lastScroll = performance.now(); }, { passive: true });
   addEventListener("wheel", () => { lastScroll = performance.now(); }, { passive: true });
-  function play() { if (running) return; running = true; clock.getDelta(); frame(); }
+  function play() { if (running || paused) return; running = true; clock.getDelta(); frame(); }
   function stop() { running = false; cancelAnimationFrame(raf); }
   const vis = { inView: true };
+  /* botón para pausar la animación (se recuerda en este navegador) */
+  let paused = false; try { paused = localStorage.getItem("pc3d-pausa") === "1"; } catch (e) { /* modo privado */ }
+  const pb = document.createElement("button"); pb.type = "button"; pb.className = "pc3d-pause";
+  const syncPb = () => { pb.textContent = paused ? "▶ Animar" : "❚❚ Pausar"; pb.setAttribute("aria-label", paused ? "Reanudar la animación" : "Pausar la animación"); pb.setAttribute("aria-pressed", paused ? "true" : "false"); };
+  pb.addEventListener("pointerdown", e => e.stopPropagation());
+  pb.addEventListener("click", e => { e.stopPropagation(); paused = !paused; try { localStorage.setItem("pc3d-pausa", paused ? "1" : "0"); } catch (er) { /* sin guardado */ } syncPb();
+    if (paused) stop(); else if (vis.inView && !document.hidden) play(); });
+  syncPb(); host.appendChild(pb);
   // solo se anima si se ve al menos un cuarto de la vitrina (si apenas asoma, no gasta placa de video)
   new IntersectionObserver(es => { vis.inView = es[0].intersectionRatio >= 0.25; vis.inView && !document.hidden ? play() : stop(); }, { threshold: [0, 0.25, 0.5] }).observe(host);
   document.addEventListener("visibilitychange", () => { document.hidden || !vis.inView ? stop() : play(); });
   host.classList.add("ready");
+  if (paused) { tAnim = T_ON + 2.5; pose(tAnim); camera.position.copy(wantPos); camera.lookAt(wantTgt); try { if (useBloom) composer.render(); else renderer.render(scene, camera); } catch (e) { /* nada */ } }
   play();
 }

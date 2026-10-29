@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Armalo vos · Armado de PC · ComparáTech</title>
+<meta name="description" content="Armá tu PC pieza por pieza: solo te mostramos componentes compatibles con lo que ya elegiste, comprobados con las fichas de los fabricantes.">
+<link rel="stylesheet" href="css/shared.css">
+<link rel="stylesheet" href="css/layout.css">
+<style>
+.bl{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
+.slots{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.sl{display:grid;grid-template-columns:170px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 14px;border-top:1px solid var(--line)}
+.sl:first-child{border-top:0}
+.sl .k{font-weight:800;display:flex;align-items:center;gap:8px}.sl .k svg{width:20px;height:20px;color:var(--acc);flex:none}
+.sl .k small{display:block;font-weight:400;color:var(--mut);font-size:11.5px}
+.sl .v{min-width:0}.sl .v .nm{font-weight:600;line-height:1.3}.sl .v .meta{font-size:12.5px;color:var(--mut);margin-top:2px}
+.sl .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.sl .acts button,.mini{border:1px solid var(--line2);background:var(--card);color:var(--tx);border-radius:999px;padding:6px 12px;font:600 13px system-ui,sans-serif;cursor:pointer}
+.sl .acts button.pri,.mini.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+.sl .acts button:hover,.mini:hover{border-color:var(--acc)}
+.st{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;margin-right:4px}
+.st.ok{background:var(--okbg);color:var(--ok)}.st.unk{background:var(--warnbg);color:var(--warn)}.st.no{background:var(--badbg);color:var(--bad)}.st.n{background:var(--soft);color:var(--mut)}
+.sum{position:sticky;top:calc(var(--hh) + 12px);background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.sum h3{margin:0 0 8px;font-size:16px}.sum .tot{font-size:26px;font-weight:800;letter-spacing:-.5px}
+.sum ul{list-style:none;padding:0;margin:8px 0 0}.sum li{font-size:13px;padding:5px 0;border-top:1px solid var(--line);line-height:1.35}
+.sum li b{font-weight:700}.sum .btns{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.ok-t{color:var(--ok)}.unk-t{color:var(--warn)}.no-t{color:var(--bad)}
+/* selector */
+#pick{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;z-index:85;padding:16px;overflow:auto;overscroll-behavior:contain}
+#pick.on{display:flex}
+#pick .box{background:var(--card);color:var(--tx);border:1px solid var(--line2);border-radius:16px;max-width:980px;width:100%;margin:auto;padding:16px;position:relative}
+#pick .x{position:absolute;right:10px;top:10px;border:0;background:var(--soft);color:var(--tx);width:34px;height:34px;border-radius:50%;font-size:19px;cursor:pointer}
+#pick h2{margin:0 40px 4px 0;font-size:20px}
+.ptools{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.ptools input[type=search]{flex:1;min-width:180px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--tx);font:inherit}
+.ptools select{padding:9px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--tx);font:inherit}
+.fxrow{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px}
+.fxrow label{display:inline-flex;gap:5px;align-items:center;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12.5px;cursor:pointer;background:var(--card)}
+.fxrow label.on{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 12%,var(--card))}
+.fxrow input{display:none}.fxrow .ttl{font-size:12px;color:var(--mut);align-self:center;margin-right:2px}
+.prow{display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 4px;border-top:1px solid var(--line)}
+.prow .im{width:56px;height:56px;background:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.prow .im img{max-width:100%;max-height:100%;object-fit:contain}.prow .im svg{width:26px;height:26px;color:#94a3b8}
+.prow .nm{font-weight:600;line-height:1.3}.prow .chk{margin-top:4px;display:flex;flex-wrap:wrap;gap:4px}
+.prow .pr{text-align:right;white-space:nowrap}.prow .pr b{font-size:16px;display:block}
+.sec-t{margin:14px 0 2px;font-size:14px;font-weight:800;display:flex;gap:8px;align-items:center}
+details.unv{margin-top:12px;border:1px solid var(--line);border-radius:12px;padding:8px 12px;background:var(--soft)}
+details.unv summary{cursor:pointer;font-weight:700}
+.why{font-size:12.5px;color:var(--mut);margin:6px 0}
+.ownf{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin:8px 0}
+.ownf label{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600}
+.ownf select,.ownf input{padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--tx);font:inherit}
+.more{display:block;margin:10px auto 0}
+.src a{color:var(--acc)}
+@media(max-width:900px){.bl{grid-template-columns:1fr}.sum{position:static}}
+@media(max-width:640px){.sl{grid-template-columns:1fr;gap:6px}.sl .acts{justify-content:flex-start}.prow{grid-template-columns:44px minmax(0,1fr)}.prow .pr{grid-column:2;text-align:left}.prow .im{width:44px;height:44px}}
+</style>
+</head>
+<body data-page="armado">
+<script src="js/layout.js"></script>
+<main>
+<h1>Armado de PC</h1>
+<div class="atabs" role="tablist"><a href="armado.html" role="tab">Armado recomendado</a><a href="armar.html" class="on" role="tab" aria-selected="true">Armalo vos (pieza por pieza)</a></div>
+<p class="lead">Elegí las piezas en el orden que quieras. En cada paso te mostramos <b>solo las compatibles</b> con lo que ya elegiste, comprobadas con las fichas de los fabricantes. Si ya tenés una pieza, marcala con «Ya lo tengo».</p>
+<div class="bl">
+  <div>
+    <div class="slots" id="slots" aria-live="polite"><div class="sl"><div class="note">Cargando el catálogo…</div></div></div>
+    <p class="note" style="margin-top:10px">Los productos que no podemos comprobar (falta la ficha del fabricante) no se ofrecen como compatibles: aparecen aparte, en «No pudimos verificar la compatibilidad», con el motivo.</p>
+  </div>
+  <aside class="sum" id="sum"></aside>
+</div>
+<h2>Cómo comprobamos la compatibilidad</h2>
+<div class="panel note" id="how">
+  <p><b>Procesador y motherboard:</b> mismo socket. Si la placa es anterior al procesador, te avisamos que puede necesitar actualizar la BIOS.</p>
+  <p><b>Memoria:</b> el tipo (DDR4 / DDR5) tiene que ser el de la placa; las memorias de notebook (SO-DIMM) no entran.</p>
+  <p><b>Cooler:</b> tiene que traer soporte para el socket según su fabricante. AMD indica que AM5 acepta los coolers de AM4 e Intel que LGA1851 acepta los de LGA1700 (<a href="https://www.amd.com/en/partner/articles/socket-am5-change-game.html" target="_blank" rel="noopener">AMD</a> · <a href="https://www.intel.com/content/www/us/en/support/articles/000099700.html" target="_blank" rel="noopener">Intel</a>).</p>
+  <p><b>Gabinete:</b> el tamaño de la placa (ATX, Micro-ATX, Mini-ITX), el largo de la placa de video, el alto del cooler de aire y la medida del radiador, según las fichas del gabinete y de cada pieza. Si el gabinete acepta placas de 381 mm o más entra cualquiera: es la más larga que se fabricó según CORSAIR (<a href="https://www.corsair.com/us/en/explorer/diy-builder/blogs/which-gpu-is-the-biggest/" target="_blank" rel="noopener">fuente</a>).</p>
+  <p><b>Fuente:</b> al menos la potencia que recomienda el fabricante del chip de la placa de video; sin placa de video, el consumo máximo del procesador + 75 W del resto, con 30 % de margen.</p>
+  <p>Los datos del fabricante tienen el enlace a la ficha oficial y la fecha en que los revisamos. Ante cualquier diferencia manda el manual del fabricante.</p>
+</div>
+</main>
+<div id="pick" role="dialog" aria-modal="true" aria-label="Elegir pieza"><div class="box" id="pbox"></div></div>
+<script src="js/lib.js"></script><script src="js/facets.js"></script><script src="js/icons.js"></script><script src="js/rep.js"></script><script src="js/quickview.js"></script><script src="js/builder.js"></script>
+<script>
+const $=s=>document.querySelector(s),{ARS,esc}=CT;
+let PR=[],HW=null,VER={},E=null,C=null,byIdM=new Map(),BUILD={},PICK=null;
+const byId=id=>byIdM.get(id);
+const ICONK={cpu:"procesadores",cooler:"refrigeracion",mobo:"motherboards",ram:"memorias-ram",ssd:"almacenamiento",gpu:"placas-de-video",case:"gabinetes",psu:"fuentes",monitor:"monitores"};
+const HINT={cpu:"socket, memoria y consumo",cooler:"socket y medidas",mobo:"socket, DDR y tamaño",ram:"DDR4 o DDR5",ssd:"NVMe, SATA o disco",gpu:"largo y consumo",case:"tamaño de placa y largos",psu:"potencia",monitor:"opcional"};
+const SKIPOK={gpu:"No la necesito (uso los gráficos del procesador)",cooler:"Uso el que trae el procesador",monitor:"No lo necesito",ssd:"No lo necesito"};
+const SRC={fab:"ficha del fabricante",regla:"regla de la norma",tienda:"título de la tienda",usuario:"dato que cargaste"};
+const save=()=>{try{localStorage.setItem("armar",JSON.stringify(BUILD))}catch(e){};try{const s=E.encode(BUILD);history.replaceState(null,"",location.pathname+(s?"?b="+encodeURIComponent(s):""))}catch(e){}};
+const attrCache=new Map();
+const A=(k,g)=>{const key=k+"|"+g.id;if(!attrCache.has(key))attrCache.set(key,E.attrs(k,g));return attrCache.get(key)};
+function others(k){const X={};for(const s of BLD.SLOTS){if(s.k===k)continue;const a=E.slotAttrs(s.k,BUILD[s.k],byId);if(a)X[s.k]=a}return X}
+const stHtml=r=>`<span class="st ${r.s==="ok"?"ok":r.s==="unk"?"unk":"no"}" title="${esc(r.txt)}">${r.s==="ok"?"✓":r.s==="unk"?"?":"✗"} ${esc(short(r))}</span>`;
+function short(r){const w={cpu:"procesador",mobo:"placa",ram:"memoria",cooler:"cooler",case:"gabinete",gpu:"placa de video",psu:"fuente","cpu+gpu":"consumo",pc:"PC"}[r.with]||r.with;return (r.s==="ok"?"compatible con ":r.s==="unk"?"sin verificar con ":"no va con ")+w}
+const img=g=>g&&g.image?`<img loading="lazy" src="${esc(g.image)}" alt="" onerror="this.outerHTML=ICONS.svg('${esc(g.category)}',26)">`:ICONS.svg(g?g.category:"otros",26);
+
+/* ---------- tabla del armado ---------- */
+function render(){
+  const S=E.summary(BUILD,byId);
+  $("#slots").innerHTML=BLD.SLOTS.map(s=>{
+    const e=BUILD[s.k],g=e&&e.id?byId(e.id):null,a=S.X[s.k];
+    let v,acts;
+    if(!e){const cpu=S.X.cpu,noSkip=(s.k==="gpu"&&cpu&&cpu.igpu&&cpu.igpu.v===false)?"el procesador elegido no tiene gráficos integrados: necesitás placa de video":(s.k==="cooler"&&cpu&&cpu.cooler&&cpu.cooler.v===false)?"el procesador elegido no trae cooler en la caja":"";
+      v=`<div class="note">Sin elegir${s.req?"":" (opcional)"}</div>${noSkip?`<div class="note">${esc(noSkip)}</div>`:""}`;acts=`<button class="pri" data-pick="${s.k}">+ Elegir</button><button data-own="${s.k}">Ya lo tengo</button>${SKIPOK[s.k]&&s.k!=="ssd"&&!noSkip?`<button data-skip="${s.k}">${s.k==="gpu"?"No la necesito":s.k==="cooler"?"Uso el del procesador":"No lo necesito"}</button>`:""}`}
+    else if(e.skip){v=`<div class="nm">${esc(SKIPOK[s.k]||"No lo necesito")}</div>`;acts=`<button data-clear="${s.k}">Cambiar</button>`}
+    else{const o=g&&C.recOffer(g),own=e.own;
+      const checks=S.checks.filter(c=>c.slot===s.k||c.with===s.k);
+      v=`<div class="nm">${g?QV.link(g,g.name):"Tu "+esc(s.l.toLowerCase())}</div><div class="meta">${own?"<b>Ya lo tenés</b> · no suma al total":o?`${ARS(CT.price(o))} · ${esc(o.store)}`:"sin precio"}${e.attrs?` · datos cargados: ${esc(Object.entries(e.attrs).map(([k,v])=>k+" "+v).join(", "))}`:""}</div>`;
+      acts=`<button data-pick="${s.k}">Cambiar</button><button data-clear="${s.k}" aria-label="Quitar ${esc(s.l)}">✕</button>`}
+    const mine=S.checks.filter(c=>c.slot===s.k);
+    const bad=S.issues.filter(c=>c.slot===s.k||c.with===s.k).length,unk=mine.filter(c=>c.s==="unk").length;
+    const badge=e&&!e.skip?(bad?'<span class="st no">✗ incompatible</span>':unk?'<span class="st unk">? sin verificar</span>':Object.keys(S.X).length>1?'<span class="st ok">✓ compatible</span>':""):"";
+    return `<div class="sl"><div class="k">${ICONS.svg(ICONK[s.k],20)}<span>${esc(s.l)}<small>${esc(HINT[s.k])}</small></span></div><div class="v">${v}${badge?`<div style="margin-top:4px">${badge}</div>`:""}</div><div class="acts">${acts}</div></div>`}).join("");
+  renderSum(S);QV.sync();save();
+}
+function renderSum(S){
+  const left=S.missing.filter(k=>!BUILD[k]).map(k=>BLD.slot(k).l.toLowerCase());
+  const ids=BLD.SLOTS.map(s=>BUILD[s.k]).filter(e=>e&&e.id&&!e.own).map(e=>e.id);
+  const li=[];
+  S.issues.forEach(c=>li.push(`<li class="no-t"><b>✗ Incompatible:</b> ${esc(c.txt)}</li>`));
+  S.unk.forEach(c=>li.push(`<li class="unk-t"><b>? Sin verificar:</b> ${esc(c.txt)} <span class="note">(${esc(BLD.slot(c.slot)?BLD.slot(c.slot).l:"")})</span></li>`));
+  S.warns.forEach(w=>li.push(`<li><b>⚠ Ojo:</b> ${esc(w)}</li>`));
+  const okN=S.checks.filter(c=>c.s==="ok").length;
+  $("#sum").innerHTML=`<h3>Tu armado</h3><div class="tot">${ARS(S.total)}</div><div class="note">${S.priced} ${S.priced===1?"pieza":"piezas"} con precio, lo más barato con stock · sin envío</div>
+   ${S.watts?`<div style="margin-top:8px">Consumo estimado: <b>~${S.watts} W</b>${S.need?` · fuente recomendada: <b>${S.need.w} W</b>`:""}</div>`:""}
+   <ul>${okN?`<li class="ok-t"><b>✓ ${okN} ${okN===1?"control comprobado":"controles comprobados"}</b></li>`:""}${li.join("")}${left.length?`<li><b>Falta elegir:</b> ${esc(left.join(", "))}</li>`:""}${!S.issues.length&&!S.unk.length&&!left.length&&okN?`<li class="ok-t"><b>Todo compatible y comprobado.</b></li>`:""}</ul>
+   <div class="btns">${ids.length?`<button class="btn pri qv-all" data-qall="${ids.join(",")}"></button>`:""}<button class="btn" id="share">🔗 Copiar enlace del armado</button><button class="btn" id="reset">Empezar de nuevo</button></div>`;
+  $("#share").onclick=async()=>{try{await navigator.clipboard.writeText(location.href);$("#share").textContent="¡Enlace copiado!"}catch(e){$("#share").textContent="No se pudo copiar"}};
+  $("#reset").onclick=()=>{BUILD={};render()};
+}
+
+/* ---------- selector de una pieza ---------- */
+function openPick(k,own){
+  PICK={k,own,q:"",sort:"price",fx:{},limit:40,showUnk:false};
+  $("#pick").classList.add("on");drawPick();setTimeout(()=>{const i=$("#pq");if(i)i.focus()},30);
+}
+function closePick(){$("#pick").classList.remove("on");PICK=null}
+function drawPick(){
+  const {k,own}=PICK,slot=BLD.slot(k),X=others(k);
+  const prods=PR.filter(g=>g.category===slot.cat);
+  let R=E.candidates(k,X,prods);
+  const q=PICK.q.toLowerCase().split(/\s+/).filter(Boolean),qf=r=>q.every(t=>r.g.name.toLowerCase().includes(t));
+  const defs=FX.defs(slot.cat).slice(0,4),fxf=r=>defs.every(d=>{const set=PICK.fx[d.k];return !set||!set.size||set.has(FX.val(r.g,d)??FX.NONE)});
+  const srt={price:(a,b)=>a.p-b.p,priceDesc:(a,b)=>b.p-a.p,name:(a,b)=>a.g.name.localeCompare(b.g.name)}[PICK.sort];
+  const ok=R.ok.filter(qf).filter(fxf).sort(srt),unk=R.unk.filter(qf).filter(fxf).sort(srt);
+  const fx=defs.map(d=>{const c={};R.ok.forEach(r=>{const v=FX.val(r.g,d)??FX.NONE;c[v]=(c[v]||0)+1});const opts=FX.sortOpts(d,Object.entries(c)).filter(([v])=>v!==FX.NONE).slice(0,10);if(opts.length<2)return"";
+    return `<div class="fxrow"><span class="ttl">${esc(d.l)}:</span>${opts.map(([v,n])=>`<label class="${PICK.fx[d.k]&&PICK.fx[d.k].has(v)?"on":""}"><input type="checkbox" data-pfx="${esc(d.k)}" value="${esc(v)}" ${PICK.fx[d.k]&&PICK.fx[d.k].has(v)?"checked":""}>${esc(v)} <span class="note">${n}</span></label>`).join("")}</div>`}).join("");
+  const row=(r,unv)=>{const o=r.o;return `<div class="prow"><div class="im">${img(r.g)}</div><div><div class="nm">${QV.link(r.g,r.g.name)} ${QV.btns(r.g.id)}</div><div class="chk">${r.r.res.map(stHtml).join("")}${!r.r.res.length?'<span class="st n">elegí otra pieza para comprobar</span>':""}</div>${unv?`<div class="why">${esc(r.r.res.filter(x=>x.s==="unk").map(x=>x.txt).join(" · "))}</div>`:""}${srcLine(r.a)}</div><div class="pr"><b>${ARS(r.p)}</b><span class="note">${esc(o.store)}${o.stock===true?"":" · stock a confirmar"}</span><br><button class="mini ${unv?"":"pri"}" data-choose="${esc(r.g.id)}">${own?"Es el mío":"Elegir"}${unv?" igual":""}</button></div></div>`};
+  const whyNo=Object.entries(R.why).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([t,n])=>`${n} · ${esc(t)}`).join("<br>");
+  const whyUnk=Object.entries(R.unkWhy).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([t,n])=>`${n} · ${esc(t)}`).join("<br>");
+  $("#pbox").innerHTML=`<button class="x" id="px" aria-label="Cerrar">×</button><h2>${own?"¿Cuál "+esc(slot.l.toLowerCase())+" tenés?":"Elegí "+esc(slot.l.toLowerCase())}</h2>
+   <div class="note">${Object.keys(X).length?`Se muestran solo los compatibles con lo que ya elegiste (${Object.keys(X).map(x=>BLD.slot(x).l.toLowerCase()).join(", ")}).`:"Todavía no elegiste otras piezas: cualquier opción sirve para empezar."}</div>
+   ${own?ownForm(k):""}
+   <div class="ptools"><input type="search" id="pq" placeholder="Buscar modelo…" value="${esc(PICK.q)}" aria-label="Buscar"><select id="psort" aria-label="Ordenar"><option value="price" ${PICK.sort==="price"?"selected":""}>Menor precio</option><option value="priceDesc" ${PICK.sort==="priceDesc"?"selected":""}>Mayor precio</option><option value="name" ${PICK.sort==="name"?"selected":""}>Nombre</option></select></div>
+   ${fx}
+   <div class="sec-t"><span class="st ok">✓</span> Compatibles y comprobados (${ok.length})</div>
+   ${ok.slice(0,PICK.limit).map(r=>row(r,false)).join("")||`<p class="note">No hay productos comprobados para esta combinación${q.length?" con esa búsqueda":""}.</p>`}
+   ${ok.length>PICK.limit?`<button class="btn more" id="pmore">Ver más (${ok.length-PICK.limit})</button>`:""}
+   ${R.no?`<p class="why"><b>${R.no} ocultos por incompatibles</b>${whyNo?":<br>"+whyNo:""}</p>`:""}
+   ${unk.length?`<details class="unv" ${PICK.showUnk?"open":""} id="punk"><summary>No pudimos verificar la compatibilidad (${unk.length})</summary><p class="why">No se ofrecen como compatibles porque falta un dato del fabricante. Motivos más comunes:<br>${whyUnk}</p>${PICK.showUnk?unk.slice(0,60).map(r=>row(r,true)).join(""):""}</details>`:""}`;
+  $("#px").onclick=closePick;
+  $("#pq").oninput=e=>{PICK.q=e.target.value;PICK.limit=40;const pos=e.target.selectionStart;drawPick();const i=$("#pq");i.focus();try{i.setSelectionRange(pos,pos)}catch(er){}};
+  $("#psort").onchange=e=>{PICK.sort=e.target.value;drawPick()};
+  const m=$("#pmore");if(m)m.onclick=()=>{PICK.limit+=40;drawPick()};
+  const u=$("#punk");if(u)u.addEventListener("toggle",()=>{if(u.open!==PICK.showUnk){PICK.showUnk=u.open;drawPick()}});
+  const of=$("#ownsave");if(of)of.onclick=()=>{const at={};document.querySelectorAll("[data-own-a]").forEach(i=>{if(i.value)at[i.dataset.ownA]=i.value});if(!Object.keys(at).length){alertOwn();return}BUILD[k]={own:true,attrs:at};closePick();render()};
+  QV.sync();
+}
+function alertOwn(){const n=$("#ownmsg");if(n)n.textContent="Completá al menos un dato o elegí tu modelo de la lista."}
+function ownForm(k){
+  const sel=(a,l,opts)=>`<label>${l}<select data-own-a="${a}"><option value="">—</option>${opts.map(o=>`<option>${o}</option>`).join("")}</select></label>`;
+  const num=(a,l,ph)=>`<label>${l}<input data-own-a="${a}" type="number" min="0" placeholder="${ph}"></label>`;
+  const F={cpu:sel("socket","Socket",BLD.SOCKETS),mobo:sel("socket","Socket",BLD.SOCKETS)+sel("ddr","Memoria",["DDR4","DDR5"])+sel("form","Tamaño",BLD.FORMS),ram:sel("ddr","Tipo",["DDR4","DDR5"]),
+    gpu:num("len","Largo de la placa (mm)","ej. 250")+num("tgp","Consumo (W)","ej. 170"),case:sel("forms","Placa más grande que entra",BLD.FORMS)+num("gpuMax","Largo máximo de placa de video (mm)","ej. 330")+num("coolerMax","Alto máximo de cooler (mm)","ej. 160"),
+    psu:num("w","Potencia (W)","ej. 650"),cooler:"",ssd:"",monitor:""}[k];
+  if(!F)return `<p class="note">Elegí tu modelo de la lista (aunque no esté a la venta, sirve para comprobar el resto).</p>`;
+  return `<div class="panel" style="margin:10px 0"><b>Si no encontrás tu modelo, cargá el dato clave</b> (lo ves en la caja o en la ficha del fabricante):<div class="ownf">${F}</div><button class="mini pri" id="ownsave">Usar estos datos</button> <span class="note" id="ownmsg"></span><p class="note" style="margin:6px 0 0">O elegí tu modelo de la lista de abajo.</p></div>`;
+}
+function srcLine(a){const s=Object.values(a).filter(x=>x&&x.src==="fab"&&x.url);if(!s.length)return"";const u=[...new Map(s.map(x=>[x.url,x])).values()].slice(0,2);
+  return `<div class="note src">Ficha: ${u.map(x=>`<a href="${esc(x.url)}" target="_blank" rel="noopener nofollow">${esc(x.ref||"fabricante")}</a>${x.date?" ("+esc(x.date)+")":""}`).join(" · ")}</div>`}
+
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-pick],[data-own],[data-skip],[data-clear],[data-choose],[data-pfx]");if(!t)return;
+  if(t.dataset.pick){openPick(t.dataset.pick,false)}
+  else if(t.dataset.own){openPick(t.dataset.own,true)}
+  else if(t.dataset.skip){const k=t.dataset.skip;BUILD[k]={skip:k==="cooler"?"incl":true};render()}
+  else if(t.dataset.clear){delete BUILD[t.dataset.clear];render()}
+  else if(t.dataset.choose){BUILD[PICK.k]=PICK.own?{own:true,id:t.dataset.choose}:{id:t.dataset.choose};closePick();render()}
+});
+document.addEventListener("change",e=>{const t=e.target;if(t.dataset&&t.dataset.pfx&&PICK){const s=PICK.fx[t.dataset.pfx]||(PICK.fx[t.dataset.pfx]=new Set());t.checked?s.add(t.value):s.delete(t.value);drawPick()}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&PICK)closePick()});
+$("#pick").addEventListener("click",e=>{if(e.target.id==="pick")closePick()});
+
+(async()=>{
+  const j=async(u,d)=>{try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw 0;return await r.json()}catch{return d}};
+  let meta,specs;[HW,PR,meta,VER,specs]=await Promise.all([j("data/hardware.json",null),j("data/products.json",[]),j("data/meta.json",{}),j("data/verified.json",{}),j("data/specs.json",null),REP.load()]);
+  if(!HW||!PR.length){$("#slots").innerHTML='<div class="sl"><div class="note">No se pudieron cargar los datos.</div></div>';return}
+  C=CT.create(HW,PR,meta,specs);E=BLD.create(C,VER);byIdM=new Map(PR.map(g=>[g.id,g]));QV.setData(PR);
+  const u=new URLSearchParams(location.search).get("b");
+  if(u)BUILD=E.decode(u);else{try{BUILD=JSON.parse(localStorage.getItem("armar")||"{}")||{}}catch(e){BUILD={}}}
+  for(const k of Object.keys(BUILD)){const e=BUILD[k];if(e&&e.id&&!byId(e.id))delete BUILD[k]}   // productos que ya no están en el catálogo
+  render();
+})();
+</script>
+<script src="js/assistant.js"></script>
+<script>CT.CTAssistant.mount({section:"armado",context:()=>({})});</script>
+</body>
+</html>

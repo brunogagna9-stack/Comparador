@@ -362,6 +362,42 @@ def store_order(scrapers, meta_path):
     return first + [s for s in scrapers if s not in first]
 
 
+HOME_LEAD = {   # para la foto de cada categoría en la portada: el título tiene que empezar con el tipo de producto
+    "procesadores": r"^(micro\s?)?procesador|^micro (amd|intel)", "motherboards": r"^(mother|motherboard|placa madre|mb)\b",
+    "placas-de-video": r"^(placa de video|video|vga|tarjeta gr)", "memorias-ram": r"^memoria", "almacenamiento": r"^(disco|ssd)\b",
+    "refrigeracion": r"^(water ?cooler|cooler cpu|cooler)", "fuentes": r"^fuente", "gabinetes": r"^gabinete", "monitores": r"^monitor",
+    "notebooks": r"^notebook", "pcs-armadas": r"^pc\b", "mouses": r"^mouse", "teclados": r"^teclado", "auriculares": r"^auricular",
+}
+
+
+def home_summary(groups, recent_days=14):
+    """Resumen chico para la portada (home.json): así la página principal no descarga todo el catálogo."""
+    stores, cats, best = set(), {}, {}
+    price = lambda o: o.get("price_cash") or o.get("price_list")
+    for g in groups:
+        for o in g.get("offers") or []:
+            stores.add(o.get("store"))
+        c = g.get("category") or "otros"
+        cats[c] = cats.get(c, 0) + 1
+        lead = HOME_LEAD.get(c)
+        if not (lead and g.get("image") and re.search(lead, g.get("name") or "", re.I)) or g.get("dif"):
+            continue
+        offs = g.get("offers") or []
+        if any(o.get("anom") for o in offs) or not any(o.get("stock") is True for o in offs):
+            continue
+        score = (len(offs), 1 if "compragamer" in (g.get("image") or "") else 0, g["id"])
+        if c not in best or score > best[c][0]:
+            best[c] = (score, {"id": g["id"], "name": g["name"], "image": g["image"], "image_fb": g.get("image_fb")})
+    # en la portada solo bajas de hardware (no cables, accesorios ni «otros») y sin saltos raros de precio
+    ok = lambda g: (g.get("chg") and g["offers"] and not g["offers"][0].get("anom") and g["chg"]["pct"] < 0 and not g.get("dif")
+                    and g.get("category") not in ("otros", "accesorios", "redes"))
+    drops = sorted((g for g in groups if ok(g)), key=lambda g: g["chg"]["pct"])
+    slim = lambda g: {"id": g["id"], "name": g["name"], "category": g.get("category"), "image": g.get("image"), "chg": g["chg"],
+                      "offers": [{k: g["offers"][0].get(k) for k in ("store", "price_cash", "price_list")}]}
+    return {"v": 1, "products": len(groups), "stores": len([s for s in stores if s]), "dropped": sum(1 for g in groups if g.get("chg") and g.get("offers") and not g["offers"][0].get("anom") and g["chg"]["pct"] < 0),
+            "cats": cats, "photo": {k: v[1] for k, v in best.items()}, "drops": [slim(g) for g in drops[:8]]}
+
+
 def main(only):
     from scrapers import SCRAPERS, common
     DATA.mkdir(parents=True, exist_ok=True)
@@ -445,6 +481,7 @@ def main(only):
     annotate_changes(groups, hist, today)
     (DATA / "products.json").write_text(json.dumps(groups, ensure_ascii=False, separators=(",", ":")))
     (DATA / "history.json").write_text(json.dumps(hist, separators=(",", ":")))
+    (DATA / "home.json").write_text(json.dumps(home_summary(groups), ensure_ascii=False, separators=(",", ":")))
     (DATA / "meta.json").write_text(json.dumps({
         "updated": dt.datetime.now(dt.timezone.utc).isoformat(timespec="minutes"),
         "stores": status, "specs": spec_status, "groups": len(groups), "demo": False}, ensure_ascii=False))

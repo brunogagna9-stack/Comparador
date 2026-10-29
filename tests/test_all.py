@@ -869,3 +869,36 @@ def test_icecat():
     with tempfile.TemporaryDirectory() as d:
         items, st = ic.refresh([dict(groups[0], spec=None)], d, fetch=stop, today="2026-10-27")
         assert items == {} and st["ok"] is False and "429" in st["error"]
+
+
+def test_limpieza_actualizacion_27():
+    """Procesadores que las tiendas ponen en refrigeración («Micro Procesador … S/Cooler», «Proces. …»), coolers en
+    procesadores («CPU Cooler …») y productos que no son hardware (sobres, lámparas, heladeras)."""
+    from scrapers.common import fix_category as f
+    assert f("Micro Procesador AMD Ryzen 5 8500G 5.0 GHz Turbo (OEM) S/Cooler – AM5", "refrigeracion") == "procesadores"
+    assert f("Proces. AMD Ryzen 9 7900 AM5 CON VIDEO SIN COOLER", "refrigeracion") == "procesadores"
+    assert f("CPU INTEL CORE I3-12100 ALDERLAKE S1700 TRAY (I)", "procesadores") == "procesadores"
+    assert f("CPU Cooler MASTER Hyper 212 3DHP Black", "procesadores") == "refrigeracion"
+    assert f("Controladora Gamemax Fan Led Rainbow", "refrigeracion") == "accesorios"
+    assert f("Controlador de Juegos CORSAIR Novablade Pro", "otros") != "accesorios"
+    assert f("Alfombra Gamer Coolermaster Fm510 Halo", "refrigeracion") == "perifericos"
+    assert f("DELL Standar fan cuskit - R550 (2 FAN X CPU) X 2", "refrigeracion") == "otros"
+    for junk in ("Sobres De Papel Para Cd S/Ventana", "Lampara Velador De Silicona Pera Usb", "HELADERA PORTÁTIL ECOFLOW GLACIER (7950)", "Fee- Derecho A Dropshipping"):
+        assert f(junk, "otros") is None, junk
+    assert f("Water Cooler CORSAIR NAUTILUS 240 RS ARGB", "refrigeracion") == "refrigeracion"
+
+
+def test_resumen_portada():
+    """home.json: la portada ya no descarga el catálogo entero (17 MB); solo cuentas, una foto por categoría y las bajas."""
+    import build_data
+    g = lambda i, name, cat, n=1, stock=True, img="https://x/a.jpg", chg=None: {"id": i, "name": name, "category": cat, "image": img,
+        "offers": [{"store": f"T{k}", "price_cash": 100 + k, "stock": stock} for k in range(n)], **({"chg": chg} if chg else {})}
+    P = [g("a", "Procesador AMD Ryzen 5 5600", "procesadores", 3), g("b", "Procesador Intel i5", "procesadores", 1),
+         g("c", "Pasta térmica", "refrigeracion", 5), g("d", "Mouse Logitech", "mouses", 2, stock=False),
+         g("e", "Monitor LG 24", "monitores", 1, chg={"prev": 200, "pct": -20.0})]
+    h = build_data.home_summary(P)
+    assert h["products"] == 5 and h["stores"] == 5 and h["cats"]["procesadores"] == 2
+    assert h["photo"]["procesadores"]["id"] == "a"                  # la más comparada
+    assert "refrigeracion" not in h["photo"]                         # el título no empieza con el tipo de producto
+    assert "mouses" not in h["photo"]                                # sin stock no se usa de foto
+    assert h["dropped"] == 1 and h["drops"][0]["id"] == "e" and len(json.dumps(h)) < 5000

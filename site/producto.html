@@ -32,18 +32,17 @@ td.n,th.n{text-align:right;white-space:nowrap}tr.best td{background:var(--best)}
   <div class="crumb"><a href="productos.html">← Volver a Productos</a><span id="bc"></span></div>
   <div id="pd"><div class="empty">Cargando producto…</div></div>
 </main>
-<script src="js/lib.js"></script><script src="js/rep.js"></script><script src="js/compare.js"></script><script src="js/detail.js"></script>
+<script src="js/lib.js"></script><script src="js/icons.js"></script><script src="js/rep.js"></script><script src="js/compare.js"></script><script src="js/detail.js"></script>
 <script>
 const $=s=>document.querySelector(s),{ARS,esc}=CT;
 const CATS={procesadores:"Procesadores",motherboards:"Motherboards","placas-de-video":"Placas de video","memorias-ram":"Memorias RAM",almacenamiento:"Almacenamiento",refrigeracion:"Refrigeración",fuentes:"Fuentes",gabinetes:"Gabinetes",monitores:"Monitores",notebooks:"Notebooks","pcs-armadas":"PCs armadas",mouses:"Mouse",teclados:"Teclados",auriculares:"Auriculares",perifericos:"Otros periféricos",redes:"Redes",accesorios:"Cables y accesorios",otros:"Otros"};
-const ICON={procesadores:"🧠",motherboards:"🔌","placas-de-video":"🎮","memorias-ram":"🧮",almacenamiento:"💽",refrigeracion:"❄️",fuentes:"⚡",gabinetes:"🖥️",monitores:"🖥️",notebooks:"💻","pcs-armadas":"🖥️",mouses:"🖱️",teclados:"⌨️",auriculares:"🎧",perifericos:"🕹️",redes:"📡",accesorios:"🔌",otros:"📦"};
 const price=o=>o.price_cash??o.price_list;
 let FOLLOW={};try{FOLLOW=JSON.parse(localStorage.getItem("seg")||"{}")}catch{}
 let LIST=[];try{LIST=JSON.parse(localStorage.getItem("lista")||"[]")}catch{}
 const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}};
 const tagH=(t,n)=>{const [l,h]=CT.TAGS[t]||CT.TAGS.nd;return `<span class="tag t-${t}" title="${esc(h+(n?" — "+n:""))}">${l}</span>`};
 async function j(u,d){try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw 0;return await r.json()}catch{return d}}
-function imgFail(el){const fb=el.dataset.fb;if(fb&&el.src!==fb){el.src=fb;return}const sp=document.createElement("span");sp.className="ph";sp.innerHTML=`<i>${ICON[el.dataset.cat]||"📦"}</i>Sin foto`;el.replaceWith(sp)}
+function imgFail(el){const fb=el.dataset.fb;if(fb&&el.src!==fb){el.src=fb;return}const sp=document.createElement("span");sp.className="ph";sp.innerHTML=`${ICONS.svg(el.dataset.cat||"otros",44)}Sin foto`;el.replaceWith(sp)}
 window.imgFail=imgFail;
 function specs(g,HW,PR,META,SP){
   try{
@@ -63,7 +62,7 @@ function specs(g,HW,PR,META,SP){
   $("#bc").innerHTML=` · <a href="productos.html?cat=${encodeURIComponent(g.category)}">${esc(CATS[g.category]||g.category)}</a>`;
   const stale=s=>{const m=(META.stores||{})[s];return !!(m&&!m.ok)},ctx={HIST,META,CFG,REP,stale};
   const best=price(g.offers[0]),c=(g.chg&&!(g.offers[0]&&g.offers[0].anom))?g.chg:null;
-  const img=g.image?`<img data-cat="${esc(g.category)}" data-fb="${esc(g.image_fb||"")}" src="${esc(g.image)}" alt="${esc(g.name)}" onerror="imgFail(this)">`:`<span class="ph"><i>${ICON[g.category]||"📦"}</i>Sin foto</span>`;
+  const img=g.image?`<img data-cat="${esc(g.category)}" data-fb="${esc(g.image_fb||"")}" src="${esc(g.image)}" alt="${esc(g.name)}" onerror="imgFail(this)">`:`<span class="ph">${ICONS.svg(g.category||"otros",44)}Sin foto</span>`;
   const inList=()=>LIST.includes(g.id),fol=()=>!!FOLLOW[g.id];
   const cmpLink=CT.CATS&&CT.CATS[g.category]?`comparar.html#${new URLSearchParams({cat:g.category,ids:g.id})}`:null;
   const head=()=>`<div class="ph1"><div class="im">${img}</div><div class="pd"><div><span class="tag2">${esc(CATS[g.category]||g.category)}</span>${g.brand?`<span class="tag2">${esc(g.brand)}</span>`:""}${g.img_src?`<span class="tag2" title="Ninguna tienda publica foto de este producto">Foto: ${esc(g.img_src)}</span>`:""}</div>

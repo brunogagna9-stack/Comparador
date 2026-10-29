@@ -127,11 +127,17 @@ _FIX = [
                 r"para olt\b|\bsin fuente\b", re.I), "accesorios"),
     # Producto que EMPIEZA con su tipo: manda sobre la categoría de la tienda y sobre palabras sueltas del título
     # («Procesador … (Sin Cooler)» es un procesador, no refrigeración; «Memoria … C/ Disipador» es una memoria).
-    (re.compile(r"^(procesador(es)?|microprocesador(es)?|proces\.|cpu)\b|^micro\s+(amd|intel|ryzen|core|athlon|pentium|celeron)\b", re.I), "procesadores"),
+    # «CPU Cooler …» y «Cooler CPU …» son coolers; los repuestos de servidor (disipador para el segundo CPU) van a «otros»
+    (re.compile(r"^(cpu|procesador)\s+(cooler|disipador|fan)\b", re.I), "refrigeracion"),
+    (re.compile(r"\b(heat ?sink|disipador|cooler|fan)\b.*\b(segundo cpu|r\d{3}\b|poweredge|proliant)|^dell (standar|cooler)", re.I), "otros"),
+    (re.compile(r"^((micro\s?)?procesador(es)?|microprocesador(es)?|proces\.|cpu\b)|^micro\s+(amd|intel|ryzen|core|athlon|pentium|celeron)\b", re.I), "procesadores"),
     (re.compile(r"^memorias?\s+(micro ?)?(sd|flash)", re.I), "almacenamiento"),
     (re.compile(r"^memorias?\b.*\b(ddr[2345]|ram)\b|^ram\b", re.I), "memorias-ram"),
     (re.compile(r"^(disco|ssd|hdd?|unidad (de estado )?s[oó]lid[ao]|pen ?drive|micro ?sd\w*)\b", re.I), "almacenamiento"),
-    (re.compile(r"^(silla|mousepad|pad mouse|alfombrilla)\b", re.I), "perifericos"),
+    (re.compile(r"^(silla|mousepad|pad mouse|alfombrilla|alfombra)\b", re.I), "perifericos"),
+    (re.compile(r"^(controlador(a)?(?! de juegos)|hub|m[oó]dulo|sistema)\b.*\b(led|argb|rgb|icue|lcd|fan)\b|^argb\b.*controller|led controller", re.I), "accesorios"),
+    (re.compile(r"^soporte\b.*\b(celular|joystick|auricular|tarjeta gr[aá]fica|placa de video|gpu|vga)\b", re.I), "accesorios"),
+    (re.compile(r"^(heladera|conservadora|sobres?|lampara|l[aá]mpara|fee\b|cargo\b|servicio)\b|dropshipping", re.I), None),
     (re.compile(r"^(fan|ventilador|cooler (para )?gabinete|cooler (cpu|gamemax)|watercool\w*|water ?cooler|disipador|pasta)\b", re.I), "refrigeracion"),
     (re.compile(r"^proyector\b", re.I), "otros"),
     (re.compile(r"^(joystick|gamepad)\b", re.I), "perifericos"),

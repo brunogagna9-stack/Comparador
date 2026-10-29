@@ -69,7 +69,7 @@ aside{border-radius:var(--r);box-shadow:var(--sh)}
 @media(max-width:800px){.li{grid-template-columns:1fr auto}}
 
 /* ---- imágenes, filtros plegables y celular (actualización 6) ---- */
-.im .ph{display:flex;flex-direction:column;align-items:center;gap:4px;color:#5b6472;font-size:12px}.im .ph i{font-style:normal;font-size:38px;filter:grayscale(.3);opacity:.75}
+.im .ph{display:flex;flex-direction:column;align-items:center;gap:4px;color:#5b6472;font-size:12px}.im .ph svg{color:#94a3b8}
 aside details{border-top:1px solid var(--line);padding:8px 0}aside details:first-of-type{margin-top:10px}
 aside summary{cursor:pointer;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);font-weight:700;list-style:none;display:flex;justify-content:space-between;padding:2px 0}
 aside summary::-webkit-details-marker{display:none}aside summary::after{content:"▾";transition:transform .15s}aside details:not([open]) summary::after{transform:rotate(-90deg)}
@@ -84,6 +84,12 @@ aside details>*:not(summary){margin-top:6px}
   .addl{padding:2px 8px;font-size:12px}
 }
 [hidden]{display:none!important}
+/* ---- filtros por categoría (actualización 27) ---- */
+#fxbox details{border-top:1px solid var(--line);padding:8px 0}
+#fxbox .fl{max-height:236px;overflow-y:auto;overscroll-behavior:contain}
+#fxbox label.zero{opacity:.45}#fxbox .fxn{font-size:11.5px;color:var(--mut);margin:4px 0 0;line-height:1.35}
+#fxbox .fxh{font-size:12px;color:var(--mut);margin:12px 0 0;padding-top:8px;border-top:2px solid var(--line)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:-2px 0 10px}.chip{border:1px solid var(--acc);background:color-mix(in srgb,var(--acc) 10%,var(--card));color:var(--tx);border-radius:999px;padding:3px 10px;font-size:12.5px;cursor:pointer}.chip:hover{text-decoration:line-through}
 </style>
 </head>
 <body data-page="productos">
@@ -93,6 +99,7 @@ aside details>*:not(summary){margin-top:6px}
   <aside id="side">
     <h4>Categoría</h4><select id="cat"></select>
     <h4>Precio (ARS)</h4><div class="rng"><input id="pmin" type="number" min="0" placeholder="Mín"><input id="pmax" type="number" min="0" placeholder="Máx"></div>
+    <div id="fxbox"></div>
     <details open><summary>Marca</summary><input id="bq" aria-label="Buscar marca" placeholder="Buscar marca…" style="width:100%;padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--tx);margin-bottom:4px"><div class="fl" id="brands"></div><button class="more" id="bmore"></button></details>
     <details open><summary>Tienda</summary><div class="fl" id="stores"></div></details>
     <details open><summary>Opciones</summary><div class="fl">
@@ -105,7 +112,7 @@ aside details>*:not(summary){margin-top:6px}
     <div class="ptitle"><h1>Productos</h1><span class="fresh" id="fresh" title="Cuándo se leyeron los precios de las tiendas"></span></div>
     <div id="alert"></div>
     <div class="tabs" id="tabs"></div>
-    <div class="summary" id="sum"></div>
+    <div class="summary" id="sum"></div><div class="chips" id="chips"></div>
     <div class="grid" id="grid" aria-busy="true"><div class="sk" aria-hidden="true"><i></i><b></b><b></b></div><div class="sk" aria-hidden="true"><i></i><b></b><b></b></div><div class="sk" aria-hidden="true"><i></i><b></b><b></b></div><div class="sk" aria-hidden="true"><i></i><b></b><b></b></div><div class="sk" aria-hidden="true"><i></i><b></b><b></b></div><div class="sk" aria-hidden="true"><i></i><b></b><b></b></div><div class="sk" aria-hidden="true"><i></i><b></b><b></b></div><div class="sk" aria-hidden="true"><i></i><b></b><b></b></div></div>
     <nav class="pager" id="pager" aria-label="Páginas de resultados"></nav><div class="pinfo" id="pinfo"></div>
   </main>
@@ -115,15 +122,15 @@ aside details>*:not(summary){margin-top:6px}
 <script>
 const $=s=>document.querySelector(s),ARS=n=>n==null?"—":"$"+Math.round(n).toLocaleString("es-AR");
 const CATS={procesadores:"Procesadores",motherboards:"Motherboards","placas-de-video":"Placas de video","memorias-ram":"Memorias RAM",almacenamiento:"Almacenamiento",refrigeracion:"Refrigeración",fuentes:"Fuentes",gabinetes:"Gabinetes",monitores:"Monitores",notebooks:"Notebooks","pcs-armadas":"PCs armadas",mouses:"Mouse",teclados:"Teclados",auriculares:"Auriculares",perifericos:"Otros periféricos",redes:"Redes",accesorios:"Cables y accesorios",otros:"Otros"};
-const ICON={procesadores:"🧠",motherboards:"🔌","placas-de-video":"🎮","memorias-ram":"🧮",almacenamiento:"💽",refrigeracion:"❄️",fuentes:"⚡",gabinetes:"🖥️",monitores:"🖥️",notebooks:"💻","pcs-armadas":"🖥️",mouses:"🖱️",teclados:"⌨️",auriculares:"🎧",perifericos:"🕹️",redes:"📡",accesorios:"🔌",otros:"📦"};
 const FB={};   // id -> imagen de respaldo (miniatura) si la de alta resolución falla
 function imgFail(el){const id=el.dataset.id,fb=FB[id];
   if(fb&&el.src!==fb){el.src=fb;return}
-  const d=DATA.find(x=>x.id===id),sp=document.createElement("span");sp.className="ph";sp.innerHTML=`<i>${ICON[d&&d.category]||"📦"}</i>Sin foto`;el.replaceWith(sp)}
-const imgTag=(g,lazy)=>g.image?`<img ${lazy?'loading="lazy" ':""}data-id="${esc(g.id)}" src="${esc(g.image)}" alt="" onerror="imgFail(this)">`:`<span class="ph"><i>${ICON[g.category]||"📦"}</i>Sin foto</span>`;
+  const d=DATA.find(x=>x.id===id),sp=document.createElement("span");sp.className="ph";sp.innerHTML=`${ICONS.svg((d&&d.category)||"otros",38)}Sin foto`;el.replaceWith(sp)}
+const imgTag=(g,lazy)=>g.image?`<img ${lazy?'loading="lazy" ':""}data-id="${esc(g.id)}" src="${esc(g.image)}" alt="" onerror="imgFail(this)">`:`<span class="ph">${ICONS.svg(g.category||"otros",38)}Sin foto</span>`;
 const COLORS=["#1f6feb","#e0763a","#12a37a","#b04ad6","#d6a31f","#d64a6a","#4a9ed6"];
 let DATA=[],HIST={},META={},CFG={stores:{}};
-const S={tab:"todos",cat:"",brands:new Set(),stores:new Set(),pmin:null,pmax:null,stock:false,multi:false,lowonly:false,sort:"price",q:"",page:1,allBrands:false,bq:""};
+const S={tab:"todos",cat:"",brands:new Set(),stores:new Set(),pmin:null,pmax:null,stock:false,multi:false,lowonly:false,sort:"rel",q:"",page:1,allBrands:false,bq:"",fx:{}};
+let CX=null;   // contexto con la base de hardware y las fichas (para los filtros por categoría)
 const PER=32;   // 4 columnas × 8 filas por página
 const chgOk=g=>!!(g.chg&&!(g.offers[0]&&g.offers[0].anom));   // un salto sospechoso no cuenta como "bajó/subió"
 const price=o=>o.price_cash??o.price_list,best=g=>price(g.offers[0]);
@@ -153,6 +160,7 @@ function filtered(skip){
   return DATA.filter(g=>{
     if(skip!=="cat"&&S.cat&&g.category!==S.cat)return false;
     if(skip!=="brand"&&S.brands.size&&!S.brands.has(g.brand))return false;
+    if(S.cat&&window.FX){for(const d of FX.defs(S.cat)){const set=S.fx[d.k];if(!set||!set.size||skip==="fx:"+d.k)continue;if(!set.has(FX.val(g,d)??FX.NONE))return false}}
     if(q.length){const n=g.name.toLowerCase();if(!q.every(t=>n.includes(t)))return false}
     const v=visible(g);if(!v.length)return false;
     const p=price(v[0]);if(S.pmin!=null&&p<S.pmin)return false;if(S.pmax!=null&&p>S.pmax)return false;
@@ -191,11 +199,31 @@ function renderSide(){
   const total=bl.length;if(!S.allBrands&&!S.bq)bl=bl.slice(0,10);
   $("#brands").innerHTML=bl.map(([b,n])=>`<label><input type="checkbox" data-b="${esc(b)}" ${S.brands.has(b)?"checked":""}> ${esc(b)}<span class="c">${n}</span></label>`).join("");
   $("#bmore").textContent=total>10&&!S.bq?(S.allBrands?"Ver menos":`Ver todas (${total})`):"";
+  renderFx();
+}
+/* filtros propios de la categoría elegida: cada opción muestra cuántos productos quedan si la marcás */
+function renderFx(){
+  const box=$("#fxbox");if(!box)return;
+  const defs=S.cat&&window.FX?FX.defs(S.cat):[];
+  if(!defs.length){box.innerHTML="";return}
+  const open=new Set([...box.querySelectorAll("details[open]")].map(d=>d.dataset.k));const first=!box.dataset.cat||box.dataset.cat!==S.cat;box.dataset.cat=S.cat;
+  box.innerHTML=`<div class="fxh">Filtros de ${esc(CATS[S.cat]||S.cat)}</div>`+defs.map((d,i)=>{
+    const base=filtered("fx:"+d.k),c={};base.forEach(g=>{const v=FX.val(g,d)??FX.NONE;c[v]=(c[v]||0)+1});
+    const sel=S.fx[d.k]||new Set();sel.forEach(v=>{if(!(v in c))c[v]=0});
+    const opts=FX.sortOpts(d,Object.entries(c));if(opts.length<2&&!sel.size&&!(opts[0]&&opts[0][0]!==FX.NONE))return "";
+    const isOpen=first?i<4||sel.size:open.has(d.k)||sel.size;
+    return `<details data-k="${esc(d.k)}" ${isOpen?"open":""}><summary>${esc(d.l)}${sel.size?` (${sel.size})`:""}</summary><div class="fl">${opts.map(([v,n])=>`<label class="${n?"":"zero"}${v===FX.NONE?" none":""}"><input type="checkbox" data-fx="${esc(d.k)}" value="${esc(v)}" ${sel.has(v)?"checked":""}> ${esc(v)}<span class="c">${n}</span></label>`).join("")}</div>${d.note?`<p class="fxn">${esc(d.note)}</p>`:""}</details>`}).join("")+
+    `<p class="fxn">«${FX.NONE}»: la tienda no lo indica y no figura en las fichas que tenemos.</p>`;
+}
+function renderChips(){
+  const el=$("#chips");if(!el)return;const out=[];
+  if(S.cat&&window.FX)FX.defs(S.cat).forEach(d=>(S.fx[d.k]||new Set()).forEach(v=>out.push(`<button class="chip" data-chip="${esc(d.k)}" data-v="${esc(v)}" title="Quitar filtro">${esc(d.l)}: ${esc(v)} ✕</button>`)));
+  el.innerHTML=out.join("");
 }
 function render(){
   const t=counts(),names={todos:"Todos",bajaron:"▼ Bajaron de precio",subieron:"▲ Subieron de precio",seguidos:"★ Seguidos"};
   $("#tabs").innerHTML=Object.keys(names).map(k=>`<button class="tab ${S.tab===k?"on":""}" data-t="${k}">${names[k]}<span class="n">${t[k]}</span></button>`).join("")+`<button class="tab" id="fbtn" aria-expanded="${$("#side").classList.contains("show")}">☰ Filtros</button>`+
-   `<div class="sortw"><span class="sub">Ordenar</span><select id="sort">${[["price","Menor precio"],["rel","Más relevante"],["priceDesc","Mayor precio"],["down","Mayor baja %"],["up","Mayor suba %"],["stores","Más tiendas"],["spread","Mayor diferencia entre tiendas"]].map(([v,l])=>`<option value="${v}" ${S.sort===v?"selected":""}>${l}</option>`).join("")}</select></div>`;
+   `<div class="sortw"><span class="sub">Ordenar</span><select id="sort">${[["rel","Más relevante"],["price","Menor precio"],["priceDesc","Mayor precio"],["down","Mayor baja %"],["up","Mayor suba %"],["stores","Más tiendas"],["spread","Mayor diferencia entre tiendas"]].map(([v,l])=>`<option value="${v}" ${S.sort===v?"selected":""}>${l}</option>`).join("")}</select></div>`;
   $("#sort").onchange=e=>{S.sort=e.target.value;S.page=1;render()};
   const rows=filtered().sort(sorter());
   $("#sum").textContent=`${rows.length.toLocaleString("es-AR")} resultados`+(S.tab==="bajaron"||S.tab==="subieron"?` · cambios de los últimos ${META.recent_days||14} días`:"");
@@ -203,7 +231,7 @@ function render(){
   const from=(S.page-1)*PER;
   $("#grid").removeAttribute("aria-busy");
   $("#grid").innerHTML=rows.slice(from,from+PER).map(card).join("")||`<div class="empty">${S.tab==="seguidos"?"Todavía no seguís productos. Tocá la ☆ de cualquier producto.":S.tab==="todos"?"Sin resultados.":"Todavía no hay cambios de precio registrados. Aparecen a medida que se actualizan los datos."}</div>`;
-  renderPager(pages,rows.length,from);syncUrl();
+  renderPager(pages,rows.length,from);syncUrl();renderChips();
   renderSide();
 }
 function renderPager(pages,total,from){
@@ -215,6 +243,7 @@ function renderPager(pages,total,from){
 }
 function syncUrl(){   // la página, la búsqueda y la categoría quedan en la dirección: se puede volver atrás o compartir
   try{const u=new URLSearchParams();if(S.q)u.set("q",S.q);if(S.cat)u.set("cat",S.cat);if(S.tab!=="todos")u.set("tab",S.tab);if(S.page>1)u.set("p",S.page);
+    if(S.cat)Object.entries(S.fx).forEach(([k,set])=>{if(set.size)u.set("f_"+k,[...set].join("~"))});
     history.replaceState(null,"",location.pathname+(u.toString()?"?"+u:""))}catch{}
 }
 function goPage(n){S.page=n;render();const t=$(".ptitle");if(t)window.scrollTo({top:t.getBoundingClientRect().top+scrollY-(document.querySelector("header.site")?document.querySelector("header.site").offsetHeight:0)-10,behavior:"auto"})}
@@ -264,8 +293,9 @@ document.addEventListener("click",e=>{
   const t=e.target;
   if(t.dataset.f){e.stopPropagation();toggleF(t.dataset.f);return}
   if(t.dataset.l){e.stopPropagation();toggleL(t.dataset.l);return}
-  const tb=t.closest("[data-t]");if(tb){e.preventDefault();S.tab=tb.dataset.t;S.page=1;if(S.tab==="bajaron")S.sort="down";else if(S.tab==="subieron")S.sort="up";else if(S.tab==="todos"&&(S.sort==="down"||S.sort==="up"))S.sort="price";render();return}
+  const tb=t.closest("[data-t]");if(tb){e.preventDefault();S.tab=tb.dataset.t;S.page=1;if(S.tab==="bajaron")S.sort="down";else if(S.tab==="subieron")S.sort="up";else if(S.tab==="todos"&&(S.sort==="down"||S.sort==="up"))S.sort="rel";render();return}
   if(t.closest("#fbtn")){$("#side").classList.toggle("show");render();return}
+  const ch=t.closest("[data-chip]");if(ch){const set=S.fx[ch.dataset.chip];if(set)set.delete(ch.dataset.v);S.page=1;render();return}
   const pb=t.closest("[data-pg]");if(pb&&!pb.disabled){goPage(+pb.dataset.pg);return}
   const op=t.closest("a.stretch");if(op){if(e.ctrlKey||e.metaKey||e.shiftKey||e.altKey)return;e.preventDefault();openModal(op.dataset.open);return}
   const c=t.closest(".card");if(c){openModal(c.dataset.id);return}
@@ -275,7 +305,8 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")$("#modal").classLis
 function bind(){
   const re=()=>{S.page=1;render()};
   $("#qh").oninput=e=>{S.q=e.target.value;re()};
-  $("#cat").onchange=e=>{S.cat=e.target.value;re()};
+  $("#cat").onchange=e=>{S.cat=e.target.value;S.fx={};re()};
+  $("#fxbox").onchange=e=>{const k=e.target.dataset.fx;if(!k)return;const set=S.fx[k]||(S.fx[k]=new Set());e.target.checked?set.add(e.target.value):set.delete(e.target.value);re()};
   const num=v=>v===""?null:Number(v);
   $("#pmin").oninput=e=>{S.pmin=num(e.target.value);re()};$("#pmax").oninput=e=>{S.pmax=num(e.target.value);re()};
   ["stock","multi","lowonly"].forEach(k=>$("#"+k).onchange=e=>{S[k]=e.target.checked;re()});
@@ -285,11 +316,13 @@ function bind(){
   $("#bmore").onclick=()=>{S.allBrands=!S.allBrands;renderSide()};
   $("#lbtn").onclick=openList;
   {const A=CFG.alerts||{},ok=u=>typeof u==="string"&&/^https:\/\//.test(u);if(ok(A.email_form_url)||ok(A.whatsapp_channel_url)){$("#abtn").hidden=false;$("#abtn").onclick=openAlerts}}
-  $("#reset").onclick=()=>{Object.assign(S,{cat:"",brands:new Set(),stores:new Set(),pmin:null,pmax:null,stock:false,multi:false,lowonly:false,q:"",bq:""});
+  $("#reset").onclick=()=>{Object.assign(S,{cat:"",brands:new Set(),stores:new Set(),pmin:null,pmax:null,stock:false,multi:false,lowonly:false,q:"",bq:"",fx:{}});
     ["qh","pmin","pmax","bq"].forEach(i=>$("#"+i).value="");["stock","multi","lowonly"].forEach(i=>$("#"+i).checked=false);re()};
 }
 (async()=>{
   [DATA,HIST,META,CFG,STORES]=await Promise.all([j("data/products.json",[]),j("data/history.json",{}),j("data/meta.json",{}),j("data/config.json",{stores:{}}),j("data/stores.json",{stores:{}})]);REP.set(STORES);
+  // base de hardware y fichas: completan los filtros por categoría (si no cargan, los filtros usan solo el título)
+  Promise.all([j("data/hardware.json",null),j("data/specs.json",null)]).then(([hw,sp])=>{try{if(hw&&window.FX){CX=CT.create(hw,DATA,META,sp);FX.init(CX);FX.clear(DATA);if(S.cat)render()}}catch(e){}});
   DATA.forEach(g=>{if(g.image_fb)FB[g.id]=g.image_fb});
   CTL.count(LIST.length);
   {const h=META.updated?(Date.now()-new Date(META.updated).getTime())/36e5:null,el=$("#fresh");
@@ -301,13 +334,14 @@ function bind(){
   {const u=new URLSearchParams(location.search);
    if(u.get("q")){S.q=u.get("q").slice(0,120);$("#qh").value=S.q}
    if(u.get("cat")&&CATS[u.get("cat")])S.cat=u.get("cat");
+   if(S.cat)for(const [k,v] of u)if(k.startsWith("f_")&&v)S.fx[k.slice(2)]=new Set(v.split("~").slice(0,20));
    if(["bajaron","subieron","seguidos"].includes(u.get("tab"))){S.tab=u.get("tab");if(S.tab==="bajaron")S.sort="down";if(S.tab==="subieron")S.sort="up"}
    const p=parseInt(u.get("p"),10);if(p>0)S.page=p;
    bind();alertBox();render();
    if(u.get("lista"))openList();else if(u.get("avisos")&&!$("#abtn").hidden)openAlerts();}
 })();
 </script>
-<script src="js/lib.js"></script><script src="js/rep.js"></script><script src="js/detail.js"></script><script src="js/assistant.js"></script>
+<script src="js/lib.js"></script><script src="js/facets.js"></script><script src="js/icons.js"></script><script src="js/rep.js"></script><script src="js/detail.js"></script><script src="js/assistant.js"></script>
 <script>CT.CTAssistant.mount({section:"precios",context:()=>({query:S.q,cat:S.cat,ids:filtered().slice(0,3).map(g=>g.id)})});</script>
 </body>
 </html>

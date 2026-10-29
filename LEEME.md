@@ -358,3 +358,55 @@ Vale para **Armado de PC** y para las PC por componentes de **Encontrá tu equip
   ROG Strix X870-A a $120.150 cuando las demás la tienen a ~$600.000): con 3 o más tiendas se descarta el que se aleja de la
   mediana; con 2, el producto no se recomienda.
 - Los totales ahora incluyen disipador (cuando hace falta) y gabinete, así que son más altos y más reales.
+
+## Actualización 27 — Filtros por categoría, íconos nuevos, limpieza del catálogo y portada más liviana
+- **Filtros por categoría en Productos** (`site/js/facets.js`): al elegir una categoría aparecen filtros propios con la cantidad
+  de productos de cada opción; se combinan con los de siempre, se ven como «chips» quitables arriba de la grilla y quedan en la
+  dirección de la página (`?cat=monitores&f_res=QHD%201440p`). El dato sale de la ficha guardada, de la base de hardware de los
+  fabricantes (socket y gráficos de los procesadores, tipo de memoria de las placas de video) o del título; si no aparece en
+  ninguna parte va a «Sin dato» (nunca se inventa).
+  - Procesadores: serie, socket, gráficos integrados, cooler en la caja · Placas de video: chip, memoria, GDDR
+  - RAM: DDR, capacidad, velocidad, PC o notebook · Motherboards: socket, chipset, DDR, tamaño, Wi-Fi (la marca es el filtro Marca)
+  - Almacenamiento: tipo (NVMe, SATA, HDD, externo, pendrive…) y capacidad · Refrigeración: aire / líquida / ventiladores / pasta y medida
+  - Fuentes: potencia, certificación, modular, ATX 3 · Gabinetes: placa que entra, ventiladores incluidos
+  - Monitores: tamaño, resolución, Hz, panel, tiempo de respuesta · Notebooks y PC armadas: procesador, RAM, almacenamiento, placa de video
+  - Mouse: conexión y uso · Teclados: tipo, switch, iluminación, conexión, formato · Auriculares: conexión, tipo, uso
+  - Quedaron afuera los que casi no tienen datos en las tiendas (socket de coolers, largo de placa de video en gabinetes,
+    LED/LCD, micrófono / 7.1 / USB-jack / cancelación de ruido, DPI, RGB en mouse). Se van a sumar con las fichas verificadas.
+- **Íconos:** los emoji se reemplazaron por íconos de línea de Lucide (licencia ISC, guardados dentro del sitio en
+  `site/js/icons.js`). En la portada cada categoría muestra además la foto real de un producto del catálogo (el más comparado,
+  con stock, cuyo título empieza con el tipo de producto); si la foto no carga, queda el ícono.
+- **Portada más liviana:** la actualización de datos genera `site/data/home.json` (unos 8 KB con cuentas, fotos y bajas). Antes la
+  portada descargaba y procesaba el catálogo entero (17 MB) mientras arrancaba la animación, y eso la trababa.
+- **Animación:** ya no se congela mientras se desplaza la página (antes se dejaba de dibujar y después «saltaba», que se veía
+  trabado): se dibuja un cuadro sí y uno no. En pantallas de 120/144 Hz, si no llega, primero baja a la mitad de cuadros de forma
+  pareja antes de bajar calidad. Nuevo botón «Pausar» (se recuerda en el navegador).
+- **Limpieza del catálogo** (`scrapers/common.py`): «Micro Procesador …» y «Proces. …» que caían en Refrigeración por decir
+  «S/Cooler» (143) vuelven a Procesadores; «CPU Cooler …» va a Refrigeración; controladoras ARGB y soportes van a Accesorios;
+  repuestos de servidores a Otros; sobres de papel, lámparas, heladeras y cargos de envío se descartan. En la portada, las bajas
+  de precio muestran solo hardware (sin cables ni «otros»).
+- **Productos:** el orden por defecto es «Más relevante» (con stock, con foto y en más tiendas primero) en vez de «Menor precio»,
+  que llenaba la primera página de accesorios baratos.
+- Pruebas nuevas: `tests/test_facets.js` y dos en `tests/test_all.py`.
+
+## Actualización 28 — «Armalo vos»: armado pieza por pieza, solo con piezas compatibles
+- **Dos caminos en Armado de PC**: pestañas «Armado recomendado» (`armado.html`, el de siempre) y «Armalo vos (pieza por pieza)»
+  (`armar.html`). En el nuevo se eligen procesador, cooler, motherboard, memoria, almacenamiento, placa de video, gabinete,
+  fuente y monitor (opcional) en cualquier orden.
+- **Solo se ofrecen piezas compatibles y comprobadas** con lo ya elegido. Lo incompatible se oculta (con el conteo y el motivo).
+  Lo que no se puede comprobar porque falta un dato del fabricante **nunca se muestra como compatible**: va aparte, plegado, en
+  «No pudimos verificar la compatibilidad», con el motivo.
+- **«Ya lo tengo»**: se elige el modelo propio (no suma al total) o se cargan los datos clave (socket, DDR, tamaño de placa, largo
+  máximo de placa de video, potencia…). **«No la necesito»** para la placa de video solo aparece si el procesador tiene gráficos
+  integrados; **«Uso el del procesador»** solo si trae cooler en la caja.
+- **Controles**: socket procesador–placa (con aviso de BIOS), DDR y SO-DIMM, socket del cooler según su fabricante (AMD: AM5 acepta
+  coolers de AM4; Intel: LGA1851 usa los de LGA1700, con enlace a ambas fuentes), tamaño de placa–gabinete, largo de la placa de
+  video, alto del cooler de aire, medida del radiador, y potencia de la fuente (la que recomienda el fabricante del chip o
+  consumo + 30 %). Un gabinete que acepta 381 mm o más entra cualquier placa (la más larga fabricada según CORSAIR).
+- **Datos verificados a mano** (`data_src/verified_src.py` → `site/data/verified.json`): coolers, gabinetes y largos de placas de
+  video, cada uno con el enlace a la ficha oficial del fabricante y la fecha de revisión. Para sumar modelos se agrega una línea
+  ahí y se corre `python data_src/verified_src.py`. No se usan PCPartPicker, BuildCores ni TechPowerUp (sus condiciones no lo
+  permiten).
+- El armado queda en la dirección (`armar.html?b=…`) para compartirlo y en el navegador para volver después; botón para agregar
+  todas las piezas a «Mi lista».
+- Motor en `site/js/builder.js`; pruebas en `tests/test_builder.js`.

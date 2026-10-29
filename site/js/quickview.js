@@ -26,7 +26,7 @@
     document.querySelectorAll("[data-ql]").forEach(b => { const on = LIST.includes(b.dataset.ql); b.classList.toggle("on", on); b.textContent = b.dataset.long ? (on ? "✓ En mi lista (quitar)" : "+ Agregar a mi lista") : (on ? "✓" : "+");
       b.title = b.ariaLabel = on ? "Quitar de mi lista" : "Agregar a mi lista de compra"; });
     document.querySelectorAll("[data-qall]").forEach(b => { const ids = b.dataset.qall.split(",").filter(Boolean), all = ids.length && ids.every(id => LIST.includes(id));
-      b.classList.toggle("on", all); b.textContent = all ? "✓ Configuración en mi lista" : `🛒 Agregar las ${ids.length} piezas a mi lista`; });
+      b.classList.toggle("on", all); b.textContent = all ? "✓ Configuración en mi lista" : (ids.length === 1 ? "🛒 Agregar la pieza a mi lista" : `🛒 Agregar las ${ids.length} piezas a mi lista`); });
   }
   QV.toggleFollow = id => { const g = byId.get(id); if (!g) return;
     if (FOLLOW[id]) { delete FOLLOW[id]; announce("Dejaste de seguir " + g.name); } else { FOLLOW[id] = { price: price(best(g)), name: g.name }; announce("Siguiendo el precio de " + g.name); }
@@ -73,7 +73,7 @@
       <td>${o.stock === true ? '<span class="okx">● Con stock</span>' : o.stock === false ? '<span class="bx2">● Sin stock</span>' : '<span class="note">stock a confirmar</span>'}</td>
       <td class="n"><a href="${esc(o.url)}" target="_blank" rel="noopener nofollow">Ir a la tienda ↗</a></td></tr>`).join("");
     document.getElementById("qv-box").innerHTML = `<button class="qv-x" type="button" aria-label="Cerrar">×</button>
-      <div class="qv-top"><div class="qv-im">${g.image ? `<img src="${esc(g.image)}" alt="" loading="lazy" onerror="this.remove()">` : "📦"}</div>
+      <div class="qv-top"><div class="qv-im">${g.image ? `<img src="${esc(g.image)}" alt="" loading="lazy" onerror="this.remove()">` : (root.ICONS ? root.ICONS.svg(g.category || "otros", 44) : "")}</div>
       <div><h3>${esc(g.name)}</h3><div class="qv-p">${ARS(price(b))}</div><div class="note">Precio más bajo con stock · ${esc(b.store)}</div></div></div>
       <div class="qv-acts"><button type="button" class="btn" data-qf="${esc(g.id)}" data-long="1"></button><button type="button" class="btn pri" data-ql="${esc(g.id)}" data-long="1"></button>
       <a class="btn" href="producto.html?id=${encodeURIComponent(g.id)}">Ver ficha e historial →</a></div>
