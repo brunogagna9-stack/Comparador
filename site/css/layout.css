@@ -18,7 +18,8 @@
 body{margin:0;color:var(--tx);font:14px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;-webkit-font-smoothing:antialiased}
 a{color:var(--acc);text-decoration:none}button{font:inherit;cursor:pointer}
 [hidden]{display:none!important}
-body{background:radial-gradient(1100px 380px at 50% -140px,color-mix(in srgb,var(--acc) 12%,transparent),transparent),var(--bg);background-attachment:fixed}
+body{background:var(--bg)}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(1100px 380px at 50% -140px,color-mix(in srgb,var(--acc) 12%,transparent),transparent)}
 
 /* ---- encabezado único ---- */
 header.site{position:sticky;top:0;z-index:40;background:var(--hbg);border-bottom:1px solid var(--line)}
@@ -123,3 +124,6 @@ footer.fine{max-width:1280px}
 .sk i{display:block;margin:10px;height:58%;border-radius:12px;background:var(--soft)}.sk b{display:block;margin:10px;height:12px;border-radius:6px;background:var(--soft);width:70%}.sk b+b{width:45%}
 @keyframes ct-shim{from{background-position:100% 0}to{background-position:-100% 0}}
 @media (prefers-reduced-motion:reduce){.sk:after{animation:none}}
+
+/* efectos de «pasar el mouse» en pausa mientras se desliza (ver layout.js) */
+html.ct-scrolling .card,html.ct-scrolling .prow,html.ct-scrolling .tile,html.ct-scrolling .sec,html.ct-scrolling .qv-b{pointer-events:none}

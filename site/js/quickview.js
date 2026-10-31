@@ -50,7 +50,7 @@
 [data-qv]{cursor:pointer}
 .qv-all{margin-top:10px;border:1px solid var(--acc);background:color-mix(in srgb,var(--acc) 12%,var(--card));color:var(--tx);border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer}
 .qv-all.on{background:var(--acc);color:#fff}
-#qv-modal{position:fixed;inset:0;background:rgba(0,0,0,.62);display:none;padding:20px;overflow:auto;z-index:80;overscroll-behavior:contain}
+#qv-modal{position:fixed;inset:0;background:rgba(0,0,0,.62);display:none;padding:20px;overflow:auto;z-index:90;overscroll-behavior:contain}
 #qv-modal.on{display:flex}#qv-modal .qv-box{background:var(--card);color:var(--tx);border:1px solid var(--line2);border-radius:14px;max-width:640px;width:100%;padding:18px;position:relative;margin:auto}
 #qv-modal .qv-x{position:absolute;right:10px;top:10px;border:0;background:var(--soft);color:var(--tx);width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer}
 #qv-modal .qv-top{display:flex;gap:14px;align-items:flex-start}#qv-modal .qv-im{flex:none;width:120px;height:120px;background:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden}

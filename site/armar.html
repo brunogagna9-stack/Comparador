@@ -8,6 +8,9 @@
 <link rel="stylesheet" href="css/shared.css">
 <link rel="stylesheet" href="css/layout.css">
 <style>
+/* colores propios de esta página con buen contraste en claro y oscuro (texto blanco sobre --btn: 5:1 o más) */
+:root{--btn:#2563eb;--btnh:#1d4ed8;--chip:#eef2f8;--chipbd:#7d8ba1;--row:#fbfcfe;--rowbd:#dfe5ee}
+@media (prefers-color-scheme:dark){:root{--btn:#3366e6;--btnh:#2a56d8;--chip:#1e2840;--chipbd:#66779f;--row:#18213a;--rowbd:#2c3856}}
 .bl{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
 .slots{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
 .sl{display:grid;grid-template-columns:170px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 14px;border-top:1px solid var(--line)}
@@ -16,45 +19,68 @@
 .sl .k small{display:block;font-weight:400;color:var(--mut);font-size:11.5px}
 .sl .v{min-width:0}.sl .v .nm{font-weight:600;line-height:1.3}.sl .v .meta{font-size:12.5px;color:var(--mut);margin-top:2px}
 .sl .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
-.sl .acts button,.mini{border:1px solid var(--line2);background:var(--card);color:var(--tx);border-radius:999px;padding:6px 12px;font:600 13px system-ui,sans-serif;cursor:pointer}
-.sl .acts button.pri,.mini.pri{background:var(--acc);border-color:var(--acc);color:#fff}
-.sl .acts button:hover,.mini:hover{border-color:var(--acc)}
+.sl .acts button,.mini{border:1px solid var(--chipbd);background:var(--chip);color:var(--tx);border-radius:999px;padding:7px 13px;font:600 13px system-ui,sans-serif;cursor:pointer}
+.sl .acts button.pri,.mini.pri{background:var(--btn);border-color:var(--btn);color:#fff}
+.sl .acts button:hover,.mini:hover{border-color:var(--btn)}.sl .acts button.pri:hover,.mini.pri:hover{background:var(--btnh)}
 .st{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;margin-right:4px}
-.st.ok{background:var(--okbg);color:var(--ok)}.st.unk{background:var(--warnbg);color:var(--warn)}.st.no{background:var(--badbg);color:var(--bad)}.st.n{background:var(--soft);color:var(--mut)}
+.st.ok{background:var(--okbg);color:var(--ok)}.st.unk{background:var(--warnbg);color:var(--warn)}.st.no{background:var(--badbg);color:var(--bad)}.st.n{background:var(--chip);color:var(--mut)}
 .sum{position:sticky;top:calc(var(--hh) + 12px);background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
 .sum h3{margin:0 0 8px;font-size:16px}.sum .tot{font-size:26px;font-weight:800;letter-spacing:-.5px}
 .sum ul{list-style:none;padding:0;margin:8px 0 0}.sum li{font-size:13px;padding:5px 0;border-top:1px solid var(--line);line-height:1.35}
 .sum li b{font-weight:700}.sum .btns{display:flex;flex-direction:column;gap:8px;margin-top:12px}
 .ok-t{color:var(--ok)}.unk-t{color:var(--warn)}.no-t{color:var(--bad)}
-/* selector */
-#pick{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;z-index:85;padding:16px;overflow:auto;overscroll-behavior:contain}
+/* selector (la ficha rápida se abre por encima: z-index 90) */
+#pick{position:fixed;inset:0;background:rgba(3,6,15,.66);display:none;z-index:85;padding:16px;overflow:auto;overscroll-behavior:contain}
 #pick.on{display:flex}
-#pick .box{background:var(--card);color:var(--tx);border:1px solid var(--line2);border-radius:16px;max-width:980px;width:100%;margin:auto;padding:16px;position:relative}
-#pick .x{position:absolute;right:10px;top:10px;border:0;background:var(--soft);color:var(--tx);width:34px;height:34px;border-radius:50%;font-size:19px;cursor:pointer}
-#pick h2{margin:0 40px 4px 0;font-size:20px}
-.ptools{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
-.ptools input[type=search]{flex:1;min-width:180px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--tx);font:inherit}
-.ptools select{padding:9px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--tx);font:inherit}
-.fxrow{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px}
-.fxrow label{display:inline-flex;gap:5px;align-items:center;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12.5px;cursor:pointer;background:var(--card)}
-.fxrow label.on{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 12%,var(--card))}
-.fxrow input{display:none}.fxrow .ttl{font-size:12px;color:var(--mut);align-self:center;margin-right:2px}
-.prow{display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 4px;border-top:1px solid var(--line)}
-.prow .im{width:56px;height:56px;background:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#pick .box{background:var(--card);color:var(--tx);border:1px solid var(--line2,var(--line));border-radius:16px;max-width:1000px;width:100%;margin:auto;padding:0 16px 16px;position:relative}
+.phead{position:sticky;top:-16px;z-index:3;background:var(--card);padding:16px 0 10px;border-bottom:1px solid var(--line);border-radius:16px 16px 0 0}
+#pick .x{position:absolute;right:0;top:14px;border:1px solid var(--chipbd);background:var(--chip);color:var(--tx);width:36px;height:36px;border-radius:50%;font-size:20px;line-height:1;cursor:pointer}
+#pick .x:hover{border-color:var(--btn)}
+#pick h2{margin:0 44px 4px 0;font-size:20px}
+.ptools{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0}
+.ptools input[type=search],.ptools select{padding:9px 12px;border:1px solid var(--chipbd);border-radius:10px;background:var(--chip);color:var(--tx);font:inherit}
+.ptools input[type=search]{flex:1;min-width:180px}
+.btabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 0}
+.btabs button{border:1px solid var(--chipbd);background:var(--chip);color:var(--tx);border-radius:999px;padding:7px 14px;font:700 13.5px system-ui,sans-serif;cursor:pointer}
+.btabs button .n{font-weight:500;opacity:.75;margin-left:4px}
+.btabs button.on{background:var(--btn);border-color:var(--btn);color:#fff}
+.btabs button:hover:not(.on){border-color:var(--btn)}
+#pfx{margin:12px 0 4px}
+.fxrow{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px;align-items:center}
+.fxrow .ttl{font-size:12.5px;color:var(--mut);font-weight:700;margin-right:2px;white-space:nowrap}
+.fxrow label{position:relative;display:inline-flex;gap:6px;align-items:center;border:1px solid var(--chipbd);border-radius:999px;padding:5px 11px;font:600 13px system-ui,sans-serif;color:var(--tx);cursor:pointer;background:var(--chip);text-transform:none;letter-spacing:0;white-space:nowrap}
+.fxrow label .c{font-weight:500;color:var(--mut);font-size:12px}
+.fxrow label:hover{border-color:var(--btn)}
+.fxrow label.on{background:var(--btn);border-color:var(--btn);color:#fff}.fxrow label.on .c{color:#fff;opacity:.85}
+.fxrow label.on::before{content:"✓";font-weight:800}
+.fxrow input{position:absolute;opacity:0;pointer-events:none}
+.fxrow label:focus-within{box-shadow:0 0 0 3px color-mix(in srgb,var(--btn) 40%,transparent)}
+.fxclear{border:0;background:none;color:var(--acc);font:600 13px system-ui,sans-serif;cursor:pointer;padding:4px 6px;text-decoration:underline}
+.prow{display:grid;grid-template-columns:60px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 12px;margin:8px 0;background:var(--row);border:1px solid var(--rowbd);border-radius:12px}
+.prow .im{width:60px;height:60px;background:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .prow .im img{max-width:100%;max-height:100%;object-fit:contain}.prow .im svg{width:26px;height:26px;color:#94a3b8}
 .prow .nm{font-weight:600;line-height:1.3}.prow .chk{margin-top:4px;display:flex;flex-wrap:wrap;gap:4px}
-.prow .pr{text-align:right;white-space:nowrap}.prow .pr b{font-size:16px;display:block}
+.prow .pr{text-align:right;white-space:nowrap}.prow .pr b{font-size:16px;display:block}.prow .pr .mini{margin-top:6px}
 .sec-t{margin:14px 0 2px;font-size:14px;font-weight:800;display:flex;gap:8px;align-items:center}
-details.unv{margin-top:12px;border:1px solid var(--line);border-radius:12px;padding:8px 12px;background:var(--soft)}
+details.unv{margin-top:12px;border:1px solid var(--rowbd);border-radius:12px;padding:8px 12px;background:var(--chip)}
 details.unv summary{cursor:pointer;font-weight:700}
 .why{font-size:12.5px;color:var(--mut);margin:6px 0}
 .ownf{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin:8px 0}
-.ownf label{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600}
-.ownf select,.ownf input{padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--tx);font:inherit}
+.ownf label{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600;color:var(--tx);text-transform:none;letter-spacing:0}
+.ownf select,.ownf input{padding:8px;border:1px solid var(--chipbd);border-radius:8px;background:var(--chip);color:var(--tx);font:inherit}
 .more{display:block;margin:10px auto 0}
 .src a{color:var(--acc)}
+html.lock{overflow:hidden}html.lock #ctas-btn{display:none}
 @media(max-width:900px){.bl{grid-template-columns:1fr}.sum{position:static}}
-@media(max-width:640px){.sl{grid-template-columns:1fr;gap:6px}.sl .acts{justify-content:flex-start}.prow{grid-template-columns:44px minmax(0,1fr)}.prow .pr{grid-column:2;text-align:left}.prow .im{width:44px;height:44px}}
+@media(max-width:640px){
+  .sl{grid-template-columns:1fr;gap:6px}.sl .acts{justify-content:flex-start}
+  #pick{padding:0}#pick .box{border-radius:0;border:0;min-height:100%;margin:0;padding:0 12px 16px}
+  .phead{top:0;border-radius:0;padding-top:12px}#pick .x{top:10px}
+  .btabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  .fxrow{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin;margin-right:-12px;padding-right:12px}
+  .prow{grid-template-columns:48px minmax(0,1fr);padding:10px}.prow .pr{grid-column:2;text-align:left;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .prow .pr b{display:inline}.prow .pr .mini{margin:0 0 0 auto}.prow .pr br{display:none}.prow .im{width:48px;height:48px}
+}
 </style>
 </head>
 <body data-page="armado">
@@ -96,7 +122,7 @@ const A=(k,g)=>{const key=k+"|"+g.id;if(!attrCache.has(key))attrCache.set(key,E.
 function others(k){const X={};for(const s of BLD.SLOTS){if(s.k===k)continue;const a=E.slotAttrs(s.k,BUILD[s.k],byId);if(a)X[s.k]=a}return X}
 const stHtml=r=>`<span class="st ${r.s==="ok"?"ok":r.s==="unk"?"unk":"no"}" title="${esc(r.txt)}">${r.s==="ok"?"✓":r.s==="unk"?"?":"✗"} ${esc(short(r))}</span>`;
 function short(r){const w={cpu:"procesador",mobo:"placa",ram:"memoria",cooler:"cooler",case:"gabinete",gpu:"placa de video",psu:"fuente","cpu+gpu":"consumo",pc:"PC"}[r.with]||r.with;return (r.s==="ok"?"compatible con ":r.s==="unk"?"sin verificar con ":"no va con ")+w}
-const img=g=>g&&g.image?`<img loading="lazy" src="${esc(g.image)}" alt="" onerror="this.outerHTML=ICONS.svg('${esc(g.category)}',26)">`:ICONS.svg(g?g.category:"otros",26);
+const img=g=>g&&g.image?`<img loading="lazy" decoding="async" width="60" height="60" src="${esc(g.image)}" alt="" onerror="this.outerHTML=ICONS.svg('${esc(g.category)}',26)">`:ICONS.svg(g?g.category:"otros",26);
 
 /* ---------- tabla del armado ---------- */
 function render(){
@@ -134,40 +160,61 @@ function renderSum(S){
 }
 
 /* ---------- selector de una pieza ---------- */
+const BRANDS={cpu:["AMD","Intel"],mobo:["AMD","Intel"],gpu:["NVIDIA","AMD","Intel"]};
+const SORTS=[["rec","Recomendados"],["price","Menor precio"],["priceDesc","Mayor precio"],["name","Nombre"]];
 function openPick(k,own){
-  PICK={k,own,q:"",sort:"price",fx:{},limit:40,showUnk:false};
-  $("#pick").classList.add("on");drawPick();setTimeout(()=>{const i=$("#pq");if(i)i.focus()},30);
+  const slot=BLD.slot(k),X=others(k);
+  const R=E.candidates(k,X,PR.filter(g=>g.category===slot.cat));          // se calcula una sola vez por apertura
+  // marca inicial: la de la pieza que ya elegiste (procesador ↔ motherboard)
+  let brand="";const pair={cpu:"mobo",mobo:"cpu"}[k];
+  if(pair&&BUILD[pair]&&BUILD[pair].id&&byId(BUILD[pair].id)){const b=E.brand(pair,byId(BUILD[pair].id));if(b&&R.ok.some(r=>r.b===b))brand=b}
+  PICK={k,own,X,R,q:"",sort:"rec",fx:{},limit:40,showUnk:false,brand};
+  document.documentElement.classList.add("lock");
+  $("#pick").classList.add("on");$("#pick").scrollTop=0;drawShell();drawList();
+  setTimeout(()=>{const i=$("#pq");if(i&&matchMedia("(pointer:fine)").matches)i.focus()},30);
 }
-function closePick(){$("#pick").classList.remove("on");PICK=null}
-function drawPick(){
-  const {k,own}=PICK,slot=BLD.slot(k),X=others(k);
-  const prods=PR.filter(g=>g.category===slot.cat);
-  let R=E.candidates(k,X,prods);
+function closePick(){$("#pick").classList.remove("on");document.documentElement.classList.remove("lock");PICK=null}
+function drawShell(){
+  const {k,own,X}=PICK,slot=BLD.slot(k);
+  $("#pbox").innerHTML=`<div class="phead"><button class="x" id="px" aria-label="Cerrar">×</button><h2>${own?"¿Cuál "+esc(slot.l.toLowerCase())+" tenés?":"Elegí "+esc(slot.l.toLowerCase())}</h2>
+   <div class="note">${Object.keys(X).length?`Se muestran solo los compatibles con lo que ya elegiste (${Object.keys(X).map(x=>BLD.slot(x).l.toLowerCase()).join(", ")}).`:"Todavía no elegiste otras piezas: cualquier opción sirve para empezar."}</div>
+   <div class="ptools"><input type="search" id="pq" placeholder="Buscar modelo…" aria-label="Buscar modelo" autocomplete="off"><select id="psort" aria-label="Ordenar">${SORTS.map(([v,l])=>`<option value="${v}">${l}</option>`).join("")}</select></div>
+   <div class="btabs" id="ptabs" role="tablist" aria-label="Marca"></div></div>
+   ${own?ownForm(k):""}<div id="pfx"></div><div id="plist"></div>`;
+  $("#px").onclick=closePick;
+  let tm;$("#pq").oninput=e=>{clearTimeout(tm);tm=setTimeout(()=>{PICK.q=e.target.value;PICK.limit=40;drawList()},120)};
+  $("#psort").onchange=e=>{PICK.sort=e.target.value;drawList()};
+  const of=$("#ownsave");if(of)of.onclick=()=>{const at={};document.querySelectorAll("[data-own-a]").forEach(i=>{if(i.value)at[i.dataset.ownA]=i.value});if(!Object.keys(at).length){alertOwn();return}BUILD[k]={own:true,attrs:at};closePick();render()};
+}
+function drawList(){
+  const {k,own,R}=PICK,slot=BLD.slot(k),brands=BRANDS[k];
+  const inBrand=r=>!PICK.brand||r.b===PICK.brand;
+  // pestañas de marca con la cantidad de compatibles
+  const tabs=$("#ptabs");
+  if(brands){const cnt=b=>R.ok.filter(r=>r.b===b).length;
+    tabs.innerHTML=[["","Todas",R.ok.length],...brands.map(b=>[b,b,cnt(b)])].filter(([b,,n])=>!b||n).map(([b,l,n])=>`<button role="tab" data-brand="${b}" class="${PICK.brand===b?"on":""}" aria-selected="${PICK.brand===b}">${l}<span class="n">${n}</span></button>`).join("");
+  }else tabs.innerHTML="";
   const q=PICK.q.toLowerCase().split(/\s+/).filter(Boolean),qf=r=>q.every(t=>r.g.name.toLowerCase().includes(t));
-  const defs=FX.defs(slot.cat).slice(0,4),fxf=r=>defs.every(d=>{const set=PICK.fx[d.k];return !set||!set.size||set.has(FX.val(r.g,d)??FX.NONE)});
-  const srt={price:(a,b)=>a.p-b.p,priceDesc:(a,b)=>b.p-a.p,name:(a,b)=>a.g.name.localeCompare(b.g.name)}[PICK.sort];
-  const ok=R.ok.filter(qf).filter(fxf).sort(srt),unk=R.unk.filter(qf).filter(fxf).sort(srt);
-  const fx=defs.map(d=>{const c={};R.ok.forEach(r=>{const v=FX.val(r.g,d)??FX.NONE;c[v]=(c[v]||0)+1});const opts=FX.sortOpts(d,Object.entries(c)).filter(([v])=>v!==FX.NONE).slice(0,10);if(opts.length<2)return"";
-    return `<div class="fxrow"><span class="ttl">${esc(d.l)}:</span>${opts.map(([v,n])=>`<label class="${PICK.fx[d.k]&&PICK.fx[d.k].has(v)?"on":""}"><input type="checkbox" data-pfx="${esc(d.k)}" value="${esc(v)}" ${PICK.fx[d.k]&&PICK.fx[d.k].has(v)?"checked":""}>${esc(v)} <span class="note">${n}</span></label>`).join("")}</div>`}).join("");
-  const row=(r,unv)=>{const o=r.o;return `<div class="prow"><div class="im">${img(r.g)}</div><div><div class="nm">${QV.link(r.g,r.g.name)} ${QV.btns(r.g.id)}</div><div class="chk">${r.r.res.map(stHtml).join("")}${!r.r.res.length?'<span class="st n">elegí otra pieza para comprobar</span>':""}</div>${unv?`<div class="why">${esc(r.r.res.filter(x=>x.s==="unk").map(x=>x.txt).join(" · "))}</div>`:""}${srcLine(r.a)}</div><div class="pr"><b>${ARS(r.p)}</b><span class="note">${esc(o.store)}${o.stock===true?"":" · stock a confirmar"}</span><br><button class="mini ${unv?"":"pri"}" data-choose="${esc(r.g.id)}">${own?"Es el mío":"Elegir"}${unv?" igual":""}</button></div></div>`};
+  const defs=FX.defs(slot.cat).filter(d=>!(k==="gpu"&&d.k==="chip")),fxf=r=>defs.every(d=>{const set=PICK.fx[d.k];return !set||!set.size||set.has(FX.val(r.g,d)??FX.NONE)});
+  const srt={rec:(a,b)=>b.gen-a.gen||b.n-a.n||a.p-b.p,price:(a,b)=>a.p-b.p,priceDesc:(a,b)=>b.p-a.p,name:(a,b)=>a.g.name.localeCompare(b.g.name)}[PICK.sort];
+  const base=R.ok.filter(inBrand);
+  const ok=base.filter(qf).filter(fxf).sort(srt),unk=R.unk.filter(inBrand).filter(qf).filter(fxf).sort(srt);
+  // filtros: todas las opciones (sin cortar), contadas sobre la marca elegida y ordenadas por familia
+  const anyFx=Object.values(PICK.fx).some(s=>s.size);
+  $("#pfx").innerHTML=defs.map(d=>{const c={};base.forEach(r=>{const v=FX.val(r.g,d)??FX.NONE;c[v]=(c[v]||0)+1});
+    const sel=PICK.fx[d.k]||new Set();const opts=FX.sortOpts(d,Object.entries(c)).filter(([v])=>v!==FX.NONE);if(opts.length<2&&!sel.size)return"";
+    return `<div class="fxrow" role="group" aria-label="${esc(d.l)}"><span class="ttl">${esc(d.l)}:</span>${opts.map(([v,n])=>`<label class="${sel.has(v)?"on":""}"><input type="checkbox" data-pfx="${esc(d.k)}" value="${esc(v)}" ${sel.has(v)?"checked":""}>${esc(v)} <span class="c">${n}</span></label>`).join("")}</div>`}).join("")+(anyFx?`<button class="fxclear" id="pfxclear">Quitar filtros</button>`:"");
+  const row=(r,unv)=>{const o=r.o;return `<div class="prow"><div class="im">${img(r.g)}</div><div><div class="nm">${QV.link(r.g,r.g.name)} ${QV.btns(r.g.id)}</div><div class="chk">${r.r.res.map(stHtml).join("")}${!r.r.res.length?'<span class="st n">elegí otra pieza para comprobar</span>':""}</div>${unv?`<div class="why">${esc(r.r.res.filter(x=>x.s==="unk").map(x=>x.txt).join(" · "))}</div>`:""}${srcLine(r.a,k,r)}</div><div class="pr"><b>${ARS(r.p)}</b><span class="note">${esc(o.store)}${r.n>1?` · ${r.n} tiendas`:""}${o.stock===true?"":" · stock a confirmar"}</span><br><button class="mini ${unv?"":"pri"}" data-choose="${esc(r.g.id)}">${own?"Es el mío":"Elegir"}${unv?" igual":""}</button></div></div>`};
   const whyNo=Object.entries(R.why).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([t,n])=>`${n} · ${esc(t)}`).join("<br>");
   const whyUnk=Object.entries(R.unkWhy).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([t,n])=>`${n} · ${esc(t)}`).join("<br>");
-  $("#pbox").innerHTML=`<button class="x" id="px" aria-label="Cerrar">×</button><h2>${own?"¿Cuál "+esc(slot.l.toLowerCase())+" tenés?":"Elegí "+esc(slot.l.toLowerCase())}</h2>
-   <div class="note">${Object.keys(X).length?`Se muestran solo los compatibles con lo que ya elegiste (${Object.keys(X).map(x=>BLD.slot(x).l.toLowerCase()).join(", ")}).`:"Todavía no elegiste otras piezas: cualquier opción sirve para empezar."}</div>
-   ${own?ownForm(k):""}
-   <div class="ptools"><input type="search" id="pq" placeholder="Buscar modelo…" value="${esc(PICK.q)}" aria-label="Buscar"><select id="psort" aria-label="Ordenar"><option value="price" ${PICK.sort==="price"?"selected":""}>Menor precio</option><option value="priceDesc" ${PICK.sort==="priceDesc"?"selected":""}>Mayor precio</option><option value="name" ${PICK.sort==="name"?"selected":""}>Nombre</option></select></div>
-   ${fx}
-   <div class="sec-t"><span class="st ok">✓</span> Compatibles y comprobados (${ok.length})</div>
-   ${ok.slice(0,PICK.limit).map(r=>row(r,false)).join("")||`<p class="note">No hay productos comprobados para esta combinación${q.length?" con esa búsqueda":""}.</p>`}
+  $("#plist").innerHTML=`<div class="sec-t"><span class="st ok">✓</span> Compatibles y comprobados (${ok.length})</div>
+   ${ok.slice(0,PICK.limit).map(r=>row(r,false)).join("")||`<p class="note">No hay productos comprobados para esta combinación${q.length||anyFx?" con esa búsqueda o esos filtros":""}.</p>`}
    ${ok.length>PICK.limit?`<button class="btn more" id="pmore">Ver más (${ok.length-PICK.limit})</button>`:""}
    ${R.no?`<p class="why"><b>${R.no} ocultos por incompatibles</b>${whyNo?":<br>"+whyNo:""}</p>`:""}
    ${unk.length?`<details class="unv" ${PICK.showUnk?"open":""} id="punk"><summary>No pudimos verificar la compatibilidad (${unk.length})</summary><p class="why">No se ofrecen como compatibles porque falta un dato del fabricante. Motivos más comunes:<br>${whyUnk}</p>${PICK.showUnk?unk.slice(0,60).map(r=>row(r,true)).join(""):""}</details>`:""}`;
-  $("#px").onclick=closePick;
-  $("#pq").oninput=e=>{PICK.q=e.target.value;PICK.limit=40;const pos=e.target.selectionStart;drawPick();const i=$("#pq");i.focus();try{i.setSelectionRange(pos,pos)}catch(er){}};
-  $("#psort").onchange=e=>{PICK.sort=e.target.value;drawPick()};
-  const m=$("#pmore");if(m)m.onclick=()=>{PICK.limit+=40;drawPick()};
-  const u=$("#punk");if(u)u.addEventListener("toggle",()=>{if(u.open!==PICK.showUnk){PICK.showUnk=u.open;drawPick()}});
-  const of=$("#ownsave");if(of)of.onclick=()=>{const at={};document.querySelectorAll("[data-own-a]").forEach(i=>{if(i.value)at[i.dataset.ownA]=i.value});if(!Object.keys(at).length){alertOwn();return}BUILD[k]={own:true,attrs:at};closePick();render()};
+  const m=$("#pmore");if(m)m.onclick=()=>{PICK.limit+=40;drawList()};
+  const u=$("#punk");if(u)u.addEventListener("toggle",()=>{if(u.open!==PICK.showUnk){PICK.showUnk=u.open;drawList()}});
+  const fc=$("#pfxclear");if(fc)fc.onclick=()=>{PICK.fx={};drawList()};
   QV.sync();
 }
 function alertOwn(){const n=$("#ownmsg");if(n)n.textContent="Completá al menos un dato o elegí tu modelo de la lista."}
@@ -177,27 +224,31 @@ function ownForm(k){
   const F={cpu:sel("socket","Socket",BLD.SOCKETS),mobo:sel("socket","Socket",BLD.SOCKETS)+sel("ddr","Memoria",["DDR4","DDR5"])+sel("form","Tamaño",BLD.FORMS),ram:sel("ddr","Tipo",["DDR4","DDR5"]),
     gpu:num("len","Largo de la placa (mm)","ej. 250")+num("tgp","Consumo (W)","ej. 170"),case:sel("forms","Placa más grande que entra",BLD.FORMS)+num("gpuMax","Largo máximo de placa de video (mm)","ej. 330")+num("coolerMax","Alto máximo de cooler (mm)","ej. 160"),
     psu:num("w","Potencia (W)","ej. 650"),cooler:"",ssd:"",monitor:""}[k];
-  if(!F)return `<p class="note">Elegí tu modelo de la lista (aunque no esté a la venta, sirve para comprobar el resto).</p>`;
-  return `<div class="panel" style="margin:10px 0"><b>Si no encontrás tu modelo, cargá el dato clave</b> (lo ves en la caja o en la ficha del fabricante):<div class="ownf">${F}</div><button class="mini pri" id="ownsave">Usar estos datos</button> <span class="note" id="ownmsg"></span><p class="note" style="margin:6px 0 0">O elegí tu modelo de la lista de abajo.</p></div>`;
+  if(!F)return `<p class="note" style="margin-top:10px">Elegí tu modelo de la lista (aunque no esté a la venta, sirve para comprobar el resto).</p>`;
+  return `<div class="panel" style="margin:12px 0"><b>Si no encontrás tu modelo, cargá el dato clave</b> (lo ves en la caja o en la ficha del fabricante):<div class="ownf">${F}</div><button class="mini pri" id="ownsave">Usar estos datos</button> <span class="note" id="ownmsg"></span><p class="note" style="margin:6px 0 0">O elegí tu modelo de la lista de abajo.</p></div>`;
 }
-function srcLine(a){const s=Object.values(a).filter(x=>x&&x.src==="fab"&&x.url);if(!s.length)return"";const u=[...new Map(s.map(x=>[x.url,x])).values()].slice(0,2);
-  return `<div class="note src">Ficha: ${u.map(x=>`<a href="${esc(x.url)}" target="_blank" rel="noopener nofollow">${esc(x.ref||"fabricante")}</a>${x.date?" ("+esc(x.date)+")":""}`).join(" · ")}</div>`}
+// enlace a la ficha oficial, con el nombre del fabricante («Ficha oficial de AMD», «Ficha oficial: CORSAIR FRAME 4000D»)
+function srcLine(a,k,r){const s=Object.values(a).filter(x=>x&&x.src==="fab"&&x.url);if(!s.length)return"";const u=[...new Map(s.map(x=>[x.url,x])).values()].slice(0,2);
+  const maker=(a.hw&&a.hw.vendor)||r.b||"";
+  return `<div class="note src">${u.map(x=>`<a href="${esc(x.url)}" target="_blank" rel="noopener nofollow">${x.ref?"Ficha oficial: "+esc(x.ref):"Ficha oficial"+(maker?" de "+esc(maker):" del fabricante")}</a>${x.date?" ("+esc(x.date)+")":""}`).join(" · ")}</div>`}
 
 document.addEventListener("click",e=>{
-  const t=e.target.closest("[data-pick],[data-own],[data-skip],[data-clear],[data-choose],[data-pfx]");if(!t)return;
+  const t=e.target.closest("[data-pick],[data-own],[data-skip],[data-clear],[data-choose],[data-brand]");if(!t)return;
   if(t.dataset.pick){openPick(t.dataset.pick,false)}
   else if(t.dataset.own){openPick(t.dataset.own,true)}
   else if(t.dataset.skip){const k=t.dataset.skip;BUILD[k]={skip:k==="cooler"?"incl":true};render()}
   else if(t.dataset.clear){delete BUILD[t.dataset.clear];render()}
   else if(t.dataset.choose){BUILD[PICK.k]=PICK.own?{own:true,id:t.dataset.choose}:{id:t.dataset.choose};closePick();render()}
+  else if(t.dataset.brand!=null&&PICK){PICK.brand=t.dataset.brand;PICK.fx={};PICK.limit=40;drawList()}
 });
-document.addEventListener("change",e=>{const t=e.target;if(t.dataset&&t.dataset.pfx&&PICK){const s=PICK.fx[t.dataset.pfx]||(PICK.fx[t.dataset.pfx]=new Set());t.checked?s.add(t.value):s.delete(t.value);drawPick()}});
-document.addEventListener("keydown",e=>{if(e.key==="Escape"&&PICK)closePick()});
+document.addEventListener("change",e=>{const t=e.target;if(t.dataset&&t.dataset.pfx&&PICK){const s=PICK.fx[t.dataset.pfx]||(PICK.fx[t.dataset.pfx]=new Set());t.checked?s.add(t.value):s.delete(t.value);PICK.limit=40;drawList()}});
+// Escape cierra primero la ficha rápida (si está abierta) y después el selector
+document.addEventListener("keydown",e=>{if(e.key!=="Escape"||!PICK)return;const q=document.getElementById("qv-modal");if(q&&q.classList.contains("on"))return;closePick()},true);   // fase de captura: se evalúa antes de que la ficha se cierre
 $("#pick").addEventListener("click",e=>{if(e.target.id==="pick")closePick()});
 
 (async()=>{
   const j=async(u,d)=>{try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw 0;return await r.json()}catch{return d}};
-  let meta,specs;[HW,PR,meta,VER,specs]=await Promise.all([j("data/hardware.json",null),j("data/products.json",[]),j("data/meta.json",{}),j("data/verified.json",{}),j("data/specs.json",null),REP.load()]);
+  let meta,specs;[HW,PR,meta,VER,specs]=await Promise.all([j("data/hardware.json",null),j("data/armar.json",null).then(d=>d&&d.length?d:j("data/products.json",[])),j("data/meta.json",{}),j("data/verified.json",{}),j("data/specs.json",null),REP.load()]);
   if(!HW||!PR.length){$("#slots").innerHTML='<div class="sl"><div class="note">No se pudieron cargar los datos.</div></div>';return}
   C=CT.create(HW,PR,meta,specs);E=BLD.create(C,VER);byIdM=new Map(PR.map(g=>[g.id,g]));QV.setData(PR);
   const u=new URLSearchParams(location.search).get("b");

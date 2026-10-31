@@ -398,6 +398,26 @@ def home_summary(groups, recent_days=14):
             "cats": cats, "photo": {k: v[1] for k, v in best.items()}, "drops": [slim(g) for g in drops[:8]]}
 
 
+ARMAR_CATS = ("procesadores", "refrigeracion", "motherboards", "memorias-ram", "almacenamiento", "placas-de-video", "gabinetes", "fuentes", "monitores")
+ARMAR_OFFER = ("store", "url", "price_cash", "price_list", "stock", "cuotas", "anom")
+
+
+def armar_catalog(groups):
+    """Catálogo reducido para «Armalo vos» (armar.json): solo las 9 categorías de piezas y los datos de oferta que usa la página.
+    Así no descarga ni lee el catálogo entero (17 MB), que traba la página en equipos modestos."""
+    out = []
+    for g in groups:
+        if g.get("category") not in ARMAR_CATS:
+            continue
+        offs = [{k: o[k] for k in ARMAR_OFFER if o.get(k) is not None} for o in g.get("offers") or []]
+        if not offs:
+            continue
+        e = {k: g[k] for k in ("id", "name", "category", "brand", "image", "image_fb", "chg", "low", "dif") if g.get(k) is not None}
+        e["offers"] = offs
+        out.append(e)
+    return out
+
+
 def main(only):
     from scrapers import SCRAPERS, common
     DATA.mkdir(parents=True, exist_ok=True)
@@ -481,6 +501,7 @@ def main(only):
     annotate_changes(groups, hist, today)
     (DATA / "products.json").write_text(json.dumps(groups, ensure_ascii=False, separators=(",", ":")))
     (DATA / "history.json").write_text(json.dumps(hist, separators=(",", ":")))
+    (DATA / "armar.json").write_text(json.dumps(armar_catalog(groups), ensure_ascii=False, separators=(",", ":")))
     (DATA / "home.json").write_text(json.dumps(home_summary(groups), ensure_ascii=False, separators=(",", ":")))
     (DATA / "meta.json").write_text(json.dumps({
         "updated": dt.datetime.now(dt.timezone.utc).isoformat(timespec="minutes"),

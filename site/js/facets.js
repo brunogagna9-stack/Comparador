@@ -33,6 +33,15 @@
     return null;
   }
   FX.cpuFamily = cpuFamily;
+  // orden por familia (de menor a mayor gama), primero AMD y después Intel
+  const CPU_ORDER = ["Ryzen 3", "Ryzen 5", "Ryzen 7", "Ryzen 9", "Athlon", "Core i3", "Core i5", "Core i7", "Core i9", "Core 3", "Core 5", "Core 7",
+    "Core Ultra 5", "Core Ultra 7", "Core Ultra 9", "Pentium / Celeron / N", "Servidor / workstation", "Apple M", "Snapdragon"];
+  const SOCKET_ORDER = ["AM4", "AM5", "LGA1151 / 1150", "LGA1200", "LGA1700", "LGA1851"];
+  const CHIPSET_ORDER = ["A320", "B350", "X370", "B450", "X470", "A520", "B550", "X570", "A620", "B650", "B650E", "X670", "X670E", "B840", "B850", "X870", "X870E",
+    "H310", "B360", "H410", "B460", "H470", "Z490", "H510", "B560", "H570", "Z590", "H610", "B660", "H670", "Z690", "B760", "H770", "Z790", "H810", "B860", "Z890"];
+  FX.CPU_ORDER = CPU_ORDER;
+  // marca de la pieza: procesadores y motherboards (AMD / Intel), placas de video (NVIDIA / AMD / Intel)
+  FX.cpuBrand = n => { const f = cpuFamily(n); return !f ? null : /^(Ryzen|Athlon)/.test(f) ? "AMD" : /^(Core|Pentium)/.test(f) ? "Intel" : null; };
   function cpuSocket(n) {
     const l = n.toLowerCase();
     if (/\bam5\b/.test(l)) return "AM5"; if (/\bam4\b/.test(l)) return "AM4";
@@ -97,8 +106,8 @@
   FX.gpuSeries = gpuSeries;
   const F = {
     procesadores: [
-      { k: "serie", l: "Serie", get: g => cpuFamily(g.name) },
-      { k: "socket", l: "Socket", get: g => cpuSocket(g.name) },
+      { k: "serie", l: "Serie", get: g => cpuFamily(g.name), order: CPU_ORDER },
+      { k: "socket", l: "Socket", get: g => cpuSocket(g.name), order: SOCKET_ORDER },
       { k: "igpu", l: "Gráficos integrados", get: g => cpuIgpu(g.name) },
       { k: "cooler", l: "Cooler en la caja", get: g => { const hw = C && C.hwCpu ? C.hwCpu(g.name) : null; const t = CT.coolerIncluded ? CT.coolerIncluded(hw || {}, g.name) : null;
         return t == null ? null : t ? "Incluye cooler" : "Sin cooler"; } },
@@ -115,8 +124,8 @@
       { k: "fmt", l: "Para", get: g => /sodimm|so-dimm|notebook|laptop/i.test(g.name) ? "Notebook (SO-DIMM)" : /\budimm\b|\bdimm\b|desktop|\bpc\b/i.test(g.name) ? "PC de escritorio" : null },
     ],
     motherboards: [
-      { k: "socket", l: "Socket", get: g => CT.parse(g.name, "motherboards").socket },
-      { k: "chipset", l: "Chipset", get: g => CT.parse(g.name, "motherboards").chipset },
+      { k: "socket", l: "Socket", get: g => CT.parse(g.name, "motherboards").socket, order: SOCKET_ORDER },
+      { k: "chipset", l: "Chipset", get: g => CT.parse(g.name, "motherboards").chipset, order: CHIPSET_ORDER },
       { k: "ddr", l: "Memoria", get: g => CT.parse(g.name, "motherboards").ddr, note: "AM4 y LGA1200 solo usan DDR4; AM5 y LGA1851 solo DDR5." },
       { k: "form", l: "Tamaño", get: g => CT.parse(g.name, "motherboards").form, note: "El tamaño sale del título (por ejemplo «B650M» = Micro-ATX)." },
       { k: "wifi", l: "Wi-Fi", get: g => CT.parse(g.name, "motherboards").wifi ? "Con Wi-Fi" : null },

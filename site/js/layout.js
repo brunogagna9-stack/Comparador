@@ -106,6 +106,13 @@
     // red de seguridad: si algo quedó oculto (por ejemplo, al imprimir), se muestra
     addEventListener("beforeprint", () => document.querySelectorAll(".ct-rv").forEach(e => e.classList.add("ct-in")));
   }
+  /* Mientras la página (o una ventana con desplazamiento propio) se desliza, se pausan los efectos de «pasar el mouse» de las
+     tarjetas: si no, cada tarjeta que pasa bajo el puntero se vuelve a dibujar y el desplazamiento se traba. */
+  (function () {
+    let t = 0; const root = document.documentElement;
+    const on = () => { if (!t) root.classList.add("ct-scrolling"); clearTimeout(t); t = setTimeout(() => { root.classList.remove("ct-scrolling"); t = 0; }, 160); };
+    document.addEventListener("scroll", on, { passive: true, capture: true });
+  })();
   if (document.body) mountHeader(); else document.addEventListener("DOMContentLoaded", mountHeader);
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => { mountFooter(); setupReveal(); }); else { mountFooter(); setupReveal(); }
 })();

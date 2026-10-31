@@ -902,3 +902,30 @@ def test_resumen_portada():
     assert "refrigeracion" not in h["photo"]                         # el título no empieza con el tipo de producto
     assert "mouses" not in h["photo"]                                # sin stock no se usa de foto
     assert h["dropped"] == 1 and h["drops"][0]["id"] == "e" and len(json.dumps(h)) < 5000
+
+
+def test_catalogo_armar():
+    """armar.json: «Armalo vos» descarga solo las categorías de piezas, con las ofertas recortadas."""
+    import build_data
+    P = [{"id": "a", "name": "Procesador AMD Ryzen 5 7600", "category": "procesadores", "image": "x", "offers": [{"store": "T", "price_cash": 1, "stock": True, "url": "u", "rating": 4, "k": "z"}]},
+         {"id": "b", "name": "Mouse", "category": "mouses", "offers": [{"store": "T", "price_cash": 1}]},
+         {"id": "c", "name": "Fuente 650W", "category": "fuentes", "offers": []}]
+    r = build_data.armar_catalog(P)
+    assert [g["id"] for g in r] == ["a"]
+    assert set(r[0]["offers"][0]) == {"store", "price_cash", "stock", "url"}
+
+
+def test_armalo_vos_actualizacion_29():
+    """La ficha rápida se abre por encima del selector, el catálogo liviano y el desplazamiento sin repintar todo."""
+    from pathlib import Path
+    import re
+    root = Path(__file__).resolve().parent.parent / "site"
+    qv = (root / "js" / "quickview.js").read_text(encoding="utf-8")
+    ar = (root / "armar.html").read_text(encoding="utf-8")
+    z = lambda txt, sel: int(re.search(re.escape(sel) + r"\{[^}]*z-index:(\d+)", txt).group(1))
+    assert z(qv, "#qv-modal") > z(ar, "#pick")
+    assert 'data/armar.json' in ar and 'data/products.json' in ar          # catálogo liviano, con respaldo
+    assert ".slice(0,10)" not in ar and "FX.defs(slot.cat).slice" not in ar   # todas las opciones y todos los filtros
+    for css in ("shared.css", "layout.css"):
+        assert "background-attachment:fixed" not in (root / "css" / css).read_text(encoding="utf-8")
+    assert "ct-scrolling" in (root / "js" / "layout.js").read_text(encoding="utf-8")

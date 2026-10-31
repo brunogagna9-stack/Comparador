@@ -97,7 +97,8 @@
       } else if (k === "ram") {
         const s = CT.parse(n, "memorias-ram");
         if (s.ddr) a.ddr = f(s.ddr, "tienda");
-        a.sodimm = f(!!s.laptop, s.laptop ? "tienda" : "regla");
+        const lap = !!s.laptop || /so-?dimm|notebook|laptop/i.test(n);
+        a.sodimm = f(lap, lap ? "tienda" : "regla");
         if (s.gb) a.gb = f(s.gb, "tienda");
       } else if (k === "gpu") {
         const hw = C.hwGpu(n) || C.hwGpuX(n);
@@ -132,6 +133,24 @@
       if (entry.id && byId(entry.id)) a = E.attrs(k, byId(entry.id));
       if (entry.attrs) for (const [key, v] of Object.entries(entry.attrs)) if (v != null && v !== "") a[key] = f(key === "forms" ? FORM_FITS[v] || [v] : (typeof v === "string" && /^\d+$/.test(v) ? +v : v), "usuario");
       return a;
+    };
+
+    /* ---------- marca (para las pestañas AMD / Intel / NVIDIA) ---------- */
+    E.brand = (k, g, a) => {
+      a = a || E.attrs(k, g);
+      if (k === "cpu") return FX.cpuBrand(g.name) || (a.socket ? (/^AM/.test(a.socket.v) ? "AMD" : "Intel") : null);
+      if (k === "mobo") return a.socket ? (/^AM/.test(a.socket.v) ? "AMD" : "Intel") : null;
+      if (k === "gpu") { const v = a.hw && a.hw.vendor; if (v) return v; const n = g.name;
+        return /\b(rtx|gtx|geforce|nvidia|gt\s?\d{3,4})\b/i.test(n) ? "NVIDIA" : /\brx\s?\d{3,4}|radeon/i.test(n) ? "AMD" : /\barc\s?[ab]\d{3}/i.test(n) ? "Intel" : null; }
+      return null;
+    };
+    /* generación de la pieza para el orden «Recomendados» (más nueva = mayor) */
+    const GEN = { AM5: 3, LGA1851: 3, LGA1700: 2, AM4: 2, LGA1200: 1 };
+    E.gen = (k, a) => {
+      if ((k === "cpu" || k === "mobo") && a.socket) return GEN[a.socket.v] || 0;
+      if (k === "ram" && a.ddr) return a.ddr.v === "DDR5" ? 2 : a.ddr.v === "DDR4" ? 1 : 0;
+      if (k === "gpu" && a.hw) { const id = a.hw.id || ""; return /^(rtx-50|rx-90|arc-b)/.test(id) ? 3 : /^(rtx-40|rx-7)/.test(id) ? 2 : 1; }
+      return 0;
     };
 
     /* ---------- controles entre dos piezas ---------- */
@@ -218,6 +237,11 @@
         if (G && K && Q && has(G, "len") && has(K, "gpuMaxRad") && Q.type && Q.type.v === "aio" && G.len.v > K.gpuMaxRad.v && (k === "gpu" || k === "case" || k === "cooler"))
           res.push({ with: "case", s: "ok", txt: "entra con el radiador arriba", warn: `si montás el radiador adelante el gabinete acepta placas de hasta ${K.gpuMaxRad.v} mm y esta mide ${G.len.v} mm: montalo arriba` }); }
       if (k === "ram" && a.sodimm && a.sodimm.v && !res.some(r => r.s === "no")) res.push({ with: "pc", s: "no", txt: "es memoria para notebook (SO-DIMM): no entra en una placa de PC" });
+      if (k === "ram" && has(a, "ddr") && /^DDR[123]$/.test(a.ddr.v) && !res.some(r => r.s === "no")) res.push({ with: "pc", s: "no", txt: `${a.ddr.v}: no la usa ninguna motherboard que se venda hoy` });
+      if (k === "cpu" && !X.mobo) {
+        if (!has(a, "socket")) res.push({ with: "pc", s: "unk", txt: "no sabemos el socket del procesador" });
+        else if (!SOCKETS.includes(a.socket.v)) res.push({ with: "pc", s: "no", txt: `socket ${a.socket.v}: ya no hay motherboards a la venta para este procesador` });
+      }
       const st = res.some(r => r.s === "no") ? "no" : res.some(r => r.s === "unk") ? "unk" : "ok";
       return { s: st, res };
     };
@@ -229,7 +253,7 @@
         if (g.category !== B.slot(k).cat || !E.isSlotProduct(k, g)) continue;
         const o = C.recOffer(g); if (!o) continue;
         const a = E.attrs(k, g), r = E.check(k, a, X);
-        const row = { g, o, p: CT.price(o), a, r };
+        const row = { g, o, p: CT.price(o), a, r, b: E.brand(k, g, a), n: new Set(g.offers.filter(x => x.stock !== false && CT.price(x)).map(x => x.store)).size, gen: E.gen(k, a) };
         if (r.s === "ok") out.ok.push(row);
         else if (r.s === "unk") { out.unk.push(row); r.res.filter(x => x.s === "unk").forEach(x => { out.unkWhy[x.txt] = (out.unkWhy[x.txt] || 0) + 1; }); }
         else { out.no++; const w = r.res.find(x => x.s === "no"); let key = w.txt.replace(/\s*\([^)]*\d[^)]*\)/g, "").trim(); const gen = [[/^es de \d+ W/, "la potencia no alcanza para el equipo"], [/^la placa mide \d+ mm/, "la placa de video es más larga de lo que acepta el gabinete"], [/^el cooler mide \d+ mm/, "el cooler es más alto de lo que acepta el gabinete"]].find(([r]) => r.test(key)); if (gen) key = gen[1]; out.why[key] = (out.why[key] || 0) + 1; }

@@ -410,3 +410,23 @@ Vale para **Armado de PC** y para las PC por componentes de **Encontrá tu equip
 - El armado queda en la dirección (`armar.html?b=…`) para compartirlo y en el navegador para volver después; botón para agregar
   todas las piezas a «Mi lista».
 - Motor en `site/js/builder.js`; pruebas en `tests/test_builder.js`.
+
+## Actualización 29 — «Armalo vos» más claro y el sitio más fluido al deslizar
+- **La ficha rápida se abre por encima** del listado de piezas (antes quedaba detrás). Escape cierra primero la ficha y después el listado.
+- **Contraste**: filtros, pestañas y botones con fondo y borde propios (borde 3:1 o más contra la ventana; texto blanco sobre
+  azul 5:1 o más, en modo claro y oscuro). El filtro marcado queda relleno y con ✓. Las filas de productos tienen fondo propio.
+- **Pestañas por marca**: «Todas · AMD · Intel» en procesadores y motherboards, «Todas · NVIDIA · AMD · Intel» en placas de
+  video. Si ya elegiste procesador, la motherboard abre en su marca.
+- **Todos los filtros y todas las opciones** (antes se cortaban en 4 filtros y 10 opciones: faltaban Ryzen 9, Core Ultra 9,
+  Athlon y 11 chipsets). Series ordenadas por familia: Ryzen 3 → 9, Core i3 → i9, Core Ultra 5 → 9 (también en Productos).
+- **Sin excepción**: no se ofrecen procesadores de sockets sin motherboards a la venta (LGA1151/1150) ni memorias DDR2/DDR3
+  o de notebook; aparecen en «ocultos por incompatibles» con el motivo.
+- **Orden «Recomendados»** (el primero): generación más nueva, después los que están en más tiendas, después el precio.
+- Enlaces «Ficha oficial de AMD», «Ficha oficial: CORSAIR FRAME 4000D»… en lugar de «fabricante».
+- En celular el listado ocupa toda la pantalla, con búsqueda y pestañas fijas arriba y los filtros en filas deslizables.
+- **Desplazamiento más fluido en todo el sitio**: el brillo del fondo pasó a una capa propia (antes `background-attachment:
+  fixed` hacía repintar toda la pantalla), y mientras la página se desliza se pausan los efectos de «pasar el mouse» de las
+  tarjetas (en Productos se pinta unas 4 veces menos al deslizar).
+- **Catálogo liviano para «Armalo vos»**: la actualización de datos genera `site/data/armar.json` (solo las 9 categorías de
+  piezas, unos 6,5 MB en vez de 17 MB); la página carga en menos de la mitad del tiempo. Si todavía no existe, usa
+  `products.json`.
