@@ -15,7 +15,7 @@ Stock: el texto «En stock» de la tarjeta.
 import re
 from urllib.parse import urljoin
 from bs4 import BeautifulSoup
-from .common import get, parse_ars, product, canon_category
+from .common import get, parse_ars, product, canon_category, not_found, LOG
 
 CE_STORES = {
     "Rocket Hard": "https://rockethard.com.ar",
@@ -69,7 +69,18 @@ def scrape_store(store, base, max_pages=40):
     for cat in categories(base):
         slug, here = cat.rstrip("/").rsplit("/", 1)[-1], set()
         for page in range(1, max_pages + 1):
-            html = get(cat if page == 1 else f"{cat}?page={page}")
+            url = cat if page == 1 else f"{cat}?page={page}"
+            try:
+                html = get(url)
+            except RuntimeError as e:
+                # La plataforma responde «no existe» (404) al pedir una página después de la última, y en categorías
+                # del sitemap que ya no existen: es el fin de esa categoría, no una falla de la tienda. Antes este 404
+                # hacía descartar la tienda entera (Rocket Hard, Acuario Insumos, Megasoft, Hyper Gaming, Noxie Store).
+                if not_found(e):
+                    if LOG and LOG[-1].startswith(url):
+                        LOG.pop()
+                    break
+                raise
             got = parse(html, store, slug)
             urls = {i["url"] for i in got}
             if not got or urls <= here:               # página vacía o repetida: fin de la categoría

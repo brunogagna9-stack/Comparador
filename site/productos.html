@@ -9,6 +9,13 @@
 .wrap{max-width:1280px;margin:auto;padding:16px 16px 20px;display:grid;grid-template-columns:260px minmax(0,1fr);gap:20px;align-items:start}
 aside{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;align-self:start;position:sticky;top:calc(var(--hh) + 14px);max-height:calc(100vh - var(--hh) - 28px);overflow-y:auto;overscroll-behavior:contain}
 aside h4{margin:14px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--mut)}aside h4:first-child{margin-top:0}
+.catlist{display:flex;flex-direction:column;gap:2px;max-height:min(60vh,520px);overflow-y:auto;overscroll-behavior:contain}
+.catlist button{display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:0;background:none;color:var(--tx);font:inherit;font-size:14px;padding:6px 8px;border-radius:8px;cursor:pointer}
+.catlist button svg{width:16px;height:16px;color:var(--acc);flex:none}.catlist button .c{margin-left:auto;color:var(--mut);font-size:12px}
+.catlist button:hover{background:var(--soft)}.catlist button.on{background:color-mix(in srgb,var(--acc) 14%,transparent);font-weight:700}
+.catsel{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--soft)}
+.catsel svg{width:16px;height:16px;color:var(--acc);flex:none}.catsel b{flex:1;min-width:0}
+.catchg{border:0;background:none;color:var(--acc);font:600 13px system-ui,sans-serif;cursor:pointer;text-decoration:underline;padding:2px}
 .fl label{display:flex;gap:7px;align-items:center;padding:2px 0;cursor:pointer}.fl .c{margin-left:auto;color:var(--mut);font-size:12px}
 select,input[type=number]{width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--tx);font:inherit}
 .rng{display:flex;gap:6px}.more{background:none;border:0;color:var(--acc);padding:4px 0;font-size:12px}
@@ -21,7 +28,7 @@ select,input[type=number]{width:100%;padding:8px;border:1px solid var(--line);bo
 .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;cursor:pointer;position:relative;display:flex;flex-direction:column}
 .card:hover{border-color:var(--acc)}
-a.sec,a.pri{display:inline-flex;align-items:center;gap:4px}.stretch{position:absolute;inset:0;z-index:1;border-radius:inherit}.stretch:focus-visible{outline:3px solid var(--acc);outline-offset:2px}.card .star,.card .addl{z-index:2}
+a.sec,a.pri{display:inline-flex;align-items:center;gap:4px}.stretch{position:absolute;inset:0;z-index:1;border-radius:inherit}.stretch:focus-visible{outline:3px solid var(--acc);outline-offset:2px}.card .star,.card .addl,.card .cmpb{z-index:2}
 .im{aspect-ratio:1;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:8px;position:relative}
 .im img{max-width:100%;max-height:100%;object-fit:contain}.im .ph{color:#b8bec9;font-size:12px}
 .badge{position:absolute;left:6px;top:6px;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px}
@@ -35,6 +42,9 @@ a.sec,a.pri{display:inline-flex;align-items:center;gap:4px}.stretch{position:abs
 .pager{display:flex;gap:6px;justify-content:center;align-items:center;flex-wrap:wrap;margin:22px 0 4px}.pager button{min-width:40px;height:40px;padding:0 12px;border-radius:10px;border:1px solid var(--line2);background:var(--card);color:var(--tx);font-weight:600}.pager button:hover:not(:disabled){background:var(--soft);border-color:var(--acc)}.pager button.on{background:var(--grad);color:#fff;border-color:transparent;cursor:default}.pager button:disabled{opacity:.55;cursor:not-allowed}.pager .gap{padding:0 4px;color:var(--mut)}
 .pinfo{text-align:center;color:var(--mut);font-size:12.5px;margin-top:8px}
 .ptitle{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;margin:0 0 10px}.ptitle h1{margin:0;font-size:24px;letter-spacing:-.5px}
+.cmpnote{margin-top:10px;padding:8px 10px;border-radius:10px;background:color-mix(in srgb,var(--acc) 10%,var(--card));border:1px solid color-mix(in srgb,var(--acc) 40%,var(--line));font-size:13.5px}
+#cmptoast{position:fixed;left:50%;bottom:18px;transform:translate(-50%,140%);background:#0f172a;color:#fff;padding:10px 14px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.3);z-index:95;font-size:14px;max-width:calc(100vw - 32px);transition:transform .2s}
+#cmptoast.on{transform:translate(-50%,0)}#cmptoast a{color:#93c5fd;font-weight:700;margin-left:6px}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.62);display:none;padding:20px;overflow:auto;z-index:70;overscroll-behavior:contain}
 .modal.on{display:flex}.box{background:var(--card);border:1px solid var(--line2);border-radius:14px;max-width:860px;width:100%;padding:18px;position:relative;margin:auto}
 .x{position:absolute;right:12px;top:10px;border:0;background:none;font-size:24px;color:var(--mut)}
@@ -57,6 +67,7 @@ aside{border-radius:var(--r);box-shadow:var(--sh)}
 .card{border-radius:16px;box-shadow:var(--sh);transition:transform .15s,border-color .15s,box-shadow .15s}.card:hover{transform:translateY(-3px);border-color:var(--acc);box-shadow:0 10px 28px rgba(37,99,235,.18)}
 .im{border-radius:12px;background:#fff}.pr{font-size:19px;letter-spacing:-.4px}
 
+.cmpb{position:absolute;left:6px;bottom:6px;background:rgba(255,255,255,.94);border:0;border-radius:999px;padding:3px 9px;font-size:12px;font-weight:700;color:#0f172a;box-shadow:0 1px 4px rgba(0,0,0,.2);cursor:pointer}.cmpb.on{background:#1d4ed8;color:#fff}
 .addl{position:absolute;right:6px;bottom:6px;background:rgba(255,255,255,.94);border:0;border-radius:999px;padding:3px 9px;font-size:12px;font-weight:700;color:#0f172a;box-shadow:0 1px 4px rgba(0,0,0,.2)}.addl.on{background:#0b7a58;color:#fff}
 .warnpill{display:inline-block;font-size:12px;padding:1px 7px;border-radius:999px;background:var(--warnbg);color:var(--warn);font-weight:600;margin-left:4px}
 .box{border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
@@ -97,10 +108,10 @@ aside details>*:not(summary){margin-top:6px}
 <div id="demo"></div>
 <div class="wrap">
   <aside id="side">
-    <h4>Categoría</h4><select id="cat"></select>
+    <div id="catbox"></div>
     <h4>Precio (ARS)</h4><div class="rng"><input id="pmin" type="number" min="0" placeholder="Mín"><input id="pmax" type="number" min="0" placeholder="Máx"></div>
     <div id="fxbox"></div>
-    <details open><summary>Marca</summary><input id="bq" aria-label="Buscar marca" placeholder="Buscar marca…" style="width:100%;padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--tx);margin-bottom:4px"><div class="fl" id="brands"></div><button class="more" id="bmore"></button></details>
+    <details open id="brandbox" hidden><summary>Marca</summary><input id="bq" aria-label="Buscar marca" placeholder="Buscar marca…" style="width:100%;padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--tx);margin-bottom:4px"><div class="fl" id="brands"></div><button class="more" id="bmore"></button></details>
     <details open><summary>Tienda</summary><div class="fl" id="stores"></div></details>
     <details open><summary>Opciones</summary><div class="fl">
       <label><input type="checkbox" id="stock"> Solo con stock</label>
@@ -184,7 +195,7 @@ function card(g){
   const o=visible(g)[0]||g.offers[0],c=chgOk(g)?g.chg:null;
   const badge=c?`<span class="badge ${c.pct<0?"d":"u"}">${c.pct<0?"▼":"▲"} ${Math.abs(c.pct).toLocaleString("es-AR")}%</span>`:"";
   const f=FOLLOW[g.id]?" on":"";
-  return `<div class="card" data-id="${esc(g.id)}"><a class="stretch" href="${DET.url(g.id)}" data-open="${esc(g.id)}" aria-label="${esc("Ver "+g.name)}"></a><div class="im">${imgTag(g,true)}${badge}<button class="star${f}" data-f="${esc(g.id)}" title="Seguir este producto" aria-label="Seguir precio">${f?"★":"☆"}</button><button class="addl${LIST.includes(g.id)?" on":""}" data-l="${esc(g.id)}" aria-label="${LIST.includes(g.id)?"Quitar de mi lista":"Agregar a mi lista"}">${LIST.includes(g.id)?"✓ En lista":"+ Lista"}</button></div>
+  return `<div class="card" data-id="${esc(g.id)}"><a class="stretch" href="${DET.url(g.id)}" data-open="${esc(g.id)}" aria-label="${esc("Ver "+g.name)}"></a><div class="im">${imgTag(g,true)}${badge}<button class="star${f}" data-f="${esc(g.id)}" title="Seguir este producto" aria-label="Seguir precio">${f?"★":"☆"}</button><button class="cmpb${CT.cmp.has(g.id,g.category)?" on":""}" data-cmp="${esc(g.id)}" title="${CT.cmp.has(g.id,g.category)?"Quitar de la comparación":"Agregar a la comparación"}" aria-label="${CT.cmp.has(g.id,g.category)?"Quitar de la comparación":"Agregar a la comparación"}">${CT.cmp.has(g.id,g.category)?"✓ Comparar":"⚖ Comparar"}</button><button class="addl${LIST.includes(g.id)?" on":""}" data-l="${esc(g.id)}" aria-label="${LIST.includes(g.id)?"Quitar de mi lista":"Agregar a mi lista"}">${LIST.includes(g.id)?"✓ En lista":"+ Lista"}</button></div>
   <div class="st">${esc(o.store)}${REP.badge(o.store)}${stale(o.store)?'<span class="warnpill" title="La tienda no respondió en la última lectura: este precio puede estar desactualizado">dato viejo</span>':""}${o.anom?'<span class="warnpill" title="El precio cambió de forma muy brusca: confirmalo en la tienda">precio inusual</span>':""}${g.dif?'<span class="warnpill" title="Los precios de las tiendas difieren 3 veces o más: confirmá que sea exactamente el mismo modelo">precios muy distintos</span>':""}</div><div class="nm">${esc(g.name)}</div>
   <div class="pr">${ARS(price(o))}${c&&c.pct<0?`<span class="old">${ARS(c.prev)}</span>`:""}</div>
   <div class="sub">${g.offers.length>1?`Comparado en ${g.offers.length} tiendas`:"1 tienda"}${g.low?' · <span class="low">mínimo histórico</span>':""}</div></div>`;
@@ -193,7 +204,13 @@ function counts(){const t={todos:DATA.length,bajaron:0,subieron:0,seguidos:0};
   DATA.forEach(g=>{if(chgOk(g))g.chg.pct<0?t.bajaron++:t.subieron++;if(FOLLOW[g.id])t.seguidos++});return t}
 function renderSide(){
   const base=filtered("cat"),cc={};base.forEach(g=>cc[g.category]=(cc[g.category]||0)+1);
-  $("#cat").innerHTML=`<option value="">Todas (${base.length})</option>`+Object.keys(CATS).filter(k=>cc[k]||S.cat===k).map(k=>`<option value="${k}" ${S.cat===k?"selected":""}>${CATS[k]} (${cc[k]||0})</option>`).join("");
+  // Categoría: lista desplegada hasta elegir una; elegida, se contrae a «Categoría: X · Cambiar»
+  const ico=k=>window.ICONS?ICONS.svg(k,16):"";
+  $("#catbox").innerHTML=S.cat&&!S.catOpen
+    ?`<h4>Categoría</h4><div class="catsel">${ico(S.cat)}<b>${esc(CATS[S.cat]||S.cat)}</b><button type="button" class="catchg" id="catchg">Cambiar</button></div>`
+    :`<h4>Categoría</h4><div class="catlist" role="list">${S.cat?`<button type="button" data-cat="" role="listitem">Todas<span class="c">${base.length}</span></button>`:""}${Object.keys(CATS).filter(k=>cc[k]||S.cat===k).map(k=>`<button type="button" data-cat="${k}" role="listitem" class="${S.cat===k?"on":""}" aria-pressed="${S.cat===k}">${ico(k)}<span>${esc(CATS[k])}</span><span class="c">${cc[k]||0}</span></button>`).join("")}</div>`;
+  // Marca: solo con una categoría elegida (muchas marcas fabrican un solo tipo de producto)
+  $("#brandbox").hidden=!S.cat;
   const bb=filtered("brand"),bc={};bb.forEach(g=>{if(g.brand)bc[g.brand]=(bc[g.brand]||0)+1});
   let bl=Object.entries(bc).sort((a,b)=>b[1]-a[1]);if(S.bq)bl=bl.filter(([b])=>b.toLowerCase().includes(S.bq));
   const total=bl.length;if(!S.allBrands&&!S.bq)bl=bl.slice(0,10);
@@ -263,13 +280,25 @@ function openModal(id){
   $("#box").innerHTML=`<button class="x" id="cx">×</button><div class="mh"><div class="im">${imgTag(g,false)}</div><div><span class="tag">${esc(CATS[g.category]||g.category)}</span>${g.img_src?`<span class="tag" title="Ninguna tienda publica foto de este producto">Foto: ${esc(g.img_src)}</span>`:""}${g.brand?`<span class="tag">${esc(g.brand)}</span>`:""}<h2 style="margin:6px 0">${esc(g.name)}</h2>
   <div class="big">${ARS(best(g))} <span class="sub">en ${esc(g.offers[0].store)}</span></div>
   ${c?`<div class="${c.pct<0?"dn":"up"}">${c.pct<0?"▼ Bajó":"▲ Subió"} ${Math.abs(c.pct)}% (antes ${ARS(c.prev)})</div>`:""}
-  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="tab ${f?"on":""}" id="fb">${f?"★ Siguiendo":"☆ Seguir precio"}</button><button class="pri" id="fl">${LIST.includes(g.id)?"✓ En mi lista (quitar)":"+ Agregar a mi lista"}</button><a class="sec" href="${DET.url(g.id)}" target="_blank" rel="noopener">↗ Abrir en otra pestaña</a></div></div></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="tab ${f?"on":""}" id="fb">${f?"★ Siguiendo":"☆ Seguir precio"}</button><button class="pri" id="fl">${LIST.includes(g.id)?"✓ En mi lista (quitar)":"+ Agregar a mi lista"}</button><button class="sec" id="fcmp">${CT.cmp.has(g.id,g.category)?"✓ En la comparación (quitar)":"⚖ Agregar a la comparación"}</button><a class="sec" href="${DET.url(g.id)}" target="_blank" rel="noopener">↗ Abrir en otra pestaña</a></div>${cmpNote(g)}</div></div>
   <table><tr><th>Tienda</th><th class="n">Efectivo / transf.</th><th class="n">Lista / tarjeta</th><th>Cuotas</th><th>Stock</th><th></th></tr>${rows}</table><p class="sub" style="margin:8px 0 0">${(()=>{const rs=g.offers.map(o=>o.store).filter(x=>rep1(x));return rs.length?"La reputación es el puntaje público de cada tienda en una sola plataforma (fecha en el detalle al pasar el mouse); no se promedian fuentes. ":""})()}Los precios no incluyen envío: se calcula en cada tienda.</p>${g.offers.some(o=>o.anom)?'<div class="alert" style="margin-top:10px;border-left-color:var(--warn)">Alguna oferta cambió de precio de forma muy brusca. Puede ser un error de la tienda: confirmalo antes de comprar.</div>':""}${chart(g)}`;
   $("#modal").classList.add("on");
   $("#cx").onclick=()=>$("#modal").classList.remove("on");
   $("#fb").onclick=()=>{toggleF(g.id);openModal(id)};
   $("#fl").onclick=()=>{toggleL(g.id);openModal(id)};
+  $("#fcmp").onclick=()=>{toggleC(g.id,true);openModal(id)};
 }
+/* comparación: una por tipo de producto (procesadores con procesadores, placas con placas…) */
+let CMPMSG="";
+function cmpNote(g){const n=CT.cmp.list(g.category).length,l=esc((CATS[g.category]||g.category).toLowerCase());
+  const msg=CMPMSG;CMPMSG="";
+  if(!n&&!msg)return"";
+  return `<div class="cmpnote" role="status">${msg?`<b>${esc(msg)}</b><br>`:""}${n?`Comparación de ${l}: <b>${n} de ${CT.CMP_MAX}</b> · <a href="comparar.html#cat=${encodeURIComponent(g.category)}">Ver comparación →</a>`:""}${CT.cmp.count()>n?` <span class="sub">· también tenés otras comparaciones guardadas</span>`:""}</div>`}
+function toggleC(id,inModal){const g=DATA.find(x=>x.id===id);if(!g)return;const r=CT.cmp.toggle(id,g.category),l=(CATS[g.category]||g.category).toLowerCase();
+  const t=r.full?`Ya tenés ${CT.CMP_MAX} ${l} para comparar: quitá uno en Comparar para sumar otro.`:r.on?`Agregado a la comparación de ${l} (${r.n} de ${CT.CMP_MAX}).`:"Quitado de la comparación.";
+  $("#live").textContent=t;if(inModal)CMPMSG=t;else toast(t,g.category);render()}
+function toast(t,cat){let el=document.getElementById("cmptoast");if(!el){el=document.createElement("div");el.id="cmptoast";el.setAttribute("role","status");document.body.appendChild(el)}
+  el.innerHTML=`${esc(t)} <a href="comparar.html#cat=${encodeURIComponent(cat)}">Ver comparación →</a>`;el.classList.add("on");clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove("on"),4500)}
 function toggleL(id){const i=LIST.indexOf(id);i>=0?LIST.splice(i,1):LIST.push(id);saveL();CTL.count(LIST.length);$("#live").textContent=i>=0?"Quitado de tu lista":"Agregado a tu lista";render()}
 function openList(){
   const gs=LIST.map(id=>DATA.find(g=>g.id===id)).filter(Boolean);
@@ -293,6 +322,7 @@ document.addEventListener("click",e=>{
   const t=e.target;
   if(t.dataset.f){e.stopPropagation();toggleF(t.dataset.f);return}
   if(t.dataset.l){e.stopPropagation();toggleL(t.dataset.l);return}
+  if(t.dataset.cmp){e.stopPropagation();e.preventDefault();toggleC(t.dataset.cmp,false);return}
   const tb=t.closest("[data-t]");if(tb){e.preventDefault();S.tab=tb.dataset.t;S.page=1;if(S.tab==="bajaron")S.sort="down";else if(S.tab==="subieron")S.sort="up";else if(S.tab==="todos"&&(S.sort==="down"||S.sort==="up"))S.sort="rel";render();return}
   if(t.closest("#fbtn")){$("#side").classList.toggle("show");render();return}
   const ch=t.closest("[data-chip]");if(ch){const set=S.fx[ch.dataset.chip];if(set)set.delete(ch.dataset.v);S.page=1;render();return}
@@ -305,7 +335,8 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")$("#modal").classLis
 function bind(){
   const re=()=>{S.page=1;render()};
   $("#qh").oninput=e=>{S.q=e.target.value;re()};
-  $("#cat").onchange=e=>{S.cat=e.target.value;S.fx={};re()};
+  $("#catbox").onclick=e=>{const c=e.target.closest("#catchg");if(c){S.catOpen=true;renderSide();return}
+    const b=e.target.closest("[data-cat]");if(!b)return;const v=b.dataset.cat;if(v!==S.cat){S.cat=v;S.fx={};S.brands=new Set();S.allBrands=false;S.bq="";$("#bq").value=""}S.catOpen=false;re()};
   $("#fxbox").onchange=e=>{const k=e.target.dataset.fx;if(!k)return;const set=S.fx[k]||(S.fx[k]=new Set());e.target.checked?set.add(e.target.value):set.delete(e.target.value);re()};
   const num=v=>v===""?null:Number(v);
   $("#pmin").oninput=e=>{S.pmin=num(e.target.value);re()};$("#pmax").oninput=e=>{S.pmax=num(e.target.value);re()};
@@ -329,7 +360,10 @@ function bind(){
    el.className="fresh"+(h==null?" old":h>24?" old":h>12?" mid":"");
    el.innerHTML=h==null?"<i></i>Sin fecha de actualización":`<i></i>Actualizado ${h<1?"hace menos de 1 h":h<48?"hace "+Math.round(h)+" h":"hace "+Math.round(h/24)+" días"}`;}
   const sc={};DATA.forEach(g=>g.offers.forEach(o=>sc[o.store]=(sc[o.store]||0)+1));
-  $("#stores").innerHTML=Object.keys(META.stores||sc).map(s=>{const m=(META.stores||{})[s];return `<label title="${esc(m&&m.error||"")}"><input type="checkbox" data-s="${esc(s)}"> ${esc(s)}${m&&!m.ok?" ⚠️":""}<span class="c">${sc[s]||0}</span></label>`}).join("");
+  // tiendas visibles en el menú: con productos y leídas bien en la última actualización. Las demás (bloqueadas, sin
+  // productos u ocultadas en config.json) quedan ocultas, no borradas: vuelven solas cuando se lean bien.
+  const showStore=s=>{const m=(META.stores||{})[s];return (sc[s]||0)>0&&!(m&&(m.hidden||!m.ok))&&!((CFG.stores||{})[s]||{}).ocultar};
+  $("#stores").innerHTML=Object.keys(META.stores||sc).filter(showStore).map(s=>{const m=(META.stores||{})[s];return `<label title="${esc(m&&m.error||"")}"><input type="checkbox" data-s="${esc(s)}"> ${esc(s)}${m&&!m.ok?" ⚠️":""}<span class="c">${sc[s]||0}</span></label>`}).join("");
   if(META.demo)$("#demo").innerHTML='<div class="demo">Datos de ejemplo (inventados) para probar el diseño.</div>';
   {const u=new URLSearchParams(location.search);
    if(u.get("q")){S.q=u.get("q").slice(0,120);$("#qh").value=S.q}

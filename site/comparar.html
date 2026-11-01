@@ -28,6 +28,10 @@ details.nod{margin-top:10px;background:var(--card);border:1px solid var(--line2)
 .tog{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--tx);text-transform:none;letter-spacing:0;font-weight:400}
 .ul2{margin:6px 0 0;padding-left:18px}.ul2 li{margin:3px 0}
 .radar{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.catbar .cmpn{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;margin-left:6px;border-radius:999px;background:#1d4ed8;color:#fff;font-size:12px;font-weight:800}
+.saved{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 12px;padding:10px 12px;border:1px solid color-mix(in srgb,var(--acc) 40%,var(--line));border-radius:12px;background:color-mix(in srgb,var(--acc) 8%,var(--card))}
+.saved button{border:1px solid var(--line2,var(--line));background:var(--card);color:var(--tx);border-radius:999px;padding:6px 12px;font:600 13px system-ui,sans-serif;cursor:pointer}
+.saved button.on{background:#1d4ed8;border-color:#1d4ed8;color:#fff}
 </style>
 </head>
 <body data-page="comparar">
@@ -36,6 +40,7 @@ details.nod{margin-top:10px;background:var(--card);border:1px solid var(--line2)
 <h1>Comparar hardware</h1>
 <p class="lead">Elegí una categoría, sumá de 2 a 4 productos y mirá en qué se diferencian, con tablas, gráficos y una conclusión explicada.</p>
 <div class="panel">
+  <div id="saved"></div>
   <label>1 · Categoría</label><div class="catbar" id="cats" style="margin:6px 0 12px"></div>
   <div class="row"><div class="f srch" style="min-width:260px"><label>2 · Buscá y sumá productos (nombre o modelo)</label><input type="search" id="q" placeholder="Ej: RTX 5070, Ryzen 5 9600X, DDR5 32GB…" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="dd" aria-autocomplete="list" aria-label="Buscar productos para comparar"><div class="dd" id="dd" role="listbox" hidden></div></div>
    <div class="f" style="max-width:260px" id="resbox"><label>Resolución (para rendimiento)</label><div class="seg" id="res"><button data-v="0">1080p</button><button data-v="1" class="on">1440p</button><button data-v="2">4K</button></div></div></div>
@@ -60,8 +65,13 @@ const byId=id=>PR.find(g=>g.id===id);
 
 function drawCats(){
   const cnt={};PR.forEach(g=>{if(CT.CATS[g.category])cnt[g.category]=(cnt[g.category]||0)+1});
-  $("#cats").innerHTML=Object.entries(CT.CATS).filter(([k])=>cnt[k]).map(([k,l])=>`<button data-c="${k}" class="${S.cat===k?"on":""}">${l} <span class="note" style="color:inherit;opacity:.7">${cnt[k]}</span></button>`).join("");
-  document.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{if(S.cat!==b.dataset.c){S.cat=b.dataset.c;S.ids=S.all?S.ids:[];S.use=null}drawAll()});
+  const saved=CT.cmp.all();
+  $("#cats").innerHTML=Object.entries(CT.CATS).filter(([k])=>cnt[k]).map(([k,l])=>{const n=(saved[k]||[]).length;return `<button data-c="${k}" class="${S.cat===k?"on":""}${n?" has":""}">${l} <span class="note" style="color:inherit;opacity:.7">${cnt[k]}</span>${n?`<span class="cmpn" title="${n} ${n===1?"producto elegido":"productos elegidos"} para comparar">${n}</span>`:""}</button>`}).join("");
+  document.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{if(S.cat!==b.dataset.c){S.cat=b.dataset.c;S.ids=S.all?S.ids:CT.cmp.list(S.cat);S.use=null}drawAll()});
+  // comparaciones guardadas (una por tipo de producto): se ven todas juntas y cada una se abre por separado
+  const keys=Object.keys(saved).filter(k=>CT.CATS[k]&&saved[k].length);
+  $("#saved").innerHTML=keys.length>1||(keys.length===1&&keys[0]!==S.cat)?`<div class="saved"><span class="note">Tus comparaciones:</span>${keys.map(k=>`<button data-c2="${k}" class="${k===S.cat&&!S.all?"on":""}">⚖ ${esc(CT.CATS[k])} <b>${saved[k].length}</b></button>`).join("")}</div>`:"";
+  document.querySelectorAll("[data-c2]").forEach(b=>b.onclick=()=>{S.all=false;const a=$("#allc");if(a)a.checked=false;S.cat=b.dataset.c2;S.ids=CT.cmp.list(S.cat);S.use=null;drawAll()});
 }
 function drawSel(){
   $("#sel").innerHTML=S.ids.map((id,i)=>{const g=byId(id);return `<div class="pill" style="--c:${COL[i]}"><span title="${esc(g.name)}">${esc(g.name)}</span><button data-r="${id}" aria-label="Quitar">×</button></div>`}).join("")||'<span class="note">Todavía no elegiste productos. Buscá arriba y tocá un resultado.</span>';
@@ -154,7 +164,7 @@ function coverage(cmp){
   const none=bad.length===cov.length;
   return `<div class="panel cov" role="note"><h2>${none?"No tenemos fichas técnicas verificadas de estos productos":"Falta la ficha técnica de "+(bad.length===1?"uno de los productos":"algunos productos")}</h2>
   ${PERI.includes(cmp.cat)?`<p>Para ${esc((CT.CATS[cmp.cat]||"").toLowerCase())} usamos la ficha técnica que publica la tienda para ese producto exacto (hoy, Compragamer) y lo que dice el título. ${none?"Estos productos":"Ese producto"} no tiene${none?"n":""} ficha publicada y el título no detalla más: solo se compara precio y disponibilidad.</p>`:`<p>${none?"Solo se puede comparar":"De "+(bad.length===1?"ese producto":"esos productos")+" solo se puede comparar"} lo que publica la tienda (precio, disponibilidad y, si figura en el título, la memoria).${max>1?" El rendimiento y el resto de las especificaciones no se comparan para no mezclar datos de otro modelo.":""}</p>`}
-  <ul>${bad.map(({c,i})=>`<li><span style="color:${COL[i]}">●</span> ${esc(c.name.slice(0,80))}</li>`).join("")}</ul>
+  <ul>${bad.map(({c,i})=>{const w=C.hwWhy?C.hwWhy(c.name,cmp.cat):null;return `<li><span style="color:${COL[i]}">●</span> ${esc(c.name.slice(0,80))}${w?`<div class="note">Motivo: ${esc(w)}.</div>`:""}</li>`}).join("")}</ul>
   ${PERI.includes(cmp.cat)?"":`<p class="note" style="margin-top:6px">Suele pasar con variantes poco comunes (por ejemplo, la misma placa con menos memoria, que rinde distinto) o con modelos muy nuevos. Preferimos decir «sin datos» antes que inventar.</p>`}</div>`;
 }
 function drawOut(){
@@ -168,6 +178,7 @@ function drawOut(){
   try{history.replaceState(null,"","#"+new URLSearchParams({cat:S.cat,ids:S.ids.join(",")}))}catch{}
 }
 function drawAll(){
+  if(!S.all)CT.cmp.set(S.cat,S.ids);   // la comparación de cada tipo queda guardada en el navegador
   drawCats();drawSel();
   $("#resbox").style.display=["placas-de-video","pcs-armadas"].includes(S.cat)||S.all?"":"none";
   drawOut();
@@ -178,7 +189,10 @@ function drawAll(){
   if(!HW||!PR.length){$("#out").innerHTML='<div class="panel">No se pudieron cargar los datos. Probá recargar la página.</div>';return}
   C=CT.makeCompare(CT.create(HW,PR,META,SP));
   $("#legend").innerHTML=["ver","bench","est","pend","nd"].map(t=>`${tagH(t)} <span>${esc(CT.TAGS[t][1])}</span>`).join("<br>");
-  try{const p=new URLSearchParams(location.hash.slice(1));if(p.get("cat")&&CT.CATS[p.get("cat")])S.cat=p.get("cat");if(p.get("ids"))S.ids=p.get("ids").split(",").filter(id=>byId(id)).slice(0,4)}catch{}
+  // Orden: enlace compartido (#cat=…&ids=…) > comparación guardada de esa categoría > la primera guardada
+  try{const p=new URLSearchParams(location.hash.slice(1)),sv=CT.cmp.all();
+    if(p.get("cat")&&CT.CATS[p.get("cat")])S.cat=p.get("cat");else{const k=Object.keys(sv).find(k=>CT.CATS[k]&&sv[k].length);if(k)S.cat=k}
+    S.ids=p.get("ids")?p.get("ids").split(",").filter(id=>byId(id)).slice(0,4):CT.cmp.list(S.cat).filter(id=>byId(id))}catch{}
   $("#share").onclick=async e=>{const b=e.currentTarget;try{await navigator.clipboard.writeText(location.href);b.textContent="✓ Enlace copiado"}catch{b.textContent="Copialo desde la barra de direcciones"}setTimeout(()=>b.textContent="🔗 Copiar enlace de esta comparación",2500)};
   $("#q").oninput=search;$("#q").onfocus=search;$("#q").onkeydown=e=>{const dd=$("#dd");if(dd.hidden&&e.key!=="ArrowDown")return;if(e.key==="ArrowDown"){e.preventDefault();if(dd.hidden)search();ddMark(DD+1)}else if(e.key==="ArrowUp"){e.preventDefault();ddMark(DD-1)}else if(e.key==="Enter"){const b=document.querySelectorAll("#dd [data-a]")[DD<0?0:DD];if(b){e.preventDefault();ddAdd(b.dataset.a)}}else if(e.key==="Escape"){dd.hidden=true;$("#q").setAttribute("aria-expanded","false")}};document.addEventListener("click",e=>{if(!e.target.closest(".srch"))$("#dd").hidden=true});
   $("#allc").onchange=e=>{S.all=e.target.checked;drawAll();search()};

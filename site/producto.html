@@ -32,7 +32,7 @@ td.n,th.n{text-align:right;white-space:nowrap}tr.best td{background:var(--best)}
   <div class="crumb"><a href="productos.html">← Volver a Productos</a><span id="bc"></span></div>
   <div id="pd"><div class="empty">Cargando producto…</div></div>
 </main>
-<script src="js/lib.js"></script><script src="js/icons.js"></script><script src="js/rep.js"></script><script src="js/compare.js"></script><script src="js/detail.js"></script>
+<script src="js/lib.js"></script><script>var CMPMSG="";</script><script src="js/icons.js"></script><script src="js/rep.js"></script><script src="js/compare.js"></script><script src="js/detail.js"></script>
 <script>
 const $=s=>document.querySelector(s),{ARS,esc}=CT;
 const CATS={procesadores:"Procesadores",motherboards:"Motherboards","placas-de-video":"Placas de video","memorias-ram":"Memorias RAM",almacenamiento:"Almacenamiento",refrigeracion:"Refrigeración",fuentes:"Fuentes",gabinetes:"Gabinetes",monitores:"Monitores",notebooks:"Notebooks","pcs-armadas":"PCs armadas",mouses:"Mouse",teclados:"Teclados",auriculares:"Auriculares",perifericos:"Otros periféricos",redes:"Redes",accesorios:"Cables y accesorios",otros:"Otros"};
@@ -69,13 +69,15 @@ function specs(g,HW,PR,META,SP){
     <h1>${esc(g.name)}</h1>
     <div class="big">${ARS(best)} <span class="sub">en ${esc(g.offers[0].store)}${g.offers.length>1?` · comparado en ${g.offers.length} tiendas`:" · 1 tienda"}</span></div>
     ${c?`<div class="${c.pct<0?"dn":"up"}">${c.pct<0?"▼ Bajó":"▲ Subió"} ${Math.abs(c.pct)}% (antes ${ARS(c.prev)})</div>`:""}${g.low?'<div class="dn">Está en su mínimo histórico</div>':""}
-    <div class="acts"><a class="btn pri" href="${esc(g.offers[0].url)}" target="_blank" rel="noopener nofollow">Ir a la tienda más barata ↗</a><button class="btn" id="fl">${inList()?"✓ En mi lista (quitar)":"+ Agregar a mi lista"}</button><button class="btn" id="fb">${fol()?"★ Siguiendo":"☆ Seguir precio"}</button>${cmpLink?`<a class="btn" href="${esc(cmpLink)}">⚖️ Comparar con otros</a>`:""}</div>
+    <div class="acts"><a class="btn pri" href="${esc(g.offers[0].url)}" target="_blank" rel="noopener nofollow">Ir a la tienda más barata ↗</a><button class="btn" id="fl">${inList()?"✓ En mi lista (quitar)":"+ Agregar a mi lista"}</button><button class="btn" id="fb">${fol()?"★ Siguiendo":"☆ Seguir precio"}</button><button class="btn" id="fcmp">${CT.cmp.has(g.id,g.category)?"✓ En la comparación (quitar)":"⚖ Agregar a la comparación"}</button></div>
+    ${CT.cmp.list(g.category).length?`<div class="sub" style="margin-top:8px" role="status">${CMPMSG?`<b>${esc(CMPMSG)}</b><br>`:""}Comparación de ${esc((CT.CATS[g.category]||g.category).toLowerCase())}: <b>${CT.cmp.list(g.category).length} de ${CT.CMP_MAX}</b> · <a href="comparar.html#cat=${encodeURIComponent(g.category)}">Ver comparación →</a></div>`:CMPMSG?`<div class="sub" style="margin-top:8px" role="status"><b>${esc(CMPMSG)}</b></div>`:""}
     ${g.offers.some(o=>o.anom)?'<div class="alert">Alguna oferta cambió de precio de forma muy brusca. Puede ser un error de la tienda: confirmalo antes de comprar.</div>':""}</div></div>`;
   $("#pd").innerHTML=`<div id="hd">${head()}</div>
    <h2>Dónde comprarlo</h2>${DET.offersTable(g,ctx)}<p class="sub" style="margin:8px 0 0">${g.offers.some(o=>REP.get(o.store))?"La reputación es el puntaje público de cada tienda en Google Maps (con su fecha); no se promedian fuentes. ":""}Los precios no incluyen envío: se calcula en cada tienda.</p>
    <h2>Historial de precio</h2>${DET.chart(g,ctx)||'<p class="sub">Todavía no hay historial: se va armando con cada actualización.</p>'}
    <h2>Especificaciones</h2>${specs(g,HW,PR,META,SP)}`;
   const bind=()=>{
+    $("#fcmp").onclick=()=>{const r=CT.cmp.toggle(g.id,g.category),l=(CT.CATS[g.category]||g.category).toLowerCase();CMPMSG=r.full?`Ya tenés ${CT.CMP_MAX} ${l} para comparar: quitá uno en Comparar para sumar otro.`:r.on?`Agregado a la comparación de ${l}.`:"Quitado de la comparación.";$("#hd").innerHTML=head();CMPMSG="";bind()};
     $("#fl").onclick=()=>{const i=LIST.indexOf(g.id);i>=0?LIST.splice(i,1):LIST.push(g.id);save("lista",LIST);CTL.count(LIST.length);$("#hd").innerHTML=head();bind()};
     $("#fb").onclick=()=>{if(FOLLOW[g.id])delete FOLLOW[g.id];else FOLLOW[g.id]={price:best,name:g.name};save("seg",FOLLOW);$("#hd").innerHTML=head();bind()};
   };bind();

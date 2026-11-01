@@ -446,6 +446,89 @@ NEW_CPU = {"r5-7600x3d", "r9-7900", "r7-7700", "r5-9600", "r7-8700g", "r5-8600g"
            "i7-14700", "i3-14100", "i3-13100", "i9-12900k", "i9-12900", "i7-12700", "i5-10400", "pg-7400",
            "pg-5400", "p-4560", "c-4900"}
 VERIFY_DATE_NEW = "2026-10-26"
+
+# ---------- Agregados en la actualización 30 (fichas oficiales leídas el 1-nov-2026) ----------
+# Solo ficha: sin puntaje de juegos (no hay una medición publicada comparable), así que nunca se recomiendan;
+# sirven para comparar y para «Armalo vos». Intel 10.ª/11.ª gen y Celeron/Pentium no publican «Maximum Turbo Power».
+VERIFY_DATE_30 = "2026-11-01"
+_IC10 = lambda sku, slug: _IC + f"{sku}/{slug}/specifications.html"
+NEW30_CPU = [
+    # id, nombre, fabricante, socket, memoria, TDP, potencia máx., regex, (núcleos, hilos, boost, L3, gráficos), ficha
+    ("i3-10100", "Core i3-10100", "Intel", "LGA1200", "DDR4", 65, None, r"10100(?![a-z0-9])", (4, 8, 4.3, 6, True), _IC10(199283, "intel-core-i310100-processor-6m-cache-up-to-4-30-ghz")),
+    ("i3-10100f", "Core i3-10100F", "Intel", "LGA1200", "DDR4", 65, None, r"10100f\b", (4, 8, 4.3, 6, False), _IC10(203473, "intel-core-i310100f-processor-6m-cache-up-to-4-30-ghz")),
+    ("i3-10105", "Core i3-10105", "Intel", "LGA1200", "DDR4", 65, None, r"10105(?![a-z0-9])", (4, 8, 4.4, 6, True), _IC10(201894, "intel-core-i310105-processor-6m-cache-up-to-4-40-ghz")),
+    ("i3-10105f", "Core i3-10105F", "Intel", "LGA1200", "DDR4", 65, None, r"10105f\b", (4, 8, 4.4, 6, False), _IC10(203474, "intel-core-i310105f-processor-6m-cache-up-to-4-40-ghz")),
+    ("i5-10400t", "Core i5-10400T", "Intel", "LGA1200", "DDR4", 35, None, r"10400t\b", (6, 12, 3.6, 12, True), _IC10(199276, "intel-core-i510400t-processor-12m-cache-up-to-3-60-ghz")),
+    ("i7-10700", "Core i7-10700", "Intel", "LGA1200", "DDR4", 65, None, r"10700(?![a-z0-9])", (8, 16, 4.8, 16, True), _IC10(199316, "intel-core-i710700-processor-16m-cache-up-to-4-80-ghz")),
+    ("i7-10700f", "Core i7-10700F", "Intel", "LGA1200", "DDR4", 65, None, r"10700f\b", (8, 16, 4.8, 16, False), _IC10(199318, "intel-core-i710700f-processor-16m-cache-up-to-4-80-ghz")),
+    ("i7-10700k", "Core i7-10700K", "Intel", "LGA1200", "DDR4", 125, None, r"10700k\b", (8, 16, 5.1, 16, True), _IC10(199335, "intel-core-i710700k-processor-16m-cache-up-to-5-10-ghz")),
+    ("i7-10700kf", "Core i7-10700KF", "Intel", "LGA1200", "DDR4", 125, None, r"10700kf\b", (8, 16, 5.1, 16, False), _IC10(199325, "intel-core-i710700kf-processor-16m-cache-up-to-5-10-ghz")),
+    ("i5-11400", "Core i5-11400", "Intel", "LGA1200", "DDR4", 65, None, r"11400(?![a-z0-9])", (6, 12, 4.4, 12, True), _IC10(212270, "intel-core-i511400-processor-12m-cache-up-to-4-40-ghz")),
+    ("i5-11400f", "Core i5-11400F", "Intel", "LGA1200", "DDR4", 65, None, r"11400f\b", (6, 12, 4.4, 12, False), _IC10(212271, "intel-core-i511400f-processor-12m-cache-up-to-4-40-ghz")),
+    ("i5-11600", "Core i5-11600", "Intel", "LGA1200", "DDR4", 65, None, r"11600(?![a-z0-9])", (6, 12, 4.8, 12, True), _IC10(212274, "intel-core-i511600-processor-12m-cache-up-to-4-80-ghz")),
+    ("i5-11600k", "Core i5-11600K", "Intel", "LGA1200", "DDR4", 125, None, r"11600k\b", (6, 12, 4.9, 12, True), _IC10(212275, "intel-core-i511600k-processor-12m-cache-up-to-4-90-ghz")),
+    ("i7-11700", "Core i7-11700", "Intel", "LGA1200", "DDR4", 65, None, r"11700(?![a-z0-9])", (8, 16, 4.9, 16, True), _IC10(212279, "intel-core-i711700-processor-16m-cache-up-to-4-90-ghz")),
+    ("i7-11700k", "Core i7-11700K", "Intel", "LGA1200", "DDR4", 125, None, r"11700k\b", (8, 16, 5.0, 16, True), _IC10(212047, "intel-core-i711700k-processor-16m-cache-up-to-5-00-ghz")),
+    ("i7-11700kf", "Core i7-11700KF", "Intel", "LGA1200", "DDR4", 125, None, r"11700kf\b", (8, 16, 5.0, 16, False), _IC10(212048, "intel-core-i711700kf-processor-16m-cache-up-to-5-00-ghz")),
+    ("i9-11900k", "Core i9-11900K", "Intel", "LGA1200", "DDR4", 125, None, r"11900k\b", (8, 16, 5.3, 16, True), _IC10(212325, "intel-core-i911900k-processor-16m-cache-up-to-5-30-ghz")),
+    ("c-5900", "Celeron G5900", "Intel", "LGA1200", "DDR4", 58, None, r"\bg5900\b", (2, 2, 3.4, 2, True), _IC10(199268, "intel-celeron-processor-g5900-2m-cache-3-40-ghz")),
+    ("c-5905", "Celeron G5905", "Intel", "LGA1200", "DDR4", 58, None, r"\bg5905\b", (2, 2, 3.5, 4, True), _IC10(201899, "intel-celeron-processor-g5905-4m-cache-3-50-ghz")),
+    ("c-5925", "Celeron G5925", "Intel", "LGA1200", "DDR4", 58, None, r"\bg5925\b", (2, 2, 3.6, 4, True), _IC10(201887, "intel-celeron-processor-g5925-4m-cache-3-60-ghz")),
+    ("pg-6400", "Pentium Gold G6400", "Intel", "LGA1200", "DDR4", 58, None, r"\bg6400\b", (2, 4, 4.0, 4, True), _IC10(199288, "intel-pentium-gold-g6400-processor-4m-cache-4-00-ghz")),
+    ("pg-6405", "Pentium Gold G6405", "Intel", "LGA1200", "DDR4", 58, None, r"\bg6405\b", (2, 4, 4.1, 4, True), _IC10(201901, "intel-pentium-gold-g6405-processor-4m-cache-4-10-ghz")),
+    ("c-6900", "Celeron G6900", "Intel", "LGA1700", "DDR4/DDR5", 46, None, r"\bg6900\b", (2, 2, 3.4, 4, True), _IC10(96163, "intel-celeron-processor-g6900-4m-cache-3-40-ghz")),
+    ("i5-12400t", "Core i5-12400T", "Intel", "LGA1700", "DDR4/DDR5", 35, 74, r"12400t\b", (6, 12, 4.2, 18, True), _IC10(223094, "intel-core-i512400t-processor-18m-cache-up-to-4-20-ghz")),
+    ("i7-13700", "Core i7-13700", "Intel", "LGA1700", "DDR4/DDR5", 65, 219, r"13700(?![a-z0-9])", (16, 24, 5.2, 30, True), _IC10(230490, "intel-core-i713700-processor-30m-cache-up-to-5-20-ghz")),
+    ("i7-13700f", "Core i7-13700F", "Intel", "LGA1700", "DDR4/DDR5", 65, 219, r"13700f\b", (16, 24, 5.2, 30, False), _IC10(230491, "intel-core-i713700f-processor-30m-cache-up-to-5-20-ghz")),
+    ("i9-13900", "Core i9-13900", "Intel", "LGA1700", "DDR4/DDR5", 65, 219, r"13900(?![a-z0-9])", (24, 32, 5.6, 36, True), _IC10(230499, "intel-core-i913900-processor-36m-cache-up-to-5-60-ghz")),
+    ("i9-13900f", "Core i9-13900F", "Intel", "LGA1700", "DDR4/DDR5", 65, 219, r"13900f\b", (24, 32, 5.6, 36, False), _IC10(230502, "intel-core-i913900f-processor-36m-cache-up-to-5-60-ghz")),
+    ("i5-14500", "Core i5-14500", "Intel", "LGA1700", "DDR4/DDR5", 65, 154, r"14500(?![a-z0-9])", (14, 20, 5.0, 24, True), _IC10(236784, "intel-core-i5-processor-14500-24m-cache-up-to-5-00-ghz")),
+    ("u5-235", "Core Ultra 5 235", "Intel", "LGA1851", "DDR5", 65, 121, r"ultra ?5.{0,14}\b235\b", (14, 14, 5.0, 24, True), _IC10(241674, "intel-core-ultra-5-processor-235-24m-cache-up-to-5-00-ghz")),
+    # AMD: potencia máxima = TDP x 1,35 (límite PPT estándar de AMD, estimado; igual que el resto de la base)
+    ("r5-3600", "Ryzen 5 3600", "AMD", "AM4", "DDR4", 65, 88, r"(ryzen 5|\br5)[ -]?3600(?![a-z0-9])", (6, 12, 4.2, 32, False), _AS + "ryzen-3000-series/amd-ryzen-5-3600.html"),
+    ("r5-4600g", "Ryzen 5 4600G", "AMD", "AM4", "DDR4", 65, 88, r"4600g\b", (6, 12, 4.2, 8, True), _AS + "ryzen-4000-series/amd-ryzen-5-4600g.html"),
+    ("r3-5300g", "Ryzen 3 5300G", "AMD", "AM4", "DDR4", 65, 88, r"5300g\b", (4, 8, 4.2, 8, True), _AS + "ryzen-5000-series/amd-ryzen-3-5300G.html"),
+    ("r5-5600ge", "Ryzen 5 5600GE", "AMD", "AM4", "DDR4", 35, 47, r"5600ge\b", (6, 12, 4.4, 16, True), _AS + "ryzen-5000-series/amd-ryzen-5-5600ge.html"),
+    ("r7-5700ge", "Ryzen 7 5700GE", "AMD", "AM4", "DDR4", 35, 47, r"5700ge\b", (8, 16, 4.6, 16, True), _AS + "ryzen-5000-series/amd-ryzen-7-5700ge.html"),
+    ("r5-5650g", "Ryzen 5 PRO 5650G", "AMD", "AM4", "DDR4", 65, 88, r"5650g\b", (6, 12, 4.4, 16, True), "https://www.amd.com/en/support/downloads/drivers.html/processors/ryzen-pro/ryzen-pro-5000-series/amd-ryzen-5-pro-5650g.html"),
+    ("r5-5500x3d", "Ryzen 5 5500X3D", "AMD", "AM4", "DDR4", 105, 142, r"5500x3d", (6, 12, 4.0, 96, False), _AC + "5000-series/amd-ryzen-5-5500x3d.html"),
+    ("r7-7700x3d", "Ryzen 7 7700X3D", "AMD", "AM5", "DDR5", 120, 162, r"7700x3d", (8, 16, 4.5, 96, True), _AC + "7000-series/amd-ryzen-7-7700x3d.html"),
+    ("a-3000g", "Athlon 3000G", "AMD", "AM4", "DDR4", 35, 47, r"athlon.{0,12}3000g|\b3000g\b", (2, 4, 3.5, 4, True), "https://www.amd.com/en/support/downloads/drivers.html/processors/athlon/athlon-3000-series/amd-athlon-3000g.html"),
+]
+for _i, _n, _v, _so, _me, _td, _mp, _m, _cs, _u in NEW30_CPU:
+    C.append((_i, _n, _v, _so, _me, _td, _mp, None, "intel_cpu" if _v == "Intel" else "amd_cpu", _m))
+    CS[_i] = _cs
+    VURL[_i] = _u
+NEW_CPU |= {c[0] for c in NEW30_CPU}
+
+# Placas de video (solo ficha). GS: (arquitectura, shaders, memoria, bus, Gbps).
+_GPU_V = ["vram", "tgp", "psu"]
+NEW30_GPU = [
+    # id, nombre, fabricante, VRAM, consumo, fuente, regex, excluir, spec, ficha, campos verificados
+    ("rx-7600xt", "Radeon RX 7600 XT", "AMD", 16, 190, 600, r"rx[ -]?7600[ -]?xt", "", (None, 2048, "GDDR6", 128, 18),
+     _AG + "7000-series/amd-radeon-rx-7600-xt.html", ["sp", "mt", "bus", "gbps"] + _GPU_V),
+    ("rx-7900gre", "Radeon RX 7900 GRE", "AMD", 16, 260, None, r"rx[ -]?7900[ -]?gre", "", ("RDNA 3", 5120, "GDDR6", 256, 18),
+     _AG + "7000-series/amd-radeon-rx-7900-gre.html", ["arq", "sp", "mt", "bus", "gbps", "vram", "tgp"]),
+    ("rx-6500xt", "Radeon RX 6500 XT (4 GB)", "AMD", 4, 113, 400, r"rx[ -]?6500[ -]?xt", "", (None, 1024, "GDDR6", 64, 18),
+     _AG + "6000-series/amd-radeon-rx-6500-xt.html", ["sp", "mt", "bus", "gbps", "tgp", "psu"]),
+    ("rx-6500xt-8", "Radeon RX 6500 XT (8 GB)", "AMD", 8, 113, 400, r"rx[ -]?6500[ -]?xt", "", (None, 1024, "GDDR6", 64, 18),
+     _AG + "6000-series/amd-radeon-rx-6500-xt.html", ["sp", "mt", "bus", "gbps", "vram", "tgp", "psu"]),
+    ("rx-6400", "Radeon RX 6400", "AMD", 4, 53, 350, r"rx[ -]?6400\b", "", (None, 768, "GDDR6", 64, 16),
+     _AG + "6000-series/amd-radeon-rx-6400.html", ["sp", "mt", "bus", "gbps"] + _GPU_V),
+    ("rtx-4060ti-16", "GeForce RTX 4060 Ti 16GB", "NVIDIA", 16, 165, 550, r"rtx[ -]?4060[ -]?ti", "", ("Ada Lovelace", 4352, "GDDR6", 128, None),
+     _NV + "40-series/rtx-4060-4060ti/", ["arq", "sp", "mt", "bus"] + _GPU_V),
+    ("rtx-3060-8", "GeForce RTX 3060 8GB", "NVIDIA", 8, 170, 550, r"rtx[ -]?3060(?![ -]?ti)", "", ("Ampere", 3584, "GDDR6", 128, None),
+     _NV + "compare/", ["sp", "mt", "bus"] + _GPU_V),
+    ("gtx-1630", "GeForce GTX 1630", "NVIDIA", 4, 75, 300, r"gtx[ -]?1630", "", ("Turing", 512, "GDDR6", 64, None),
+     _NV + "compare/", ["arq", "sp", "mt", "bus"] + _GPU_V),
+    ("gt-710", "GeForce GT 710", "NVIDIA", 2, 19, 300, r"gt[ -]?710\b", "", (None, 192, None, 64, None),
+     "https://www.msi.com/Graphics-card/GT-710-2GD5-LP/Specification", ["sp", "bus", "tgp", "psu"]),
+]
+for _i, _n, _v, _vr, _t, _p, _m, _x, _sp, _u, _ver in NEW30_GPU:
+    GX.append((_i, _n, _v, _vr, _t, _p, None, None, "nvidia" if _v == "NVIDIA" else "amd_gpu", _m, _x))
+    GS[_i] = _sp
+    VURL[_i] = _u
+NEW30 = {g[0] for g in NEW30_GPU} | {c[0] for c in NEW30_CPU}
 _GPU_V = ["vram", "tgp", "psu"]
 VERIFIED = {}
 for _i in GS:
@@ -472,6 +555,8 @@ VERIFIED["arc-a380"] = ["arq", "mt", "bus", "gbps", "vram", "tgp"]      # Intel:
 # para calcular la fuente, del lado seguro. La arquitectura tampoco figura en la ficha.
 VERIFIED["gt-1030"] = VERIFIED["gt-1030-d4"] = ["sp", "mt", "bus", "vram", "psu"]
 NEW_GPU = {"r9700", "rx-9070gre", "rtx-3050-6", "arc-b570", "rx-9060", "rx-9050", "arc-a380", "gt-1030", "gt-1030-d4"}
+for _g in NEW30_GPU:
+    VERIFIED[_g[0]] = _g[10]          # lo que dice la ficha (sin arquitectura cuando la página no la nombra)
 for _c in C:
     _i, _v = _c[0], _c[2]
     _f = ["cores", "threads", "boost", "l3", "tdp"]
@@ -505,12 +590,12 @@ def build():
         a, sp, mt, bus, gb = GS[g["id"]]
         g["spec"] = dict(arq=a, sp=sp, mt=mt, bus=bus, gbps=gb, bw=round(bus / 8 * gb) if bus and gb else None)
         g["ver"] = VERIFIED.get(g["id"], [])
-        if g["ver"]: g["vurl"], g["vdate"] = VURL[g["id"]], (VERIFY_DATE_NEW if g["id"] in NEW_GPU else VERIFY_DATE)
+        if g["ver"]: g["vurl"], g["vdate"] = VURL[g["id"]], (VERIFY_DATE_30 if g["id"] in NEW30 else VERIFY_DATE_NEW if g["id"] in NEW_GPU else VERIFY_DATE)
     for c in cpus:
         n, t, b, l3, ig = CS[c["id"]]
         c["spec"] = dict(cores=n, threads=t, boost=b, l3=l3, igpu=ig)
         c["ver"] = VERIFIED.get(c["id"], [])
-        if c["ver"]: c["vurl"], c["vdate"] = VURL[c["id"]], (VERIFY_DATE_NEW if c["id"] in NEW_CPU else VERIFY_DATE)
+        if c["ver"]: c["vurl"], c["vdate"] = VURL[c["id"]], (VERIFY_DATE_30 if c["id"] in NEW30 else VERIFY_DATE_NEW if c["id"] in NEW_CPU else VERIFY_DATE)
         if c["id"] in EST:
             conf, note = EST[c["id"]]
             c["se"] = {"conf": conf, "n": note}      # puntaje estimado: no figura en la tabla de Tom's

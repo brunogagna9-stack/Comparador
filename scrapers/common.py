@@ -24,11 +24,18 @@ def get(url, as_json=False, retries=3, delay=None):
             last = f"HTTP {r.status_code}"
             if r.status_code in (403, 429):
                 break  # nos pidieron que paremos: no insistimos
+            if r.status_code == 404:
+                break  # la página no existe: reintentar no cambia nada
         except Exception as e:  # red caída, timeout, etc.
             last = str(e)
         time.sleep(2 * (i + 1))
     LOG.append(f"{url} -> {last}")
     raise RuntimeError(f"No se pudo leer {url}: {last}")
+
+
+def not_found(err):
+    """True si el error de get() fue «la página no existe» (HTTP 404)."""
+    return "HTTP 404" in str(err)
 
 
 def post(url, data, as_json=False, retries=3):
@@ -116,9 +123,14 @@ _NON_HW = re.compile(r"\brobot\b|transformers|\bfunda\b|\bcelular\b|\btoner\b|ca
 # Correcciones de categoría que valen para TODAS las tiendas (la categoría de la tienda a veces es demasiado amplia:
 # mini PCs y consolas dentro de "procesadores", accesorios dentro de "placas de video", etc.). Primera regla que coincide.
 _FIX = [
-    (re.compile(r"^(multi)?procesadora\b|licuadora|batidora|\bpicadora\b", re.I), None),      # electrodomésticos: fuera
+    (re.compile(r"^(multi)?procesadora\b|\bprocesadora (manual|de alimentos)\b|licuadora|batidora|\bpicadora\b", re.I), None),      # electrodomésticos: fuera
+    # actualización 30: notebooks, PC y placas madre publicadas dentro de «procesadores» o «placas de video»
+    (re.compile(r"^(?!(funda|mochila|bolso|malet[ií]n|cargador|soporte|base|teclado|mouse|bater[ií]a|pantalla|cable|adaptador|protector|sticker|skin|cover|monitor|auricular)\b)"
+                r"(?:(nb|notebook|laptop)\b|.*\b(vivobook|zenbook|macbook|thinkpad|ideapad|zbook)\b)", re.I), "notebooks"),
+    (re.compile(r"^(aio|all in one|workstation)\b|\bthinkcentre\b|^servidor\b|^hpe proliant\b.*\bservidor|\bproliant\b.*\bservidor rack", re.I), "pcs-armadas"),
+    (re.compile(r"^(mb|mother(board)?)\b", re.I), "motherboards"),
     (re.compile(r"^consola\b|steam ?deck|legion go\b|rog ally|^(combo )?tablet\b|^celular\b", re.I), "otros"),
-    (re.compile(r"^mini ?pc\b|^barebone\b|\bnuc\b.*\bmini\b|^(combo|kit)\b.*\b(ryzen|core ?i[3579]|core ultra|intel core|athlon|pentium)\b", re.I), "pcs-armadas"),
+    (re.compile(r"^mini ?pc\b|^barebone\b|\bnuc\b.*\bmini\b|^(combo|kit)\b.*\b(ryzen|core ?i[3579]|intel ?i[3579]|core ultra|intel core|athlon|pentium)\b", re.I), "pcs-armadas"),
     # Combos/kits que mezclan varios productos (gabinete + fuente, placa de video + fuente…): no son ni fuente ni gabinete
     (re.compile(r"^(combo|kit)\b.*\b(gabinete|placa de video|rtx|radeon|rx ?\d{4}|5060|teclado|mouse)\b.*\bfuente\b|"
                 r"^(combo|kit)\b.*\bfuente\b.*\b(gabinete|placa de video|teclado|mouse)\b|^kit (gabinete|asus)\b|^combo (gabinete|placa)\b", re.I), "otros"),
@@ -129,7 +141,7 @@ _FIX = [
     # («Procesador … (Sin Cooler)» es un procesador, no refrigeración; «Memoria … C/ Disipador» es una memoria).
     # «CPU Cooler …» y «Cooler CPU …» son coolers; los repuestos de servidor (disipador para el segundo CPU) van a «otros»
     (re.compile(r"^(cpu|procesador)\s+(cooler|disipador|fan)\b", re.I), "refrigeracion"),
-    (re.compile(r"\b(heat ?sink|disipador|cooler|fan)\b.*\b(segundo cpu|r\d{3}\b|poweredge|proliant)|^dell (standar|cooler)", re.I), "otros"),
+    (re.compile(r"\b(heat ?sink|disipador|cooler|fan)\b.*\b(segundo cpu|r\d{3}\b|poweredge|proliant)|^dell (standar|cooler|heat ?sink)", re.I), "otros"),
     (re.compile(r"^((micro\s?)?procesador(es)?|microprocesador(es)?|proces\.|cpu\b)|^micro\s+(amd|intel|ryzen|core|athlon|pentium|celeron)\b", re.I), "procesadores"),
     (re.compile(r"^memorias?\s+(micro ?)?(sd|flash)", re.I), "almacenamiento"),
     (re.compile(r"^memorias?\b.*\b(ddr[2345]|ram)\b|^ram\b", re.I), "memorias-ram"),

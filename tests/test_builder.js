@@ -108,4 +108,21 @@ t("el armado se guarda en la dirección y se recupera igual", () => {
   assert.deepStrictEqual(E.decode(E.encode(b)), b);
   assert.deepStrictEqual(E.decode("zzz=1;cpu="), {});
 });
+t("sin excepción: procesadores sin placas a la venta y memorias que no entran en ninguna PC actual", () => {
+  const old = { id: "c9", name: "Procesador Intel Pentium G4560 LGA1151 Kaby Lake", category: "procesadores", offers: [{ store: "T", price_cash: 1, stock: true }] };
+  const r = E.check("cpu", E.attrs("cpu", old), {});
+  assert.strictEqual(r.s, "no"); assert(/ya no hay motherboards/.test(r.res[0].txt));
+  assert.strictEqual(chk("cpu", "c1", {}).s, "ok");
+  const ddr3 = { id: "r9", name: "Memoria Kingston 8GB DDR3 1600", category: "memorias-ram", offers: [] };
+  assert.strictEqual(E.check("ram", E.attrs("ram", ddr3), {}).s, "no");
+  const sodimm = { id: "r8", name: "Memoria Kingston 16GB DDR5 5600 Notebook", category: "memorias-ram", offers: [] };
+  assert.strictEqual(E.check("ram", E.attrs("ram", sodimm), {}).s, "no");
+  assert.strictEqual(chk("ram", "r1", {}).s, "ok");
+});
+t("marca para las pestañas y generación para «Recomendados»", () => {
+  assert.strictEqual(E.brand("cpu", byId("c1")), "AMD"); assert.strictEqual(E.brand("cpu", byId("c3")), "Intel");
+  assert.strictEqual(E.brand("mobo", byId("m3")), "AMD"); assert.strictEqual(E.brand("gpu", byId("g1")), "NVIDIA");
+  assert(E.gen("cpu", A("cpu", "c1")) > E.gen("cpu", A("cpu", "c2")));      // AM5 antes que LGA1700
+  const R = E.candidates("cpu", {}, PR); assert(R.ok.every(r => r.b && typeof r.n === "number" && typeof r.gen === "number"));
+});
 console.log(`armado pieza por pieza: ${n} pruebas OK`);

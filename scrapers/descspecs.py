@@ -158,7 +158,7 @@ def refresh(groups, all_items, today=None):
         for o, f in sorted(cands, key=lambda x: -len(x[1])):
             for k, rec in f.items():
                 if k in merged:
-                    if merged[k]["v"] != rec["v"]:
+                    if merged[k] is not None and merged[k]["v"] != rec["v"]:   # (ya descartado: se mantiene descartado)
                         merged[k] = None                  # dos tiendas se contradicen: no se publica ese dato
                     continue
                 merged[k], origin[k] = dict(rec), o

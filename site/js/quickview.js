@@ -25,6 +25,8 @@
       b.title = b.ariaLabel = on ? "Dejar de seguir el precio" : "Seguir el precio (te avisamos en Productos si cambia)"; });
     document.querySelectorAll("[data-ql]").forEach(b => { const on = LIST.includes(b.dataset.ql); b.classList.toggle("on", on); b.textContent = b.dataset.long ? (on ? "✓ En mi lista (quitar)" : "+ Agregar a mi lista") : (on ? "✓" : "+");
       b.title = b.ariaLabel = on ? "Quitar de mi lista" : "Agregar a mi lista de compra"; });
+    document.querySelectorAll("[data-qc]").forEach(b => { const g = byId.get(b.dataset.qc), on = !!(g && root.CT && root.CT.cmp && root.CT.cmp.has(g.id, g.category)); b.classList.toggle("on", on);
+      b.textContent = on ? "✓ En la comparación (quitar)" : "⚖ Agregar a la comparación"; });
     document.querySelectorAll("[data-qall]").forEach(b => { const ids = b.dataset.qall.split(",").filter(Boolean), all = ids.length && ids.every(id => LIST.includes(id));
       b.classList.toggle("on", all); b.textContent = all ? "✓ Configuración en mi lista" : (ids.length === 1 ? "🛒 Agregar la pieza a mi lista" : `🛒 Agregar las ${ids.length} piezas a mi lista`); });
   }
@@ -38,6 +40,13 @@
     if (all) ids.forEach(id => { const i = LIST.indexOf(id); if (i >= 0) LIST.splice(i, 1); }); else ids.forEach(id => { if (!LIST.includes(id)) LIST.push(id); });
     write("lista", LIST); count(); announce(all ? "Quitaste la configuración de tu lista" : "Agregaste la configuración a tu lista"); syncButtons(); };
 
+  /* «Agregar a la comparación»: una comparación por tipo de producto (ver CT.cmp en lib.js) */
+  QV.toggleCmp = id => { const g = byId.get(id); if (!g || !root.CT || !root.CT.cmp) return; const C = root.CT.cmp, r = C.toggle(id, g.category);
+    const l = root.CT.catName(g.category).toLowerCase(), max = root.CT.CMP_MAX;
+    const t = r.full ? `Ya tenés ${max} ${l} para comparar: quitá uno en Comparar para sumar otro.` : r.on ? `Agregado a la comparación de ${l} (${r.n} de ${max}).` : "Quitado de la comparación.";
+    announce(t); const box = document.getElementById("qv-cmp");
+    if (box) box.innerHTML = `<div class="note" style="margin:-4px 0 10px"><b>${esc(t)}</b>${C.list(g.category).length ? ` <a href="comparar.html#cat=${encodeURIComponent(g.category)}">Ver comparación →</a>` : ""}</div>`;
+    syncButtons(); };
   /* botones para poner al lado de un producto */
   QV.btns = id => `<span class="qv-b"><button type="button" class="qv-f" data-qf="${esc(id)}">☆</button><button type="button" class="qv-l" data-ql="${esc(id)}">+</button></span>`;
   QV.link = (g, text) => `<a href="producto.html?id=${encodeURIComponent(g.id)}" data-qv="${esc(g.id)}">${esc(text ?? g.name)}</a>`;
@@ -76,7 +85,8 @@
       <div class="qv-top"><div class="qv-im">${g.image ? `<img src="${esc(g.image)}" alt="" loading="lazy" onerror="this.remove()">` : (root.ICONS ? root.ICONS.svg(g.category || "otros", 44) : "")}</div>
       <div><h3>${esc(g.name)}</h3><div class="qv-p">${ARS(price(b))}</div><div class="note">Precio más bajo con stock · ${esc(b.store)}</div></div></div>
       <div class="qv-acts"><button type="button" class="btn" data-qf="${esc(g.id)}" data-long="1"></button><button type="button" class="btn pri" data-ql="${esc(g.id)}" data-long="1"></button>
-      <a class="btn" href="producto.html?id=${encodeURIComponent(g.id)}">Ver ficha e historial →</a></div>
+      <button type="button" class="btn" data-qc="${esc(g.id)}"></button>
+      <a class="btn" href="producto.html?id=${encodeURIComponent(g.id)}">Ver ficha e historial →</a></div><div id="qv-cmp" role="status"></div>
       <table>${rows}</table>`;
     document.querySelector("#qv-box .qv-x").onclick = QV.close;
     syncButtons();
@@ -87,8 +97,9 @@
 
   /* un solo manejador para toda la página (sirve también para lo que se dibuja después) */
   document.addEventListener("click", e => {
-    const t = e.target.closest("[data-qf],[data-ql],[data-qall],[data-qv]"); if (!t) return;
-    if (t.dataset.qf) { e.preventDefault(); QV.toggleFollow(t.dataset.qf); }
+    const t = e.target.closest("[data-qf],[data-ql],[data-qall],[data-qv],[data-qc]"); if (!t) return;
+    if (t.dataset.qc) { e.preventDefault(); QV.toggleCmp(t.dataset.qc); }
+    else if (t.dataset.qf) { e.preventDefault(); QV.toggleFollow(t.dataset.qf); }
     else if (t.dataset.ql) { e.preventDefault(); QV.toggleList(t.dataset.ql); }
     else if (t.dataset.qall) { e.preventDefault(); QV.addAll(t.dataset.qall.split(",").filter(Boolean)); }
     else if (t.dataset.qv && !e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) { if (QV.open(t.dataset.qv)) e.preventDefault(); }   // Ctrl+clic: abre la ficha en otra pestaña

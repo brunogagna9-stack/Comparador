@@ -6,6 +6,26 @@
 
   /* ---------- utilidades ---------- */
   CT.esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  /* Comparaciones guardadas en el navegador: una por tipo de producto («comparar»: {categoría: [ids]}), hasta 4 cada una.
+     Así se pueden mandar procesadores y placas de video desde Productos sin mezclarlos: cada tipo es su propia comparación. */
+  // nombre de una categoría aunque la página no cargue compare.js (que define CT.CATS)
+  CT.catName = k => (CT.CATS && CT.CATS[k]) || ({ "placas-de-video": "Placas de video", procesadores: "Procesadores", motherboards: "Placas madre", "memorias-ram": "Memorias RAM",
+    almacenamiento: "SSD y discos", fuentes: "Fuentes", gabinetes: "Gabinetes", refrigeracion: "Refrigeración", monitores: "Monitores", notebooks: "Notebooks",
+    "pcs-armadas": "PC armadas", mouses: "Mouse", teclados: "Teclados", auriculares: "Auriculares" })[k] || String(k || "").replace(/-/g, " ");
+  CT.CMP_MAX = 4;
+  CT.cmp = {
+    all() { try { const v = JSON.parse(localStorage.getItem("comparar") || "{}"); return v && typeof v === "object" && !Array.isArray(v) ? v : {}; } catch (e) { return {}; } },
+    save(v) { try { localStorage.setItem("comparar", JSON.stringify(v)); } catch (e) { } },
+    list(cat) { return (this.all()[cat] || []).slice(0, CT.CMP_MAX); },
+    has(id, cat) { return this.list(cat).includes(id); },
+    set(cat, ids) { const v = this.all(); if (ids.length) v[cat] = ids.slice(0, CT.CMP_MAX); else delete v[cat]; this.save(v); },
+    /* agrega o quita; devuelve {on, n, full} */
+    toggle(id, cat) { const l = this.list(cat), i = l.indexOf(id);
+      if (i >= 0) { l.splice(i, 1); this.set(cat, l); return { on: false, n: l.length, full: false }; }
+      if (l.length >= CT.CMP_MAX) return { on: false, n: l.length, full: true };
+      l.push(id); this.set(cat, l); return { on: true, n: l.length, full: false }; },
+    count() { return Object.values(this.all()).reduce((a, l) => a + (Array.isArray(l) ? l.length : 0), 0); },
+  };
   CT.ARS = n => "$" + Math.round(n).toLocaleString("es-AR");
   CT.price = o => o.price_cash ?? o.price_list;
   /* Números de página para el paginador: siempre la primera y la última, la actual con sus vecinas, y "…" en los saltos. */
@@ -37,6 +57,11 @@
     return m && [2, 3, 4, 6, 8, 10, 12, 16, 20, 24, 32, 48].includes(+m[1]) ? +m[1] : null;
   }
   CT.vramOf = vramOf;
+  /* Nombre limpio para reconocer el modelo: sin ™ ® ©, «16G» = «16GB», «1030GT» = «GT 1030», «G210» = «GT 210». */
+  const hwName = n => String(n || "").replace(/[™®©]/g, " ").replace(/\s+/g, " ");
+  // solo para placas de video: «16G» = «16GB», «1030GT» = «GT 1030», «G210» = «GT 210» (en procesadores «5600GT» es otra cosa)
+  const gpuName = n => hwName(n).replace(/\b(\d{1,2})\s?G\b(?![bB])/g, "$1GB").replace(/\b(1030|710|730|740|610)\s?GT\b/i, "GT $1").replace(/\bG(210|710|730)\b/i, "GT $1");
+  CT.hwName = hwName; CT.gpuName = gpuName;
 
   function capacity(txt) { // devuelve GB
     const m = txt.match(/(\d+(?:[.,]\d+)?)\s?(tb|gb)\b/i);
@@ -239,15 +264,28 @@
     /* coincidencia de productos del catálogo con la base de hardware */
     const gpuTests = HW.gpus.map(g => [g, rxm(g.m, g.x)]);
     const cpuTests = HW.cpus.map(c => [c, rxm(c.m)]);
-    C.hwGpu = (name, vram) => { if (NOT_PC.test(name)) return null; const v = vram === undefined ? vramOf(name) : vram; // en PC armadas la VRAM sale del análisis del título, no del primer "GB"
+    C.hwGpu = (name, vram) => { if (NOT_PC.test(name)) return null; name = gpuName(name); const v = vram === undefined ? vramOf(name) : vram; // en PC armadas la VRAM sale del análisis del título, no del primer "GB"
       const hit = gpuTests.find(([g, t]) => t(name) && (v == null || v === g.vram)); return hit ? hit[0] : null; };
     /* Placas que solo se comparan (sin datos suficientes para recomendarlas). Solo las usan Comparar y la página de producto. */
     const gpuxTests = (HW.gpux || []).map(g => [g, rxm(g.m, g.x)]);
-    C.hwGpuX = (name, vram) => { if (NOT_PC.test(name)) return null; const v = vram === undefined ? vramOf(name) : vram;
+    C.hwGpuX = (name, vram) => { if (NOT_PC.test(name)) return null; name = gpuName(name); const v = vram === undefined ? vramOf(name) : vram;
       const hit = gpuxTests.find(([g, t]) => t(name) && (v == null || v === g.vram)); return hit ? hit[0] : null; };
     /* "Sin Cooler" / "con cooler Wraith" describen al procesador, no lo convierten en un cooler */
     const cpuClean = n => n.replace(/\((?:simil|similar|equivalente|tipo)\b[^)]*\)|\b(?:simil|similar a|equivalente a)\s+\S+(?:\s+\S+)?/ig, " ").replace(/\+?\s*\bwraith\s+(?:stealth|spire|prism|max)\b(?:\s+cooler)?/ig, " ").replace(/\+\s*(?:cooler|disipador)\b/ig, " ").replace(/\b(?:sin|con|incluye|no incluye|s\/|c\/)\s?(?:cooler|disipador|ventilador|fan)(?:\s+(?:wraith|stock|original|stealth|prism))?(?:\s+(?:stealth|spire))?/ig, " ");
-    C.hwCpu = name => { name = cpuClean(name); if (/cooler|disipador|fan|pasta|\bkit\b/i.test(name)) return null; const hit = cpuTests.find(([c, t]) => t(name)); return hit ? hit[0] : null; };
+    /* Por qué un producto no tiene ficha (para decirlo en lugar de un aviso genérico). */
+    C.hwWhy = (name, cat) => {
+      if (cat === "placas-de-video") {
+        const n = gpuName(name), v = vramOf(n), fam = g => { let m = g.m; if (/\.\*/.test(m)) { const f = m.split("|")[0].split(".*")[0]; try { new RegExp(f); m = f; } catch (e) { } } return rxm(m, g.x)(n); }, all = [...HW.gpus, ...(HW.gpux || [])].filter(fam);   // familia del modelo, sin exigir la memoria
+        const sizes = [...new Set(all.map(g => g.vram))].sort((a, b) => a - b);
+        if (!all.length) return "el modelo no está en nuestra base de fichas oficiales";
+        if (v == null && sizes.length > 1) return `la tienda no indica la memoria y el ${all[0].name.replace(/ \(.*\)| \d+GB$/, "")} existe en ${sizes.join(" y ")} GB, que rinden distinto`;
+        if (v != null && !sizes.includes(v)) return `la tienda dice ${v} GB y el fabricante del chip lo hace en ${sizes.join(" o ")} GB: puede ser un error del título o una variante no oficial`;
+        return null;
+      }
+      if (cat === "procesadores") return C.hwCpu(name) ? null : "el modelo no está en nuestra base de fichas oficiales";
+      return null;
+    };
+    C.hwCpu = name => { name = cpuClean(hwName(name).replace(/\bvideo\s?cooler\b/ig, "video").replace(/\b(?:y|e)\s+(?:cooler|disipador)\b/ig, " ")); if (/cooler|disipador|fan|pasta|\bkit\b/i.test(name)) return null; const hit = cpuTests.find(([c, t]) => t(name)); return hit ? hit[0] : null; };
 
     const isPc = n => /^pc\b|\bpc (armada|gamer|powered)|powered by|notebook|combo|\bkit\b|all in one/i.test(n);
     C.findGpu = g => { const t = rxm(g.m, g.x);

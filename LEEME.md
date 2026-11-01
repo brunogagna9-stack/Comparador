@@ -430,3 +430,29 @@ Vale para **Armado de PC** y para las PC por componentes de **Encontrá tu equip
 - **Catálogo liviano para «Armalo vos»**: la actualización de datos genera `site/data/armar.json` (solo las 9 categorías de
   piezas, unos 6,5 MB en vez de 17 MB); la página carga en menos de la mitad del tiempo. Si todavía no existe, usa
   `products.json`.
+
+## Actualización 30 — Más fichas técnicas, tiendas ocultas, comparar desde Productos y fotos en Armado de PC
+- **Fichas técnicas nuevas** (`make_hardware.py`, sección «actualización 30»), todas leídas en la ficha oficial el 1-nov-2026 y
+  sin puntaje de juegos inventado: 39 procesadores (Intel 10.ª, 11.ª, 13.ª y 14.ª gen sin K, Celeron/Pentium, Core Ultra 5 235,
+  Ryzen 5 3600, 4600G, 5300G, 5600GE, 5700GE, PRO 5650G, 5500X3D, 7700X3D, Athlon 3000G) y 9 placas de video (RX 7600 XT,
+  RX 7900 GRE, RX 6500 XT 4/8 GB, RX 6400, RTX 4060 Ti 16 GB, RTX 3060 8 GB, GTX 1630, GT 710).
+- **Reconocimiento de nombres**: «RTX™», «16G» = 16 GB, «1030GT», «C/ Video y Cooler», «SIN VIDEOCOOLER». Placas de video sin ficha:
+  147 → 90; procesadores: 95 → 37 (los que quedan son servidores, notebooks mal clasificados y modelos sin página global de AMD).
+- **El aviso «Falta la ficha técnica» dice el motivo**: «la tienda no indica la memoria y el RTX 5060 Ti existe en 8 y 16 GB»,
+  «la tienda dice 8 GB y el fabricante lo hace en 16 GB», o «el modelo no está en nuestra base».
+- **Categorías corregidas**: notebooks, PC, servidores y placas madre publicadas como procesador o placa de video; una
+  procesadora de cocina se descarta.
+- **Tiendas ocultas**: en `site/data/config.json` una tienda con `"ocultar": true` no se publica en ninguna parte (sus datos
+  quedan en `raw/`; para volver a mostrarla se borra esa marca). **Try** queda oculta (bloquea la lectura con HTTP 403). En el
+  menú de Productos además se ocultan solas las tiendas con 0 productos o que fallaron en la última lectura.
+- **Lector de Rocket Hard, Acuario Insumos, Megasoft, Hyper Gaming y Noxie Store**: la «página no existe» (404) después de la
+  última página de una categoría ahora es el fin de esa categoría; antes descartaba la tienda entera.
+- **Descripciones de tienda (mouses, teclados, auriculares)**: se rompía cuando dos tiendas se contradecían y una tercera repetía
+  el dato; ahora ese dato se descarta y el resto se publica.
+- **Productos**: la categoría se muestra como lista hasta elegir una y después se contrae («Categoría: X · Cambiar»); el filtro
+  de marca aparece solo con una categoría elegida.
+- **Agregar a la comparación** desde Productos (tarjeta y ventana), la ficha de producto y la vista rápida. Hay una comparación
+  por tipo de producto (hasta 4 cada una), guardada en el navegador: en Comparar aparecen como «Tus comparaciones» y cada una
+  se abre por separado; nunca se mezclan procesadores con placas de video.
+- **Armado de PC**: cada sugerencia muestra la foto del producto (o el ícono de su categoría) y cada componente su ícono.
+- **Icecat**: `.github/workflows/actualizar.yml` le pasa el secreto `ICECAT_USER` al paso de lectura (sin esto queda apagado).
