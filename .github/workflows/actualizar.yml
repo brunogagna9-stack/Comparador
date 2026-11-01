@@ -34,6 +34,8 @@ jobs:
         run: python tests/run_tests.py
       - name: Recolectar precios
         run: python build_data.py
+        env:
+          ICECAT_USER: ${{ secrets.ICECAT_USER }}
       - name: Verificar que los datos sean válidos (si no, no se publica)
         run: python scripts/check_data.py
       - name: Copiar el sitio listo para publicar (antes de tocar git)
