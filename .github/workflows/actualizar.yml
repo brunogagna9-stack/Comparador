@@ -38,6 +38,16 @@ jobs:
           ICECAT_USER: ${{ secrets.ICECAT_USER }}
       - name: Verificar que los datos sean válidos (si no, no se publica)
         run: python scripts/check_data.py
+      - name: Avisos por mail a cuentas (se saltea solo si faltan los secretos; nunca frena la publicación)
+        if: github.event_name != 'push'
+        continue-on-error: true
+        timeout-minutes: 10
+        run: python scripts/notify.py
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          NOTIFY_FROM: ${{ secrets.NOTIFY_FROM }}
       - name: Copiar el sitio listo para publicar (antes de tocar git)
         run: cp -r site "$RUNNER_TEMP/site_publicar"
       - name: Guardar datos en el repositorio
