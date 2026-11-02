@@ -929,3 +929,50 @@ def test_armalo_vos_actualizacion_29():
     for css in ("shared.css", "layout.css"):
         assert "background-attachment:fixed" not in (root / "css" / css).read_text(encoding="utf-8")
     assert "ct-scrolling" in (root / "js" / "layout.js").read_text(encoding="utf-8")
+
+
+def test_actualizacion_30():
+    """Tiendas ocultas, fin de categoría en las tiendas «card-ecommerce», descripciones contradictorias y categorías."""
+    import tempfile, build_data
+    from pathlib import Path
+    from scrapers import cardeco, common, descspecs
+    from scrapers.common import fix_category as f
+    # 1. tienda oculta en config.json: no se publica (sus datos quedan en raw/)
+    with tempfile.TemporaryDirectory() as d:
+        cfg = Path(d) / "config.json"
+        cfg.write_text('{"stores": {"Try": {"ocultar": true}, "Venex": {}}}')
+        assert build_data.hidden_stores(cfg) == {"Try"}
+        cfg.write_text("roto")
+        assert build_data.hidden_stores(cfg) == set()
+    assert "Try" in build_data.hidden_stores()
+    # 2. «página no existe» (404) al pasar la última página = fin de esa categoría, no falla de la tienda
+    html = ('<div class="card-ecommerce"><div class="card-title"><a href="https://x/p-1.html">Mouse Logitech G203</a></div>'
+            '<h4 class="pecio_final" data-precio="$ 20.000"></h4><div class="card-category"><span class="pull-right">En stock</span></div></div>')
+    pages = {"https://x/sitemap.xml": "<loc>https://x/perifericos/</loc><loc>https://x/vieja/</loc>", "https://x/perifericos/": html}
+    def fake(url, **k):
+        if url in pages:
+            return pages[url]
+        common.LOG.append(f"{url} -> HTTP 404"); raise RuntimeError(f"No se pudo leer {url}: HTTP 404")
+    old = cardeco.get; cardeco.get = fake
+    try:
+        common.LOG.clear()
+        r = cardeco.scrape_store("Rocket Hard", "https://x")
+        assert len(r) == 1 and r[0]["price_cash"] == 20000 and common.LOG == []
+    finally:
+        cardeco.get = old
+    # 3. dos tiendas se contradicen y una tercera repite el dato: se descarta sin romper el paso
+    g = [{"id": "m1", "name": "Mouse Logitech G305", "category": "mouses", "offers": [{"store": s, "url": s} for s in "ABC"]}]
+    items = [{"url": "A", "desc": "Mouse inalámbrico. DPI máximo 12000. 6 botones. Peso 99 g"},
+             {"url": "B", "desc": "Mouse inalámbrico. DPI máximo 8000. 6 botones. Peso 99 g"},
+             {"url": "C", "desc": "Mouse inalámbrico DPI máximo 12000, 6 botones"}]
+    out, st = descspecs.refresh(g, items)
+    f1 = list(out.values())[0]["f"]
+    assert st["ok"] and "dpi_max" not in f1 and f1["botones"]["v"] == 6
+    # 4. categorías
+    assert f("LILIANA PROCESADORA MANUAL TWISTMIX 450W ROJO", "procesadores") is None
+    assert f("NB ASUS 15.6 R7-170 16GB 512GB RTX3050", "placas-de-video") == "notebooks"
+    assert f("Mother GIGABYTE X870E Eagle WIFI 7 DDR5 – AM5", "placas-de-video") == "motherboards"
+    assert f("Combo Ecovision Intel I3 12100F + RTX3050 + 8Gb + 240Gb", "placas-de-video") == "pcs-armadas"
+    assert f("Funda para Macbook Air 13", "perifericos") == "perifericos"
+    assert f("Monitor HP Omen 27 165Hz", "monitores") == "monitores"
+    assert f("Procesador AMD Ryzen 5 5600GT", "procesadores") == "procesadores"

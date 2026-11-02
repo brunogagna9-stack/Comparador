@@ -75,4 +75,11 @@ t("se dejaron afuera los filtros con muy pocos datos", () => {
   assert(!FX.defs("refrigeracion").some(d => /socket/i.test(d.l)));
   assert(!FX.defs("monitores").some(d => /LED|LCD/.test(d.l)));
 });
+t("series de procesadores ordenadas por familia (AMD y después Intel), sin cortar ninguna", () => {
+  const d = FX.defs("procesadores").find(x => x.k === "serie");
+  const o = FX.sortOpts(d, [["Core i9", 18], ["Ryzen 9", 3], ["Ryzen 5", 27], ["Core Ultra 9", 3], ["Athlon", 1], ["Core i3", 17], ["Ryzen 3", 7]]).map(x => x[0]);
+  assert.deepStrictEqual(o, ["Ryzen 3", "Ryzen 5", "Ryzen 9", "Athlon", "Core i3", "Core i9", "Core Ultra 9"]);
+  assert.strictEqual(FX.cpuBrand("Procesador AMD Ryzen 9 7900X"), "AMD");
+  assert.strictEqual(FX.cpuBrand("Procesador Intel Core Ultra 9 285K"), "Intel");
+});
 console.log(`filtros por categoría: ${n} pruebas OK`);

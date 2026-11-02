@@ -275,7 +275,7 @@ t("todo procesador con puntaje da sugerencias de placa en los tres resoluciones"
     [0].forEach(r => assert(HW.gpus.some(g => g.p[r] <= cf), "sin sugerencia para " + c.id)); });
   // sin puntaje: el 12100F y los agregados por la auditoría que Tom's Hardware no mide (tienen ficha oficial, no puntaje inventado)
   const sin = HW.cpus.filter(c => !c.s);
-  assert(sin.every(c => c.id === "i3-12100f" || (c.vurl && c.vdate === "2026-10-26")), "todo procesador sin puntaje tiene ficha oficial");
+  assert(sin.every(c => c.id === "i3-12100f" || (c.vurl && ["2026-10-26", "2026-11-01"].includes(c.vdate))), "todo procesador sin puntaje tiene ficha oficial");
   assert(!sin.some(c => c.se), "ninguno tiene puntaje estimado");
 });
 t("el Ryzen 7 5800X existe, se reconoce y no se confunde con X3D / XT", () => {
@@ -309,7 +309,7 @@ t("¿Qué actualizar?: si ya cumple, no inventa cambios; si el CPU limita, ofrec
   assert(lim.steps.some(s => s.kind === "cpu"));
 });
 t("¿Qué actualizar?: lo que no está en la base se dice, no se inventa un puntaje", () => {
-  const r = CU.advise({ text: "Ryzen 5 3600, GTX 960, 8 GB DDR4", res: 0, fps: 60 });
+  const r = CU.advise({ text: "Ryzen 5 2600, GTX 960, 8 GB DDR4", res: 0, fps: 60 });
   assert.strictEqual(r.cur.gF, null); assert.strictEqual(r.cur.cF, null); assert.strictEqual(r.cur.eff, null);
   assert(r.unknown.length === 2 && r.unknown.every(u => u.why.length > 20)); assert.strictEqual(r.o.socketGuess, "AM4");
   assert(r.steps.some(s => s.kind === "ram"), "8 GB de RAM sí se puede evaluar");
@@ -382,7 +382,7 @@ t("con datos incompletos no hay ganador inventado: solo hechos de precio y memor
   const cmp = K.compare([K.item(a), K.item(b)], { res: 1 });
   const cov = K.coverage(cmp);
   assert(cov[0].have > 3, "la RTX 3050 6GB tiene ficha oficial (sin rendimiento medido)");
-  assert(cov[1].have <= 1, "la RTX 3060 8GB no está en la base");
+  assert(cov[1].have > 3, "la RTX 3060 8GB tiene ficha oficial desde la actualización 30 (sin rendimiento medido)");
   assert(cmp.uses.every(u => u.winner == null), "sin datos de las dos no hay ganador");
   assert(cmp.rows.find(r => r.id === "fps").cells[0].tag === "nd", "no se inventa rendimiento");
   const f = K.facts(cmp).map(x => x.text).join("|");
@@ -413,7 +413,7 @@ t("procesadores agregados: se reconocen con sus variantes y con «+ Wraith Steal
   assert.strictEqual(id("Procesador AMD Ryzen 7 7700 5.3GHz Turbo AM5"), "r7-7700");
   assert.strictEqual(id("Procesador AMD Ryzen 7 7700X"), "r7-7700x");
   assert.strictEqual(id("Procesador AMD Ryzen 7 5700X3D"), "r7-5700x3d");
-  assert.strictEqual(id("Procesador AMD Ryzen 5 PRO 5650G 6/12 4.4GHz AM4 Bulk (Simil 5600GT)"), undefined, "un «símil» no es el mismo modelo");
+  assert.strictEqual(id("Procesador AMD Ryzen 5 PRO 5650G 6/12 4.4GHz AM4 Bulk (Simil 5600GT)"), "r5-5650g", "un «símil» no es el mismo modelo: es el 5650G, no el 5600GT");
   assert.strictEqual(id("Cooler AMD Wraith Stealth"), undefined);
   const c = HW.cpus.find(x => x.id === "r5-5600xt");
   assert(c.vurl && c.ver.includes("cores") && c.s == null, "ficha oficial verificada, sin puntaje inventado");
@@ -536,5 +536,27 @@ t("fuente: con placas de 16 pines se prefieren ATX 3.x o se avisa del adaptador;
   const P = C.parts(gpu("rtx-5070ti"), HW.cpus.find(c => c.id === "i5-14400f"), false, "sug", 0);
   const ps = P.find(p => p.slot === "psu"); assert(/16 pines/.test(ps.why) && ps.shop.every(x => /16 pines/.test(x.note)));
   const cs = P.find(p => p.slot === "case"); assert(cs && cs.shop.every(x => /^gab/i.test(x.g.name) && !/kit|fuente/i.test(x.g.name)));
+});
+t("actualización 30: nombres con ™, «16G», fichas nuevas y motivo de «sin ficha»", () => {
+  const K = CT.create(HW, [], {}, null), gid = n => ((K.hwGpu(n) || K.hwGpuX(n)) || {}).id, cid = n => (K.hwCpu(n) || {}).id;
+  assert.strictEqual(gid("Placa de Video ASUS PRIME GeForce RTX™ 5060 Ti 16GB GDDR7 OC Edition"), "rtx-5060ti-16");
+  assert.strictEqual(gid("VGA MSI GeForce RTX 5060 Ti 16G SHADOW 2X OC PLUS"), "rtx-5060ti-16");
+  assert.strictEqual(gid("Video Radeon Gigabyte Gaming RX 7600XT 16GB OC"), "rx-7600xt");
+  assert.strictEqual(gid("Video Geforce Msi Gaming X RTX 4060 TI 16G"), "rtx-4060ti-16");
+  assert.strictEqual(gid("Video Geforce Gigabyte Gaming RTX 3060 8GB OC"), "rtx-3060-8");
+  assert.strictEqual(gid("Placa de Video Peladn Nvidia 1030GT 2Gb Ddr4"), "gt-1030-d4");
+  assert.strictEqual(cid("MICRO AMD (AM4) RYZEN 5 5600GT (100-100001488BOX)"), "r5-5600gt");     // «5600GT» no es una placa GT
+  assert.strictEqual(cid("Procesador Intel Core i7 14700 14va 20 Núcleos 5.4 GHz C/ Video y Cooler"), "i7-14700");
+  assert.strictEqual(cid("MICRO INTEL CORE I3 10105F S/VIDEO C/COOLER BOX S1200"), "i3-10105f");
+  assert.strictEqual(cid("Microprocesador Intel Core I5 11400"), "i5-11400");
+  assert.strictEqual(cid("Microprocesador Intel Core I5 11400F"), "i5-11400f");
+  assert.strictEqual(cid("Micro AMD Athlon 3000G Vega 3 DualCore AM4 BOX"), "a-3000g");
+  assert.strictEqual(cid("Cooler CPU Jiushark JF100rs (1700 / Am5) 220w"), undefined);
+  // todo lo nuevo tiene ficha oficial con fecha y sin puntaje inventado
+  for (const c of HW.cpus.filter(c => c.vdate === "2026-11-01")) { assert(c.vurl && c.s == null, c.id); }
+  for (const g of HW.gpux.filter(g => g.vdate === "2026-11-01")) { assert(g.vurl && g.p == null, g.id); }
+  assert(/8 y 16 GB/.test(K.hwWhy("Placa de Video ASUS Dual RTX 5060 Ti", "placas-de-video")));
+  assert(/dice 8 GB/.test(K.hwWhy("Video Radeon Asus Dual RX 7600XT 8GB OC", "placas-de-video")));
+  assert.strictEqual(K.hwWhy("Video Radeon Gigabyte Gaming RX 7600XT 16GB OC", "placas-de-video"), null);
 });
 console.log(n + " pruebas de JavaScript OK");

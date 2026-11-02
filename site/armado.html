@@ -10,6 +10,14 @@
 <style>
 .vencmp .vc{border:1px solid var(--line2);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:4px;background:var(--card2)}.vencmp .vc.on{border-color:var(--acc);box-shadow:0 0 0 2px color-mix(in srgb,var(--acc) 30%,transparent)}.vencmp .vh{font-weight:800;font-size:16px}.vencmp .btn{margin-top:6px;align-self:flex-start}
 @media(max-width:640px){table.gt,table.gt tbody,table.gt tr,table.gt td{display:block;width:100%}table.gt tr:first-child{display:none}table.gt tr{padding:12px 14px;border-bottom:1px solid var(--line2)}table.gt td{border:0;padding:3px 0}table.gt td:nth-child(2){padding:6px 0}}
+
+/* sugerencias con foto (actualización 30) */
+.shopi>div{display:grid!important;grid-template-columns:52px minmax(0,1fr) auto;align-items:center;gap:10px!important;padding:6px 0!important;border-top:1px solid var(--line)}
+.shopi>div:first-child{border-top:0}
+.shopi .th{width:52px;height:52px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none}
+.shopi .th img{max-width:100%;max-height:100%;object-fit:contain}.shopi .th svg{width:24px;height:24px;color:#94a3b8}
+.part .pt{display:flex;align-items:center;gap:8px}.part .pt svg{width:18px;height:18px;color:var(--acc);flex:none}
+@media(max-width:520px){.shopi>div{grid-template-columns:44px minmax(0,1fr)}.shopi>div>span:last-child{grid-column:2}.shopi .th{width:44px;height:44px}}
 </style>
 </head>
 <body data-page="armado">
@@ -41,7 +49,7 @@
 <h2>De dónde salen los datos</h2>
 <div class="panel note" id="src"></div>
 </main>
-<script src="js/lib.js"></script><script src="js/rep.js"></script><script src="js/quickview.js"></script>
+<script src="js/lib.js"></script><script src="js/icons.js"></script><script src="js/rep.js"></script><script src="js/quickview.js"></script>
 <script>
 const $=s=>document.querySelector(s),{ARS,esc,RES}=CT;
 let HW,PR=[],META={},C,S={mode:"gpu",res:0,id:null,ven:""};
@@ -51,9 +59,12 @@ function shopHtml(items,extra){
   if(!PR.length)return '<div class="note">Sin datos de precios cargados.</div>';
   if(!items.length)return '<div class="note">No encontré opciones con stock ahora mismo en el comparador.</div>';
   // el nombre abre la vista rápida (Seguir precio / Agregar a mi lista); ☆ y + lo hacen directo desde la fila
-  return '<div class="shop">'+items.map(x=>`<div><span>${QV.link(x.g,x.g.name.slice(0,70))} <span class="note">· <a href="${esc(x.o.url)}" target="_blank" rel="noopener nofollow">${esc(x.o.store)} ↗</a>${REP.badge(x.o.store)}${x.o.stock===true?"":" · stock sin confirmar"}${extra?extra(x):""}</span>${x.note?`<div class="note" style="color:${x.bios==="bios"?"var(--warn)":"inherit"}">${esc(x.note)}</div>`:""}</span><span style="white-space:nowrap"><b>${ARS(x.p)}</b>${QV.btns(x.g.id)}</span></div>`).join("")+'</div>';
+  return '<div class="shop shopi">'+items.map(x=>`<div><span class="th" aria-hidden="true">${thumb(x.g)}</span><span>${QV.link(x.g,x.g.name.slice(0,70))} <span class="note">· <a href="${esc(x.o.url)}" target="_blank" rel="noopener nofollow">${esc(x.o.store)} ↗</a>${REP.badge(x.o.store)}${x.o.stock===true?"":" · stock sin confirmar"}${extra?extra(x):""}</span>${x.note?`<div class="note" style="color:${x.bios==="bios"?"var(--warn)":"inherit"}">${esc(x.note)}</div>`:""}</span><span style="white-space:nowrap"><b>${ARS(x.p)}</b>${QV.btns(x.g.id)}</span></div>`).join("")+'</div>';
 }
-const partHtml=p=>`<div class="part"><b>${esc(p.title)}</b><div class="why">${esc(p.why)}</div>${shopHtml(p.shop,p.slot==="psu"?x=>{const m=x.g.name.match(/(\d{3,4})\s?w/i);return m?" · "+m[1]+" W":""}:null)}</div>`;
+// miniatura del producto (si la foto no carga, el ícono de su categoría)
+const thumb=g=>g.image?`<img loading="lazy" decoding="async" width="52" height="52" src="${esc(g.image)}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{innerHTML:ICONS.svg('${esc(g.category)}',24)}))">`:ICONS.svg(g.category||"otros",24);
+const SLOTICO={cpu:"procesadores",gpu:"placas-de-video",ram:"memorias-ram",ssd:"almacenamiento",psu:"fuentes",mobo:"motherboards",cooler:"refrigeracion",case:"gabinetes"};
+const partHtml=p=>`<div class="part"><b class="pt">${SLOTICO[p.slot]?ICONS.svg(SLOTICO[p.slot],18):""}${esc(p.title)}</b><div class="why">${esc(p.why)}</div>${shopHtml(p.shop,p.slot==="psu"?x=>{const m=x.g.name.match(/(\d{3,4})\s?w/i);return m?" · "+m[1]+" W":""}:null)}</div>`;
 function totalHtml(t){
   if(!PR.length)return"";
   const faltan=t.missing.length?`<small>Sin precio en el comparador: ${t.missing.map(esc).join(", ")}. El total es parcial.</small>`:`<small>Suma la opción más barata con stock de cada parte (${t.priced} de ${t.count}).</small>`;

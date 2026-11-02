@@ -88,7 +88,10 @@
   /* ---------------- motor ---------------- */
   CT.makeAssistant = function (data, opts) {
     opts = opts || {};
-    const { HW, PR, META, SPECS, STORES } = data;
+    const { HW, PR, META, SPECS } = data;
+    // tiendas ocultas (config.json «ocultar» o marcadas en meta.json): el asistente no las menciona
+    const hid = n => !!(((META || {}).stores || {})[n] || {}).hidden || !!(((data.CFG || {}).stores || {})[n] || {}).ocultar;
+    const STORES = data.STORES && data.STORES.stores ? Object.assign({}, data.STORES, { stores: Object.fromEntries(Object.entries(data.STORES.stores).filter(([n]) => !hid(n))) }) : data.STORES;
     const C = CT.create(HW, PR, META || {}, SPECS || null);
     if (CT.makeFinder && !C.recommend) CT.makeFinder(C); else if (CT.makeCompare && !C.compare) CT.makeCompare(C);
     const A = { C, state: opts.state || {}, endpoint: (data.CFG && data.CFG.assistant && data.CFG.assistant.endpoint) || opts.endpoint || null };

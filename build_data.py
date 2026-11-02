@@ -418,6 +418,15 @@ def armar_catalog(groups):
     return out
 
 
+def hidden_stores(path=None):
+    """Tiendas ocultas en todo el sitio (config.json: "ocultar": true). Sus datos se conservan en raw/ y vuelven al quitar la marca."""
+    try:
+        cfg = json.loads(Path(path or DATA / "config.json").read_text(encoding="utf-8"))
+        return {k for k, v in cfg.get("stores", {}).items() if isinstance(v, dict) and v.get("ocultar")}
+    except Exception:
+        return set()
+
+
 def main(only):
     from scrapers import SCRAPERS, common
     DATA.mkdir(parents=True, exist_ok=True)
@@ -426,11 +435,12 @@ def main(only):
     seed_from_raw(hist)
     status, all_items = {}, []
     t0 = time.monotonic()
+    hidden = hidden_stores()   # se siguen leyendo para saber su estado, pero no se publican
     for store in store_order(SCRAPERS, DATA / "meta.json"):
         fn = SCRAPERS[store]
         raw = RAW / f"{store}.json"
         if only and store not in only:
-            if raw.exists():
+            if raw.exists() and store not in hidden:
                 all_items += read_raw(raw)
             continue
         if (time.monotonic() - t0) / 60 > BUDGET_MIN:
@@ -439,6 +449,9 @@ def main(only):
             items = read_raw(raw) if raw.exists() else []
             status[store] = {"ok": False, "count": len(items), "stale": bool(items), "skipped": True,
                              "error": "No alcanzó el tiempo de esta corrida: se muestran los precios de la lectura anterior."}
+            if store in hidden:
+                status[store]["hidden"] = True
+                continue
             all_items += items
             continue
         common.LOG.clear()
@@ -453,6 +466,9 @@ def main(only):
             print(f"[{store}] ERROR: {why}")
             items = read_raw(raw) if raw.exists() else []
             status[store] = {"ok": False, "count": len(items), "error": why[:400], "stale": bool(items)}
+        if store in hidden:
+            status[store]["hidden"] = True
+            continue
         all_items += items
     today = dt.date.today().isoformat()
     groups = build(all_items, load_extra_images())
