@@ -47,5 +47,19 @@
   "_ayuda": "Avisos de bajas de precio. Pegá acá, entre comillas, el enlace de suscripción de tu formulario de Brevo (email_form_url) y/o el enlace de invitación de tu canal de WhatsApp (whatsapp_channel_url). Si dejás null, el botón «Avisos» no se muestra. Estos enlaces son públicos: NUNCA pegues claves acá.",
   "email_form_url": null,
   "whatsapp_channel_url": null
+ },
+ "contact_email": null,
+ "titular": null,
+ "_ayuda_contacto": "contact_email: el correo del sitio (aparece en el pie, en Contacto y en las políticas). titular: nombre del responsable que figura en la Política de privacidad. null = no se muestra.",
+ "accounts": {
+  "_ayuda": "Cuentas de usuario (opcional). APAGADAS mientras estén en null. Pegá la «Project URL» de Supabase (https://xxxx.supabase.co) y la clave PUBLISHABLE (empieza con sb_publishable_). Esa clave es pública por diseño. NUNCA pegues acá la clave secret (sb_secret_): esa va solo en los secretos de GitHub. Si la pegaras por error, el sitio se niega a usarla.",
+  "supabase_url": null,
+  "supabase_publishable_key": null
+ },
+ "ads": {
+  "_ayuda": "Publicidad APAGADA mientras client sea null. Cuando Google AdSense apruebe el sitio, pegá acá tu identificador de editor (ca-pub-...) en client y los números de bloque (data-ad-slot) en slots. analytics_id: identificador de medición de Google Analytics (G-...), opcional. Al activarlos aparece un aviso de cookies y las políticas lo informan solas. Los anuncios nunca cambian el orden de los resultados.",
+  "client": null,
+  "analytics_id": null,
+  "slots": {"inicio": null, "productos": null}
  }
 }

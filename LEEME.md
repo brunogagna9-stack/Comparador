@@ -456,3 +456,96 @@ Vale para **Armado de PC** y para las PC por componentes de **Encontrá tu equip
   se abre por separado; nunca se mezclan procesadores con placas de video.
 - **Armado de PC**: cada sugerencia muestra la foto del producto (o el ícono de su categoría) y cada componente su ícono.
 - **Icecat**: `.github/workflows/actualizar.yml` le pasa el secreto `ICECAT_USER` al paso de lectura (sin esto queda apagado).
+
+## Actualización 31 — Páginas legales, pie nuevo, «Mi historial» y lugar para publicidad (apagado)
+- **Páginas nuevas**: `privacidad.html` (qué se guarda en el navegador, servicios de terceros, cookies, derechos de la Ley 25.326
+  con la leyenda de la AAIP), `terminos.html`, `preguntas.html` (con datos estructurados para Google) y `contacto.html`. El estado
+  de cada servicio opcional (asistente con IA, avisos, publicidad, medición) se lee de `data/config.json`, así que lo que dicen las
+  políticas siempre coincide con lo que hace el sitio. **Es una base redactada con cuidado, no asesoramiento legal.**
+- **Pie de página** en dos bloques: Información (Cómo funciona, Tiendas, Preguntas frecuentes, Datos y confiabilidad, Mi historial,
+  GitHub) y Legal y contacto (Privacidad, Términos, Contacto y el correo si está configurado). `tiendas.html` pasó al encabezado común.
+- **Correo y titular**: en `data/config.json`, `contact_email` y `titular` (null = no se muestran). Al cargarlos aparecen solos en
+  el pie, en Contacto y en las políticas.
+- **Mi historial** (`historial.html`, ícono de reloj en el encabezado): armados recomendados (si la persona se queda 4 s en una
+  elección), armados de «Armalo vos» (desde 2 piezas) y comparaciones (desde 2 productos). Se guardan solo en el navegador, hasta
+  50 de cada tipo; en la misma visita se actualiza la misma entrada. Botón «Eliminar» por entrada y «Eliminar todo», siempre con la
+  ventana «¿Estás seguro de eliminarlo de tu historial?». Armado de PC ahora guarda la elección en la dirección
+  (`armado.html?modo=gpu&id=…&res=…&marca=…`) para poder reabrirla.
+- **Publicidad y medición APAGADAS** hasta configurar `ads.client` (ca-pub-…), `ads.slots` y opcionalmente `ads.analytics_id` (G-…)
+  en `data/config.json`. Al activarlas: se cargan los scripts de Google, aparecen los bloques marcados «Publicidad» (portada y
+  debajo del listado de Productos) y un aviso de cookies que se muestra una sola vez.
+- **`robots.txt` y `sitemap.xml`**: el sitemap se puede cargar en Google Search Console; los buscadores solo leen robots.txt en la
+  raíz del dominio, así que ese archivo empieza a valer cuando el sitio tenga dominio propio.
+- Pruebas: `tests/test_history.js` y `test_actualizacion_31_paginas`.
+
+## Actualización 32 — Cuentas de usuario (Supabase) y avisos de precios por mail (Brevo) · APAGADO hasta configurarlo
+Mientras no completes la configuración, el sitio funciona exactamente igual que antes: no aparece ningún botón nuevo, no se
+carga nada de Supabase y no se envía ningún mail.
+
+**Qué hace cuando está activado**
+- Botón de persona en el encabezado → `cuenta.html`: crear cuenta (mail + contraseña de 8 caracteres o más, aceptando Términos y
+  Privacidad), confirmar el mail, ingresar, recuperar contraseña, cerrar sesión (con opción de borrar los datos del navegador) y
+  **eliminar la cuenta** con todos sus datos (con ventana de confirmación).
+- Los productos que se siguen (☆) y el historial de armados y comparaciones se guardan también en la cuenta y aparecen en todos
+  los dispositivos. Lo que se borra en un dispositivo se borra en los demás. Lo que la persona ya tenía guardado en el navegador
+  se suma a la cuenta la primera vez que ingresa.
+- **Avisos por mail** (cada persona elige en «Mi cuenta»): baja de precio de 2 % o más, suba de 2 % o más, y aparición de
+  **cuotas sin interés publicadas por la tienda**. Las promociones de bancos que la tienda no muestra en su sitio no se pueden
+  leer, así que no se informan. Un solo mail por persona y por lectura de precios. No se avisa con precios sospechosos ni sin stock.
+- Seguridad: cada cuenta solo ve sus datos (reglas «Row Level Security» de la base, probadas). La web usa solo la clave
+  **publishable**, que es pública por diseño. Si alguien pega por error la clave **secret** en `config.json`, el sitio se niega
+  a usarla y muestra un aviso.
+- Política de privacidad, Términos y Preguntas frecuentes ya explican las cuentas. El estado (Activado o Hoy desactivado) se
+  muestra solo según `config.json`.
+
+**Cómo activarlo, paso a paso** (todo gratis; hacelo en este orden)
+
+*A. Supabase (las cuentas)*
+1. Entrá a https://supabase.com, creá una cuenta y un proyecto nuevo («New project»). Elegí una contraseña de base de datos y
+   guardala. Como región, la más cercana disponible (por ejemplo, São Paulo).
+2. En el proyecto: **SQL Editor** → «New query» → pegá TODO el contenido de `data_src/supabase.sql` → **Run**. Tiene que decir
+   «Success». Se puede correr de nuevo sin problema.
+3. **Authentication → Sign In / Providers → Email**: dejalo activado, con «Confirm email» activado.
+4. **Authentication → URL Configuration**:
+   - Site URL: `https://brunogagna9-stack.github.io/Comparador/cuenta.html`
+   - Redirect URLs → «Add URL»: `https://brunogagna9-stack.github.io/Comparador/cuenta.html`
+5. **Project Settings → API Keys**: copiá la **Publishable key** (empieza con `sb_publishable_`). En la ventana «Connect» o en
+   **Project Settings → Data API** copiá la **Project URL** (`https://xxxx.supabase.co`).
+6. En `site/data/config.json`, dentro de `"accounts"`, pegá esos dos valores entre comillas en `supabase_url` y
+   `supabase_publishable_key`.
+7. En la misma página de API Keys, en «Secret keys», copiá la clave **secret** (`sb_secret_...`). **Esa NO va en ningún
+   archivo.** Va en GitHub → el repositorio → Settings → Secrets and variables → Actions → «New repository secret»:
+   - `SUPABASE_URL` = la Project URL
+   - `SUPABASE_SECRET_KEY` = la clave secret
+
+*B. Brevo (los mails)*
+1. Entrá a https://www.brevo.com y creá una cuenta gratuita (300 mails por día).
+2. **Remitente**: en Brevo → Senders, Domains & Dedicated IPs → Senders, agregá el mail desde el que salen los avisos y verificalo.
+   ⚠ Para que los mails no caigan en spam (y para conectar Brevo con Supabase) hace falta **un dominio propio**
+   (por ejemplo, `comparatech.com.ar`), autenticado en Brevo → Domains (SPF/DKIM). Con un Gmail como remitente, los
+   proveedores de correo suelen rechazar o mandar a spam los envíos hechos por terceros. **Este paso queda pendiente hasta que
+   tengas tu dominio y tu mail propio.**
+3. **Clave para los avisos**: Brevo → SMTP & API → API Keys → «Generate a new API key». Guardala como secretos de GitHub:
+   - `BREVO_API_KEY` = esa clave
+   - `NOTIFY_FROM` = el mail remitente verificado (por ejemplo, `avisos@tudominio.com.ar`)
+4. **Mails de la cuenta (confirmación y contraseña)** por Brevo, para que lleguen a cualquier persona: Brevo → SMTP & API →
+   pestaña SMTP → «Generate a new SMTP key». Después, en Supabase → **Authentication → Emails → SMTP Settings** → activar
+   «Enable custom SMTP» y completar:
+   - Sender email: el remitente verificado · Sender name: `ComparáTech`
+   - Host: `smtp-relay.brevo.com` · Port: `587`
+   - Username: el mail con el que entrás a Brevo · Password: la **SMTP key** (no la API key)
+   Sin este paso, Supabase solo manda mails de prueba a los miembros del proyecto (2 por hora): **las cuentas no se pueden
+   abrir al público hasta hacerlo.**
+
+*C. Probar*
+1. Subí los archivos y corré Actions → «Actualizar precios y publicar» → Run workflow.
+2. Abrí el sitio: tiene que aparecer el ícono de persona arriba a la derecha. Creá una cuenta de prueba con tu mail, confirmala,
+   seguí un producto y fijate en Supabase → Table Editor → `follows` que aparezca.
+3. En el registro de la corrida, el paso «Avisos por mail» dice cuántos seguimientos revisó y cuántos mails mandó. Si faltan
+   secretos dice «no configurados» y sigue sin frenar nada. Los avisos se mandan en las corridas automáticas (cada 6 h) y en las
+   manuales, no en las que se disparan al subir archivos.
+
+**Archivos**: `site/cuenta.html`, `site/js/account.js`, `site/js/vendor/supabase-2.117.3.js` (librería oficial de Supabase,
+licencia MIT, guardada en el sitio en una versión fija), `data_src/supabase.sql`, `scripts/notify.py`, paso nuevo en
+`.github/workflows/actualizar.yml`, clave `accounts` en `data/config.json`. Pruebas: `tests/test_account.js` y
+`test_actualizacion_32_cuentas` (además se probó el SQL en PostgreSQL y la página completa en un navegador contra un Supabase simulado).

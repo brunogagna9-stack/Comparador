@@ -17,6 +17,8 @@
   const CART = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2.5 3h2.7l2.4 11.2a1.6 1.6 0 0 0 1.6 1.3h8.6a1.6 1.6 0 0 0 1.6-1.2L21 7H6"/></svg>';
   const LENS = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>';
 
+const USER_ICO = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>';
+const HIST_ICO = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg>';
   function listCount() { try { const l = JSON.parse(localStorage.getItem("lista") || "[]"); return Array.isArray(l) ? l.length : 0; } catch { return 0; } }
 
   const header = `<header class="site"><div class="hin">
@@ -24,6 +26,8 @@
     <nav aria-label="Secciones">${NAV.map(([h, t, id]) => `<a href="${h}"${id === page ? ' class="on" aria-current="page"' : ""}>${t}</a>`).join("")}</nav>
     <div class="hsearch">${LENS}<input id="qh" type="search" placeholder="Buscar productos: ryzen 5 5500, rtx 4060…" aria-label="Buscar productos" autocomplete="off"></div>
     <button class="bell" id="abtn" hidden aria-haspopup="dialog" aria-label="Avisos de bajas de precio" title="Avisos de bajas de precio">🔔</button>
+    <a class="hist" href="historial.html" aria-label="Mi historial de armados y comparaciones" title="Mi historial de armados y comparaciones"${page === "historial" ? ' aria-current="page"' : ""}>${HIST_ICO}</a>
+    <a class="acct" id="accbtn" href="cuenta.html" hidden aria-label="Ingresar o crear cuenta" title="Ingresar o crear cuenta"${page === "cuenta" ? ' aria-current="page"' : ""}>${USER_ICO}</a>
     <button class="cart" id="lbtn" aria-haspopup="dialog" aria-label="Mi lista de compra" title="Mi lista de compra">${CART}<span class="cn" id="lcount" data-n="0">0</span></button>
   </div></header>`;
 
@@ -34,15 +38,21 @@
     <div><h4>Secciones</h4><ul>${[["index.html", "Inicio"]].concat(NAV.map(n => [n[0], n[1]])).map(([h, t]) => `<li><a href="${h}">${t}</a></li>`).join("")}</ul></div>
     <div><h4>Información</h4><ul>
       <li><a href="index.html#como">Cómo funciona</a></li>
+      <li><a href="tiendas.html">Tiendas</a></li>
+      <li><a href="preguntas.html">Preguntas frecuentes</a></li>
       <li><a href="index.html#confianza">Datos y confiabilidad</a></li>
-      <li><a href="https://github.com/brunogagna9-stack/Comparador" target="_blank" rel="noopener">Proyecto en GitHub ↗</a></li>
-      <li id="fcontact" hidden></li></ul></div>
-    <div><h4>Importante</h4>
-      <p>Los precios y el stock se leen automáticamente de cada tienda y pueden cambiar en cualquier momento: <b>verificá en la tienda antes de comprar</b>.</p>
-      <p>Las reseñas de las tiendas son el puntaje público de Google Maps, con su fecha. Si una tienda no tiene reseñas verificables, lo decimos.</p>
+      <li><a href="historial.html">Mi historial</a></li>
+      <li id="facct" hidden><a href="cuenta.html">Mi cuenta</a></li>
+      <li><a href="https://github.com/brunogagna9-stack/Comparador" target="_blank" rel="noopener">Proyecto en GitHub ↗</a></li></ul></div>
+    <div><h4>Legal y contacto</h4><ul>
+      <li><a href="privacidad.html">Política de privacidad</a></li>
+      <li><a href="terminos.html">Términos y condiciones</a></li>
+      <li><a href="contacto.html">Contacto</a></li>
+      <li id="fcontact" hidden></li></ul>
+      <p>Los precios y el stock se leen automáticamente de cada tienda y pueden cambiar: <b>verificá en la tienda antes de comprar</b>.</p>
       <p id="fupd" class="sub"></p></div>
   </div>
-  <div class="fbot"><span>© ${new Date().getFullYear()} ComparáTech · Proyecto independiente, sin relación comercial con las tiendas. Marcas y logos: propiedad de sus dueños.</span>
+  <div class="fbot"><span>© ${new Date().getFullYear()} ComparáTech · Proyecto independiente: no está afiliado, asociado ni respaldado por las tiendas ni por los fabricantes que se muestran. Marcas, logos y nombres comerciales: propiedad de sus dueños.</span>
     <button class="up" type="button" id="fup">↑ Volver arriba</button></div></footer>
   <button id="totop" type="button" aria-label="Volver arriba">↑ Volver arriba</button>`;
 
@@ -69,13 +79,42 @@
     fetch("data/config.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).catch(() => null).then(cfg => {
       cfg = cfg || {};
       const c = cfg.contact_email;
-      if (typeof c === "string" && /^[^\s@<>"]+@[^\s@<>"]+\.[a-z]{2,}$/i.test(c)) { const li = document.getElementById("fcontact"); li.hidden = false; li.innerHTML = `<a href="mailto:${esc(c)}">Contacto: ${esc(c)}</a>`; }
+      if (typeof c === "string" && /^[^\s@<>"]+@[^\s@<>"]+\.[a-z]{2,}$/i.test(c)) { const li = document.getElementById("fcontact"); li.hidden = false; li.innerHTML = `<a href="mailto:${esc(c)}">${esc(c)}</a>`; }
       const A = cfg.alerts || {}, ok = u => typeof u === "string" && /^https:\/\//.test(u);
+      setupAds(cfg.ads || {});
+      // Cuentas (actualización 32): solo si config.json tiene los datos de Supabase; si no, no se carga nada.
+      const ac = cfg.accounts || {};
+      if (typeof ac.supabase_url === "string" && ac.supabase_url) document.getElementById("facct").hidden = false;
+      if (typeof ac.supabase_url === "string" && ac.supabase_url && typeof ac.supabase_publishable_key === "string" && ac.supabase_publishable_key && !window.ACC && !document.querySelector('script[src$="js/account.js"]')) {
+        const sc = document.createElement("script"); sc.src = "js/account.js"; document.head.appendChild(sc); }
       if (!isProducts && (ok(A.email_form_url) || ok(A.whatsapp_channel_url))) { const b = document.getElementById("abtn"); b.hidden = false; b.onclick = () => { location.href = "productos.html?avisos=1"; }; }
     });
     fetch("data/meta.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).catch(() => null).then(m => {
       if (m && m.updated) { const d = new Date(m.updated); if (!isNaN(d)) document.getElementById("fupd").textContent = "Última lectura de precios: " + d.toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" }); }
     });
+  }
+
+  /* Publicidad y medición: APAGADAS mientras data/config.json no tenga los identificadores (ads.client / ads.analytics_id).
+     Los anuncios van solo en lugares fijos marcados con <div class="ad-slot" data-slot="…">; nunca cambian resultados ni orden. */
+  function setupAds(ads) {
+    const client = typeof ads.client === "string" && /^ca-pub-\d{10,20}$/.test(ads.client) ? ads.client : null;
+    const ga = typeof ads.analytics_id === "string" && /^G-[A-Z0-9]{4,}$/.test(ads.analytics_id) ? ads.analytics_id : null;
+    if (!client && !ga) return;
+    const add = (src, attrs) => { const sc = document.createElement("script"); sc.async = true; sc.src = src; Object.assign(sc, attrs || {}); document.head.appendChild(sc); };
+    if (ga) { add("https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(ga)); window.dataLayer = window.dataLayer || [];
+      window.gtag = function () { window.dataLayer.push(arguments); }; window.gtag("js", new Date()); window.gtag("config", ga, { anonymize_ip: true }); }
+    if (client) {
+      add("https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=" + encodeURIComponent(client), { crossOrigin: "anonymous" });
+      const slots = ads.slots || {};
+      document.querySelectorAll(".ad-slot[data-slot]").forEach(el => { const id = slots[el.dataset.slot]; if (!/^\d{6,12}$/.test(String(id || ""))) return;
+        el.hidden = false; el.innerHTML = `<span class="ad-lbl">Publicidad</span><ins class="adsbygoogle" style="display:block" data-ad-client="${esc(client)}" data-ad-slot="${esc(id)}" data-ad-format="auto" data-full-width-responsive="true"></ins>`;
+        try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch (e) { } });
+    }
+    // aviso de cookies (una sola vez por navegador)
+    let seen = false; try { seen = localStorage.getItem("cookies-aviso") === "1"; } catch (e) { }
+    if (seen) return;
+    document.body.insertAdjacentHTML("beforeend", `<div id="ckbar" role="region" aria-label="Aviso de cookies"><p>Usamos cookies de Google para ${client ? "mostrar publicidad" : ""}${client && ga ? " y " : ""}${ga ? "medir las visitas" : ""}. Los anuncios no cambian los resultados. <a href="privacidad.html">Más información</a></p><button type="button" id="ckok">Entendido</button></div>`);
+    document.getElementById("ckok").onclick = () => { try { localStorage.setItem("cookies-aviso", "1"); } catch (e) { } document.getElementById("ckbar").remove(); };
   }
 
   const CTL = window.CTL = {

@@ -107,7 +107,7 @@ html.lock{overflow:hidden}html.lock #ctas-btn{display:none}
 </div>
 </main>
 <div id="pick" role="dialog" aria-modal="true" aria-label="Elegir pieza"><div class="box" id="pbox"></div></div>
-<script src="js/lib.js"></script><script src="js/facets.js"></script><script src="js/icons.js"></script><script src="js/rep.js"></script><script src="js/quickview.js"></script><script src="js/builder.js"></script>
+<script src="js/lib.js"></script><script src="js/facets.js"></script><script src="js/icons.js"></script><script src="js/rep.js"></script><script src="js/quickview.js"></script><script src="js/builder.js"></script><script src="js/history.js"></script>
 <script>
 const $=s=>document.querySelector(s),{ARS,esc}=CT;
 let PR=[],HW=null,VER={},E=null,C=null,byIdM=new Map(),BUILD={},PICK=null;
@@ -141,7 +141,16 @@ function render(){
     const bad=S.issues.filter(c=>c.slot===s.k||c.with===s.k).length,unk=mine.filter(c=>c.s==="unk").length;
     const badge=e&&!e.skip?(bad?'<span class="st no">✗ incompatible</span>':unk?'<span class="st unk">? sin verificar</span>':Object.keys(S.X).length>1?'<span class="st ok">✓ compatible</span>':""):"";
     return `<div class="sl"><div class="k">${ICONS.svg(ICONK[s.k],20)}<span>${esc(s.l)}<small>${esc(HINT[s.k])}</small></span></div><div class="v">${v}${badge?`<div style="margin-top:4px">${badge}</div>`:""}</div><div class="acts">${acts}</div></div>`}).join("");
-  renderSum(S);QV.sync();save();
+  renderSum(S);QV.sync();save();remember(S);
+}
+/* «Mi historial»: este armado se guarda (y se va actualizando) desde que tiene al menos 2 piezas elegidas */
+function remember(S){
+  if(!window.HIST)return;const ch=BLD.SLOTS.filter(s=>BUILD[s.k]&&!BUILD[s.k].skip);if(ch.length<2)return;
+  const nm=k=>{const e=BUILD[k],g=e&&e.id?byId(e.id):null;if(!g)return null;const hw=k==="cpu"?C.hwCpu(g.name):k==="gpu"?(C.hwGpu(g.name)||C.hwGpuX(g.name)):null;
+    return hw?hw.name:g.name.replace(/^(micro(procesador)?|procesador|placa de video|vga|video)\s+/i,"").slice(0,42)};
+  const head=[nm("cpu"),nm("gpu")].filter(Boolean).join(" + ")||ch.map(s=>s.l.toLowerCase()).join(", ");
+  const st=S.issues.length?" · ⚠ con incompatibilidades":S.unk.length?" · con piezas sin verificar":"";
+  HIST.save("armados",{title:"Armalo vos · "+head,sub:`${ch.length} de ${BLD.SLOTS.length} piezas · total ${ARS(S.total)}${st}`,url:"armar.html?b="+encodeURIComponent(E.encode(BUILD)),kind:"vos",total:S.total},"armar");
 }
 function renderSum(S){
   const left=S.missing.filter(k=>!BUILD[k]).map(k=>BLD.slot(k).l.toLowerCase());
@@ -156,7 +165,7 @@ function renderSum(S){
    <ul>${okN?`<li class="ok-t"><b>✓ ${okN} ${okN===1?"control comprobado":"controles comprobados"}</b></li>`:""}${li.join("")}${left.length?`<li><b>Falta elegir:</b> ${esc(left.join(", "))}</li>`:""}${!S.issues.length&&!S.unk.length&&!left.length&&okN?`<li class="ok-t"><b>Todo compatible y comprobado.</b></li>`:""}</ul>
    <div class="btns">${ids.length?`<button class="btn pri qv-all" data-qall="${ids.join(",")}"></button>`:""}<button class="btn" id="share">🔗 Copiar enlace del armado</button><button class="btn" id="reset">Empezar de nuevo</button></div>`;
   $("#share").onclick=async()=>{try{await navigator.clipboard.writeText(location.href);$("#share").textContent="¡Enlace copiado!"}catch(e){$("#share").textContent="No se pudo copiar"}};
-  $("#reset").onclick=()=>{BUILD={};render()};
+  $("#reset").onclick=()=>{BUILD={};try{sessionStorage.removeItem("hist:armar")}catch(e){}render()};   // «Empezar de nuevo» arranca otra entrada del historial
 }
 
 /* ---------- selector de una pieza ---------- */

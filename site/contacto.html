@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Contacto · ComparáTech</title>
+<meta name="description" content="Cómo contactar a ComparáTech para consultas, errores de precios o pedidos de tiendas.">
+<link rel="stylesheet" href="css/shared.css">
+<link rel="stylesheet" href="css/layout.css">
+<style>
+.doc{max-width:820px}.doc h2{margin:28px 0 8px;font-size:20px}.doc h3{margin:18px 0 6px;font-size:16px}
+.doc p,.doc li{line-height:1.6}.doc ul{padding-left:20px}.doc .upd{color:var(--mut);font-size:13px}
+.doc .box{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--card);margin:12px 0}
+.doc .st{display:inline-block;font-size:12.5px;font-weight:700;padding:2px 9px;border-radius:999px;margin-left:6px}
+.doc .st.on{background:var(--okbg);color:var(--ok)}.doc .st.off{background:var(--soft);color:var(--mut)}
+.doc .legal{font-size:13.5px;color:var(--mut);border-left:3px solid var(--line);padding-left:12px}
+.doc details{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:10px 0;background:var(--card)}
+.doc summary{cursor:pointer;font-weight:700;font-size:16px}.doc details p{margin:10px 0 0}
+</style>
+</head>
+<body data-page="contacto">
+<script src="js/layout.js"></script>
+<main class="doc">
+<h1>Contacto</h1>
+<p class="lead">¿Encontraste un precio mal leído, un dato técnico equivocado o querés sugerir una tienda? Nos sirve mucho que nos avises.</p>
+<div class="box"><b>Correo:</b> <span data-mail="todavía no hay un correo propio del sitio; mientras tanto podés escribirnos en GitHub (abajo).">…</span></div>
+<div class="box"><b>GitHub:</b> podés abrir una consulta en <a href="https://github.com/brunogagna9-stack/Comparador/issues" target="_blank" rel="noopener">la página del proyecto</a> (hace falta una cuenta gratuita de GitHub). Lo que escribas ahí es público: no pongas datos personales.</div>
+<h2>Antes de escribir</h2>
+<ul>
+<li>Muchas dudas ya están en <a href="preguntas.html">Preguntas frecuentes</a>.</li>
+<li>Si es un error de precio, contanos el producto y la tienda: vale siempre el precio de la tienda al momento de comprar.</li>
+<li>Si sos una tienda y querés que te sumemos, que corrijamos algo o que dejemos de leer tu catálogo, escribinos: respetamos lo que cada tienda permite en su sitio.</li>
+</ul>
+
+</main>
+<script>
+// Estado actual de los servicios opcionales (se lee de data/config.json: lo que dice esta página coincide con lo que hace el sitio)
+(async()=>{let c={};try{const r=await fetch("data/config.json",{cache:"no-cache"});if(r.ok)c=await r.json()}catch(e){}
+const ok=u=>typeof u==="string"&&/^https:\/\//.test(u),A=c.alerts||{},ads=c.ads||{};
+const st={ia:ok((c.assistant||{}).endpoint),brevo:ok(A.email_form_url),wa:ok(A.whatsapp_channel_url),ads:typeof ads.client==="string"&&/^ca-pub-\d{10,20}$/.test(ads.client),ga:typeof ads.analytics_id==="string"&&/^G-[A-Z0-9]{4,}$/.test(ads.analytics_id),acc:(()=>{const a=c.accounts||{};return typeof a.supabase_url==="string"&&/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(a.supabase_url.trim())&&typeof a.supabase_publishable_key==="string"&&/^(sb_publishable_|eyJ)/.test(a.supabase_publishable_key.trim())})()};
+document.querySelectorAll("[data-st]").forEach(e=>{const on=st[e.dataset.st];e.className="st "+(on?"on":"off");e.textContent=on?"Activado":"Hoy desactivado"});
+const em=c.contact_email,okm=typeof em==="string"&&/^[^\s@<>"]+@[^\s@<>"]+\.[a-z]{2,}$/i.test(em);
+document.querySelectorAll("[data-mail]").forEach(e=>{e.innerHTML=okm?`<a href="mailto:${em.replace(/[<>"&]/g,"")}">${em.replace(/[<>"&]/g,"")}</a>`:e.dataset.mail});
+const ti=typeof c.titular==="string"&&c.titular.trim()?c.titular.trim().replace(/[<>"&]/g,""):"";document.querySelectorAll("[data-titular]").forEach(e=>{if(ti)e.textContent=ti});
+})();
+</script>
+<script src="js/lib.js"></script><script src="js/assistant.js"></script>
+<script>CT.CTAssistant&&CT.CTAssistant.mount({section:"info",context:()=>({})});</script>
+</body>
+</html>

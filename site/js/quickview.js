@@ -105,7 +105,8 @@
     else if (t.dataset.qv && !e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) { if (QV.open(t.dataset.qv)) e.preventDefault(); }   // Ctrl+clic: abre la ficha en otra pestaña
   });
   QV.refresh = () => { FOLLOW = read("seg", {}); LIST = read("lista", []); if (!Array.isArray(LIST)) LIST = []; syncButtons(); };
-  addEventListener("storage", e => { if (e.key === "seg" || e.key === "lista") QV.refresh(); });   // otra pestaña cambió la lista
+  addEventListener("storage", e => { if (e.key === "seg" || e.key === "lista") QV.refresh(); });
+  addEventListener("acc:synced", e => { if (e.detail && e.detail.changed) QV.refresh(); });   // la cuenta trajo cambios de otro dispositivo   // otra pestaña cambió la lista
   QV.sync = syncButtons;
   document.addEventListener("DOMContentLoaded", ensureModal);
   if (document.readyState !== "loading") ensureModal();

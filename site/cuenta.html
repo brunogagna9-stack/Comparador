@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mi cuenta · ComparáTech</title>
+<meta name="description" content="Ingresá o creá tu cuenta para seguir precios, recibir avisos por mail y tener tu historial en todos tus dispositivos.">
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="css/shared.css">
+<link rel="stylesheet" href="css/layout.css">
+<style>
+.acc{max-width:760px}
+.acc .card2{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin:0 0 16px;box-shadow:var(--sh)}
+.acc h2{font-size:18px;margin:0 0 10px}
+.acc .tabs{display:flex;gap:8px;margin:0 0 14px;flex-wrap:wrap}
+.acc .tabs button{border:1px solid var(--line);background:var(--card);color:var(--tx);border-radius:999px;padding:8px 16px;font:700 14px system-ui,sans-serif;cursor:pointer}
+.acc .tabs button.on{background:#2563eb;border-color:#2563eb;color:#fff}
+.acc label{display:block;font-weight:700;font-size:14px;margin:10px 0 4px}
+.acc input[type=email],.acc input[type=password]{width:100%;max-width:420px;box-sizing:border-box;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:15px system-ui,sans-serif;background:var(--card);color:var(--tx)}
+.acc .chk{display:flex;gap:10px;align-items:flex-start;font-weight:500;margin:10px 0;text-transform:none;letter-spacing:0;font-size:14.5px;color:var(--tx);line-height:1.45}
+.acc .chk input{margin-top:3px;width:18px;height:18px;flex:none}
+.acc .btn1{border:0;background:#2563eb;color:#fff;border-radius:999px;padding:10px 20px;font:700 14.5px system-ui,sans-serif;cursor:pointer;margin-top:12px}
+.acc .btn1:disabled{opacity:.6;cursor:wait}
+.acc .btn2{border:1px solid var(--line);background:var(--card);color:var(--tx);border-radius:999px;padding:8px 16px;font:700 13.5px system-ui,sans-serif;cursor:pointer}
+.acc .danger{border:1px solid color-mix(in srgb,var(--bad) 45%,var(--line));color:var(--bad);background:var(--card)}
+.acc .link{border:0;background:none;color:var(--acc);font:600 14px system-ui,sans-serif;cursor:pointer;padding:4px 0;text-decoration:underline}
+.acc .msg{margin:12px 0 0;padding:10px 12px;border-radius:10px;font-size:14px;line-height:1.5}
+.acc .msg.ok{background:var(--okbg);color:var(--ok)}.acc .msg.bad{background:var(--badbg);color:var(--bad)}.acc .msg.info{background:var(--soft);color:var(--tx)}
+.acc .fl{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+.acc .fl li{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:9px 12px}
+.acc .fl a{font-weight:600;overflow-wrap:anywhere}.acc .fl .sub{color:var(--mut);font-size:13px}
+.acc .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.acc .note{color:var(--mut);font-size:13.5px;line-height:1.5}
+</style>
+</head>
+<body data-page="cuenta">
+<script src="js/layout.js"></script>
+<main class="acc">
+<h1>Mi cuenta</h1>
+<div id="out"><p class="note">Cargando…</p></div>
+</main>
+<script src="js/lib.js"></script><script src="js/history.js"></script><script src="js/account.js"></script>
+<script>
+const $=s=>document.querySelector(s),{esc}=CT,ARS=n=>n==null?"—":"$"+Math.round(n).toLocaleString("es-AR");
+let TAB="in",MSG=null;
+const msg=(t,k)=>{MSG=t?{t,k:k||"info"}:null;const el=$("#msg");if(el){el.className="msg "+(MSG?MSG.k:"");el.hidden=!MSG;el.textContent=MSG?MSG.t:""}};
+const ERR=e=>{const m=String(e&&e.message||e||"");
+  if(/Invalid login credentials/i.test(m))return"El mail o la contraseña no coinciden.";
+  if(/Email not confirmed/i.test(m))return"Todavía no confirmaste tu mail: abrí el enlace que te enviamos (revisá también «Spam»).";
+  if(/already registered|already exists/i.test(m))return"Ya hay una cuenta con ese mail. Probá «Ingresar» o «Olvidé mi contraseña».";
+  if(/rate limit|too many/i.test(m))return"Se hicieron demasiados intentos. Esperá unos minutos y volvé a probar.";
+  if(/Password should be|weak/i.test(m))return"La contraseña es muy débil: usá al menos 8 caracteres combinando letras y números.";
+  if(/fetch|network/i.test(m))return"No hay conexión con el servidor de cuentas. Probá de nuevo en un rato.";
+  return"No se pudo completar: "+m};
+const box=h=>$("#out").innerHTML=h+`<p id="msg" class="msg" hidden></p>`;
+const withBtn=async(btn,fn)=>{btn.disabled=true;try{await fn()}catch(e){msg(ERR(e),"bad")}finally{btn.disabled=false}};
+
+function off(why){
+  box(`<div class="card2">${why==="secret"
+    ?`<h2>⚠ Configuración insegura</h2><p>El archivo <code>data/config.json</code> tiene una clave <b>secreta</b> de Supabase. Por seguridad no se usa. Quien administra el sitio tiene que borrarla de ese archivo de inmediato, generar una nueva en Supabase y poner en su lugar la clave <b>publishable</b>.</p>`
+    :`<h2>Las cuentas todavía no están disponibles</h2><p>Mientras tanto, todo funciona sin cuenta: los productos que seguís y <a href="historial.html">tu historial</a> se guardan en este navegador.</p>`}</div>`);
+}
+function loggedOut(){
+  const fs={in:"Ingresar",up:"Crear cuenta",rec:"Recuperar contraseña"};
+  box(`<p class="lead">Con una cuenta, los productos que seguís y tu historial de armados y comparaciones te acompañan en todos tus dispositivos, y podés recibir avisos por mail cuando cambia un precio.</p>
+  <div class="card2"><div class="tabs" role="tablist">${["in","up"].map(k=>`<button type="button" role="tab" data-tab="${k}" class="${TAB===k?"on":""}" aria-selected="${TAB===k}">${fs[k]}</button>`).join("")}</div>
+  <form id="f" novalidate>
+   ${TAB==="rec"?`<h2>Recuperar contraseña</h2><p class="note">Te enviamos un enlace para elegir una contraseña nueva.</p>`:""}
+   <label for="em">Mail</label><input id="em" type="email" autocomplete="email" required>
+   ${TAB!=="rec"?`<label for="pw">Contraseña</label><input id="pw" type="password" autocomplete="${TAB==="up"?"new-password":"current-password"}" minlength="8" required>`:""}
+   ${TAB==="up"?`<p class="note">Mínimo 8 caracteres.</p><label class="chk"><input type="checkbox" id="ok"><span>Leí y acepto los <a href="terminos.html" target="_blank">Términos y condiciones</a> y la <a href="privacidad.html#cuentas" target="_blank">Política de privacidad</a>.</span></label>`:""}
+   <button class="btn1" type="submit">${TAB==="in"?"Ingresar":TAB==="up"?"Crear cuenta":"Enviar enlace"}</button>
+   ${TAB==="in"?`<div><button type="button" class="link" data-tab="rec">Olvidé mi contraseña</button></div>`:TAB==="rec"?`<div><button type="button" class="link" data-tab="in">Volver a ingresar</button></div>`:""}
+  </form></div>
+  <p class="note">No es obligatorio tener cuenta: sin ella, todo se guarda solo en este navegador. Detalles en la <a href="privacidad.html#cuentas">política de privacidad</a>.</p>`);
+  if(MSG)msg(MSG.t,MSG.k);
+  $("#f").onsubmit=e=>{e.preventDefault();const em=$("#em").value.trim(),pw=$("#pw")&&$("#pw").value,b=e.submitter||$("#f .btn1");
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em))return msg("Escribí un mail válido.","bad");
+    if(TAB!=="rec"&&(!pw||pw.length<8))return msg("La contraseña tiene que tener al menos 8 caracteres.","bad");
+    if(TAB==="up"&&!$("#ok").checked)return msg("Para crear la cuenta tenés que aceptar los Términos y la Política de privacidad.","bad");
+    withBtn(b,async()=>{
+      if(TAB==="in"){const r=await ACC.signIn(em,pw);if(r.error)throw r.error}
+      else if(TAB==="up"){const r=await ACC.signUp(em,pw);if(r.error)throw r.error;
+        msg(r.data&&r.data.session?"¡Listo! Tu cuenta está creada.":"¡Listo! Te enviamos un mail a "+em+" para confirmar la cuenta. Abrí el enlace (revisá también «Spam») y después ingresá.","ok")}
+      else{const r=await ACC.resetPassword(em);if(r.error)throw r.error;msg("Si hay una cuenta con ese mail, te llegó un enlace para elegir una contraseña nueva.","ok")}
+    })};
+}
+function newPassword(){
+  box(`<div class="card2"><h2>Elegí una contraseña nueva</h2><form id="f"><label for="pw">Contraseña nueva</label><input id="pw" type="password" autocomplete="new-password" minlength="8" required>
+   <button class="btn1" type="submit">Guardar contraseña</button></form></div>`);
+  $("#f").onsubmit=e=>{e.preventDefault();const pw=$("#pw").value;if(pw.length<8)return msg("Mínimo 8 caracteres.","bad");
+    withBtn($("#f .btn1"),async()=>{const r=await ACC.updatePassword(pw);if(r.error)throw r.error;MSG={t:"Contraseña actualizada.",k:"ok"};loggedIn()})};
+}
+async function loggedIn(){
+  const u=ACC.user(),F=(()=>{try{return JSON.parse(localStorage.getItem("seg")||"{}")||{}}catch{return{}}})(),ids=Object.keys(F);
+  const H=HIST.KINDS.map(k=>HIST.list(k).length);
+  box(`<div class="card2"><h2>Tu cuenta</h2><p>Ingresaste como <b>${esc(u.email)}</b>.</p><p class="note" id="sy">Sincronizando…</p>
+    <div class="row"><button type="button" class="btn2" id="out1">Cerrar sesión</button><button type="button" class="btn2" id="out2">Cerrar sesión y borrar datos de este navegador</button></div></div>
+  <div class="card2" id="avisos"><h2>Avisos por mail</h2><p class="note">Te escribimos como máximo una vez por cada lectura de precios (cada 6 horas aprox.), con un resumen de los productos que seguís.</p>
+    <form id="pf"><label class="chk"><input type="checkbox" name="notify_down"><span>Cuando <b>baja</b> el precio (2 % o más)</span></label>
+    <label class="chk"><input type="checkbox" name="notify_up"><span>Cuando <b>sube</b> el precio (2 % o más)</span></label>
+    <label class="chk"><input type="checkbox" name="notify_cuotas"><span>Cuando alguna tienda lo ofrece en <b>cuotas sin interés</b> (según lo que publica la tienda; no incluye promociones de bancos que la tienda no muestre)</span></label>
+    <button class="btn1" type="submit">Guardar preferencias</button></form></div>
+  <div class="card2"><h2>Productos que seguís (${ids.length})</h2>${ids.length?`<ul class="fl">${ids.map(id=>`<li><div><a href="producto.html?id=${encodeURIComponent(id)}">${esc(F[id].name||id)}</a><div class="sub">Precio cuando lo empezaste a seguir: ${ARS(F[id].price)}</div></div><button type="button" class="btn2 danger" data-unf="${esc(id)}" aria-label="Dejar de seguir ${esc(F[id].name||id)}">Dejar de seguir</button></li>`).join("")}</ul>`
+    :`<p class="note">Todavía no seguís ningún producto. En <a href="productos.html">Productos</a> tocá ☆ en el que te interese.</p>`}</div>
+  <div class="card2"><h2>Tu historial</h2><p>${H[0]} armado${H[0]===1?"":"s"} y ${H[1]} comparaci${H[1]===1?"ón":"ones"}, guardados también en tu cuenta.</p><a href="historial.html">Ver mi historial →</a></div>
+  <div class="card2"><h2>Eliminar mi cuenta</h2><p class="note">Se borran tu cuenta, tus seguimientos, tu historial guardado en la cuenta y tus preferencias de avisos. Lo que esté guardado en este navegador queda acá.</p><button type="button" class="btn2 danger" id="del">Eliminar mi cuenta</button></div>`);
+  if(MSG)msg(MSG.t,MSG.k);
+  try{const p=await ACC.getPrefs();for(const k of["notify_down","notify_up","notify_cuotas"])$("#pf [name="+k+"]").checked=!!p[k]}catch(e){msg(ERR(e),"bad")}
+  $("#pf").onsubmit=e=>{e.preventDefault();const p={};for(const k of["notify_down","notify_up","notify_cuotas"])p[k]=$("#pf [name="+k+"]").checked;
+    withBtn($("#pf .btn1"),async()=>{await ACC.setPrefs(p);msg("Preferencias guardadas.","ok")})};
+  $("#out1").onclick=()=>withBtn($("#out1"),async()=>{MSG={t:"Cerraste sesión. Lo guardado en este navegador sigue acá.",k:"info"};await ACC.signOut()});
+  $("#out2").onclick=async()=>{if(!await HIST.confirm("¿Cerrar sesión y borrar de este navegador tus seguimientos y tu historial?","Sí, cerrar y borrar"))return;
+    withBtn($("#out2"),async()=>{MSG={t:"Cerraste sesión y se borraron los datos de este navegador. Siguen guardados en tu cuenta.",k:"info"};await ACC.signOut();["seg","historial"].forEach(k=>{try{localStorage.removeItem(k)}catch{}})})};
+  $("#del").onclick=async()=>{if(!await HIST.confirm("¿Estás seguro de eliminar tu cuenta?","Sí, eliminar mi cuenta"))return;
+    withBtn($("#del"),async()=>{await ACC.deleteAccount();MSG={t:"Tu cuenta y sus datos se eliminaron.",k:"ok"};loggedOut()})};
+}
+document.addEventListener("click",async e=>{const t=e.target.closest("[data-tab],[data-unf]");if(!t)return;
+  if(t.dataset.tab){TAB=t.dataset.tab;MSG=null;loggedOut();return}
+  if(t.dataset.unf){if(!await HIST.confirm("¿Dejar de seguir este producto?","Sí, dejar de seguir"))return;
+    try{const F=JSON.parse(localStorage.getItem("seg")||"{}");delete F[t.dataset.unf];localStorage.setItem("seg",JSON.stringify(F))}catch{}MSG=null;loggedIn()}});
+addEventListener("acc:synced",e=>{const el=$("#sy");if(!el)return;if(e.detail.ok){if(e.detail.changed){loggedIn();return}el.textContent="✓ Sincronizado con tu cuenta."}else el.textContent="No se pudo sincronizar ahora ("+e.detail.error+"). Se reintenta al próximo cambio."});
+addEventListener("acc:auth",e=>{const ev=e.detail.event;if(ev==="PASSWORD_RECOVERY")return newPassword();if(ev==="SIGNED_IN"||ev==="SIGNED_OUT"||ev==="USER_DELETED"){if(ACC.user())loggedIn();else loggedOut()}});
+ACC.ready.then(A=>{if(!A.enabled)return off(A.status);const H0=ACC.initialHash||"";if(/type=recovery/.test(H0))return newPassword();
+  if(H0.includes("error_description")){const d=new URLSearchParams(H0.slice(1)).get("error_description");MSG={t:"El enlace no es válido o ya venció"+(d?" ("+d+")":"")+". Pedí uno nuevo.",k:"bad"}}
+  if(A.user()){if(H0.includes("type=signup"))MSG={t:"¡Mail confirmado! Tu cuenta está lista.",k:"ok"};loggedIn()}else loggedOut()});
+</script>
+</body>
+</html>

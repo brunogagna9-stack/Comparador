@@ -33,8 +33,8 @@ header.site nav a.on{background:var(--tx);color:var(--bg)}
 header.site .hsearch{margin-left:auto;position:relative;flex:0 1 290px;min-width:150px}
 header.site .hsearch svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--mut);pointer-events:none}
 header.site #qh{width:100%;padding:9px 14px 9px 36px;border:1px solid var(--line2);border-radius:999px;background:var(--card);color:var(--tx);font:inherit;box-shadow:none}
-header.site .cart,header.site .bell{position:relative;display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:50%;border:1px solid var(--line2);background:var(--card);color:var(--tx);cursor:pointer;flex:none;font-size:16px;padding:0}
-header.site .cart:hover,header.site .bell:hover{background:var(--soft)}
+header.site .cart,header.site .bell,header.site .hist,header.site .acct{position:relative;display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:50%;border:1px solid var(--line2);background:var(--card);color:var(--tx);cursor:pointer;flex:none;font-size:16px;padding:0}
+header.site .cart:hover,header.site .bell:hover,header.site .hist:hover,header.site .hist[aria-current],header.site .acct:hover,header.site .acct[aria-current]{background:var(--soft)}
 header.site .cart .cn{position:absolute;top:-5px;right:-5px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:var(--acc);color:var(--bg);font-size:12px;font-weight:800;line-height:20px;text-align:center}
 header.site .cart .cn[data-n="0"]{display:none}
 @media(max-width:900px){
@@ -43,10 +43,16 @@ header.site .cart .cn[data-n="0"]{display:none}
   header.site .hin{flex-wrap:wrap;height:auto;padding:7px 12px;gap:6px 10px}
   header.site .logo{font-size:18px;order:1}
   header.site .hsearch{order:2;flex:1 1 140px;margin-left:0}
-  header.site .cart,header.site .bell{order:3;width:38px;height:38px}
+  header.site .cart,header.site .bell,header.site .hist,header.site .acct{order:3;width:38px;height:38px}
   header.site nav{order:4;flex:1 1 100%;overflow-x:auto;scrollbar-width:none;margin:0 -4px}
   header.site nav::-webkit-scrollbar{display:none}
   header.site nav a{padding:5px 11px;font-size:13px}
+}
+/* celulares angostos: logo y botones arriba, buscador a todo el ancho debajo (con 3 botones no entra todo en una línea) */
+@media(max-width:560px){
+  header.site .logo{flex:1 1 auto}
+  header.site .hsearch{order:4;flex:1 1 100%}
+  header.site nav{order:5}
 }
 
 /* ---- pie de página ---- */
@@ -127,3 +133,12 @@ footer.fine{max-width:1280px}
 
 /* efectos de «pasar el mouse» en pausa mientras se desliza (ver layout.js) */
 html.ct-scrolling .card,html.ct-scrolling .prow,html.ct-scrolling .tile,html.ct-scrolling .sec,html.ct-scrolling .qv-b{pointer-events:none}
+
+/* publicidad (apagada hasta configurar data/config.json) y aviso de cookies */
+.ad-slot{margin:18px 0;padding:8px;border:1px dashed var(--line);border-radius:12px;min-height:100px}.ad-slot .ad-lbl{display:block;font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+#ckbar{position:fixed;left:16px;right:16px;bottom:16px;z-index:9997;max-width:720px;margin:auto;display:flex;gap:12px;align-items:center;background:var(--card);color:var(--tx);border:1px solid var(--line2,var(--line));border-radius:14px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+#ckbar p{margin:0;font-size:14px;flex:1}#ckbar button{border:0;border-radius:999px;padding:9px 16px;background:#2563eb;color:#fff;font:700 14px system-ui,sans-serif;cursor:pointer}
+
+header.site .acct[hidden]{display:none}
+header.site .acct.in{border-color:#2563eb;color:#2563eb}
+header.site .acct.in::after{content:"";position:absolute;right:2px;bottom:2px;width:9px;height:9px;border-radius:50%;background:#16a34a;border:2px solid var(--card)}

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mi historial · ComparáTech</title>
+<meta name="description" content="Tus armados de PC y comparaciones anteriores, guardados en este navegador.">
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="css/shared.css">
+<link rel="stylesheet" href="css/layout.css">
+<style>
+.htabs{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 14px}
+.htabs button{border:1px solid var(--line2,var(--line));background:var(--card);color:var(--tx);border-radius:999px;padding:9px 16px;font:700 14px system-ui,sans-serif;cursor:pointer}
+.htabs button .n{font-weight:500;opacity:.75;margin-left:4px}
+.htabs button.on{background:#2563eb;border-color:#2563eb;color:#fff}
+.hl{display:flex;flex-direction:column;gap:10px}
+.he{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.he .ic{width:44px;height:44px;border-radius:12px;background:color-mix(in srgb,#2563eb 14%,var(--card));display:flex;align-items:center;justify-content:center;color:#2563eb}
+.he .ic svg{width:22px;height:22px}
+.he .tt{font-weight:700;line-height:1.35;overflow-wrap:anywhere}.he .sb{color:var(--mut);font-size:13px;margin-top:2px}
+.he .ac{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.he .ac a,.he .ac button{border-radius:999px;padding:7px 14px;font:700 13px system-ui,sans-serif;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.he .ac a{background:#2563eb;color:#fff;border:1px solid #2563eb}
+.he .ac button{background:var(--card);color:var(--bad);border:1px solid color-mix(in srgb,var(--bad) 45%,var(--line))}
+.he .ac button:hover{background:var(--badbg)}
+.hbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 10px}
+.hbar .all{border:0;background:none;color:var(--bad);font:700 13.5px system-ui,sans-serif;cursor:pointer;text-decoration:underline;padding:4px}
+.empty{background:var(--card);border:1px dashed var(--line);border-radius:14px;padding:22px;text-align:center}
+.empty a{font-weight:700}
+@media(max-width:560px){.he{grid-template-columns:36px minmax(0,1fr)}.he .ac{grid-column:1/-1;justify-content:flex-start}.he .ic{width:36px;height:36px}}
+</style>
+</head>
+<body data-page="historial">
+<script src="js/layout.js"></script>
+<main>
+<h1>Mi historial</h1>
+<p class="lead">Tus armados de PC y tus comparaciones anteriores, para volver a abrirlos cuando quieras. Se guardan <b>solo en este navegador</b>: no los vemos nosotros y no aparecen en otro dispositivo.</p>
+<div class="htabs" role="tablist" aria-label="Tipo de historial">
+  <button type="button" role="tab" data-k="armados" id="t-armados">Armados de PC<span class="n"></span></button>
+  <button type="button" role="tab" data-k="comparaciones" id="t-comparaciones">Comparaciones<span class="n"></span></button>
+</div>
+<div id="out" role="tabpanel" aria-live="polite"></div>
+<p class="note" style="margin-top:16px">Los armados se guardan solos cuando elegís una placa o un procesador en <a href="armado.html">Armado recomendado</a> o cuando elegís al menos 2 piezas en <a href="armar.html">Armalo vos</a>; las comparaciones, cuando comparás 2 productos o más. Se guardan hasta 50 de cada tipo. Más detalles en la <a href="privacidad.html">política de privacidad</a>.</p>
+</main>
+<script src="js/lib.js"></script><script src="js/icons.js"></script><script src="js/history.js"></script>
+<script>
+const $=s=>document.querySelector(s),{esc}=CT;
+const LBL={armados:{one:"armado",all:"todos los armados",empty:`Todavía no hay armados. Probá con <a href="armado.html">Armado recomendado</a> o <a href="armar.html">Armalo vos</a>.`,ico:"_armado"},
+  comparaciones:{one:"comparación",all:"todas las comparaciones",empty:`Todavía no hay comparaciones. Elegí productos en <a href="comparar.html">Comparar hardware</a> o tocá «⚖ Comparar» en <a href="productos.html">Productos</a>.`,ico:"_comparar"}};
+let K="armados";try{if(location.hash==="#comparaciones")K="comparaciones"}catch(e){}
+const when=iso=>{const d=new Date(iso);if(isNaN(d))return"";const m=(Date.now()-d)/6e4;
+  const rel=m<1?"recién":m<60?`hace ${Math.round(m)} min`:m<1440?`hace ${Math.round(m/60)} h`:m<2880?"ayer":`hace ${Math.round(m/1440)} días`;
+  return rel+" · "+d.toLocaleString("es-AR",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})};
+function draw(){
+  HIST.KINDS.forEach(k=>{const b=$("#t-"+k);b.classList.toggle("on",k===K);b.setAttribute("aria-selected",k===K);b.querySelector(".n").textContent=HIST.list(k).length});
+  const l=HIST.list(K),L=LBL[K];
+  $("#out").innerHTML=!l.length?`<div class="empty">${L.empty}</div>`
+   :`<div class="hbar"><span class="note">${l.length} ${l.length===1?L.one:K}</span><button type="button" class="all" id="delall">Eliminar ${L.all}</button></div>
+     <div class="hl">${l.map(e=>`<div class="he"><span class="ic" aria-hidden="true">${ICONS.svg(e.cat||L.ico,22)}</span>
+       <div><div class="tt">${esc(e.title)}</div><div class="sb">${esc(e.sub||"")}${e.sub?" · ":""}${esc(when(e.t))}</div></div>
+       <div class="ac"><a href="${esc(e.url)}">Abrir</a><button type="button" data-del="${esc(e.id)}" aria-label="Eliminar «${esc(e.title)}» del historial">🗑 Eliminar</button></div></div>`).join("")}</div>`;
+}
+document.addEventListener("click",async e=>{
+  const t=e.target.closest("[data-k],[data-del],#delall");if(!t)return;
+  if(t.dataset.k){K=t.dataset.k;try{history.replaceState(null,"","#"+K)}catch(er){}draw();return}
+  if(t.dataset.del){if(await HIST.confirm("¿Estás seguro de eliminarlo de tu historial?")){HIST.remove(K,t.dataset.del);draw()}return}
+  if(t.id==="delall"){if(await HIST.confirm(`¿Estás seguro de eliminar ${LBL[K].all} de tu historial?`,"Sí, eliminar todo")){HIST.clear(K);draw()}}
+});
+addEventListener("storage",e=>{if(e.key==="historial")draw()});
+addEventListener("acc:synced",e=>{if(e.detail&&e.detail.changed)draw()});   // la cuenta trajo armados o comparaciones de otro dispositivo   // otra pestaña guardó algo
+draw();
+</script>
+</body>
+</html>

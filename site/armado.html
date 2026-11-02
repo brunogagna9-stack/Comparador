@@ -49,7 +49,7 @@
 <h2>De dónde salen los datos</h2>
 <div class="panel note" id="src"></div>
 </main>
-<script src="js/lib.js"></script><script src="js/icons.js"></script><script src="js/rep.js"></script><script src="js/quickview.js"></script>
+<script src="js/lib.js"></script><script src="js/icons.js"></script><script src="js/rep.js"></script><script src="js/quickview.js"></script><script src="js/history.js"></script>
 <script>
 const $=s=>document.querySelector(s),{ARS,esc,RES}=CT;
 let HW,PR=[],META={},C,S={mode:"gpu",res:0,id:null,ven:""};
@@ -127,10 +127,18 @@ function render(){
       h+=`<div class="cols"><div class="col"><h3>Placas sugeridas (equilibradas)</h3><div class="tg">El procesador no limita a la placa</div>${li(ok)}</div><div class="col"><h3>Placas posibles (límite)</h3><div class="tg">Leve cuello de botella (hasta 20 %)</div>${li(ok8)}</div></div><p class="note">Tocá una placa para ver el armado completo con fuente, placa madre y memoria. ¿Ya tenés este procesador y querés saber qué cambiar? Probá <a href="actualizar.html">¿Qué actualizar?</a></p>`;
     }
   }
-  $("#out").innerHTML=h;QV.sync();
+  $("#out").innerHTML=h;QV.sync();rememberArmado();
   document.querySelectorAll("[data-g]").forEach(e=>e.onclick=()=>{S.mode="gpu";S.id=e.dataset.g;setMode();window.scrollTo(0,0)});
   document.querySelectorAll("[data-ven]").forEach(e=>e.onclick=()=>setVen(S.ven===e.dataset.ven?"":e.dataset.ven));
 }
+/* dirección de la página con la elección (para compartir y para el historial) y registro en «Mi historial»:
+   se guarda si la persona se queda al menos 4 s en esa elección (así no se llena con cada opción que mira de pasada) */
+const RESN=["1080p","1440p","4K"];let HT=0;
+function armadoUrl(){const p=new URLSearchParams({modo:S.mode,id:S.id,res:String(S.res)});if(S.ven&&S.mode==="gpu")p.set("marca",S.ven);return "armado.html?"+p}
+function rememberArmado(){
+  const url=armadoUrl();try{history.replaceState(null,"",url.replace("armado.html",location.pathname.split("/").pop()||"armado.html"))}catch(e){}
+  clearTimeout(HT);HT=setTimeout(()=>{if(!window.HIST)return;const x=(S.mode==="gpu"?HW.gpus:HW.cpus).find(y=>y.id===S.id);if(!x)return;
+    HIST.save("armados",{title:`Armado recomendado · ${S.mode==="gpu"?"placa":"procesador"} ${x.name}`,sub:`${RESN[S.res]}${S.mode==="gpu"?" · procesador "+(S.ven||"el más conveniente"):""}`,url,kind:"recomendado"})},4000)}
 function setVen(v){S.ven=v;document.querySelectorAll("#ven button").forEach(b=>b.classList.toggle("on",b.dataset.v===v));render()}
 function setMode(){
   $("#vbox").style.display=S.mode==="gpu"?"":"none";
@@ -146,6 +154,9 @@ function setMode(){
   let m;[HW,PR,m]=await Promise.all([j("data/hardware.json",null),j("data/products.json",[]),j("data/meta.json",{}),REP.load()]);META=m;
   if(!HW){$("#out").textContent="No se pudieron cargar los datos de hardware.";return}
   C=CT.create(HW,PR,META);S.id="rtx-5070";QV.setData(PR);
+  {const u=new URLSearchParams(location.search);if(["gpu","cpu"].includes(u.get("modo")))S.mode=u.get("modo");if(u.get("id"))S.id=u.get("id");
+   const r=+u.get("res");if([0,1,2].includes(r)&&u.get("res")!==null){S.res=r;document.querySelectorAll("#res button").forEach(x=>x.classList.toggle("on",+x.dataset.v===r))}
+   if(["AMD","Intel"].includes(u.get("marca"))){S.ven=u.get("marca");document.querySelectorAll("#ven button").forEach(b=>b.classList.toggle("on",b.dataset.v===S.ven))}}
   $("#src").innerHTML=`Consumos y fuentes requeridas: <a href="${HW.sources.nvidia}">NVIDIA</a>, <a href="${HW.sources.amd_gpu}">AMD</a>, <a href="${HW.sources.intel_gpu}">Intel</a>. Procesadores: <a href="${HW.sources.amd_cpu}">AMD</a> e <a href="${HW.sources.intel_cpu}">Intel ARK</a> (la potencia máxima de AMD es el TDP × 1,35, un valor estimado). Rendimiento de placas: <a href="${HW.sources.tom_gpu}">Tom's Hardware (jerarquía de GPU, jun 2026)</a>. Procesadores: <a href="${HW.sources.tom_cpu}">Tom's Hardware (jerarquía de CPU, oct 2026)</a>. Requisitos de juegos: enlaces en cada fila. Precios: los mismos del comparador.`;
   document.querySelectorAll("#mode button").forEach(b=>b.onclick=()=>{S.mode=b.dataset.v;S.id=null;setMode()});
   document.querySelectorAll("#res button").forEach(b=>b.onclick=()=>{S.res=+b.dataset.v;document.querySelectorAll("#res button").forEach(x=>x.classList.toggle("on",x===b));render()});

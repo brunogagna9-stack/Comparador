@@ -976,3 +976,103 @@ def test_actualizacion_30():
     assert f("Funda para Macbook Air 13", "perifericos") == "perifericos"
     assert f("Monitor HP Omen 27 165Hz", "monitores") == "monitores"
     assert f("Procesador AMD Ryzen 5 5600GT", "procesadores") == "procesadores"
+
+
+def test_actualizacion_31_paginas():
+    """Páginas legales y de ayuda, pie con enlaces, robots/sitemap y publicidad apagada por defecto."""
+    import re
+    from pathlib import Path
+    site = Path(__file__).resolve().parent.parent / "site"
+    for f in ("privacidad.html", "terminos.html", "preguntas.html", "contacto.html", "historial.html"):
+        h = (site / f).read_text(encoding="utf-8")
+        assert 'js/layout.js' in h and "<h1>" in h, f
+    priv = (site / "privacidad.html").read_text(encoding="utf-8")
+    assert "25.326" in priv and "AGENCIA DE ACCESO A LA INFORMACIÓN PÚBLICA" in priv and 'data-st="ads"' in priv
+    lay = (site / "js" / "layout.js").read_text(encoding="utf-8")
+    for link in ("privacidad.html", "terminos.html", "contacto.html", "preguntas.html", "tiendas.html", "historial.html"):
+        assert link in lay, link
+    cfg = json.loads((site / "data" / "config.json").read_text(encoding="utf-8"))
+    assert cfg["ads"]["client"] is None and cfg["ads"]["analytics_id"] is None      # publicidad apagada hasta que se configure
+    sm = (site / "sitemap.xml").read_text(encoding="utf-8")
+    assert "historial.html" not in sm and sm.count("<loc>") >= 10
+    assert "Sitemap:" in (site / "robots.txt").read_text(encoding="utf-8")
+    t = (site / "tiendas.html").read_text(encoding="utf-8")
+    assert "js/layout.js" in t and "<header>" not in t                                 # mismo encabezado que el resto
+
+
+def test_actualizacion_32_cuentas():
+    """Cuentas con Supabase y avisos por Brevo: apagado por defecto, sin claves en el sitio y lógica de avisos."""
+    import importlib.util, re, urllib.error
+    from pathlib import Path
+    root = Path(__file__).resolve().parent.parent
+    site = root / "site"
+    cfg = json.loads((site / "data" / "config.json").read_text(encoding="utf-8"))
+    assert cfg["accounts"]["supabase_url"] is None and cfg["accounts"]["supabase_publishable_key"] is None   # apagado
+    # ninguna clave secreta en nada que se publique
+    for f in site.rglob("*"):
+        if f.is_file() and f.suffix in (".js", ".html", ".json") and "vendor" not in f.parts:
+            txt = f.read_text(encoding="utf-8", errors="ignore")
+            assert not re.search(r"sb_secret_[A-Za-z0-9]{8,}", txt), f
+    assert (site / "js" / "vendor" / "supabase-2.117.3.js").stat().st_size > 100000
+    cu = (site / "cuenta.html").read_text(encoding="utf-8")
+    assert "js/account.js" in cu and "noindex" in cu and "privacidad.html#cuentas" in cu and "Eliminar mi cuenta" in cu
+    sql = (root / "data_src" / "supabase.sql").read_text(encoding="utf-8")
+    for tb in ("profiles", "follows", "history", "notifications_log"):
+        assert f"alter table public.{tb} enable row level security" in sql, tb
+    assert "revoke all on function public.notify_targets() from public, anon, authenticated" in sql
+    priv = (site / "privacidad.html").read_text(encoding="utf-8")
+    assert 'id="cuentas"' in priv and "Supabase" in priv and "Brevo" in priv
+    wf = (root / ".github" / "workflows" / "actualizar.yml").read_text(encoding="utf-8")
+    assert "scripts/notify.py" in wf and "continue-on-error: true" in wf and "secrets.SUPABASE_SECRET_KEY" in wf
+
+    spec = importlib.util.spec_from_file_location("notify", root / "scripts" / "notify.py")
+    N = importlib.util.module_from_spec(spec); spec.loader.exec_module(N)
+    of = lambda store, p, **k: dict({"store": store, "price_cash": p, "url": "https://t/" + store, "stock": True}, **k)
+    prods = [{"id": "g1", "name": "RTX 5060", "offers": [of("A", 90000), of("B", 95000)]},
+             {"id": "g2", "name": "Ryzen 5", "offers": [of("A", 105000)]},
+             {"id": "g3", "name": "SSD", "offers": [of("A", 50000, cuotas="6 cuotas sin interés de $8.333")]},
+             {"id": "g4", "name": "Raro", "offers": [of("A", 1000, anom=True)]},
+             {"id": "g5", "name": "Lento", "offers": [of("A", 99000)]}]
+    base = dict(user_id="u1", email="a@b.com", notify_down=True, notify_up=False, notify_cuotas=True, last_cuotas=False)
+    rows = [dict(base, product_id="g1", name="RTX", price_ref=100000, last_price=100000),   # bajó 10 %
+            dict(base, product_id="g2", name="R5", price_ref=100000, last_price=100000),    # subió 5 %, pero no pidió subas
+            dict(base, product_id="g3", name="SSD", price_ref=50000, last_price=50000),     # aparecieron cuotas sin interés
+            dict(base, product_id="g4", name="Raro", price_ref=5000, last_price=5000),      # precio sospechoso: nunca se avisa
+            dict(base, product_id="g5", name="Lento", price_ref=100000, last_price=100000)] # bajó 1 %: no alcanza
+    mails, upd = N.evaluate(rows, prods, {})
+    items = mails["a@b.com"]["items"]
+    assert [i["id"] for i in items] == ["g1", "g3"], items
+    assert items[0]["changes"][0]["type"] == "baja" and round(items[0]["changes"][0]["pct"]) == -10
+    assert items[1]["changes"][0]["type"] == "cuotas"
+    u = {(x[1]): x for x in upd}
+    assert u["g1"][2] == 90000 and u["g2"][2] == 105000 and "g5" not in u and "g4" not in u   # la referencia solo se mueve con cambios reales
+    subj, body = N.render(items, "https://x/")
+    assert "cuenta.html#avisos" in body and "RTX 5060" in body and "bancos" not in subj
+    # la configuración verificada de la tienda también cuenta como cuotas sin interés
+    mails2, _ = N.evaluate([dict(base, product_id="g2", price_ref=105000, last_price=105000)],
+                           [{"id": "g2", "name": "R5", "offers": [of("Z", 105000, price_list=120000)]}], {"Z": {"cuotas": {"n": 6, "sin_interes": True}}})
+    assert mails2["a@b.com"]["items"][0]["changes"][0]["type"] == "cuotas"
+    # sin secretos no hace nada (y no llama a nadie)
+    calls = []
+    assert N.main([], env={}, call=lambda *a, **k: calls.append(a)) == 0 and not calls
+    # corrida completa con servicios simulados: 1 mail, registro y referencias
+    env = {"SUPABASE_URL": "https://abcdefghijkl.supabase.co", "SUPABASE_SECRET_KEY": "sb_secret_x", "BREVO_API_KEY": "k", "NOTIFY_FROM": "avisos@ejemplo.com"}
+    log = []
+    def fake(method, url, headers, payload=None):
+        log.append((method, url, headers, payload))
+        return [dict(base, product_id="g1", name="x", price_ref=None, last_price=None)] if url.endswith("/rpc/notify_targets") else None
+    N.main([], env=env, call=fake, products=prods, cfg={})
+    assert log[0][2]["apikey"] == "sb_secret_x"
+    assert not any("api.brevo.com" in l[1] for l in log)          # sin precio de referencia todavía no hay aviso, solo se guarda
+    assert any(l[0] == "PATCH" and "product_id=eq.g1" in l[1] for l in log)
+    log.clear()
+    def fake2(method, url, headers, payload=None):
+        log.append((method, url, headers, payload))
+        if url.endswith("/rpc/notify_targets"):
+            return [dict(base, product_id="g1", name="x", price_ref=100000, last_price=100000)]
+        if "brevo" in url:
+            raise urllib.error.HTTPError(url, 500, "x", {}, None)
+    N.main([], env=env, call=fake2, products=prods, cfg={})
+    br = [l for l in log if "api.brevo.com" in l[1]]
+    assert len(br) == 1 and br[0][2]["api-key"] == "k" and br[0][3]["to"] == [{"email": "a@b.com"}]
+    assert not any(l[0] == "PATCH" for l in log)                 # falló el envío: se reintenta en la próxima corrida

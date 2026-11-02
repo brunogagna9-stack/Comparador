@@ -53,7 +53,7 @@ details.nod{margin-top:10px;background:var(--card);border:1px solid var(--line2)
 <div class="panel"><div class="legend" id="legend"></div>
 <p class="note" style="margin-top:8px">Las puntuaciones y el ganador se calculan solo con métricas numéricas que tienen dato para <b>todos</b> los productos. Cada métrica se normaliza contra el mejor de la comparación (el mejor vale 100 %; si menos es mejor, se invierte) y se pondera según el uso elegido. Si faltan datos o la diferencia es menor al 3 %, decimos que el resultado es inconcluso. No usamos puntajes inventados.</p></div>
 </main>
-<script src="js/lib.js"></script><script src="js/rep.js"></script><script src="js/compare.js"></script>
+<script src="js/lib.js"></script><script src="js/history.js"></script><script src="js/rep.js"></script><script src="js/compare.js"></script>
 <script>
 const $=s=>document.querySelector(s),{ARS,esc,RES}=CT;
 const COL=["#4f6bff","#ff4f8b","#12a37f","#e0a100"];
@@ -176,6 +176,9 @@ function drawOut(){
   $("#diff").onchange=e=>{S.diff=e.target.checked;drawOut()};
   document.querySelectorAll("[data-h]").forEach(b=>b.onclick=()=>$("#h_"+b.dataset.h).classList.toggle("on"));
   try{history.replaceState(null,"","#"+new URLSearchParams({cat:S.cat,ids:S.ids.join(",")}))}catch{}
+  // «Mi historial»: la comparación de esta visita se guarda (y se actualiza mientras sumás o quitás productos)
+  if(window.HIST&&!S.all){const nm=id=>{const g=byId(id);if(!g)return"";const hw=S.cat==="procesadores"?C.hwCpu(g.name):S.cat==="placas-de-video"?(C.hwGpu(g.name)||C.hwGpuX(g.name)):null;return hw?hw.name:shortName(g.name).slice(0,48)};
+    HIST.save("comparaciones",{title:S.ids.map(nm).join(" vs "),sub:`${CT.CATS[S.cat]||S.cat} · ${S.ids.length} productos`,url:"comparar.html#"+new URLSearchParams({cat:S.cat,ids:S.ids.join(",")}),cat:S.cat},"cmp:"+S.cat)}
 }
 function drawAll(){
   if(!S.all)CT.cmp.set(S.cat,S.ids);   // la comparación de cada tipo queda guardada en el navegador
