@@ -81,6 +81,7 @@ function specs(g,HW,PR,META,SP){
     $("#fl").onclick=()=>{const i=LIST.indexOf(g.id);i>=0?LIST.splice(i,1):LIST.push(g.id);save("lista",LIST);CTL.count(LIST.length);$("#hd").innerHTML=head();bind()};
     $("#fb").onclick=()=>{if(FOLLOW[g.id])delete FOLLOW[g.id];else FOLLOW[g.id]={price:best,name:g.name};save("seg",FOLLOW);$("#hd").innerHTML=head();bind()};
   };bind();
+  addEventListener("acc:synced",e=>{if(!e.detail||!e.detail.changed)return;try{FOLLOW=JSON.parse(localStorage.getItem("seg")||"{}")}catch{}$("#hd").innerHTML=head();bind()});
 })();
 </script>
 <script src="js/assistant.js"></script>
