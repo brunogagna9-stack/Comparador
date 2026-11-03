@@ -1007,7 +1007,15 @@ def test_actualizacion_32_cuentas():
     root = Path(__file__).resolve().parent.parent
     site = root / "site"
     cfg = json.loads((site / "data" / "config.json").read_text(encoding="utf-8"))
-    assert cfg["accounts"]["supabase_url"] is None and cfg["accounts"]["supabase_publishable_key"] is None   # apagado
+    acc = cfg["accounts"]
+    if acc.get("supabase_url") is None and acc.get("supabase_publishable_key") is None:
+        pass                                                                          # apagado: el sitio funciona igual que antes
+    else:                                                                             # encendido: datos con el formato correcto
+        url, key = str(acc.get("supabase_url") or ""), str(acc.get("supabase_publishable_key") or "")
+        assert not key.startswith("sb_secret_"), "config.json tiene la clave SECRETA de Supabase: borrala ya y rotala en Supabase"
+        assert re.match(r"^https://[a-z0-9-]+\.supabase\.co/?$", url), (
+            "config.json → accounts.supabase_url tiene que ser solo https://xxxx.supabase.co (sin /rest/v1 ni nada más). Ahora dice: " + url)
+        assert re.match(r"^(sb_publishable_[A-Za-z0-9_-]{10,}|eyJ[\w-]+\.[\w-]+\.[\w-]+)$", key), "accounts.supabase_publishable_key no parece una clave publishable"
     # ninguna clave secreta en nada que se publique
     for f in site.rglob("*"):
         if f.is_file() and f.suffix in (".js", ".html", ".json") and "vendor" not in f.parts:
