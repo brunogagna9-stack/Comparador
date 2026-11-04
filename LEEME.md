@@ -549,3 +549,29 @@ carga nada de Supabase y no se envía ningún mail.
 licencia MIT, guardada en el sitio en una versión fija), `data_src/supabase.sql`, `scripts/notify.py`, paso nuevo en
 `.github/workflows/actualizar.yml`, clave `accounts` en `data/config.json`. Pruebas: `tests/test_account.js` y
 `test_actualizacion_32_cuentas` (además se probó el SQL en PostgreSQL y la página completa en un navegador contra un Supabase simulado).
+
+## Actualización 33 — Auditoría de compatibilidad con el catálogo real
+Se recorrió el catálogo publicado completo (13.172 productos de «Armalo vos» y 28.291 en total) y las 1.296 configuraciones
+del «Armado recomendado», contrastando lo que deduce el sitio con reglas independientes (chipset → socket, socket → DDR,
+letra M/I del modelo → tamaño de placa, modelo del título contra la ficha usada).
+- **Corregido: gráficos integrados de Intel.** La ficha técnica agrupa variantes con y sin «F» (12700 / 12700F, 12400 / 12400F,
+  Ultra 5 225 / 225F). Antes se usaba el dato de la ficha: un 12700F figuraba con gráficos integrados (en «Armalo vos» se podía
+  armar sin placa de video y quedaba sin imagen) y un 12400 figuraba sin ellos. Ahora manda el modelo exacto del título, también
+  en el filtro de Productos. Verificado: 0 contradicciones en los 169 procesadores con ese dato.
+- **Corregido: largo de placas de video.** La ficha de un modelo ya no se aplica a sus variantes «MAX» o «PLUS» (otro diseño,
+  otro largo; por ejemplo, Gigabyte EAGLE MAX): quedan como «sin verificar» hasta cargar su ficha.
+- **Corregido: almacenamiento en «Armalo vos».** Ya no aparecen discos externos, carcasas «carry disk» ni adaptadores.
+- **Corregido: fuentes con dos potencias en el título** («600W (símil 500W)»): se toma la menor.
+- **Corregido: procesadores sin ficha** porque el título mencionaba el cooler («…Vega 7 Cooler», «Sin Cooler», «S-coolers»):
+  ahora se reconocen (de 57 sin ficha a 35; los que quedan son de servidor, muy viejos o modelos sin cargar).
+- **Armado recomendado con compatibilidad verificada.** Disipador: primero los que tienen el soporte para el socket en la ficha
+  del fabricante (verified.json), después uno sin ficha con el aviso «confirmá con la tienda…»; se descartan los que la ficha dice
+  que NO soportan el socket. Gabinete: primero los que según la ficha aceptan el tamaño de la placa y el largo de la placa de video;
+  los que no entran se descartan y el resto dice qué confirmar. La primera opción (la que suma al total) es siempre verificada
+  cuando existe una; puede costar más que la más barata sin ficha, que queda como alternativa.
+- Sin errores encontrados en: socket de placas (ninguna contradicción chipset/socket), memoria según socket, tamaño de placa,
+  memorias de notebook (todas detectadas) ni modelos de placa de video.
+- **Datos que faltan** (en «Armalo vos» quedan como «sin verificar», nunca como compatibles): sockets del 51 % de los coolers,
+  alto del 95 % de los coolers de aire, largo del 71 % de las placas de video y medidas del 74 % de los gabinetes. Se completan
+  sumando fichas oficiales a `data_src/verified_src.py`.
+- Pruebas nuevas en `tests/test_builder.js`.
