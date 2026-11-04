@@ -222,9 +222,9 @@ function showResults(){
 }
 (async()=>{
   const j=async(u,d)=>{try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw 0;return await r.json()}catch{return d}};
-  let m,SP;[HW,PR,m,SP]=await Promise.all([j("data/hardware.json",null),j("data/products.json",[]),j("data/meta.json",{}),j("data/specs.json",null),REP.load()]);META=m;
+  let m,SP,VER;[HW,PR,m,SP,VER]=await Promise.all([j("data/hardware.json",null),j("data/products.json",[]),j("data/meta.json",{}),j("data/specs.json",null),j("data/verified.json",null),REP.load()]);META=m;
   if(!HW||!PR.length){$("#app").innerHTML='<div class="panel">No se pudieron cargar los datos de productos. Probá recargar la página.</div>';return}
-  C=CT.makeFinder(CT.create(HW,PR,META,SP));QV.setData(PR);
+  C=CT.makeFinder(CT.create(HW,PR,META,SP,VER));QV.setData(PR);
   $("#fine").textContent="Las recomendaciones usan solo productos y precios reales del comparador. Las especificaciones de PC armadas y notebooks se leen del título de la tienda y están pendientes de verificar. No es asesoramiento profesional: confirmá siempre con la tienda antes de comprar.";
   draw();
 })();

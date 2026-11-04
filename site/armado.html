@@ -67,7 +67,7 @@ const SLOTICO={cpu:"procesadores",gpu:"placas-de-video",ram:"memorias-ram",ssd:"
 const partHtml=p=>`<div class="part"><b class="pt">${SLOTICO[p.slot]?ICONS.svg(SLOTICO[p.slot],18):""}${esc(p.title)}</b><div class="why">${esc(p.why)}</div>${shopHtml(p.shop,p.slot==="psu"?x=>{const m=x.g.name.match(/(\d{3,4})\s?w/i);return m?" · "+m[1]+" W":""}:null)}</div>`;
 function totalHtml(t){
   if(!PR.length)return"";
-  const faltan=t.missing.length?`<small>Sin precio en el comparador: ${t.missing.map(esc).join(", ")}. El total es parcial.</small>`:`<small>Suma la opción más barata con stock de cada parte (${t.priced} de ${t.count}).</small>`;
+  const faltan=t.missing.length?`<small>Sin precio en el comparador: ${t.missing.map(esc).join(", ")}. El total es parcial.</small>`:`<small>Suma la primera opción de cada parte: la más barata con stock y, en gabinete y disipador, la más barata con compatibilidad verificada (${t.priced} de ${t.count}).</small>`;
   return `<div class="tot"><span>Total estimado de esta configuración${faltan}</span><span>${ARS(t.total)}${t.missing.length?"+":""}</span></div>`;
 }
 function build(g,A){
@@ -76,7 +76,7 @@ function build(g,A){
   const col=(title,tag,own,tot,cpu)=>{const all=ids([...A.shared,...own]);return `<div class="col"><h3>${title}</h3><div class="tg">${tag}</div>
     ${own.length?own.map(partHtml).join(""):'<div class="note">No hay diferencias: esta configuración usa solo los componentes compartidos.</div>'}
     ${A.shared.length?`<div class="note up">+ los ${A.shared.length} componentes compartidos (arriba), ya incluidos en el total.</div>`:""}
-    ${totalHtml(tot)}${all.length?`<button type="button" class="qv-all" data-qall="${all.join(",")}"></button><div class="note">Agrega la opción más barata de cada pieza (incluidas las compartidas) a tu lista del carrito.</div>`:""}</div>`};
+    ${totalHtml(tot)}${all.length?`<button type="button" class="qv-all" data-qall="${all.join(",")}"></button><div class="note">Agrega la primera opción de cada pieza (incluidas las compartidas) a tu lista del carrito.</div>`:""}</div>`};
   let h="";
   if(A.shared.length)h+=`<div class="col shared" style="margin-bottom:14px"><h3>Componentes compartidos por ambas configuraciones</h3><div class="tg">Son idénticos en el mínimo y en el sugerido: aparecen una sola vez. Cada configuración los cuenta en su propio total.</div>${A.shared.map(partHtml).join("")}</div>`;
   h+=`<div class="cols">${col("Hardware mínimo","Sin cuello de botella importante a "+RES[r],A.onlyMin,A.totalMin)}${col("Hardware sugerido","Equilibrado y con margen a "+RES[r],A.onlySug,A.totalSug)}</div>`;
@@ -151,9 +151,9 @@ function setMode(){
 }
 (async()=>{
   const j=async(u,d)=>{try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw 0;return await r.json()}catch{return d}};
-  let m;[HW,PR,m]=await Promise.all([j("data/hardware.json",null),j("data/products.json",[]),j("data/meta.json",{}),REP.load()]);META=m;
+  let m,ver;[HW,PR,m,ver]=await Promise.all([j("data/hardware.json",null),j("data/products.json",[]),j("data/meta.json",{}),j("data/verified.json",null),REP.load()]);META=m;
   if(!HW){$("#out").textContent="No se pudieron cargar los datos de hardware.";return}
-  C=CT.create(HW,PR,META);S.id="rtx-5070";QV.setData(PR);
+  C=CT.create(HW,PR,META,null,ver);S.id="rtx-5070";QV.setData(PR);
   {const u=new URLSearchParams(location.search);if(["gpu","cpu"].includes(u.get("modo")))S.mode=u.get("modo");if(u.get("id"))S.id=u.get("id");
    const r=+u.get("res");if([0,1,2].includes(r)&&u.get("res")!==null){S.res=r;document.querySelectorAll("#res button").forEach(x=>x.classList.toggle("on",+x.dataset.v===r))}
    if(["AMD","Intel"].includes(u.get("marca"))){S.ven=u.get("marca");document.querySelectorAll("#ven button").forEach(b=>b.classList.toggle("on",b.dataset.v===S.ven))}}

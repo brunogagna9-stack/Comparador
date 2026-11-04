@@ -259,7 +259,7 @@ $("#pick").addEventListener("click",e=>{if(e.target.id==="pick")closePick()});
   const j=async(u,d)=>{try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw 0;return await r.json()}catch{return d}};
   let meta,specs;[HW,PR,meta,VER,specs]=await Promise.all([j("data/hardware.json",null),j("data/armar.json",null).then(d=>d&&d.length?d:j("data/products.json",[])),j("data/meta.json",{}),j("data/verified.json",{}),j("data/specs.json",null),REP.load()]);
   if(!HW||!PR.length){$("#slots").innerHTML='<div class="sl"><div class="note">No se pudieron cargar los datos.</div></div>';return}
-  C=CT.create(HW,PR,meta,specs);E=BLD.create(C,VER);byIdM=new Map(PR.map(g=>[g.id,g]));QV.setData(PR);
+  C=CT.create(HW,PR,meta,specs,VER);E=BLD.create(C,VER);byIdM=new Map(PR.map(g=>[g.id,g]));QV.setData(PR);
   const u=new URLSearchParams(location.search).get("b");
   if(u)BUILD=E.decode(u);else{try{BUILD=JSON.parse(localStorage.getItem("armar")||"{}")||{}}catch(e){BUILD={}}}
   for(const k of Object.keys(BUILD)){const e=BUILD[k];if(e&&e.id&&!byId(e.id))delete BUILD[k]}   // productos que ya no están en el catálogo
