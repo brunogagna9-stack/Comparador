@@ -100,10 +100,11 @@
   }
   const CERT = { white: 1, bronze: 2, silver: 3, gold: 4, platinum: 5, titanium: 6 };
   function psuSpec(n) {
-    const w = n.match(/(\d{3,4})\s?w\b/i), c = n.match(/80\s?\+?\s?plus\s?(white|bronze|silver|gold|platinum|titanium)?/i);
+    const ws = [...n.matchAll(/(\d{3,4})\s?w\b/gi)].map(m => +m[1]).filter(x => x >= 150 && x <= 2000);
+    const w = ws.length ? [Math.min(...ws)] : null, c = n.match(/80\s?\+?\s?plus\s?(white|bronze|silver|gold|platinum|titanium)?/i);
     const cy = !c && n.match(/cybenetics\s?(bronze|silver|gold|platinum|titanium|diamond)/i);
     const cert = c ? (c[1] ? c[1].toLowerCase() : "white") : null;
-    return { w: w ? +w[1] : null, cert, certRank: cert ? CERT[cert] : null, cyb: cy ? "Cybenetics " + cy[1][0].toUpperCase() + cy[1].slice(1).toLowerCase() : null, modular: /modular/i.test(n) && !/no modular|semi/i.test(n), semi: /semi[- ]?modular/i.test(n),
+    return { w: w ? w[0] : null, wMany: ws.length > 1 && new Set(ws).size > 1, cert, certRank: cert ? CERT[cert] : null, cyb: cy ? "Cybenetics " + cy[1][0].toUpperCase() + cy[1].slice(1).toLowerCase() : null, modular: /modular/i.test(n) && !/no modular|semi/i.test(n), semi: /semi[- ]?modular/i.test(n),
       atx3: (n.match(/atx\s?3\.\d/i) || [null])[0], bulk: /bulk/i.test(n) };
   }
   const CHIPSETS = "a320 a520 b450 b550 x570 a620 b650 b650e x670 x670e b840 b850 x870 x870e h510 b560 z590 h610 b660 b760 z690 z790 h810 b860 z890".split(" ");
@@ -225,8 +226,8 @@
   };
 
   /* ---------- contexto con el catálogo y la base de hardware ---------- */
-  CT.create = function (HW, PR, meta, SPECS) {
-    const C = { HW, PR, meta: meta || {}, SPECS: SPECS && SPECS.items ? SPECS : null };
+  CT.create = function (HW, PR, meta, SPECS, VER) {
+    const C = { HW, PR, meta: meta || {}, SPECS: SPECS && SPECS.items ? SPECS : null, VER: VER || null };
     /* ficha técnica verificada de un notebook (specs.json); devuelve null si la tienda no la publica */
     C.spec = g => (g && g.spec && C.SPECS && C.SPECS.items[g.spec]) || null;
     C.sf = (g, field) => {
@@ -285,7 +286,10 @@
       if (cat === "procesadores") return C.hwCpu(name) ? null : "el modelo no está en nuestra base de fichas oficiales";
       return null;
     };
-    C.hwCpu = name => { name = cpuClean(hwName(name).replace(/\bvideo\s?cooler\b/ig, "video").replace(/\b(?:y|e)\s+(?:cooler|disipador)\b/ig, " ")); if (/cooler|disipador|fan|pasta|\bkit\b/i.test(name)) return null; const hit = cpuTests.find(([c, t]) => t(name)); return hit ? hit[0] : null; };
+    C.hwCpu = name => { name = cpuClean(hwName(name).replace(/\bvideo\s?cooler\b/ig, "video").replace(/\b(?:y|e)\s+(?:cooler|disipador)\b/ig, " "));
+      // publicaciones de PROCESADORES que mencionan el cooler («…Vega 7 Cooler», «Sin Cooler», «S-coolers», «+ Wraith Stealth Cooler»): no son disipadores
+      if (/^\s*(procesador|micro(procesador)?|cpu)\b/i.test(name)) name = name.replace(/(?:\+\s*|\b(?:con|c\/|sin|s\/|s-|no incluye|incluye)\s*)?(?:wraith\s+\w+\s+)?\b(?:coolers?|disipador)\b/ig, " ");
+      if (/cooler|disipador|fan|pasta|\bkit\b/i.test(name)) return null; const hit = cpuTests.find(([c, t]) => t(name)); return hit ? hit[0] : null; };
 
     const isPc = n => /^pc\b|\bpc (armada|gamer|powered)|powered by|notebook|combo|\bkit\b|all in one/i.test(n);
     C.findGpu = g => { const t = rxm(g.m, g.x);
@@ -323,12 +327,31 @@
       const ok = { AM5: /am5|am4|\bamd\b/, AM4: /am4|\bamd\b/, LGA1851: /1851|1700|\bintel\b/, LGA1700: /1700|\bintel\b/, LGA1200: /1200|115\d|\bintel\b/ }[socket];
       return ok ? ok.test(l) : true; };
     C.coolerTier = c => { const w = c.maxp || (c.tdp ? c.tdp * 1.35 : 90); return w <= 95 ? 1 : w <= 170 ? 2 : 3; };
+    /* ---- fichas verificadas (verified.json): coolers con sus sockets y gabinetes con sus medidas (actualización 33) ----
+       Con la ficha se garantiza la compatibilidad; sin ficha se avisa que hay que confirmarla con la tienda. */
+    const vprep = l => (l || []).map(e => Object.assign({ t: rxm(e.m, e.x) }, e));
+    const VCO = vprep(VER && VER.coolers), VCA = vprep(VER && VER.cases), VGP = vprep(VER && VER.gpus);
+    const MOUNT_EQ = { AM5: ["AM4"], LGA1851: ["LGA1700"] }, VARIANT = /\b(max|plus)\b/i;
+    C.verCooler = n => VCO.find(e => e.t(n)) || null;
+    C.verCase = n => VCA.find(e => e.t(n)) || null;
+    C.verGpu = (n, chip) => VGP.find(e => e.t(n) && (!e.chip || e.chip === chip) && (!VARIANT.test(n) || VARIANT.test(e.name))) || null;
+    // true = la ficha dice que soporta el socket · false = la ficha dice que no · null = no hay ficha
+    C.coolerSocketOk = (n, socket) => { const v = C.verCooler(n); if (!v) return null; const s = /^LGA115/.test(socket) ? "LGA115x" : socket;
+      return v.sockets.includes(s) || (MOUNT_EQ[socket] || []).some(x => v.sockets.includes(x)); };
+    /* hasta 2 opciones verificadas primero (la primera es la que suma al total) y, como alternativa, la más barata sin ficha completa */
+    const pickVer = rows => { const v = rows.filter(x => x.ver), rest = rows.filter(x => !x.ver && x.part).concat(rows.filter(x => !x.ver && !x.part));
+      return v.length ? v.slice(0, 2).concat(rest.slice(0, 3 - Math.min(v.length, 2))) : rest.slice(0, 3); };
+    const markCooler = (list, c) => {
+      if (!VCO.length) return list.slice(0, 3);
+      const rows = list.map(x => Object.assign(x, { ver: C.coolerSocketOk(x.g.name, c.socket) })).filter(x => x.ver !== false);
+      rows.forEach(x => { x.note = x.ver ? `✓ Soporte para ${c.socket} verificado en la ficha del fabricante.` : `Sin ficha verificada: confirmá con la tienda que incluya el soporte para ${c.socket}.`; });
+      return pickVer(rows); };
     C.findCooler = c => { const w = c.maxp || (c.tdp ? c.tdp * 1.35 : 90), tier = C.coolerTier(c);
-      return C.cheapest(inCat("refrigeracion").filter(p => { const n = p.name; if (COOLER_BAD.test(n) || !/cooler|\bdisipador\b|water|aio|l[ií]quid|refrigeraci/i.test(n)) return false;
+      return markCooler(C.cheapest(inCat("refrigeracion").filter(p => { const n = p.name; if (COOLER_BAD.test(n) || !/cooler|\bdisipador\b|water|aio|l[ií]quid|refrigeraci/i.test(n)) return false;
         if (isAio(n)) { const z = aioSize(n); return z && (tier === 3 ? z >= 360 : tier === 2 ? z >= 240 : z >= 240); }
         if (tier === 3) return false;                                                   // >170 W: solo líquida de 360 o más
         const t = statedTdp(n); if (t != null) return t >= w + (tier === 2 ? 20 : 0);
-        return GOOD_AIR.test(n); }).filter(p => coolerFits(p.name, c.socket)), 3); };   // sin potencia declarada solo se aceptan modelos de torre conocidos
+        return GOOD_AIR.test(n); }).filter(p => coolerFits(p.name, c.socket)), 60), c); };   // sin potencia declarada solo se aceptan modelos de torre conocidos
     // Placas madre: ¿soportan ese procesador de fábrica o pueden necesitar actualizar la BIOS? y ¿alcanzan para su consumo?
     CT.biosNeed = (c, chipset) => {
       const ch = (chipset || "").toLowerCase(), id = c.id || "";
@@ -351,9 +374,18 @@
       return first ? [first, ...shop.filter(x => x !== first && (x.bios !== "bios" || first.bios === "bios"))].slice(0, 3) : [];
     };
     // Gabinete según el tamaño de la placa madre elegida
-    C.findCase = moboName => { const f = moboName ? moboSpec(moboName).form : null, atx = f !== "Micro-ATX" && f !== "Mini-ITX";   // tamaño desconocido: se asume ATX
-      return C.cheapest(inCat("gabinetes").filter(p => /^(gabinete|gab)\b/i.test(p.name) && !/kit|combo|fuente|\b\d{3,4}\s?w\b|teclado|mouse|tec\+|slim|\bitx\b|sin vidrio/i.test(p.name)
-        && (!atx || !/m-?atx|micro|mini[- ]?tower|matx/i.test(p.name))), 3); };
+    C.findCase = (moboName, gpuName, gpuChip) => { const f = moboName ? moboSpec(moboName).form : null, atx = f !== "Micro-ATX" && f !== "Mini-ITX";   // tamaño desconocido: se asume ATX
+      const list = C.cheapest(inCat("gabinetes").filter(p => /^(gabinete|gab)\b/i.test(p.name) && !/kit|combo|fuente|\b\d{3,4}\s?w\b|teclado|mouse|tec\+|slim|\bitx\b|sin vidrio/i.test(p.name)
+        && (!atx || !/m-?atx|micro|mini[- ]?tower|matx/i.test(p.name))), 100000);   // todo el catálogo: los verificados no siempre están entre los más baratos
+      if (!VCA.length) return list.slice(0, 3);
+      const need = f || "ATX", gv = gpuName ? C.verGpu(gpuName, gpuChip) : null, any = VER && VER.rules && VER.rules.gpu_any ? VER.rules.gpu_any.len : 381;
+      const rows = list.map(x => { const v = C.verCase(x.g.name); if (!v) return Object.assign(x, { ver: null, note: "Sin ficha verificada: confirmá en la tienda que acepte placas " + need + " y medí el largo de la placa de video." });
+        if (!Array.isArray(v.forms)) return Object.assign(x, { ver: null, note: "Sin ficha verificada del tamaño de placa: confirmá en la tienda que acepte placas " + need + "." });
+        if (!v.forms.includes(need)) return Object.assign(x, { ver: false });
+        if (gpuName && v.gpu && (gv ? gv.len > v.gpu : v.gpu < any)) return Object.assign(x, gv ? { ver: false } : { ver: null, part: true, note: `Ficha del fabricante: acepta placas ${need} y placas de video de hasta ${v.gpu} mm. No tenemos el largo de la placa de video elegida: confirmalo antes de comprar.` });
+        return Object.assign(x, { ver: true, note: `✓ Verificado en la ficha del fabricante: acepta placas ${need}` + (gpuName && v.gpu ? ` y placas de video de hasta ${v.gpu} mm${gv ? ` (la elegida mide ${gv.len} mm)` : ""}` : "") + "." }); })
+        .filter(x => x.ver !== false);
+      return pickVer(rows); };
     // Placas de video que en la mayoría de los modelos usan el conector de 16 pines (12V-2x6 / 12VHPWR)
     CT.uses16pin = g => g.vendor === "NVIDIA" && /rtx\s?[45]0\d0/i.test(g.name) && g.tgp >= 200;
     C.findPsuFor = (w, g) => { const base = C.findPsu(w);
@@ -428,10 +460,11 @@
         out.push({ slot: "cooler", label: "Disipador del procesador", key: "cooler:" + tier + ":" + inc, title: `Disipador del procesador${inc === null ? " (si no lo trae)" : ""}`,
           why: (inc === false ? "Este procesador (o la publicación más barata) viene sin disipador. " : "No sabemos si la caja trae disipador: confirmalo con la tienda; si lo trae, podés sacarlo del total. ") +
             (tier === 1 ? `Consume hasta ~${w} W: alcanza un disipador de aire común.` : tier === 2 ? `Consume hasta ~${w} W: hace falta un disipador de aire tipo torre o una líquida de 240 mm.` : `Consume hasta ~${w} W: conviene una refrigeración líquida de 360 mm.`) +
-            " Verificá que incluya el soporte para el socket " + c.socket + ".", shop: C.findCooler(c), optional: inc === null }); }
+            " Primero van los que tienen el soporte para " + c.socket + " verificado en la ficha del fabricante.", shop: C.findCooler(c), optional: inc === null }); }
       const mobo = C.findMoboFor(c)[0], f = mobo ? moboSpec(mobo.g.name).form : null;
       out.push({ slot: "case", label: "Gabinete", key: "case:" + (f || "?"), title: `Gabinete${f ? " (para placa " + f + ")" : " (para placa ATX)"}`,
-        why: (g ? `Medí el largo máximo de placa de video que acepta: las de 2 ventiladores miden ~250 mm y las de 3, 300–340 mm. ` : "") + "Que entre la fuente (ATX) y, si elegís líquida, que tenga lugar para el radiador.", shop: C.findCase(mobo && mobo.g.name) });
+        why: (g ? `Primero van los gabinetes con ficha del fabricante verificada (tamaño de placa y largo de la placa de video); los demás dicen qué confirmar. ` : "") + "Que entre la fuente (ATX) y, si elegís líquida, que tenga lugar para el radiador.",
+        shop: C.findCase(mobo && mobo.g.name, g && (C.findGpu(g)[0] || {}).g ? C.findGpu(g)[0].g.name : null, g && g.id) });
       return out;
     };
     /* Separa lo compartido de lo propio de cada configuración (comparando slot por slot). */
