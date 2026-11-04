@@ -49,7 +49,8 @@
     const VC = prep(E.VER.coolers), VK = prep(E.VER.cases), VG = prep(E.VER.gpus);
     E.verCooler = n => VC.find(e => e.t(n)) || null;
     E.verCase = n => VK.find(e => e.t(n)) || null;
-    E.verGpu = (n, chip) => VG.find(e => e.t(n) && (!e.chip || e.chip === chip)) || null;
+    const VARIANT = /\b(max|plus)\b/i;   // «EAGLE MAX», «VENTUS 2X PLUS»: otro diseño, otro largo
+    E.verGpu = (n, chip) => VG.find(e => e.t(n) && (!e.chip || e.chip === chip) && (!VARIANT.test(n) || VARIANT.test(e.name))) || null;
     const src = e => ({ url: e.src, date: e.d, ref: e.name });
 
     /* ---------- qué productos pertenecen a cada lugar ---------- */
@@ -63,7 +64,8 @@
         case "cooler": { const t = FX.val(g, FX.defs("refrigeracion")[0]); return t === "Líquida (watercooler)" || t === "Cooler de aire para procesador"; }
         case "mobo": return !/notebook|\bpc\b/i.test(n);
         case "ram": return /ddr|memoria|ram/i.test(n) && !/^(mb|mother|mainboard|placa madre)\b|\bmother(board)?\b|\b(notebook|pc)\s+(gamer|armada)\b|^(notebook|pc)\b/i.test(n);   // hay placas madre publicadas en la categoría de memorias
-        case "ssd": { const t = FX.val(g, FX.defs("almacenamiento")[0]); return !!t && /^(SSD NVMe|SSD SATA|SSD M\.2|SSD \(sin|Disco rígido)/.test(t); }
+        case "ssd": { const t = FX.val(g, FX.defs("almacenamiento")[0]); return !!t && /^(SSD NVMe|SSD SATA|SSD M\.2|SSD \(sin|Disco rígido)/.test(t)
+          && !/extern|\bext\b|port[aá]til|portable|carry|enclosure|cofre|carcasa|adaptador|docking|\busb\b|rugged/i.test(n); }
         case "gpu": return !!(C.hwGpu(n) || C.hwGpuX(n)) && !/^pc\b|notebook|\bkit\b/i.test(n);
         case "case": return /^(gabinete|gab)\b/i.test(n) && !/\bkit\b|combo|tec\+|teclado|mouse/i.test(n);
         case "psu": return !!CT.parse(n, "fuentes").w && !/gabinete|combo|\bkit\b/i.test(n);
@@ -77,7 +79,10 @@
       const n = g.name, a = {};
       if (k === "cpu") {
         const hw = C.hwCpu(n);
-        if (hw) { a.hw = hw; a.socket = f(hw.socket, "fab", { url: hw.vurl }); a.mem = f(hw.mem, "fab"); a.maxp = f(hw.maxp, "fab"); if (hw.spec && typeof hw.spec.igpu === "boolean") a.igpu = f(hw.spec.igpu, "fab"); }
+        if (hw) { a.hw = hw; a.socket = f(hw.socket, "fab", { url: hw.vurl }); a.mem = f(hw.mem, "fab"); a.maxp = f(hw.maxp, "fab");
+          // la ficha agrupa variantes con y sin «F» (12700 / 12700F): los gráficos integrados se deciden por el modelo exacto del título
+          const t = CT.hasIgpu(n);
+          if (hw.spec && typeof hw.spec.igpu === "boolean") a.igpu = t != null && t !== hw.spec.igpu ? f(t, "regla", { note: t ? "el modelo del título no lleva «F»: trae gráficos integrados" : "el modelo del título lleva «F»: no trae gráficos integrados" }) : f(hw.spec.igpu, "fab"); }
         if (!a.socket) { const s = FX.cpuSocket(n); if (s && SOCKETS.includes(s)) a.socket = f(s, /am[45]|1700|1851|1200/i.test(n) ? "tienda" : "regla"); }
         if (!a.mem && a.socket) a.mem = f({ AM4: "DDR4", AM5: "DDR5", LGA1851: "DDR5", LGA1200: "DDR4", LGA1700: "DDR4/DDR5" }[a.socket.v], "regla");
         if (!a.igpu) { const t = CT.hasIgpu(n); if (/sin (video|gr[aá]ficos)|s\/\s?video/i.test(n)) a.igpu = f(false, "tienda"); else if (/c\/\s?video|con video/i.test(n)) a.igpu = f(true, "tienda"); else if (t != null) a.igpu = f(t, "regla"); }

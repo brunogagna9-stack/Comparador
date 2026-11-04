@@ -60,9 +60,11 @@
   function cpuIgpu(n) {
     if (/sin (video|gr[aá]ficos)|s\/\s?video|sin gpu/i.test(n)) return "Sin gráficos integrados";
     if (/c\/\s?video|con (video|gr[aá]ficos)/i.test(n)) return "Con gráficos integrados";
+    // primero el modelo exacto del título (la ficha agrupa 12700 y 12700F, que difieren justo en esto)
+    const t = CT.hasIgpu(n); if (t != null) return t ? "Con gráficos integrados" : "Sin gráficos integrados";
     const hw = C && C.hwCpu ? C.hwCpu(n) : null;
     if (hw && hw.spec && typeof hw.spec.igpu === "boolean") return hw.spec.igpu ? "Con gráficos integrados" : "Sin gráficos integrados";
-    const t = CT.hasIgpu(n); return t == null ? null : t ? "Con gráficos integrados" : "Sin gráficos integrados";
+    return null;
   }
   /* placas de video: chip, memoria y tipo de memoria (el tipo sale de la ficha del fabricante del chip) */
   function gpuHw(n) { if (!C) return null; return (C.hwGpu && C.hwGpu(n)) || (C.hwGpuX && C.hwGpuX(n)) || null; }
