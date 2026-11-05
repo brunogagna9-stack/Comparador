@@ -399,15 +399,38 @@ def home_summary(groups, recent_days=14):
 
 
 ARMAR_CATS = ("procesadores", "refrigeracion", "motherboards", "memorias-ram", "almacenamiento", "placas-de-video", "gabinetes", "fuentes", "monitores")
+def search_index(groups):
+    """Índice liviano para el autocompletado de los buscadores (buscar.json, actualización 36): por producto
+    [id, nombre, categoría, foto, precio más bajo con stock (0 si no hay), cantidad de tiendas]. Se descarga recién
+    cuando la persona toca un buscador."""
+    price = lambda o: o.get("price_cash") or o.get("price_list")
+    rows = []
+    for g in groups:
+        offs = [o for o in g.get("offers") or [] if price(o) and not o.get("anom")]
+        if not offs:
+            continue
+        live = [o for o in offs if o.get("stock") is not False] or offs
+        img = g.get("image") or ""
+        if not img.startswith("https://"):
+            img = g.get("image_fb") or ""
+            if not img.startswith("https://"):
+                img = ""
+        rows.append([g["id"], g.get("name") or "", g.get("category") or "otros", img, round(min(price(o) for o in live)),
+                     len({o.get("store") for o in offs})])
+    return {"v": 1, "items": rows}
+
+
+ARMAR_PER_CATS = ("mouses", "teclados", "auriculares")   # actualización 35: se descargan aparte, solo al elegir un periférico
 ARMAR_OFFER = ("store", "url", "price_cash", "price_list", "stock", "cuotas", "anom")
 
 
-def armar_catalog(groups):
+def armar_catalog(groups, cats=ARMAR_CATS):
     """Catálogo reducido para «Armalo vos» (armar.json): solo las 9 categorías de piezas y los datos de oferta que usa la página.
-    Así no descarga ni lee el catálogo entero (17 MB), que traba la página en equipos modestos."""
+    Así no descarga ni lee el catálogo entero (17 MB), que traba la página en equipos modestos.
+    Con cats=ARMAR_PER_CATS arma armar_per.json (mouse, teclado y auriculares), que la página pide solo si hace falta."""
     out = []
     for g in groups:
-        if g.get("category") not in ARMAR_CATS:
+        if g.get("category") not in cats:
             continue
         offs = [{k: o[k] for k in ARMAR_OFFER if o.get(k) is not None} for o in g.get("offers") or []]
         if not offs:
@@ -518,7 +541,9 @@ def main(only):
     (DATA / "products.json").write_text(json.dumps(groups, ensure_ascii=False, separators=(",", ":")))
     (DATA / "history.json").write_text(json.dumps(hist, separators=(",", ":")))
     (DATA / "armar.json").write_text(json.dumps(armar_catalog(groups), ensure_ascii=False, separators=(",", ":")))
+    (DATA / "armar_per.json").write_text(json.dumps(armar_catalog(groups, ARMAR_PER_CATS), ensure_ascii=False, separators=(",", ":")))
     (DATA / "home.json").write_text(json.dumps(home_summary(groups), ensure_ascii=False, separators=(",", ":")))
+    (DATA / "buscar.json").write_text(json.dumps(search_index(groups), ensure_ascii=False, separators=(",", ":")))
     (DATA / "meta.json").write_text(json.dumps({
         "updated": dt.datetime.now(dt.timezone.utc).isoformat(timespec="minutes"),
         "stores": status, "specs": spec_status, "groups": len(groups), "demo": False}, ensure_ascii=False))

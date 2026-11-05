@@ -575,3 +575,67 @@ letra M/I del modelo → tamaño de placa, modelo del título contra la ficha us
   alto del 95 % de los coolers de aire, largo del 71 % de las placas de video y medidas del 74 % de los gabinetes. Se completan
   sumando fichas oficiales a `data_src/verified_src.py`.
 - Pruebas nuevas en `tests/test_builder.js`.
+
+## Actualización 34 — Fichas oficiales cargadas (coolers, placas de video y gabinetes)
+Búsqueda del 4/11/2026 solo en sitios de los fabricantes (informe «Fichas oficiales de hardware»). Todo queda en
+`data_src/verified_src.py` (bloque «Actualización 33/34») y se genera `site/data/verified.json` con
+`python3 data_src/verified_src.py`. Cada dato lleva el enlace a la ficha y la fecha.
+- **Cargado**: 78 coolers nuevos (sockets, alto, radiador, TDP), 53 gabinetes (placas que aceptan, largo máximo de placa de
+  video —y con radiador cuando el fabricante lo publica—, alto de cooler y radiadores) y 86 placas de video (largo).
+  Ahora: 114 coolers, 89 gabinetes y 112 placas de video verificados.
+- **Cobertura en «Armalo vos»** (catálogo publicado): sockets de coolers del 49 % al 79 %; largo de placas de video del 25 %
+  al 73 %; medidas de gabinetes del 26 % al 47 %. El resto sigue como «sin verificar», nunca como compatible.
+- **Corregido**: Gigabyte EAGLE MAX (281 mm) ya no toma el largo de la EAGLE OC (208–215 mm); Cooler Master «ML240 Core II» y
+  Gigabyte «GAMING 360I» ahora se reconocen; MSI COREFROZR AA13 con su alto (152 mm).
+- **Criterio en los casos dudosos**: si dos fuentes oficiales se contradicen se carga el valor más seguro (por ejemplo,
+  Corsair 9000D: 400 mm y no 580; MSI Maestro 900R: 400 y no 440). Los soportes que vienen solo en cajas nuevas (Cooler
+  Master MA624, Hyper 212 RGB Black Edition, AeroCool Cylon 4F, Gamdias P2-360R, ML240L V2 en AM5) NO se dan por
+  garantizados. Lo publicado a medias (radiador máximo por posición) no se carga.
+- **Procesador nuevo**: Ryzen 7 PRO 5755GE (ficha de AMD) en `make_hardware.py` → `site/data/hardware.json`.
+- **Sin ficha oficial** (siguen sin verificar): entre otros, Raptor Cryo, XYZ Hydrotemp/Thermax Pulsar, Formula V Oasis,
+  Sentey H30, Cooler Master Elite 660/461, Aureox, Aconcawa, Zotac RTX 5050/3050 Twin Edge, Ryzen 5 3500X.
+
+## Actualización 35 — Fotos en todo el sitio y «Armalo vos» con más piezas
+- **Fotos de los productos** (`site/js/icons.js` → `ICONS.thumb`): se usa la foto de la tienda (solo https, con una segunda
+  foto de respaldo y, si ninguna carga, el ícono de la categoría). Se agregaron en:
+  - **Comparar hardware**: en las sugerencias del buscador, en los productos elegidos, arriba de cada columna de la «Tabla
+    comparativa» y en la «Vista general».
+  - **¿Qué actualizar?**: las recomendaciones (placas de video, procesadores, placas madre, memorias y fuentes) son tarjetas
+    con foto.
+  - **Encontrá tu equipo**: foto grande de cada PC armada y notebook, fila de fotos de las piezas en los armados por
+    componentes, foto en cada pieza y en sus alternativas, en «Opciones similares», en las mejoras para tu equipo y en
+    monitores y combos de teclado y mouse.
+- **¿Qué actualizar? con desplegables** (`site/js/combo.js`): un campo por pieza (procesador, placa de video, memoria,
+  fuente, placa madre y almacenamiento) con buscador y sugerencias mientras escribís; procesador y placa de video muestran la
+  foto del modelo (la publicación más barata del catálogo que coincide). La placa madre se elige por chipset y aparecen
+  primero los del socket de tu procesador. Debajo de cada campo se ve si lo reconocimos. Se puede seguir escribiendo
+  libre o pegar la lista en texto («¿Preferís pegar la lista en texto?»). Se agregaron los chipsets viejos (B350, X370, X470,
+  H310, B360, H370, Z370, B365, Z390, H410 a Z490, H670, H770) con su socket.
+- **Armalo vos**:
+  - **Más de una memoria y más de un disco** («+ Agregar otra memoria» / «+ Agregar otro disco», hasta 4). Cada una se
+    comprueba con el procesador y la placa. El armado avisa si mezclás DDR4 y DDR5 (incompatible), si hay más módulos que
+    ranuras (Mini-ITX: 2; resto: 4), si una Micro-ATX puede tener solo 2 ranuras, si son modelos distintos y la velocidad
+    menor con 4 módulos DDR5. Con varios discos M.2, recuerda confirmar las ranuras.
+  - **Ventiladores de gabinete** (hasta 3 lugares; reconoce medida y packs «x3»), **mouse, teclado y auriculares**.
+  - El total se separa en **PC** y **Periféricos** (el monitor pasa a periféricos).
+  - Mouse, teclado y auriculares se descargan aparte (`site/data/armar_per.json`, lo genera `build_data.py`) y solo cuando
+    abrís uno de esos lugares, para que la página siga liviana.
+  - Los enlaces y el historial de armados anteriores siguen funcionando igual.
+- Pruebas nuevas en `tests/test_builder.js`, `tests/test_js.js` y `tests/test_all.py` (`test_actualizacion_35_fotos_y_armado`).
+
+## Actualización 36 — Autocompletado con fotos, armado por procesador completo y Productos sin trabarse
+- **Buscadores con sugerencias** (`site/js/search.js`, lo carga `site/js/layout.js` en todas las páginas menos Productos):
+  en el buscador grande de la portada y en el de arriba, mientras escribís aparecen hasta 8 productos (5 en el celular)
+  con foto, categoría, cantidad de tiendas y precio más bajo con stock. Tocar uno abre su ficha; Enter o «Ver todos los
+  resultados» busca en Productos como antes. Se maneja con flechas, Enter y Esc.
+  - Usa `site/data/buscar.json` (lo genera `build_data.py` → `search_index`): un renglón liviano por producto. Se descarga
+    recién al tocar un buscador (unos 1,4 MB comprimidos), así la portada no se vuelve lenta.
+- **Armado recomendado → Empezar por procesador**: las placas sugeridas y posibles se muestran con foto y precio «desde»
+  (primero las que tienen stock). Debajo aparece el **armado completo con ese procesador** (placa de video, placa madre,
+  memoria, disco, fuente, gabinete y disipador si hace falta), en mínimo y sugerido, con foto y precio de cada pieza, más la
+  tabla de juegos. Tocar otra placa recalcula el armado sin cambiar de modo ni de procesador. El enlace guarda la placa
+  (`&placa=`) y el historial también.
+- **Productos ya no se traba**: las tarjetas «Bajas de precio recientes» de la portada abren la ficha del producto (antes
+  hacían una búsqueda por el nombre que quedaba activa y dejaba una sola categoría). En Productos, cuando hay una búsqueda
+  activa se ve «Buscando: «…» ✕ Quitar búsqueda».
+- Pruebas: `test_actualizacion_36_buscador_y_armado` (Python) y el autocompletado en `tests/test_js.js`.

@@ -501,6 +501,18 @@ for _i, _n, _v, _so, _me, _td, _mp, _m, _cs, _u in NEW30_CPU:
     VURL[_i] = _u
 NEW_CPU |= {c[0] for c in NEW30_CPU}
 
+# ---- actualización 33: procesadores con ficha oficial encontrada en la búsqueda de fichas (consultada el 2026-11-04) ----
+VERIFY_DATE_33 = "2026-11-04"
+NEW33_CPU = [
+    # AMD lo publica como «Ryzen 7 PRO 5755GE»: AM4, 8/16, 3,2/4,6 GHz, 35 W, DDR4-3200, Radeon Graphics. El «E» lo separa del 5755G (65 W).
+    ("r7-5755ge", "Ryzen 7 PRO 5755GE", "AMD", "AM4", "DDR4", 35, 47, r"5755ge\b", (8, 16, 4.6, 16, True), "https://www.amd.com/en/products/processors/desktops/ryzen-pro/5000-series/amd-ryzen-7-pro-5755ge.html"),
+]
+for _i, _n, _v, _so, _me, _td, _mp, _m, _cs, _u in NEW33_CPU:
+    C.append((_i, _n, _v, _so, _me, _td, _mp, None, "intel_cpu" if _v == "Intel" else "amd_cpu", _m))
+    CS[_i] = _cs
+    VURL[_i] = _u
+NEW_CPU |= {c[0] for c in NEW33_CPU}
+
 # Placas de video (solo ficha). GS: (arquitectura, shaders, memoria, bus, Gbps).
 _GPU_V = ["vram", "tgp", "psu"]
 NEW30_GPU = [
@@ -595,7 +607,7 @@ def build():
         n, t, b, l3, ig = CS[c["id"]]
         c["spec"] = dict(cores=n, threads=t, boost=b, l3=l3, igpu=ig)
         c["ver"] = VERIFIED.get(c["id"], [])
-        if c["ver"]: c["vurl"], c["vdate"] = VURL[c["id"]], (VERIFY_DATE_30 if c["id"] in NEW30 else VERIFY_DATE_NEW if c["id"] in NEW_CPU else VERIFY_DATE)
+        if c["ver"]: c["vurl"], c["vdate"] = VURL[c["id"]], (VERIFY_DATE_33 if c["id"] in {x[0] for x in NEW33_CPU} else VERIFY_DATE_30 if c["id"] in NEW30 else VERIFY_DATE_NEW if c["id"] in NEW_CPU else VERIFY_DATE)
         if c["id"] in EST:
             conf, note = EST[c["id"]]
             c["se"] = {"conf": conf, "n": note}      # puntaje estimado: no figura en la tabla de Tom's
