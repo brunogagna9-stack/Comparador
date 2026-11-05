@@ -170,4 +170,63 @@ t("procesadores cuyo título menciona el cooler siguen teniendo ficha; los disip
   assert(C.hwCpu("Procesador Intel Core I9-12900k 16 Nucleos Lga1700 S-coolers Y S-video"));
   assert.strictEqual(C.hwCpu("Cooler para procesador Intel Core i5 12400"), null);
 });
+
+/* ---------- actualización 35: varias memorias y discos, ventiladores y periféricos ---------- */
+{
+  const PR2 = PR.concat([
+    P("r4", "Memoria Corsair Vengeance 32GB 2X16 DDR5 6000", "memorias-ram", 200000),
+    P("s1", "Disco Solido SSD M.2 WD 1TB Black SN770 NVMe", "almacenamiento", 90000),
+    P("s2", "Disco Solido SSD M.2 Kingston 2TB NV3 NVMe", "almacenamiento", 150000),
+    P("f1", "Cooler Fan 120mm ARGB Pack X3 Gabinete", "refrigeracion", 30000),
+    P("mo1", "Mouse Gamer Logitech G203 Con Cable", "mouses", 20000),
+    P("mo2", "Mouse Pad Gamer XL", "mouses", 5000),
+    P("kb1", "Teclado Mecánico Redragon Kumara K552", "teclados", 40000),
+    P("kb2", "Combo Teclado Y Mouse Logitech MK270", "teclados", 25000),
+    P("hp1", "Auriculares HyperX Cloud Stinger 2", "auriculares", 50000),
+  ]);
+  const C2 = CT.create(HW, PR2, {}), E2 = BLD.create(C2, VER), by2 = id => PR2.find(g => g.id === id);
+  t("lugares extra: misma pieza base y siguen el formato del enlace", () => {
+    assert.strictEqual(BLD.base("ram3"), "ram"); assert.strictEqual(BLD.base("ssd2"), "ssd"); assert.strictEqual(BLD.base("fan2"), "fan"); assert.strictEqual(BLD.base("cpu"), "cpu");
+    assert.ok(BLD.MAIN().every(s => !s.base) && BLD.MAIN().length === 13);
+    const b = { cpu: { id: "c1" }, ram: { id: "r1" }, ram2: { id: "r1" }, ssd2: { own: true, id: "s2" }, kb: { id: "kb1" }, fan: { skip: true } };
+    assert.deepStrictEqual(E2.decode(E2.encode(b)), b);
+    assert.deepStrictEqual(E2.decode("cpu=c1;mobo=m1;monitor=-"), { cpu: { id: "c1" }, mobo: { id: "m1" }, monitor: { skip: true } });   // enlaces viejos
+  });
+  t("la segunda memoria se controla contra el procesador y la placa", () => {
+    const X = { cpu: E2.attrs("cpu", by2("c1")), mobo: E2.attrs("mobo", by2("m1")), ram: E2.attrs("ram", by2("r1")) };
+    assert.strictEqual(E2.check("ram2", E2.attrs("ram2", by2("r2")), X).s, "no");                 // DDR4 en placa DDR5
+    const r = E2.check("ram2", E2.attrs("ram2", by2("r1")), X);
+    assert.strictEqual(r.s, "ok"); assert.ok(r.res.some(x => x.with === "mobo") && r.res.some(x => x.with === "cpu"));
+    assert.ok(E2.check("mobo", X.mobo, { ram2: E2.attrs("ram", by2("r2")) }).res.some(x => x.with === "ram2" && x.s === "no"));
+  });
+  t("memorias: tipos mezclados, módulos de más y modelos distintos", () => {
+    let S = E2.summary({ cpu: { id: "c1" }, mobo: { id: "m3" }, ram: { id: "r1" }, ram2: { id: "r2" } }, by2);
+    assert.ok(S.issues.some(i => /DDR5 y DDR4|DDR4 y DDR5/.test(i.txt)));
+    S = E2.summary({ cpu: { id: "c1" }, mobo: { id: "m4" }, ram: { id: "r4" }, ram2: { id: "r1" } }, by2);    // Mini-ITX: 2 ranuras, 3 módulos
+    assert.ok(S.issues.some(i => /3 módulos/.test(i.txt) && /Mini-ITX/.test(i.txt)));
+    S = E2.summary({ cpu: { id: "c1" }, mobo: { id: "m3" }, ram: { id: "r4" }, ram2: { id: "r4" }, ram3: { id: "r1" } }, by2);   // 5 módulos
+    assert.ok(S.issues.some(i => /5 módulos/.test(i.txt)));
+    S = E2.summary({ cpu: { id: "c1" }, mobo: { id: "m3" }, ram: { id: "r4" }, ram2: { id: "r4" } }, by2);      // 4 iguales en ATX: válido
+    assert.ok(!S.issues.length); assert.ok(S.warns.some(w => /dos por canal/.test(w))); assert.ok(!S.warns.some(w => /modelos distintos/.test(w)));
+    S = E2.summary({ mobo: { id: "m3" }, ram: { id: "r4" }, ram2: { id: "r1" } }, by2);
+    assert.ok(S.warns.some(w => /modelos distintos/.test(w)));
+    assert.strictEqual(CT.parse("Memoria Corsair Vengeance 32GB 2X16 DDR5 6000", "memorias-ram").mods, 2);
+    assert.strictEqual(CT.parse("Memoria Adata 8GB DDR4 3200 x 1", "memorias-ram").mods, 1);
+  });
+  t("varios discos M.2: aviso de ranuras", () => {
+    const S = E2.summary({ ssd: { id: "s1" }, ssd2: { id: "s2" } }, by2);
+    assert.ok(S.warns.some(w => /2 discos M\.2/.test(w)));
+  });
+  t("ventiladores y periféricos: qué productos entran y totales separados", () => {
+    assert.ok(E2.isSlotProduct("fan", by2("f1")) && !E2.isSlotProduct("fan", by2("k2")));
+    assert.ok(E2.isSlotProduct("mouse", by2("mo1")), "«con cable» no descarta un mouse");
+    assert.ok(!E2.isSlotProduct("mouse", by2("mo2")) && !E2.isSlotProduct("kb", by2("kb2")) && E2.isSlotProduct("kb", by2("kb1")) && E2.isSlotProduct("hp", by2("hp1")));
+    assert.strictEqual(E2.attrs("fan2", by2("f1")).count.v, 3); assert.strictEqual(E2.attrs("fan", by2("f1")).size.v, 120);
+    const S = E2.summary({ cpu: { id: "c1" }, fan: { id: "f1" }, mouse: { id: "mo1" }, kb: { own: true, id: "kb1" }, hp: { id: "hp1" } }, by2);
+    assert.strictEqual(S.total, 100000 + 30000); assert.strictEqual(S.totalPer, 20000 + 50000); assert.strictEqual(S.totalAll, 200000);
+    assert.ok(S.warns.some(w => /ventiladores de gabinete \(3 de 120 mm\)/.test(w)));
+    assert.ok(!S.missing.includes("fan") && !S.missing.includes("ram2") && !S.missing.includes("mouse"));
+    assert.ok(E2.candidates("ram2", {}, PR2).ok.some(r => r.g.id === "r1"));
+  });
+}
 console.log(`armado pieza por pieza: ${n} pruebas OK`);
