@@ -125,4 +125,47 @@ t("marca para las pestañas y generación para «Recomendados»", () => {
   assert(E.gen("cpu", A("cpu", "c1")) > E.gen("cpu", A("cpu", "c2")));      // AM5 antes que LGA1700
   const R = E.candidates("cpu", {}, PR); assert(R.ok.every(r => r.b && typeof r.n === "number" && typeof r.gen === "number"));
 });
+t("gráficos integrados según el modelo exacto del título (la ficha agrupa 12700 y 12700F)", () => {
+  const c = (id, name) => E.attrs("cpu", { id, name, category: "procesadores", offers: [] });
+  assert.strictEqual(c("x1", "Procesador Intel Core i7 12700F 4.9GHz Socket 1700").igpu.v, false);
+  assert.strictEqual(c("x2", "Procesador Intel Core i7 12700 4.9GHz Socket 1700").igpu.v, true);
+  assert.strictEqual(c("x3", "Procesador Intel Core I5 12400 12gen").igpu.v, true);
+  assert.strictEqual(c("x4", "Procesador Intel Core i5 12400F").igpu.v, false);
+  assert.strictEqual(c("x5", "Procesador Intel Core Ultra 5 245KF").igpu.v, false);
+  // sin placa de video, un procesador F no puede quedar como armado válido
+  const b = { id: "x1", name: "Procesador Intel Core i7 12700F Socket 1700", category: "procesadores", offers: [{ store: "T", price_cash: 1, stock: true }] };
+  const S = E.summary({ cpu: { id: "x1" }, gpu: { skip: true } }, id => id === "x1" ? b : null);
+  assert(S.issues.some(i => /gráficos integrados/.test(i.txt)));
+});
+t("placas de video: la ficha de un modelo no se aplica a sus variantes MAX o PLUS (otro largo)", () => {
+  assert(E.verGpu("Placa de Video Gigabyte RTX 5060 Ti Eagle OC 8GB", "rtx-5060ti-8"));
+  assert.strictEqual(E.verGpu("Placa De Video Gigabyte Rtx 5060ti Eagle Max Oc 8 Gb Gddr7", "rtx-5060ti-8"), null);
+});
+t("almacenamiento: nada externo, carcasas ni adaptadores", () => {
+  const s = name => E.isSlotProduct("ssd", { id: "s", name, category: "almacenamiento", offers: [] });
+  assert(s("Disco SSD Kingston NV3 1TB M.2 NVMe PCIe 4.0"));
+  ["Disco Ssd Ext 1Tb Kingston Xs1000R Usb 3.2", "Carry Disk SSD M.2 Hiksemi MDR1 RGB (Usb 3.2)", "SSD M.2 ADAPTADOR EXTENSION UNIVERSAL", "Disco SSD SANDISK 2TB Portable USB-C"].forEach(n => assert(!s(n), n));
+});
+t("fuentes con dos potencias en el título: se toma la menor", () => {
+  assert.strictEqual(CT.parse("FUENTE 600W LNZ NP600-LX (SIMIL 500W-550W) (OEM)", "fuentes").w, 500);
+  assert.strictEqual(CT.parse("Fuente Corsair RM850e 850W 80 Plus Gold", "fuentes").w, 850);
+});
+t("armado recomendado: coolers y gabinetes con ficha verificada primero; los demás dicen qué confirmar", () => {
+  const P2 = [P("ck1", "Cooler CPU Marca Desconocida X100 Tower 4 heatpipe 150W", "refrigeracion", 20000), P("ck2", "Cooler CPU ID-Cooling FROZN A410 SE ARGB 180W", "refrigeracion", 40000),
+    P("cs1", "Gabinete Generico X ATX Mid Tower", "gabinetes", 30000), P("cs2", "Gabinete Corsair FRAME 4000D RS ARGB", "gabinetes", 90000), P("cs3", "Gabinete MSI MAG Forge M100A mATX", "gabinetes", 50000)];
+  const C2 = CT.create(HW, P2, {}, null, VER);
+  const cpu = HW.cpus.find(c => c.socket === "AM5" && (c.maxp || 0) < 120);
+  const k = C2.findCooler(cpu);
+  assert.strictEqual(k[0].g.id, "ck2"); assert(k[0].ver && /verificado/.test(k[0].note));
+  assert(k.some(x => x.g.id === "ck1" && /confirmá/.test(x.note)));
+  const g = C2.findCase("Mother Gigabyte B650 Eagle AX ATX", "Placa de Video MSI RTX 5070 Ti Gaming Trio OC 16GB", "rtx-5070ti");
+  assert.strictEqual(g[0].g.id, "cs2"); assert(/338 mm/.test(g[0].note));
+  assert(!g.some(x => x.g.id === "cs3"));                          // Micro-ATX y 300 mm: no entra
+  assert(g.some(x => x.g.id === "cs1" && /confirmá/.test(x.note)));
+});
+t("procesadores cuyo título menciona el cooler siguen teniendo ficha; los disipadores no", () => {
+  assert.strictEqual(C.hwCpu("Procesador AMD Ryzen 5 5600GT 6 Núcleos 4.6GHz AM4 Radeon Vega 7 Cooler").name, "Ryzen 5 5600GT");
+  assert(C.hwCpu("Procesador Intel Core I9-12900k 16 Nucleos Lga1700 S-coolers Y S-video"));
+  assert.strictEqual(C.hwCpu("Cooler para procesador Intel Core i5 12400"), null);
+});
 console.log(`armado pieza por pieza: ${n} pruebas OK`);
