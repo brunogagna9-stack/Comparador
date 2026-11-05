@@ -559,4 +559,27 @@ t("actualización 30: nombres con ™, «16G», fichas nuevas y motivo de «sin 
   assert(/dice 8 GB/.test(K.hwWhy("Video Radeon Asus Dual RX 7600XT 8GB OC", "placas-de-video")));
   assert.strictEqual(K.hwWhy("Video Radeon Gigabyte Gaming RX 7600XT 16GB OC", "placas-de-video"), null);
 });
+t("¿Qué actualizar? (act. 35): cada opción de los desplegables se reconoce", () => {
+  HW.cpus.forEach(c => { const o = CU.parseOwned(c.name); assert(o.cpu && o.cpu.id === c.id, "procesador " + c.name); });
+  HW.gpus.forEach(g => { const o = CU.parseOwned(g.name); assert(o.gpu && o.gpu.id === g.id, "placa " + g.name); });
+  (HW.gpux || []).forEach(g => assert(CU.parseOwned(g.name).gpuText, "placa sin FPS " + g.name));
+  const html = require("fs").readFileSync(path.join(__dirname, "../site/actualizar.html"), "utf8");
+  const chips = JSON.parse(html.match(/const CHIPS=(\{[^}]+\})/)[1].replace(/(\w+):/g, '"$1":'));
+  for (const [so, list] of Object.entries(chips)) list.split(" ").forEach(ch => { const o = CU.parseOwned("Placa madre " + ch); assert(o.mobo && o.mobo.socket === so, ch + " → " + so); });
+  ["8 GB DDR4", "32 GB DDR5", "16 GB DDR3"].forEach(x => assert(CU.parseOwned(x).ram, x));
+  ["SSD NVMe 1 TB", "SSD SATA 480 GB", "HDD 2 TB"].forEach(x => assert(CU.parseOwned(x).storage, x));
+  assert.strictEqual(CU.parseOwned("650 W").psu.w, 650);
+  assert(html.includes("js/combo.js") && html.includes("ICONS.thumb(x.g,64)"), "desplegables y fotos en las recomendaciones");
+});
+t("autocompletado (act. 36): todas las palabras, sin acentos y lo más relevante primero", () => {
+  const SR = require("../site/js/search.js");
+  SR._set([["m", "Mouse pad RTX", "accesorios", "", 1000, 1], ["g1", "Placa de Video MSI GeForce RTX 4060 Ventus 8GB", "placas-de-video", "https://i/1.jpg", 500000, 5],
+    ["g2", "Placa de Video ASUS RTX 4060Ti 16GB", "placas-de-video", "https://i/2.jpg", 700000, 2], ["g3", "Placa de Video RTX 4060 sin precio", "placas-de-video", "", 0, 1],
+    ["c", "Procesador AMD Ryzen 5 5600 Núcleos", "procesadores", "https://i/c.jpg", 200000, 9]]);
+  let r = SR.find("rtx 4060");
+  assert.strictEqual(r.total, 3); assert.strictEqual(r.list[0].id, "g1");                        // palabra exacta y más tiendas primero
+  assert.strictEqual(r.list[r.list.length - 1].id, "g3");                                         // sin precio, al final
+  assert.strictEqual(SR.find("nucleos ryzen").list[0].id, "c");                                   // sin acentos y en cualquier orden
+  assert.strictEqual(SR.find("zzz").total, 0); assert.deepStrictEqual(SR.find(" ").list || [], []);
+});
 console.log(n + " pruebas de JavaScript OK");
