@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="css/shared.css">
 <link rel="stylesheet" href="css/layout.css">
 <style>
-textarea{width:100%;min-height:92px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--tx);font:inherit;resize:vertical}
+textarea{width:100%;min-height:70px;margin-top:6px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--tx);font:inherit;resize:vertical}
 .ex{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;align-items:center}.ex button{padding:5px 11px;border:1px solid var(--line);border-radius:99px;background:var(--card);color:var(--tx);cursor:pointer;font:inherit;font-size:12.5px}
 .seen{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.seen span{padding:3px 10px;border-radius:99px;background:var(--soft);font-size:12.5px}.seen span.bad{background:var(--warnbg);color:var(--warn)}
 .bars{display:grid;gap:10px;margin:10px 0 4px}.bar{display:grid;grid-template-columns:150px 1fr 90px;gap:10px;align-items:center;font-size:13px}
@@ -18,23 +18,32 @@ textarea{width:100%;min-height:92px;padding:10px;border:1px solid var(--line);bo
 .opt2 .hd{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-weight:700}
 .step{margin-bottom:14px}.step h3{margin:0 0 4px;font-size:16px}.num{display:inline-block;width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;background:var(--grad);color:#fff;font-size:13px;margin-right:8px}
 @media(max-width:600px){.bar{grid-template-columns:1fr 70px}.bar .tr{grid-column:1 / -1;order:3}}
+.slots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 14px}
+.slots .f label{display:flex;align-items:center;gap:6px}.slots input{padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--tx);font:inherit}
+.slots .st{min-height:18px;font-size:12px;color:var(--mut);margin-top:3px}.slots .st.ok{color:var(--ok)}.slots .st.bad{color:var(--warn)}
+.slots .ico{display:inline-flex;color:var(--mut)}
+details.paste{margin-top:10px}details.paste summary{cursor:pointer;font-size:13px;color:var(--acc)}
+@media(max-width:860px){.slots{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:560px){.slots{grid-template-columns:1fr}}
 </style>
 </head>
 <body data-page="actualizar">
 <script src="js/layout.js"></script>
 <main>
 <h1>¿Qué actualizar?</h1>
-<p class="lead">Escribí los componentes que ya tenés y el rendimiento que querés lograr. Te decimos qué te está limitando, qué conviene cambiar primero y cuánto cuesta hoy en las tiendas.</p>
+<p class="lead">Elegí los componentes que ya tenés y el rendimiento que querés lograr. Te decimos qué te está limitando, qué conviene cambiar primero y cuánto cuesta hoy en las tiendas.</p>
 
 <div class="panel">
-  <div class="f"><label for="txt">Tus componentes actuales</label>
-    <textarea id="txt" placeholder="Ej.: Ryzen 7 5800X, RTX 3070, 16 GB DDR4, fuente 650 W, placa B550"></textarea></div>
+  <h3 style="margin:0 0 8px;font-size:16px">Tus componentes actuales</h3>
+  <div class="slots" id="slots"></div>
   <div class="ex"><span class="note">Probá un ejemplo:</span>
-    <button data-ex="Ryzen 7 5800X, RTX 3070, 16 GB DDR4, 650 W, B550">5800X + RTX 3070</button>
-    <button data-ex="Ryzen 5 5600X, RX 6600, 16 GB DDR4, 500 W, B450">5600X + RX 6600</button>
-    <button data-ex="Core i5-12400F, RTX 3060, 16 GB DDR4, 550 W">i5-12400F + RTX 3060</button>
-    <button data-ex="Ryzen 5 5500, RTX 3050, 8 GB DDR4, 450 W, A520">5500 + RTX 3050</button></div>
-  <p class="note">Separalos con comas o en renglones. No hace falta que escribas todo: con el procesador y la placa de video ya podemos empezar. Fuente en watts (ej. 650 W), memoria con su tipo (ej. 16 GB DDR4) y la placa madre por su chipset (ej. B550).</p>
+    <button data-ex="Ryzen 7 5800X|GeForce RTX 3070|16 GB DDR4|650 W|B550">5800X + RTX 3070</button>
+    <button data-ex="Ryzen 5 5600X|Radeon RX 6600|16 GB DDR4|500 W|B450">5600X + RX 6600</button>
+    <button data-ex="Core i5-12400F|GeForce RTX 3060|16 GB DDR4|550 W|">i5-12400F + RTX 3060</button>
+    <button data-ex="Ryzen 5 5500|GeForce RTX 3050|8 GB DDR4|450 W|A520">5500 + RTX 3050</button></div>
+  <p class="note">Elegí de cada lista o escribí y te sugerimos. No hace falta completar todo: con el procesador y la placa de video ya podemos empezar. Si tu modelo no aparece, dejalo escrito igual.</p>
+  <details class="paste"><summary>¿Preferís pegar la lista en texto?</summary>
+    <textarea id="txt" placeholder="Ej.: Ryzen 7 5800X, RTX 3070, 16 GB DDR4, fuente 650 W, placa B550"></textarea>
+    <button class="btn" id="usetxt" type="button" style="margin-top:6px">Completar los campos con este texto</button></details>
   <div class="row" style="margin-top:6px">
     <div class="f" style="max-width:300px"><label>Resolución de tu monitor</label><div class="seg" id="res"><button data-v="0" class="on">1080p</button><button data-v="1">1440p</button><button data-v="2">4K</button></div></div>
     <div class="f" style="max-width:380px"><label>Rendimiento que querés (juegos exigentes)</label><div class="seg" id="fps"></div></div>
@@ -49,7 +58,7 @@ textarea{width:100%;min-height:92px;padding:10px;border:1px solid var(--line);bo
 <div class="panel note" id="how"></div>
 <details class="panel"><summary>Modelos que reconocemos</summary><div class="note" id="known" style="margin-top:8px"></div></details>
 </main>
-<script src="js/lib.js"></script><script src="js/rep.js"></script>
+<script src="js/lib.js"></script><script src="js/rep.js"></script><script src="js/icons.js"></script><script src="js/combo.js"></script>
 <script src="js/compare.js"></script>
 <script src="js/finder.js"></script>
 <script src="js/upgrade.js"></script>
@@ -62,7 +71,7 @@ const fdate=iso=>{try{return new Date(iso).toLocaleString("es-AR",{timeZone:"Ame
 function shopRows(items,extra){
   if(!PR.length)return '<div class="note">Sin datos de precios cargados.</div>';
   if(!items||!items.length)return '<div class="note">Sin stock en el comparador ahora mismo.</div>';
-  return '<div class="shop">'+items.slice(0,2).map(x=>`<div><span><a href="${esc(x.o.url)}" target="_blank" rel="noopener nofollow">${esc(x.g.name.slice(0,70))}</a> <span class="note">· ${esc(x.o.store)}${REP.badge(x.o.store)}${x.o.stock===true?"":" · stock sin confirmar"}${extra?extra(x):""}</span></span><b>${ARS(x.p)}</b></div>`).join("")+'</div>';
+  return '<div class="shopc">'+items.slice(0,2).map(x=>`<div class="it">${ICONS.thumb(x.g,64)}<span><a href="${esc(x.o.url)}" target="_blank" rel="noopener nofollow">${esc(x.g.name.slice(0,90))}</a><span class="note">${esc(x.o.store)}${REP.badge(x.o.store)}${x.o.stock===true?"":" · stock sin confirmar"}${extra?extra(x):""}</span></span><b>${ARS(x.p)}</b></div>`).join("")+'</div>';
 }
 const wOf=x=>{const m=x.g.name.match(/(\d{3,4})\s?w/i);return m?" · "+m[1]+" W":""};
 
@@ -89,9 +98,58 @@ function cpuOpt(x,r,plat){
   const p=x.parts;
   return `<div class="opt2">${head}${nt}<div class="note">Cambio de plataforma (${c.socket}, ${c.mem}): procesador + placa madre + memoria. Total ≈ <b>${ARS(x.total)}</b>.</div>${shopRows([p.cpu])}${shopRows([p.mobo])}${shopRows([p.ram])}</div>`;
 }
+/* ---- campos con desplegable (actualización 35) ---- */
+const SLOTS=[{k:"cpu",l:"Procesador",cat:"procesadores",ph:"Ej.: Ryzen 7 5800X"},{k:"gpu",l:"Placa de video",cat:"placas-de-video",ph:"Ej.: RTX 3070"},
+  {k:"ram",l:"Memoria RAM",cat:"memorias-ram",ph:"Ej.: 16 GB DDR4"},{k:"psu",l:"Fuente",cat:"fuentes",ph:"Ej.: 650 W"},
+  {k:"mobo",l:"Placa madre (chipset)",cat:"motherboards",ph:"Ej.: B550"},{k:"st",l:"Almacenamiento",cat:"almacenamiento",ph:"Ej.: SSD NVMe 1 TB"}];
+const CHIPS={AM4:"A320 B350 X370 B450 X470 A520 B550 X570",AM5:"A620 B650 B650E X670 X670E B840 B850 X870 X870E",LGA1700:"H610 B660 H670 Z690 B760 H770 Z790",LGA1851:"H810 B860 Z890",LGA1200:"H410 B460 H470 Z490 H510 B560 Z590",LGA1151:"H310 B360 H370 Z370 B365 Z390"};
+const SOCK_DDR={AM4:"DDR4",AM5:"DDR5",LGA1851:"DDR5",LGA1200:"DDR4",LGA1151:"DDR4",LGA1700:"DDR4 o DDR5"};
+let PHOTO={cpu:{},gpu:{}},ITEMS={};
+function photos(){ // una foto real del catálogo para cada modelo (la publicación con stock más barata que coincide)
+  const pick=(map,id,g)=>{if(!id||!g.image)return;const p=CT.price(g),q=map[id];if(!q||(p&&(!q.p||p<q.p)))map[id]={g,p}};
+  for(const g of PR){
+    if(g.category==="procesadores"){const c=C.hwCpu(g.name);pick(PHOTO.cpu,c&&c.id,g)}
+    else if(g.category==="placas-de-video"){const x=C.hwGpu(g.name)||(C.hwGpuX&&C.hwGpuX(g.name));pick(PHOTO.gpu,x&&x.id,g)}
+  }
+}
+function buildItems(){
+  const th=(cat,g)=>ICONS.thumb(g||{category:cat},40);
+  ITEMS.cpu=HW.cpus.map(c=>({label:c.name,value:c.name,sub:[c.socket,c.mem,c.spec&&c.spec.cores?c.spec.cores+" núcleos":""].filter(Boolean).join(" · "),keys:c.vendor+" "+(c.m||""),thumb:th("procesadores",PHOTO.cpu[c.id]&&PHOTO.cpu[c.id].g)}));
+  ITEMS.gpu=HW.gpus.concat(HW.gpux||[]).map(g=>({label:g.name,value:g.name,sub:[g.vendor,g.vram?g.vram+" GB":"",g.p?"":"sin medición de FPS"].filter(Boolean).join(" · "),keys:(g.vendor||"")+" "+String(g.name).replace(/geforce|radeon/i,""),thumb:th("placas-de-video",PHOTO.gpu[g.id]&&PHOTO.gpu[g.id].g)}));
+  ITEMS.ram=[];["DDR4","DDR5","DDR3"].forEach(d=>[8,16,32,64].forEach(n=>{if(d==="DDR3"&&n>16)return;ITEMS.ram.push({label:n+" GB "+d,value:n+" GB "+d,sub:d==="DDR5"?"AM5, Intel 12.ª gen. en adelante":d==="DDR4"?"AM4, Intel 6.ª a 14.ª gen.":"equipos más viejos",thumb:th("memorias-ram")})}));
+  ITEMS.psu=[350,400,450,500,550,600,650,700,750,800,850,1000,1200].map(w=>({label:w+" W",value:w+" W",keys:"fuente watts",thumb:th("fuentes")}));
+  ITEMS.st=["SSD NVMe 500 GB","SSD NVMe 1 TB","SSD NVMe 2 TB","SSD SATA 240 GB","SSD SATA 480 GB","SSD SATA 1 TB","HDD 1 TB","HDD 2 TB"].map(t=>({label:t,value:t,thumb:th("almacenamiento")}));
+}
+function moboItems(){
+  const c=C.parseOwned($("#u-cpu").value).cpu,sk=c&&c.socket;
+  const L=[];Object.entries(CHIPS).forEach(([so,list])=>list.split(" ").forEach(ch=>L.push({label:ch,value:ch,sub:so+" · "+SOCK_DDR[so]+(sk===so?" · coincide con tu procesador":""),keys:so,_m:sk===so,thumb:ICONS.thumb({category:"motherboards"},40)})));
+  return sk?L.filter(x=>x._m).concat(L.filter(x=>!x._m)):L;
+}
+const slotText=()=>SLOTS.map(sl=>{let v=$("#u-"+sl.k).value.trim();if(v&&sl.k==="mobo"&&!/placa|mother|mobo/i.test(v))v="Placa madre "+v;if(v&&sl.k==="psu"&&/^\d{3,4}$/.test(v))v+=" W";return v}).filter(Boolean).join(", ");
+function status(sl){
+  const v=$("#u-"+sl.k).value.trim(),el=$("#st-"+sl.k);if(!v){el.className="st";el.textContent="";return}
+  const t=sl.k==="mobo"&&!/placa|mother/i.test(v)?"Placa madre "+v:sl.k==="psu"&&/^\d{3,4}$/.test(v)?v+" W":v;
+  const o=C.parseOwned(t),hit=sl.k==="cpu"?o.cpu&&o.cpu.name:sl.k==="gpu"?(o.gpu&&o.gpu.name)||o.gpuText:sl.k==="ram"?o.ram&&o.ram.gb+" GB"+(o.ram.ddr?" "+o.ram.ddr:""):sl.k==="psu"?o.psu&&o.psu.w+" W":sl.k==="mobo"?o.mobo&&[o.mobo.chipset,o.mobo.socket].filter(Boolean).join(" · "):o.storage&&o.storage.text;
+  const known=sl.k==="cpu"?!!o.cpu:sl.k==="gpu"?!!o.gpu:!!hit;
+  el.className="st "+(known?"ok":"bad");
+  el.textContent=known?"✓ "+hit:sl.k==="cpu"&&o.cpuText?"No está en nuestra base de rendimiento: lo usamos solo para el socket.":sl.k==="gpu"&&o.gpuText?"La conocemos, pero sin FPS medidos.":"No lo reconocemos: revisá cómo está escrito.";
+}
+function buildSlots(){
+  photos();buildItems();
+  $("#slots").innerHTML=SLOTS.map(sl=>`<div class="f"><label for="u-${sl.k}"><span class="ico">${ICONS.svg(sl.cat,16)}</span>${sl.l}</label><input id="u-${sl.k}" type="text" placeholder="${esc(sl.ph)}"><div class="st" id="st-${sl.k}" aria-live="polite"></div></div>`).join("");
+  SLOTS.forEach(sl=>{const inp=$("#u-"+sl.k);
+    COMBO.mount(inp,{items:sl.k==="mobo"?moboItems:ITEMS[sl.k],limit:200,empty:"No está en la lista: podés dejarlo escrito así."});
+    inp.addEventListener("change",()=>status(sl));inp.addEventListener("blur",()=>status(sl));});
+}
+function fromText(text){
+  const o=C.parseOwned(text),set=(k,v)=>{if(v){$("#u-"+k).value=v}};
+  SLOTS.forEach(sl=>$("#u-"+sl.k).value="");
+  set("cpu",o.cpu?o.cpu.name:o.cpuText);set("gpu",o.gpu?o.gpu.name:o.gpuText);set("ram",o.ram&&o.ram.text);set("psu",o.psu&&o.psu.w+" W");set("mobo",o.mobo&&(o.mobo.chipset||o.mobo.text));set("st",o.storage&&o.storage.text);
+  SLOTS.forEach(sl=>status(sl));
+}
 function render(){
-  const text=$("#txt").value.trim();
-  if(!text){$("#out").innerHTML='<div class="warn">Escribí al menos tu procesador o tu placa de video.</div>';return}
+  const text=slotText();
+  if(!text){$("#out").innerHTML='<div class="warn">Elegí o escribí al menos tu procesador o tu placa de video.</div>';return}
   const r=C.advise({text,res:S.res,fps:S.fps,budget:+$("#bud").value||null});
   let h="";
   h+=`<h2>Entendimos esto</h2><div class="seen">${r.o.seen.map(s=>`<span><b>${esc(s[0])}:</b> ${esc(s[1])}</span>`).join("")}${r.unknown.map(u=>`<span class="bad"><b>${esc(u.slot)}:</b> ${esc(u.text)} (sin datos)</span>`).join("")}${r.o.unknown.map(u=>`<span class="bad">No entendimos: ${esc(u)}</span>`).join("")}</div>`;
@@ -135,7 +193,9 @@ function render(){
   $("#known").innerHTML=`<p><b>Procesadores:</b> ${HW.cpus.filter(c=>c.s).map(c=>esc(c.name)).join(", ")}.</p><p><b>Placas de video:</b> ${HW.gpus.map(g=>esc(g.name)).join(", ")}.</p>`;
   document.querySelectorAll("#res button").forEach(b=>b.onclick=()=>{S.res=+b.dataset.v;document.querySelectorAll("#res button").forEach(x=>x.classList.toggle("on",x===b));if($("#out").innerHTML)render()});
   document.querySelectorAll("#fps button").forEach(b=>b.onclick=()=>{S.fps=+b.dataset.v;document.querySelectorAll("#fps button").forEach(x=>x.classList.toggle("on",x===b));if($("#out").innerHTML)render()});
-  document.querySelectorAll("[data-ex]").forEach(b=>b.onclick=()=>{$("#txt").value=b.dataset.ex;render()});
+  buildSlots();
+  document.querySelectorAll("[data-ex]").forEach(b=>b.onclick=()=>{const v=b.dataset.ex.split("|");SLOTS.forEach((sl,i)=>{$("#u-"+sl.k).value=v[i]||""});SLOTS.forEach(sl=>status(sl));render()});
+  $("#usetxt").onclick=()=>{fromText($("#txt").value);render()};
   $("#go").onclick=render;
 })();
 </script>

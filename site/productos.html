@@ -23,7 +23,9 @@ select,input[type=number]{width:100%;padding:8px;border:1px solid var(--line);bo
 .tab{border:1px solid var(--line);background:var(--card);color:var(--tx);padding:7px 13px;border-radius:999px}
 .tab.on{background:var(--tx);color:var(--bg);border-color:var(--tx)}.tab .n{opacity:.7;margin-left:4px}
 .sortw{margin-left:auto;display:flex;gap:8px;align-items:center}.sortw select{width:auto}
-.summary{color:var(--mut);margin:4px 0 10px;font-size:13px}
+.summary{color:var(--mut);margin:4px 0 10px;font-size:13px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.qact{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;padding:4px 6px 4px 12px;border-radius:999px;background:color-mix(in srgb,var(--acc) 12%,var(--card));border:1px solid color-mix(in srgb,var(--acc) 45%,transparent);color:var(--tx)}
+.qact button{border:0;border-radius:999px;background:var(--acc);color:#fff;font:600 12.5px system-ui,sans-serif;padding:5px 11px;cursor:pointer}.qact button:hover{filter:brightness(1.1)}
 .alert{background:var(--soft);border:1px solid var(--line);border-left:4px solid var(--up);border-radius:10px;padding:10px 14px;margin-bottom:12px}
 .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;cursor:pointer;position:relative;display:flex;flex-direction:column}
@@ -244,7 +246,9 @@ function render(){
    `<div class="sortw"><span class="sub">Ordenar</span><select id="sort">${[["rel","Más relevante"],["price","Menor precio"],["priceDesc","Mayor precio"],["down","Mayor baja %"],["up","Mayor suba %"],["stores","Más tiendas"],["spread","Mayor diferencia entre tiendas"]].map(([v,l])=>`<option value="${v}" ${S.sort===v?"selected":""}>${l}</option>`).join("")}</select></div>`;
   $("#sort").onchange=e=>{S.sort=e.target.value;S.page=1;render()};
   const rows=filtered().sort(sorter());
-  $("#sum").textContent=`${rows.length.toLocaleString("es-AR")} resultados`+(S.tab==="bajaron"||S.tab==="subieron"?` · cambios de los últimos ${META.recent_days||14} días`:"");
+  $("#sum").innerHTML=esc(`${rows.length.toLocaleString("es-AR")} resultados`+(S.tab==="bajaron"||S.tab==="subieron"?` · cambios de los últimos ${META.recent_days||14} días`:""))+
+    (S.q.trim()?` <span class="qact">Buscando: <b>«${esc(S.q.trim())}»</b> <button type="button" id="qclear">✕ Quitar búsqueda</button></span>`:"");   // act. 36: que se vea la búsqueda activa y se pueda quitar
+  {const qc=$("#qclear");if(qc)qc.onclick=()=>{S.q="";$("#qh").value="";S.page=1;render()}}
   const pages=Math.max(1,Math.ceil(rows.length/PER));if(S.page>pages)S.page=pages;if(S.page<1)S.page=1;
   const from=(S.page-1)*PER;
   $("#grid").removeAttribute("aria-busy");

@@ -19,13 +19,28 @@
     { k: "cpu", l: "Procesador", cat: "procesadores", req: true },
     { k: "cooler", l: "Cooler del procesador", cat: "refrigeracion", req: true },
     { k: "mobo", l: "Motherboard", cat: "motherboards", req: true },
-    { k: "ram", l: "Memoria RAM", cat: "memorias-ram", req: true },
-    { k: "ssd", l: "Almacenamiento", cat: "almacenamiento", req: true },
+    { k: "ram", l: "Memoria RAM", cat: "memorias-ram", req: true, multi: 4 },
+    { k: "ram2", l: "Memoria RAM 2", cat: "memorias-ram", base: "ram" },
+    { k: "ram3", l: "Memoria RAM 3", cat: "memorias-ram", base: "ram" },
+    { k: "ram4", l: "Memoria RAM 4", cat: "memorias-ram", base: "ram" },
+    { k: "ssd", l: "Almacenamiento", cat: "almacenamiento", req: true, multi: 4 },
+    { k: "ssd2", l: "Almacenamiento 2", cat: "almacenamiento", base: "ssd" },
+    { k: "ssd3", l: "Almacenamiento 3", cat: "almacenamiento", base: "ssd" },
+    { k: "ssd4", l: "Almacenamiento 4", cat: "almacenamiento", base: "ssd" },
     { k: "gpu", l: "Placa de video", cat: "placas-de-video", req: true },
     { k: "case", l: "Gabinete", cat: "gabinetes", req: true },
+    { k: "fan", l: "Ventiladores de gabinete", cat: "refrigeracion", req: false, multi: 3 },
+    { k: "fan2", l: "Ventiladores de gabinete 2", cat: "refrigeracion", base: "fan" },
+    { k: "fan3", l: "Ventiladores de gabinete 3", cat: "refrigeracion", base: "fan" },
     { k: "psu", l: "Fuente", cat: "fuentes", req: true },
-    { k: "monitor", l: "Monitor", cat: "monitores", req: false },
+    { k: "monitor", l: "Monitor", cat: "monitores", req: false, per: true },
+    { k: "mouse", l: "Mouse", cat: "mouses", req: false, per: true },
+    { k: "kb", l: "Teclado", cat: "teclados", req: false, per: true },
+    { k: "hp", l: "Auriculares", cat: "auriculares", req: false, per: true },
   ];
+  /* lugares extra (2.ª memoria, 2.º disco, más ventiladores): mismo tipo de pieza que su lugar base */
+  B.base = k => { const s = B.SLOTS.find(x => x.k === k); return (s && s.base) || k; };
+  B.MAIN = () => B.SLOTS.filter(s => !s.base);
   B.slot = k => B.SLOTS.find(s => s.k === k);
   const SOCKETS = ["AM4", "AM5", "LGA1700", "LGA1851", "LGA1200"];
   B.SOCKETS = SOCKETS;
@@ -55,9 +70,12 @@
 
     /* ---------- qué productos pertenecen a cada lugar ---------- */
     const BAD = /\bcombo\b|\bkit\b(?!.*\b(x2|2x)\b.*\b(ddr|gb)\b)|\bpack\b|bundle|\+\s*(mouse|teclado|auricular|fuente|placa)|usado|reacondicionad|exhibici|repuesto|soporte|cable\b/i;
+    const BADP = /\bcombo\b|\bkit\b|\bpack\b|bundle|usado|reacondicionad|exhibici|repuesto/i;   // periféricos: «con cable» es válido
     E.isSlotProduct = (k, g) => {
-      const n = g.name;
-      if (k !== "ram" && BAD.test(n)) return false;
+      const n = g.name; k = B.base(k);
+      if (k === "mouse" || k === "kb" || k === "hp") { if (BADP.test(n)) return false; }
+      else if (k === "fan") { if (/usado|reacondicionad|exhibici|repuesto/i.test(n)) return false; }
+      else if (k !== "ram" && BAD.test(n)) return false;
       if (k === "ram" && /\bcombo\b|usado|reacondicionad/i.test(n)) return false;
       switch (k) {
         case "cpu": return !!FX.cpuFamily(n) && !/cooler|disipador|notebook|\bpc\b/i.test(n) && !/Servidor/.test(FX.cpuFamily(n));
@@ -70,13 +88,17 @@
         case "case": return /^(gabinete|gab)\b/i.test(n) && !/\bkit\b|combo|tec\+|teclado|mouse/i.test(n);
         case "psu": return !!CT.parse(n, "fuentes").w && !/gabinete|combo|\bkit\b/i.test(n);
         case "monitor": return /monitor/i.test(n);
+        case "fan": return FX.val(g, FX.defs("refrigeracion")[0]) === "Ventiladores para gabinete";
+        case "mouse": return /\bmouse\b|\bmice\b/i.test(n) && !/pad\b|mousepad|alfombr|teclado|bungee|soporte|funda/i.test(n);
+        case "kb": return /teclado|keyboard/i.test(n) && !/mouse|keycap|funda|soporte|cubre|protector|reposa/i.test(n);
+        case "hp": return /auricular|headset|vincha|headphone|cascos?\b/i.test(n) && !/soporte|almohadill|adaptador|cable\b|funda|repuesto/i.test(n);
       }
       return false;
     };
 
     /* ---------- atributos de cada pieza con su origen ---------- */
     E.attrs = (k, g) => {
-      const n = g.name, a = {};
+      const n = g.name, a = {}; k = B.base(k);
       if (k === "cpu") {
         const hw = C.hwCpu(n);
         if (hw) { a.hw = hw; a.socket = f(hw.socket, "fab", { url: hw.vurl }); a.mem = f(hw.mem, "fab"); a.maxp = f(hw.maxp, "fab");
@@ -105,6 +127,7 @@
         const lap = !!s.laptop || /so-?dimm|notebook|laptop/i.test(n);
         a.sodimm = f(lap, lap ? "tienda" : "regla");
         if (s.gb) a.gb = f(s.gb, "tienda");
+        if (s.mods) a.mods = f(s.mods, "tienda");
       } else if (k === "gpu") {
         const hw = C.hwGpu(n) || C.hwGpuX(n);
         if (hw) { a.hw = hw; a.tgp = f(hw.tgp, "fab", { url: hw.vurl }); if (hw.psu) a.psurec = f(hw.psu, "fab", { url: hw.vurl }); a.pin16 = f(CT.uses16pin(hw), "regla"); }
@@ -127,12 +150,16 @@
         if (s.cert) a.cert = f(s.cert, "tienda");
       } else if (k === "ssd") {
         const t = FX.val(g, FX.defs("almacenamiento")[0]); a.kind = f(t, "tienda");
+      } else if (k === "fan") {
+        const m = n.match(/\b(80|92|120|140|200)\s?mm\b/i) || n.match(/\b(120|140)\b/); if (m) a.size = f(+m[1], "tienda");
+        const c = n.match(/\b(?:x\s?|pack\s?(?:x\s?)?|kit\s?(?:x\s?)?)([2-6])\b|\b([2-6])\s?(?:en\s?1|in\s?1|unidades|ventiladores|fans?)\b/i);
+        a.count = f(c ? +(c[1] || c[2]) : 1, c ? "tienda" : "regla");
       }
       return a;
     };
 
     /* atributos de lo que el usuario YA TIENE (eligió el modelo o cargó el dato a mano) */
-    E.slotAttrs = (k, entry, byId) => {
+    E.slotAttrs = (k, entry, byId) => {   // k puede ser un lugar extra (ram2): se lee como su lugar base
       if (!entry || entry.skip) return null;
       let a = {};
       if (entry.id && byId(entry.id)) a = E.attrs(k, byId(entry.id));
@@ -142,7 +169,7 @@
 
     /* ---------- marca (para las pestañas AMD / Intel / NVIDIA) ---------- */
     E.brand = (k, g, a) => {
-      a = a || E.attrs(k, g);
+      a = a || E.attrs(k, g); k = B.base(k);
       if (k === "cpu") return FX.cpuBrand(g.name) || (a.socket ? (/^AM/.test(a.socket.v) ? "AMD" : "Intel") : null);
       if (k === "mobo") return a.socket ? (/^AM/.test(a.socket.v) ? "AMD" : "Intel") : null;
       if (k === "gpu") { const v = a.hw && a.hw.vendor; if (v) return v; const n = g.name;
@@ -151,7 +178,7 @@
     };
     /* generación de la pieza para el orden «Recomendados» (más nueva = mayor) */
     const GEN = { AM5: 3, LGA1851: 3, LGA1700: 2, AM4: 2, LGA1200: 1 };
-    E.gen = (k, a) => {
+    E.gen = (k, a) => { k = B.base(k);
       if ((k === "cpu" || k === "mobo") && a.socket) return GEN[a.socket.v] || 0;
       if (k === "ram" && a.ddr) return a.ddr.v === "DDR5" ? 2 : a.ddr.v === "DDR4" ? 1 : 0;
       if (k === "gpu" && a.hw) { const id = a.hw.id || ""; return /^(rtx-50|rx-90|arc-b)/.test(id) ? 3 : /^(rtx-40|rx-7)/.test(id) ? 2 : 1; }
@@ -230,10 +257,11 @@
     /* Controla un producto candidato (o lo ya elegido) para el lugar k contra el resto del armado.
        X = { cpu: attrs, mobo: attrs, … } de las piezas ya elegidas (sin la del lugar k). */
     E.check = (k, a, X) => {
-      const res = [];
-      for (const [p, q, fn] of PAIRS) {
-        if (p === k && X[q]) res.push(Object.assign({ with: q }, fn(a, X[q])));
-        else if (q === k && X[p]) res.push(Object.assign({ with: p }, fn(X[p], a)));
+      const res = []; k = B.base(k);
+      for (const [p, q, fn] of PAIRS) for (const xk of Object.keys(X)) {   // también contra los lugares extra (ram2 cuenta como memoria)
+        const xb = B.base(xk);
+        if (p === k && xb === q) res.push(Object.assign({ with: xk }, fn(a, X[xk])));
+        else if (q === k && xb === p) res.push(Object.assign({ with: xk }, fn(X[xk], a)));
       }
       if (k === "psu") { const r = psuCheck(a, X); if (r) res.push(Object.assign({ with: "cpu+gpu" }, r)); }
       if ((k === "cpu" || k === "gpu") && X.psu) { const Y = Object.assign({}, X, { [k]: a }); const r = psuCheck(X.psu, Y); if (r) res.push(Object.assign({ with: "psu" }, r)); }
@@ -275,16 +303,36 @@
         const r = E.check(s.k, X[s.k], others);
         r.res.forEach(x => { const key = [s.k, x.with].sort().join("|") + x.txt; if (checks.some(c => c.key === key)) return; checks.push(Object.assign({ key, slot: s.k }, x)); if (x.warn) warns.push(x.warn); }); }
       checks.forEach(c => { if (c.s === "no") issues.push(c); });
-      const missing = B.SLOTS.filter(s => s.req && !build[s.k]).map(s => s.k);
+      const missing = B.SLOTS.filter(s => s.req && !build[s.k]).map(s => s.k);   // los lugares extra y los periféricos son opcionales
       // sin placa de video: el procesador tiene que tener gráficos integrados
       if (build.gpu && build.gpu.skip && X.cpu && X.cpu.igpu && X.cpu.igpu.v === false) issues.push({ s: "no", slot: "gpu", txt: "el procesador no tiene gráficos integrados: sin placa de video no hay imagen" });
       if (build.gpu && build.gpu.skip && X.cpu && !X.cpu.igpu) checks.push({ s: "unk", slot: "gpu", txt: "no sabemos si el procesador tiene gráficos integrados" });
       if (build.cooler && build.cooler.skip === "incl" && X.cpu && X.cpu.cooler && X.cpu.cooler.v === false) issues.push({ s: "no", slot: "cooler", txt: "este procesador no trae cooler en la caja" });
-      if (X.ssd && X.ssd.kind && /NVMe|M\.2/.test(X.ssd.kind.v || "")) warns.push("disco M.2: todas las placas de los sockets actuales traen al menos una ranura M.2, pero confirmá cuántas tiene la que elijas si vas a poner más de uno");
-      let total = 0, priced = 0;
-      for (const s of B.SLOTS) { const e = build[s.k]; if (e && e.id && !e.own) { const g = byId(e.id), o = g && C.recOffer(g); if (o) { total += CT.price(o); priced++; } } }
+      const of = b => B.SLOTS.filter(s => B.base(s.k) === b && X[s.k]).map(s => ({ k: s.k, a: X[s.k], e: build[s.k] }));
+      const m2 = of("ssd").filter(d => d.a.kind && /NVMe|M\.2/.test(d.a.kind.v || "")).length;
+      if (m2 === 1) warns.push("disco M.2: todas las placas de los sockets actuales traen al menos una ranura M.2, pero confirmá cuántas tiene la que elijas si vas a poner más de uno");
+      else if (m2 > 1) warns.push(`vas a poner ${m2} discos M.2: confirmá que la placa tenga ${m2} ranuras M.2 (muchas placas económicas y Micro-ATX traen 1 o 2) y si alguna comparte líneas con los puertos SATA`);
+      // varias memorias: mismo tipo, cuántos módulos entran y aviso si son modelos distintos
+      const rams = of("ram");
+      if (rams.length) {
+        const ddrs = [...new Set(rams.map(r => r.a.ddr && r.a.ddr.v).filter(Boolean))];
+        if (ddrs.length > 1) issues.push({ s: "no", slot: rams[1].k, txt: `combinás memorias ${ddrs.join(" y ")}: una placa usa un solo tipo` });
+        if (rams.length > 1 && new Set(rams.map(r => r.e.id || JSON.stringify(r.e.attrs || {}))).size > 1)
+          warns.push("combinás memorias de modelos distintos: suelen funcionar, pero la placa usa la velocidad y la latencia de la más lenta y a veces hay que ajustarla en la BIOS. Lo más seguro es un kit con todos los módulos iguales");
+        const mods = rams.reduce((t, r) => t + (r.a.mods ? r.a.mods.v : 1), 0), form = X.mobo && X.mobo.form ? X.mobo.form.v : null;
+        const cap = form === "Mini-ITX" ? 2 : 4;
+        if (mods > cap) issues.push({ s: "no", slot: rams[rams.length - 1].k, txt: `son ${mods} módulos de memoria y ${form === "Mini-ITX" ? "las placas Mini-ITX tienen 2 ranuras" : "las placas de los sockets actuales tienen como máximo 4 ranuras"}` });
+        else if (mods > 2 && form === "Micro-ATX") warns.push(`son ${mods} módulos de memoria: muchas placas Micro-ATX tienen solo 2 ranuras, confirmá que la tuya tenga ${mods}`);
+        else if (mods > 2 && !form) warns.push(`son ${mods} módulos de memoria: confirmá que la placa tenga ${mods} ranuras`);
+        if (mods > 2 && mods <= cap && ddrs[0] === "DDR5") warns.push(`con ${mods} módulos DDR5 quedan dos por canal: AMD e Intel indican para eso una velocidad máxima soportada menor que con 2 módulos. Si buscás velocidad, conviene 2 módulos más grandes`);
+      }
+      const fans = of("fan");
+      if (fans.length) { const n = fans.reduce((t, x) => t + (x.a.count ? x.a.count.v : 1), 0), sz = [...new Set(fans.map(x => x.a.size && x.a.size.v).filter(Boolean))];
+        warns.push(`ventiladores de gabinete (${n}${sz.length ? " de " + sz.join(" y ") + " mm" : ""}): confirmá en la ficha del gabinete cuántos de esa medida acepta y cuántos trae, y que la placa tenga conectores suficientes (o usá un divisor)`); }
+      let total = 0, totalPer = 0, priced = 0;
+      for (const s of B.SLOTS) { const e = build[s.k]; if (e && e.id && !e.own) { const g = byId(e.id), o = g && C.recOffer(g); if (o) { if (s.per) totalPer += CT.price(o); else total += CT.price(o); priced++; } } }
       const need = E.psuNeed(X);
-      return { X, issues, warns, checks, unk: checks.filter(c => c.s === "unk"), missing, total, priced, watts: E.watts(X), need };
+      return { X, issues, warns, checks, unk: checks.filter(c => c.s === "unk"), missing, total, totalPer, totalAll: total + totalPer, priced, watts: E.watts(X), need };
     };
 
     /* armado <-> texto para la dirección de la página (para compartir): cpu=id;gpu=-;case=own:id… */

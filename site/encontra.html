@@ -29,7 +29,11 @@
 .sec{font-size:12px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;margin-top:6px}
 details summary{cursor:pointer;color:var(--acc);font-size:13px}
 .okx{color:var(--ok);font-weight:700}.wx{color:var(--warn);font-weight:700}.bx2{color:var(--bad);font-weight:700}.ux{color:var(--mut);font-weight:700}
-.rrow{display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:2px 0}
+.rrow{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;padding:3px 0}
+.pt{display:flex;align-items:center;gap:9px;min-width:0}.pt>span:last-child{min-width:0}
+.rc .hero{display:flex;justify-content:center;padding:4px 0}.rc .hero .ct-th{border-radius:12px}
+.strip{display:flex;gap:6px;flex-wrap:wrap}.strip .ct-th{border-radius:8px}
+.opt .oi{flex:none;color:var(--acc);display:inline-flex;margin-top:1px}
 </style>
 </head>
 <body data-page="encontra">
@@ -41,7 +45,7 @@ details summary{cursor:pointer;color:var(--acc);font-size:13px}
 <div id="out"></div>
 </main>
 <footer class="fine" id="fine"></footer>
-<script src="js/lib.js"></script><script src="js/rep.js"></script><script src="js/compare.js"></script><script src="js/finder.js"></script><script src="js/quickview.js"></script>
+<script src="js/lib.js"></script><script src="js/rep.js"></script><script src="js/icons.js"></script><script src="js/compare.js"></script><script src="js/finder.js"></script><script src="js/quickview.js"></script>
 <script>
 const $=s=>document.querySelector(s),{ARS,esc,RES}=CT;
 let HW,PR=[],META={},C;
@@ -96,7 +100,8 @@ const STEPS=[
 function getp(p){return p.split(".").reduce((o,k)=>o[k],A)}
 const ANS={};
 function setp(p,v){ANS[p]=true;const k=p.split(".");let o=A;k.slice(0,-1).forEach(x=>o=o[x]);o[k[k.length-1]]=v}
-function choice(t,h,key,opts){const cur=getp(key);return `<div class="q"><h2>${t}</h2>${h?`<p class="hint">${h}</p>`:""}<div class="opts">${opts.map(([v,l,s],i)=>`<button class="opt rad ${ANS[key]&&cur===v?"on":""}" data-k="${key}" data-i="${i}"><span class="bx"></span><span>${l}${s?`<small>${s}</small>`:""}</span></button>`).join("")}</div></div>`}
+const OPT_ICO={pc:"pcs-armadas",armada:"pcs-armadas",componentes:"_armado",notebook:"notebooks"};
+function choice(t,h,key,opts){const cur=getp(key);return `<div class="q"><h2>${t}</h2>${h?`<p class="hint">${h}</p>`:""}<div class="opts">${opts.map(([v,l,s],i)=>`<button class="opt rad ${ANS[key]&&cur===v?"on":""}" data-k="${key}" data-i="${i}"><span class="bx"></span>${key==="tipo"&&OPT_ICO[v]?`<span class="oi">${ICONS.svg(OPT_ICO[v],22)}</span>`:""}<span>${l}${s?`<small>${s}</small>`:""}</span></button>`).join("")}</div></div>`}
 function bindChoice(key){document.querySelectorAll(`[data-k="${key}"]`).forEach(b=>b.onclick=()=>{const o=CHOICES[key][+b.dataset.i];setp(key,o);draw()})}
 const CHOICES={tipo:["pc","armada","componentes","notebook",null].map(x=>x),"have.tiene":[true,false],res:["1080","1440","4k",null],portable:["si","no",null],enfoque:["barato","equilibrado","rendimiento",null]};
 
@@ -127,11 +132,12 @@ function whyTxt(p,n){
   if(n.gaming&&p.c.fps)t+=` Para tu resolución (${RES[n.res]}) estimamos ~${Math.round(p.c.fps)} FPS promedio en juegos exigentes.`;
   return t;
 }
-function simH(p){return p.similar&&p.similar.length?`<details><summary>Opciones similares (${p.similar.length})</summary>${p.similar.map(c=>`<div class="rrow"><span>${c.kind==="build"?esc(buildName(c)):QV.link(c.g,c.g.name.slice(0,60))}</span><span style="white-space:nowrap"><b>${ARS(c.total)}</b>${c.kind==="build"?"":QV.btns(c.g.id)}</span></div>`).join("")}</details>`:""}
+function simH(p){return p.similar&&p.similar.length?`<details><summary>Opciones similares (${p.similar.length})</summary>${p.similar.map(c=>`<div class="rrow"><span class="pt">${ICONS.thumb(c.kind==="build"?(c.g||{category:"pcs-armadas"}):c.g,40)}<span>${c.kind==="build"?esc(buildName(c)):QV.link(c.g,c.g.name.slice(0,60))}</span></span><span style="white-space:nowrap"><b>${ARS(c.total)}</b>${c.kind==="build"?"":QV.btns(c.g.id)}</span></div>`).join("")}</details>`:""}
 const buildName=c=>c.g?`${c.g.name} + ${c.c.name}`:c.c.name;
+const SLOTCAT={cpu:"procesadores",gpu:"placas-de-video",mobo:"motherboards",ram:"memorias-ram",ssd:"almacenamiento",psu:"fuentes",case:"gabinetes",cooler:"refrigeracion"};
 function partsH(parts){return parts.map(pt=>{const [b,...rest]=pt.shop||[];
   const row=x=>`${QV.link(x.g,x.g.name.slice(0,58))} <span class="note">· <a href="${esc(x.o.url)}" target="_blank" rel="noopener nofollow">${esc(x.o.store)} ↗</a>${REP.badge(x.o.store)}</span>${x.note?`<div class="note"${x.bios==="bios"?' style="color:var(--warn)"':""}>${esc(x.note)}</div>`:""}`;
-  return `<div class="rrow"><span>${esc(pt.label)}: ${b?row(b):'<span class="ux">sin precio en el comparador</span>'}</span><span style="white-space:nowrap"><b>${b?ARS(b.p):"—"}</b>${b?QV.btns(b.g.id):""}</span></div>${rest.length?`<details style="margin:-2px 0 4px 8px"><summary>${rest.length} alternativa${rest.length>1?"s":""}</summary>${rest.map(r=>`<div class="rrow"><span>${row(r)}</span><span style="white-space:nowrap"><b>${ARS(r.p)}</b>${QV.btns(r.g.id)}</span></div>`).join("")}</details>`:""}`}).join("")}
+  return `<div class="rrow"><span class="pt">${ICONS.thumb(b?b.g:{category:SLOTCAT[pt.slot]||"otros"},44)}<span>${esc(pt.label)}: ${b?row(b):'<span class="ux">sin precio en el comparador</span>'}</span></span><span style="white-space:nowrap"><b>${b?ARS(b.p):"—"}</b>${b?QV.btns(b.g.id):""}</span></div>${rest.length?`<details style="margin:-2px 0 4px 8px"><summary>${rest.length} alternativa${rest.length>1?"s":""}</summary>${rest.map(r=>`<div class="rrow"><span class="pt">${ICONS.thumb(r.g,36)}<span>${row(r)}</span></span><span style="white-space:nowrap"><b>${ARS(r.p)}</b>${QV.btns(r.g.id)}</span></div>`).join("")}</details>`:""}`}).join("")}
 /* cuánto más cuesta y cuánto más rinde frente a la opción económica de la misma sección */
 function vsH(p,eco,n){
   if(!eco||p===eco)return p.k==="eco"?`<div class="vs"><b>Punto de partida</b> para comparar las otras dos columnas.</div>`:"";
@@ -150,7 +156,8 @@ function cardH(p,n,eco){
   const c=p.c,isB=c.kind==="build";
   const head=isB?`PC por componentes · ${esc(buildName(c))}`:esc(c.g.name);
   const kindTxt={build:"Componentes individuales (armado por tu cuenta)",pc:"PC armada",notebook:"Notebook"}[c.kind];
-  let h=`<div class="rc"><div class="lab">${p.label}</div><h3>${isB?head:QV.link(c.g)}</h3>${isB?"":`<div>${QV.btns(c.g.id)} <a class="note" href="${esc(c.o.url)}" target="_blank" rel="noopener nofollow">Ir a ${esc(c.o.store)} ↗</a></div>`}
+  const strip=isB?c.parts.map(x=>x.shop&&x.shop[0]).filter(Boolean).slice(0,6).map(x=>ICONS.thumb(x.g,54)).join(""):"";
+  let h=`<div class="rc"><div class="lab">${p.label}</div>${isB?(strip?`<div class="strip">${strip}</div>`:""):`<div class="hero">${ICONS.thumb(c.g,150)}</div>`}<h3>${isB?head:QV.link(c.g)}</h3>${isB?"":`<div>${QV.btns(c.g.id)} <a class="note" href="${esc(c.o.url)}" target="_blank" rel="noopener nofollow">Ir a ${esc(c.o.store)} ↗</a></div>`}
    <div><span class="pr">${ARS(c.total)}${isB&&c.missing.length?"+":""}</span> ${tagH("ver")}<div class="note">${kindTxt} · ${isB?"suma de las opciones más baratas con stock":esc(c.o.store)+REP.badge(c.o.store)+" · "+stockTxt(c.o)} · ARS</div><div class="note">${dateTxt()}</div></div>${vsH(p,eco,n)}`;
   if(isB){const all=c.parts.map(x=>x.shop&&x.shop[0]&&x.shop[0].g.id).filter(Boolean);
     h+=`<div class="sec">Piezas, especificaciones y precios</div>${partsH(c.parts)}${all.length?`<button type="button" class="qv-all" data-qall="${all.join(",")}"></button>`:""}${c.missing.length?`<div class="stale">Sin precio en el comparador: ${c.missing.map(esc).join(", ")}. El total es parcial.</div>`:""}`;
@@ -172,10 +179,10 @@ function upgradeH(u,n){
   if(A.have.goal==="gpu"||A.have.goal==="todo"){
     h+=`<h2>Placas de video para tu equipo</h2>`;
     if(!u.gpus.length)h+=`<div class="panel">No encontramos placas con stock que mejoren al menos un 25 % lo que tenés${A.budget?" dentro de tu presupuesto":""}${A.have.gpu&&A.have.gpu!=="none"?"":""}. Probá subir el presupuesto.</div>`;
-    else h+=`<div class="grid2">${u.gpus.slice(0,6).map(x=>{const b=x.shop[0];return `<div class="rc"><h3><a href="${esc(b.o.url)}" target="_blank" rel="noopener nofollow">${esc(b.g.name.slice(0,70))}</a></h3><div><span class="pr">${ARS(b.p)}</span> ${tagH("ver")}<div class="note">${esc(b.o.store)}${REP.badge(b.o.store)} · ${stockTxt(b.o)} · ~${Math.round(x.g.p[n.res])} FPS a ${RES[n.res]} ${tagH("bench")}</div></div><div class="sec">Compatibilidad con tu equipo</div>${x.compat.map(statusH).join("")}</div>`}).join("")}</div>`;
+    else h+=`<div class="grid2">${u.gpus.slice(0,6).map(x=>{const b=x.shop[0];return `<div class="rc"><div class="hero">${ICONS.thumb(b.g,110)}</div><h3><a href="${esc(b.o.url)}" target="_blank" rel="noopener nofollow">${esc(b.g.name.slice(0,70))}</a></h3><div><span class="pr">${ARS(b.p)}</span> ${tagH("ver")}<div class="note">${esc(b.o.store)}${REP.badge(b.o.store)} · ${stockTxt(b.o)} · ~${Math.round(x.g.p[n.res])} FPS a ${RES[n.res]} ${tagH("bench")}</div></div><div class="sec">Compatibilidad con tu equipo</div>${x.compat.map(statusH).join("")}</div>`}).join("")}</div>`;
   }
   if((A.have.goal==="cpu"||A.have.goal==="todo")&&u.cpus.length){
-    h+=`<h2>Procesadores para tu equipo</h2><div class="grid2">${u.cpus.slice(0,6).map(x=>{const b=x.shop[0];return `<div class="rc"><h3><a href="${esc(b.o.url)}" target="_blank" rel="noopener nofollow">${esc(b.g.name.slice(0,70))}</a></h3><div><span class="pr">${ARS(x.total)}</span> ${tagH("ver")}<div class="note">Costo: ${x.cost} · ${esc(b.o.store)}${REP.badge(b.o.store)} · puntaje de juegos ${x.c.s}/100 ${tagH("bench")}</div></div><div class="sec">Compatibilidad con tu equipo</div>${x.compat.map(statusH).join("")}</div>`}).join("")}</div>`;
+    h+=`<h2>Procesadores para tu equipo</h2><div class="grid2">${u.cpus.slice(0,6).map(x=>{const b=x.shop[0];return `<div class="rc"><div class="hero">${ICONS.thumb(b.g,110)}</div><h3><a href="${esc(b.o.url)}" target="_blank" rel="noopener nofollow">${esc(b.g.name.slice(0,70))}</a></h3><div><span class="pr">${ARS(x.total)}</span> ${tagH("ver")}<div class="note">Costo: ${x.cost} · ${esc(b.o.store)}${REP.badge(b.o.store)} · puntaje de juegos ${x.c.s}/100 ${tagH("bench")}</div></div><div class="sec">Compatibilidad con tu equipo</div>${x.compat.map(statusH).join("")}</div>`}).join("")}</div>`;
   }
   return h;
 }
@@ -183,7 +190,7 @@ function extrasH(n){
   if(!A.perifericos)return"";
   const mon=C.inCat("monitores").filter(g=>{const s=CT.parse(g.name,"monitores");const want={0:"FHD",1:"QHD",2:"4K"}[n.res];return s.res&&s.res.startsWith(want)&&(!A.usos.includes("gaming_comp")||(s.hz||0)>=144)});
   const kb=C.inCat("perifericos").filter(g=>/combo/i.test(g.name)&&/teclado/i.test(g.name)&&/mouse/i.test(g.name));
-  const row=(t,l)=>l.length?`<div class="sec">${t}</div>${l.map(x=>`<div class="rrow"><span><a href="${esc(x.o.url)}" target="_blank" rel="noopener nofollow">${esc(x.g.name.slice(0,64))}</a> <span class="note">· ${esc(x.o.store)}${REP.badge(x.o.store)}</span></span><b>${ARS(x.p)}</b></div>`).join("")}`:`<div class="sec">${t}</div><div class="note">No encontramos opciones con stock que cumplan lo que elegiste.</div>`;
+  const row=(t,l)=>l.length?`<div class="sec">${t}</div>${l.map(x=>`<div class="rrow"><span class="pt">${ICONS.thumb(x.g,56)}<span><a href="${esc(x.o.url)}" target="_blank" rel="noopener nofollow">${esc(x.g.name.slice(0,64))}</a> <span class="note">· ${esc(x.o.store)}${REP.badge(x.o.store)}</span></span></span><b>${ARS(x.p)}</b></div>`).join("")}`:`<div class="sec">${t}</div><div class="note">No encontramos opciones con stock que cumplan lo que elegiste.</div>`;
   return `<h2>Periféricos</h2><div class="panel">${row("Monitores ("+RES[n.res]+(A.usos.includes("gaming_comp")?", 144 Hz o más":"")+")",C.cheapest(mon,3))}${row("Combos de teclado y mouse",C.cheapest(kb,3))}<div class="note">No están incluidos en los totales de arriba.</div></div>`;
 }
 function gamesNote(){

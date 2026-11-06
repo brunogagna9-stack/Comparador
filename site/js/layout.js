@@ -66,6 +66,11 @@ const HIST_ICO = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" st
       const q = document.getElementById("qh");
       q.addEventListener("keydown", e => { if (e.key === "Enter" && q.value.trim()) location.href = "productos.html?q=" + encodeURIComponent(q.value.trim()); });
       document.getElementById("lbtn").onclick = () => { location.href = "productos.html?lista=1"; };
+      // actualización 36: sugerencias con foto mientras se escribe (también en el buscador grande de la portada)
+      const sc = document.createElement("script"); sc.src = "js/search.js"; sc.async = true;
+      sc.onload = () => { if (!window.SRCH) return; SRCH.mount(q, { host: q.parentNode, alignRight: true });
+        const hq = document.getElementById("hq"); if (hq) SRCH.mount(hq, { host: hq.closest("form") || hq.parentNode }); };
+      document.head.appendChild(sc);
     }
   }
   function mountFooter() {

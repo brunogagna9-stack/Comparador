@@ -32,6 +32,10 @@ details.nod{margin-top:10px;background:var(--card);border:1px solid var(--line2)
 .saved{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 12px;padding:10px 12px;border:1px solid color-mix(in srgb,var(--acc) 40%,var(--line));border-radius:12px;background:color-mix(in srgb,var(--acc) 8%,var(--card))}
 .saved button{border:1px solid var(--line2,var(--line));background:var(--card);color:var(--tx);border-radius:999px;padding:6px 12px;font:600 13px system-ui,sans-serif;cursor:pointer}
 .saved button.on{background:#1d4ed8;border-color:#1d4ed8;color:#fff}
+.dd button{align-items:center}.dd .dn{display:flex;align-items:center;gap:10px;min-width:0}.dd .dn>span:last-child{min-width:0}
+.pill{padding:4px 8px 4px 4px}.pill .ct-th{border-radius:50%}
+.hd .hph{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}.hd .ct-th{border-radius:12px}
+.rleg{display:flex;flex-direction:column;gap:8px}.rleg>div{display:flex;align-items:center;gap:10px}.rleg .ct-th{border:2px solid var(--c)}
 </style>
 </head>
 <body data-page="comparar">
@@ -53,7 +57,7 @@ details.nod{margin-top:10px;background:var(--card);border:1px solid var(--line2)
 <div class="panel"><div class="legend" id="legend"></div>
 <p class="note" style="margin-top:8px">Las puntuaciones y el ganador se calculan solo con métricas numéricas que tienen dato para <b>todos</b> los productos. Cada métrica se normaliza contra el mejor de la comparación (el mejor vale 100 %; si menos es mejor, se invierte) y se pondera según el uso elegido. Si faltan datos o la diferencia es menor al 3 %, decimos que el resultado es inconcluso. No usamos puntajes inventados.</p></div>
 </main>
-<script src="js/lib.js"></script><script src="js/history.js"></script><script src="js/rep.js"></script><script src="js/compare.js"></script>
+<script src="js/lib.js"></script><script src="js/icons.js"></script><script src="js/history.js"></script><script src="js/rep.js"></script><script src="js/compare.js"></script>
 <script>
 const $=s=>document.querySelector(s),{ARS,esc,RES}=CT;
 const COL=["#4f6bff","#ff4f8b","#12a37f","#e0a100"];
@@ -74,7 +78,7 @@ function drawCats(){
   document.querySelectorAll("[data-c2]").forEach(b=>b.onclick=()=>{S.all=false;const a=$("#allc");if(a)a.checked=false;S.cat=b.dataset.c2;S.ids=CT.cmp.list(S.cat);S.use=null;drawAll()});
 }
 function drawSel(){
-  $("#sel").innerHTML=S.ids.map((id,i)=>{const g=byId(id);return `<div class="pill" style="--c:${COL[i]}"><span title="${esc(g.name)}">${esc(g.name)}</span><button data-r="${id}" aria-label="Quitar">×</button></div>`}).join("")||'<span class="note">Todavía no elegiste productos. Buscá arriba y tocá un resultado.</span>';
+  $("#sel").innerHTML=S.ids.map((id,i)=>{const g=byId(id);return `<div class="pill" style="--c:${COL[i]}">${ICONS.thumb(g,32)}<span title="${esc(g.name)}">${esc(g.name)}</span><button data-r="${id}" aria-label="Quitar">×</button></div>`}).join("")||'<span class="note">Todavía no elegiste productos. Buscá arriba y tocá un resultado.</span>';
   document.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{S.ids=S.ids.filter(x=>x!==b.dataset.r);drawAll()});
 }
 let DD=-1;   // opción resaltada con el teclado
@@ -93,7 +97,7 @@ function search(){
    .map(g=>({g,p:Math.min(...g.offers.filter(o=>o.stock!==false).map(CT.price).concat([Infinity]))})).sort((a,b)=>a.p-b.p);
   const res=all.slice(0,10);
   dd.hidden=false;$("#q").setAttribute("aria-expanded","true");
-  dd.innerHTML=res.length?`<div class="ddh">${all.length>10?`Mostrando 10 de ${all.length} · seguí escribiendo para afinar`:`${all.length} ${all.length===1?"resultado":"resultados"}`} · ↑ ↓ y Enter para elegir</div>`+res.map(({g,p},i)=>`<button type="button" role="option" id="dd${i}" data-a="${esc(g.id)}"><span>${hl(g.name,words)}${S.all?` <span class="note">· ${esc(CT.CATS[g.category]||g.category)}</span>`:""}</span><span class="p">${isFinite(p)?ARS(p):"sin stock"}</span></button>`).join(""):`<div class="ddm">No encontramos «${esc(t)}» en ${S.all?"ninguna categoría":esc(CT.CATS[S.cat]||"esta categoría")}. Probá con otra parte del nombre (por ejemplo solo el modelo).${S.all?"":" También podés tildar «Buscar en todas las categorías»."}</div>`;
+  dd.innerHTML=res.length?`<div class="ddh">${all.length>10?`Mostrando 10 de ${all.length} · seguí escribiendo para afinar`:`${all.length} ${all.length===1?"resultado":"resultados"}`} · ↑ ↓ y Enter para elegir</div>`+res.map(({g,p},i)=>`<button type="button" role="option" id="dd${i}" data-a="${esc(g.id)}"><span class="dn">${ICONS.thumb(g,40)}<span>${hl(g.name,words)}${S.all?` <span class="note">· ${esc(CT.CATS[g.category]||g.category)}</span>`:""}</span></span><span class="p">${isFinite(p)?ARS(p):"sin stock"}</span></button>`).join(""):`<div class="ddm">No encontramos «${esc(t)}» en ${S.all?"ninguna categoría":esc(CT.CATS[S.cat]||"esta categoría")}. Probá con otra parte del nombre (por ejemplo solo el modelo).${S.all?"":" También podés tildar «Buscar en todas las categorías»."}</div>`;
   dd.querySelectorAll("[data-a]").forEach(b=>b.onmousedown=e=>{e.preventDefault();ddAdd(b.dataset.a)});
 }
 
@@ -114,7 +118,7 @@ function radar(cmp){
   ax.forEach((a,i)=>{const [x,y]=pt(i,100),[lx,ly]=pt(i,118);svg+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--line)"/><text x="${lx}" y="${ly}" font-size="12" font-weight="600" fill="var(--tx)" text-anchor="${lx<cx-8?"end":lx>cx+8?"start":"middle"}" dominant-baseline="middle">${esc(RL(a.label))}</text>`});
   cmp.items.forEach((it,j)=>{const p=ax.map((a,i)=>pt(i,a.vals[j]).join(",")).join(" ");svg+=`<polygon points="${p}" fill="${COL[j]}" fill-opacity=".18" stroke="${COL[j]}" stroke-width="2"/>`});
   svg+="</svg>";
-  return `<h2>Vista general</h2><div class="panel radar">${svg}<div style="flex:1;min-width:220px"><div>${cmp.items.map((it,j)=>`<div><span style="color:${COL[j]}">●</span> ${esc(it.name.slice(0,60))}</div>`).join("")}</div><p class="note">Puntuación relativa calculada por ComparáTech ${tagH("est")}: 100 = el mejor de esta comparación en cada métrica (si menos es mejor, se invierte). Solo incluye métricas con dato para todos. No es un benchmark.</p></div></div>`;
+  return `<h2>Vista general</h2><div class="panel radar">${svg}<div style="flex:1;min-width:220px"><div class="rleg">${cmp.items.map((it,j)=>`<div style="--c:${COL[j]}">${ICONS.thumb(byId(S.ids[j])||{category:cmp.cat},56)}<span><span style="color:${COL[j]}">●</span> ${esc(it.name.slice(0,60))}</span></div>`).join("")}</div><p class="note">Puntuación relativa calculada por ComparáTech ${tagH("est")}: 100 = el mejor de esta comparación en cada métrica (si menos es mejor, se invierte). Solo incluye métricas con dato para todos. No es un benchmark.</p></div></div>`;
 }
 
 /* ---------- veredicto ---------- */
@@ -147,7 +151,7 @@ function table(cmp){
   const items=cmp.items,two=items.length===2;
   let rows=cmp.rows;if(S.diff)rows=rows.filter(r=>r.differs||["name","price"].includes(r.id));
   const empty=rows.filter(r=>r.cells.every(c=>c.tag==="nd"));rows=rows.filter(r=>!empty.includes(r));
-  let h=`<div class="row" style="margin:14px 0 8px;justify-content:space-between"><h2 style="margin:0">Tabla comparativa</h2><label class="tog"><input type="checkbox" id="diff" ${S.diff?"checked":""}> Mostrar solo las diferencias</label></div><div class="tw"><table class="ct"><thead><tr><th>Característica</th>${items.map((it,i)=>`<th class="hd" style="--c:${COL[i]}">${it.o?`<a href="${esc(it.o.url)}" target="_blank" rel="noopener nofollow">${esc(it.name.slice(0,70))}</a>`:esc(it.name)}</th>`).join("")}${two?"<th>Ventaja</th>":""}</tr></thead><tbody>`;
+  let h=`<div class="row" style="margin:14px 0 8px;justify-content:space-between"><h2 style="margin:0">Tabla comparativa</h2><label class="tog"><input type="checkbox" id="diff" ${S.diff?"checked":""}> Mostrar solo las diferencias</label></div><div class="tw"><table class="ct"><thead><tr><th>Característica</th>${items.map((it,i)=>`<th class="hd" style="--c:${COL[i]}"><div class="hph">${ICONS.thumb(byId(S.ids[i])||{category:cmp.cat},96)}${it.o?`<a href="${esc(it.o.url)}" target="_blank" rel="noopener nofollow">${esc(it.name.slice(0,70))}</a>`:esc(it.name)}</div></th>`).join("")}${two?"<th>Ventaja</th>":""}</tr></thead><tbody>`;
   rows.forEach(r=>{
     h+=`<tr><td class="l">${esc(r.label)}<button class="i" data-h="${r.id}" aria-label="Qué significa" title="${esc(r.help)}">i</button>${r.derived?" "+tagH("est"):""}<div class="help" id="h_${r.id}">${esc(r.help)}</div></td>`;
     r.cells.forEach(c=>{h+=`<td class="${c.win?"win":""}">${(r.id==="store"||r.id==="official")&&c.url?`<a href="${esc(c.url)}" target="_blank" rel="noopener nofollow">${esc(c.disp)}</a>${r.id==="store"?REP.badge(c.disp):""}`:c.tag==="nd"?`<span class="nd">Sin datos</span>`:c.win?`<b>${esc(c.disp)}</b>`:esc(c.disp)}${c.tag&&c.tag!=="nd"&&r.id!=="name"?tagH(c.tag,c.note):""}</td>`});

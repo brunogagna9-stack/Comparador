@@ -33,6 +33,20 @@
   const ICONS = {};
   ICONS.has = k => k in P;
   ICONS.svg = (k, size, cls) => `<svg class="ico${cls ? " " + cls : ""}" xmlns="http://www.w3.org/2000/svg" width="${size || 24}" height="${size || 24}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${P[k] || P.otros}</svg>`;
+  /* Foto de un producto (con su categoría como reserva): si la imagen no carga se prueba la miniatura y después el ícono.
+     Se usa en todas las listas con productos (actualización 35). g = producto del catálogo o { image, category }. */
+  const escA = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  ICONS.thumb = (g, size, cls) => {
+    size = size || 48; g = g || {};
+    const cat = g.category || g.cat || "otros", ico = ICONS.svg(cat, Math.round(size * 0.5));
+    const src = g.image || g.image_fb;
+    const box = inner => `<span class="ct-th${cls ? " " + cls : ""}" style="width:${size}px;height:${size}px" aria-hidden="true">${inner}</span>`;
+    if (!src || !/^https:\/\//.test(src)) return box(ico);
+    const fb = g.image && g.image_fb && g.image_fb !== g.image && /^https:\/\//.test(g.image_fb) ? escA(g.image_fb) : "";
+    return box(`<img loading="lazy" decoding="async" alt="" width="${size}" height="${size}" src="${escA(src)}" data-fb="${fb}" data-cat="${escA(cat)}" onerror="ICONS.imgErr(this)">`);
+  };
+  ICONS.imgErr = img => { const fb = img.getAttribute("data-fb"); if (fb) { img.setAttribute("data-fb", ""); img.src = fb; return; }
+    const s = document.createElement("span"); s.innerHTML = ICONS.svg(img.getAttribute("data-cat") || "otros", Math.round((img.width || 48) * 0.5)); img.replaceWith(s.firstChild); };
   root.ICONS = ICONS;
   if (typeof module !== "undefined" && module.exports) module.exports = ICONS;
 })(typeof self !== "undefined" ? self : this);

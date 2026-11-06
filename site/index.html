@@ -140,6 +140,7 @@ function catPhotoFail(img){const ph=img.parentNode,fb=img.dataset.fb;if(fb&&img.
 const QUICK=["RTX 4060","Ryzen 5 5600","SSD 1TB","DDR4 16GB","Monitor 24"];
 $("#quick").insertAdjacentHTML("beforeend",QUICK.map(q=>`<a href="productos.html?q=${encodeURIComponent(q)}">${esc(q)}</a>`).join(""));
 $("#hs").addEventListener("submit",e=>{e.preventDefault();const q=$("#hq").value.trim();location.href="productos.html"+(q?"?q="+encodeURIComponent(q):"")});
+if(window.SRCH)SRCH.mount($("#hq"),{host:$("#hs")});   // si el autocompletado ya cargó (si no, lo monta layout.js al cargar)
 const chgOk=g=>!!(g.chg&&!(g.offers[0]&&g.offers[0].anom));
 const price=o=>o.price_cash??o.price_list;
 async function j(u,d){try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw 0;return await r.json()}catch{return d}}
@@ -159,7 +160,7 @@ async function j(u,d){try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)thr
     return `<a class="cat" href="productos.html?cat=${k}"><div class="ph" data-c="${k}">${p&&p.image?`<img loading="lazy" decoding="async" src="${esc(p.image)}" ${p.image_fb?`data-fb="${esc(p.image_fb)}"`:""} alt="" title="${esc(p.name)}" onerror="catPhotoFail(this)">`:ICONS.svg(k,42,"big")}</div><div class="row"><span class="bi">${ICONS.svg(k,17)}</span><span>${CATS[k]}<small>${cc[k].toLocaleString("es-AR")} productos</small></span></div></a>`}).join("")||`<div class="empty">Los productos aparecen apenas se lean las tiendas.</div>`;
   const top=drops.slice(0,4);
   if(top.length){$("#dropsec").hidden=false;
-    $("#drops").innerHTML=top.map(g=>{const o=g.offers[0];return `<a class="dp" href="productos.html?q=${encodeURIComponent(g.name.split(/\s+/).slice(0,6).join(" "))}"><div class="im">${g.image?`<img loading="lazy" src="${esc(g.image)}" alt="" onerror="this.outerHTML=ICONS.svg('${esc(g.category||"otros")}',36,'big')">`:ICONS.svg(g.category||"otros",36,"big")}<span class="bd">▼ ${Math.abs(g.chg.pct).toLocaleString("es-AR")}%</span></div><div class="st">${esc(o.store)}</div><div class="nm">${esc(g.name)}</div><div class="pr">${ARS(price(o))}<span class="old">${ARS(g.chg.prev)}</span></div></a>`}).join("")}
+    $("#drops").innerHTML=top.map(g=>{const o=g.offers[0];return `<a class="dp" href="${g.id?"producto.html?id="+encodeURIComponent(g.id):"productos.html?q="+encodeURIComponent(g.name.split(/\s+/).slice(0,6).join(" "))}"><div class="im">${g.image?`<img loading="lazy" src="${esc(g.image)}" alt="" onerror="this.outerHTML=ICONS.svg('${esc(g.category||"otros")}',36,'big')">`:ICONS.svg(g.category||"otros",36,"big")}<span class="bd">▼ ${Math.abs(g.chg.pct).toLocaleString("es-AR")}%</span></div><div class="st">${esc(o.store)}</div><div class="nm">${esc(g.name)}</div><div class="pr">${ARS(price(o))}<span class="old">${ARS(g.chg.prev)}</span></div></a>`}).join("")}
 })();
 </script>
 <script type="module">

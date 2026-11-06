@@ -913,6 +913,8 @@ def test_catalogo_armar():
     r = build_data.armar_catalog(P)
     assert [g["id"] for g in r] == ["a"]
     assert set(r[0]["offers"][0]) == {"store", "price_cash", "stock", "url"}
+    rp = build_data.armar_catalog(P, build_data.ARMAR_PER_CATS)          # actualización 35: periféricos aparte
+    assert [g["id"] for g in rp] == ["b"]
 
 
 def test_armalo_vos_actualizacion_29():
@@ -1084,3 +1086,41 @@ def test_actualizacion_32_cuentas():
     br = [l for l in log if "api.brevo.com" in l[1]]
     assert len(br) == 1 and br[0][2]["api-key"] == "k" and br[0][3]["to"] == [{"email": "a@b.com"}]
     assert not any(l[0] == "PATCH" for l in log)                 # falló el envío: se reintenta en la próxima corrida
+
+
+def test_actualizacion_35_fotos_y_armado():
+    """Fotos en Comparar, ¿Qué actualizar? y Encontrá tu equipo; varias memorias/discos y periféricos en «Armalo vos»."""
+    from pathlib import Path
+    root = Path(__file__).resolve().parent.parent / "site"
+    rd = lambda f: (root / f).read_text(encoding="utf-8")
+    ic = rd("js/icons.js")
+    assert "ICONS.thumb" in ic and "ICONS.imgErr" in ic and "^https:" in ic        # solo imágenes https, con respaldo
+    for page in ("comparar.html", "encontra.html", "actualizar.html", "armar.html"):
+        h = rd(page)
+        assert 'src="js/icons.js"' in h and "ICONS.thumb(" in h, page
+    assert 'src="js/combo.js"' in rd("actualizar.html")
+    ar = rd("armar.html")
+    assert "data/armar_per.json" in ar and "compact()" in ar and "totalPer" in ar and "BLD.MAIN()" in ar
+    css = rd("css/shared.css")
+    assert ".ct-th" in css and ".cb-dd" in css and ".shopc" in css
+
+
+def test_actualizacion_36_buscador_y_armado():
+    """Índice liviano del autocompletado, tarjetas de bajas a la ficha, búsqueda visible en Productos y armado por procesador."""
+    import build_data
+    from pathlib import Path
+    G = [{"id": "a", "name": "Placa de Video RTX 5060", "category": "placas-de-video", "image": "https://x/a.jpg",
+          "offers": [{"store": "T1", "price_cash": 900, "stock": True}, {"store": "T2", "price_cash": 800, "stock": False}, {"store": "T3", "price_cash": 850, "stock": True}]},
+         {"id": "b", "name": "Mouse", "category": "mouses", "image": "http://inseguro/b.jpg", "image_fb": "https://ok/b.jpg", "offers": [{"store": "T1", "price_cash": 10, "anom": True}]},
+         {"id": "c", "name": "Teclado", "category": "teclados", "image": "http://x", "offers": [{"store": "T1", "price_list": 50}]}]
+    r = build_data.search_index(G)["items"]
+    assert r[0] == ["a", "Placa de Video RTX 5060", "placas-de-video", "https://x/a.jpg", 850, 3]   # el más barato CON stock
+    assert [x[0] for x in r] == ["a", "c"] and r[1][3] == ""                                       # sin precios raros ni fotos http
+    root = Path(__file__).resolve().parent.parent / "site"
+    rd = lambda f: (root / f).read_text(encoding="utf-8")
+    assert "js/search.js" in rd("js/layout.js") and "SRCH.mount" in rd("js/layout.js")
+    assert 'producto.html?id="+encodeURIComponent(g.id)' in rd("index.html")
+    assert 'id="qclear"' in rd("productos.html")
+    ar = rd("armado.html")
+    assert "data-gsel" in ar and "C.parts(g,c,false,\"min\"" in ar and 'p.set("placa",S.gid)' in ar
+    assert '"buscar.json"' in (Path(build_data.__file__).read_text(encoding="utf-8"))

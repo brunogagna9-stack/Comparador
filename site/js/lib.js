@@ -73,7 +73,9 @@
     const d = n.match(/ddr([2345])/i); if (d) out.ddr = "DDR" + d[1];
     const k = n.match(/(\d+)\s?x\s?(\d+)\s?gb/i);
     if (k) { out.mods = +k[1]; out.gb = +k[1] * +k[2]; }
-    else { const t = n.match(/(\d+)\s?gb/i); if (t) { out.gb = +t[1]; out.mods = 1; } }
+    else { const t = n.match(/(\d+)\s?gb/i); if (t) { out.gb = +t[1]; out.mods = 1;
+      // «32GB 2X16»: módulos sin «GB» en el segundo número; solo si la cuenta da el total del título
+      const x = n.match(/\b([248])\s?x\s?(\d{1,2})\b/i); if (x && +x[1] * +x[2] === out.gb) out.mods = +x[1]; } }
     const mh = n.match(/(\d{3,5})\s?(?:mhz|mt\/?s)\b/i) || n.match(/ddr[45][- ](\d{4})\b/i); if (mh) out.mhz = +mh[1];
     const cl = n.match(/\bcl\s?-?(\d{2})\b/i); if (cl) out.cl = +cl[1];
     if (out.mhz && out.cl) out.lat = Math.round(out.cl * 2000 / out.mhz * 10) / 10; // latencia real en ns
@@ -107,10 +109,12 @@
     return { w: w ? w[0] : null, wMany: ws.length > 1 && new Set(ws).size > 1, cert, certRank: cert ? CERT[cert] : null, cyb: cy ? "Cybenetics " + cy[1][0].toUpperCase() + cy[1].slice(1).toLowerCase() : null, modular: /modular/i.test(n) && !/no modular|semi/i.test(n), semi: /semi[- ]?modular/i.test(n),
       atx3: (n.match(/atx\s?3\.\d/i) || [null])[0], bulk: /bulk/i.test(n) };
   }
-  const CHIPSETS = "a320 a520 b450 b550 x570 a620 b650 b650e x670 x670e b840 b850 x870 x870e h510 b560 z590 h610 b660 b760 z690 z790 h810 b860 z890".split(" ");
+  const CHIPSETS = "a320 b350 x370 x470 h310 b360 h370 z370 b365 z390 h410 b460 h470 z490 h670 h770 a520 b450 b550 x570 a620 b650 b650e x670 x670e b840 b850 x870 x870e h510 b560 z590 h610 b660 b760 z690 z790 h810 b860 z890".split(" ");
   const CHIP_SOCKET = { a620: "AM5", b650: "AM5", b650e: "AM5", x670: "AM5", x670e: "AM5", b840: "AM5", b850: "AM5", x870: "AM5", x870e: "AM5",
     a320: "AM4", a520: "AM4", b450: "AM4", b550: "AM4", x570: "AM4", h610: "LGA1700", b660: "LGA1700", b760: "LGA1700", z690: "LGA1700", z790: "LGA1700",
-    h810: "LGA1851", b860: "LGA1851", z890: "LGA1851", h510: "LGA1200", b560: "LGA1200", z590: "LGA1200" };
+    h810: "LGA1851", b860: "LGA1851", z890: "LGA1851", h510: "LGA1200", b560: "LGA1200", z590: "LGA1200",
+    b350: "AM4", x370: "AM4", x470: "AM4", h410: "LGA1200", b460: "LGA1200", h470: "LGA1200", z490: "LGA1200", h670: "LGA1700", h770: "LGA1700",
+    h310: "LGA1151", b360: "LGA1151", h370: "LGA1151", z370: "LGA1151", b365: "LGA1151", z390: "LGA1151" };
   function moboSpec(n) {
     const o = { socket: null, chipset: null, ddr: null, form: null, wifi: /wi-?fi|wifi/i.test(n) };
     if (/\bam5\b/i.test(n)) o.socket = "AM5"; else if (/\bam4\b/i.test(n)) o.socket = "AM4";
@@ -120,7 +124,7 @@
     if (!o.chipset) { const m = n.match(/\b([ABXHZ]\d{3}E?)M?\b/i); if (m && CHIPSETS.includes(m[1].toLowerCase())) o.chipset = m[1].toUpperCase(); }
     if (!o.socket && o.chipset) o.socket = CHIP_SOCKET[o.chipset.toLowerCase()] || null; // deducido del chipset
     const d = n.match(/ddr([45])/i) || n.match(/\bd([45])\b/i); if (d) o.ddr = "DDR" + d[1];
-    else if (o.socket) { const only = { AM4: "DDR4", LGA1200: "DDR4", AM5: "DDR5", LGA1851: "DDR5" }[o.socket]; if (only) { o.ddr = only; o.ddrBySocket = true; } }
+    else if (o.socket) { const only = { AM4: "DDR4", LGA1200: "DDR4", LGA1151: "DDR4", AM5: "DDR5", LGA1851: "DDR5" }[o.socket]; if (only) { o.ddr = only; o.ddrBySocket = true; } }
     if (/mini[- ]?itx|\bitx\b|\b[abxhz]\d{3}e?i\b/i.test(n)) o.form = "Mini-ITX";
     else if (/e-?atx/i.test(n)) o.form = "E-ATX";
     else if (/m-?atx|micro[- ]?atx|\b[abxhz]\d{3}e?m\b/i.test(n)) o.form = "Micro-ATX";

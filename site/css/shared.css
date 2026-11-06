@@ -70,3 +70,17 @@ input:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{ou
 .atabs{display:flex;gap:8px;margin:0 0 14px;flex-wrap:wrap}
 .atabs a{padding:9px 16px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--tx);font-weight:700;text-decoration:none}
 .atabs a.on{background:var(--grad);color:#fff;border-color:transparent}
+/* foto de producto (ICONS.thumb, actualización 35) */
+.ct-th{display:inline-flex;align-items:center;justify-content:center;flex:none;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;color:#94a3b8;vertical-align:middle}
+.ct-th img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain}
+/* actualización 35 · desplegable con buscador y fotos (js/combo.js) y filas de compra con foto */
+.cb{position:relative}.cb input{width:100%}
+.cb-dd{position:absolute;z-index:30;left:0;right:0;top:100%;margin-top:4px;background:var(--card);border:1px solid var(--line);border-radius:10px;max-height:340px;overflow:auto;box-shadow:0 10px 28px rgba(0,0,0,.18)}
+.cb-dd button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line2,var(--line));background:none;color:var(--tx);padding:7px 10px;cursor:pointer;font:inherit;font-size:14px}
+.cb-dd button:hover,.cb-dd button.act{background:var(--soft)}.cb-dd button.act{box-shadow:inset 3px 0 0 var(--acc)}
+.cb-t{display:flex;flex-direction:column;min-width:0}.cb-t small{color:var(--mut);font-size:12px}.cb-m{padding:10px 12px;color:var(--mut);font-size:13px}
+.shopc{display:grid;gap:8px;margin-top:8px}
+.shopc .it{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.shopc .it a{font-weight:600;color:var(--tx);text-decoration:none}.shopc .it a:hover{text-decoration:underline}
+.shopc .it b{white-space:nowrap;font-size:15px}.shopc .it .note{display:block;margin-top:2px}
+@media(max-width:600px){.shopc .it{grid-template-columns:auto 1fr}.shopc .it b{grid-column:2}}

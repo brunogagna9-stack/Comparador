@@ -26,6 +26,10 @@
 .st.ok{background:var(--okbg);color:var(--ok)}.st.unk{background:var(--warnbg);color:var(--warn)}.st.no{background:var(--badbg);color:var(--bad)}.st.n{background:var(--chip);color:var(--mut)}
 .sum{position:sticky;top:calc(var(--hh) + 12px);background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
 .sum h3{margin:0 0 8px;font-size:16px}.sum .tot{font-size:26px;font-weight:800;letter-spacing:-.5px}
+.sum .tl{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:14px;padding:2px 0}.sum .tl.all{margin-top:6px;padding-top:8px;box-shadow:inset 0 1px 0 var(--line)}.sum .tl.all span{font-weight:700}.sum .big{font-size:26px;font-weight:800;letter-spacing:-.5px}
+.slh{display:flex;align-items:center;gap:8px;padding:10px 14px;border-top:1px solid var(--line);background:var(--chip);font-weight:800;font-size:14px}.slh svg{color:var(--acc)}
+.sl.xt{background:color-mix(in srgb,var(--chip) 45%,transparent)}.sl.add{padding:8px 14px;border-top:1px dashed var(--line)}.sl.add .mini{margin:2px 4px 2px 0}
+.sl .pc{display:flex;align-items:center;gap:10px;min-width:0}.sl .pc>div{min-width:0}
 .sum ul{list-style:none;padding:0;margin:8px 0 0}.sum li{font-size:13px;padding:5px 0;border-top:1px solid var(--line);line-height:1.35}
 .sum li b{font-weight:700}.sum .btns{display:flex;flex-direction:column;gap:8px;margin-top:12px}
 .ok-t{color:var(--ok)}.unk-t{color:var(--warn)}.no-t{color:var(--bad)}
@@ -112,55 +116,72 @@ html.lock{overflow:hidden}html.lock #ctas-btn{display:none}
 const $=s=>document.querySelector(s),{ARS,esc}=CT;
 let PR=[],HW=null,VER={},E=null,C=null,byIdM=new Map(),BUILD={},PICK=null;
 const byId=id=>byIdM.get(id);
-const ICONK={cpu:"procesadores",cooler:"refrigeracion",mobo:"motherboards",ram:"memorias-ram",ssd:"almacenamiento",gpu:"placas-de-video",case:"gabinetes",psu:"fuentes",monitor:"monitores"};
-const HINT={cpu:"socket, memoria y consumo",cooler:"socket y medidas",mobo:"socket, DDR y tamaño",ram:"DDR4 o DDR5",ssd:"NVMe, SATA o disco",gpu:"largo y consumo",case:"tamaño de placa y largos",psu:"potencia",monitor:"opcional"};
-const SKIPOK={gpu:"No la necesito (uso los gráficos del procesador)",cooler:"Uso el que trae el procesador",monitor:"No lo necesito",ssd:"No lo necesito"};
+const ICONK={cpu:"procesadores",cooler:"refrigeracion",mobo:"motherboards",ram:"memorias-ram",ssd:"almacenamiento",gpu:"placas-de-video",case:"gabinetes",psu:"fuentes",monitor:"monitores",fan:"refrigeracion",mouse:"mouses",kb:"teclados",hp:"auriculares"};
+const HINT={cpu:"socket, memoria y consumo",cooler:"socket y medidas",mobo:"socket, DDR y tamaño",ram:"DDR4 o DDR5",ssd:"NVMe, SATA o disco",gpu:"largo y consumo",case:"tamaño de placa y largos",psu:"potencia",monitor:"opcional",fan:"opcional · medida y cantidad",mouse:"opcional",kb:"opcional",hp:"opcional"};
+const SKIPOK={gpu:"No la necesito (uso los gráficos del procesador)",cooler:"Uso el que trae el procesador",monitor:"No lo necesito",ssd:"No lo necesito",fan:"Uso los que trae el gabinete",mouse:"No lo necesito",kb:"No lo necesito",hp:"No los necesito"};
+const SKIPBTN={gpu:"No la necesito",cooler:"Uso el del procesador",fan:"Uso los del gabinete",hp:"No los necesito"};
+const ADDL={ram:"+ Agregar otra memoria",ssd:"+ Agregar otro disco",fan:"+ Agregar más ventiladores"};
+const XTRA={ram:"Otra memoria RAM",ssd:"Otro almacenamiento",fan:"Más ventiladores"};
+const PERCATS=["mouses","teclados","auriculares"];let PERLOAD=null;
+const base=k=>BLD.base(k),slotL=k=>{const s=BLD.slot(k);return s.base?XTRA[s.base]:s.l},low=t=>t.charAt(0).toLowerCase()+t.slice(1);
+/* mouse, teclado y auriculares vienen en un archivo aparte que se pide solo cuando hace falta */
+function loadPer(){if(PERLOAD)return PERLOAD;const j=async u=>{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw 0;return r.json()};
+  PERLOAD=j("data/armar_per.json").catch(()=>j("data/products.json").then(d=>d.filter(g=>PERCATS.includes(g.category)))).catch(()=>[]).then(d=>{const have=new Set(PR.map(g=>g.id));d.forEach(g=>{if(!have.has(g.id)){PR.push(g);byIdM.set(g.id,g)}});return d});return PERLOAD}
+/* al quitar una memoria o un disco del medio, los que siguen suben un lugar */
+function compact(){for(const s of BLD.SLOTS.filter(x=>x.multi)){const keys=BLD.SLOTS.filter(x=>base(x.k)===s.k).map(x=>x.k),vals=keys.map(k=>BUILD[k]).filter(Boolean);keys.forEach((k,i)=>{if(vals[i])BUILD[k]=vals[i];else delete BUILD[k]})}}
 const SRC={fab:"ficha del fabricante",regla:"regla de la norma",tienda:"título de la tienda",usuario:"dato que cargaste"};
 const save=()=>{try{localStorage.setItem("armar",JSON.stringify(BUILD))}catch(e){};try{const s=E.encode(BUILD);history.replaceState(null,"",location.pathname+(s?"?b="+encodeURIComponent(s):""))}catch(e){}};
 const attrCache=new Map();
 const A=(k,g)=>{const key=k+"|"+g.id;if(!attrCache.has(key))attrCache.set(key,E.attrs(k,g));return attrCache.get(key)};
 function others(k){const X={};for(const s of BLD.SLOTS){if(s.k===k)continue;const a=E.slotAttrs(s.k,BUILD[s.k],byId);if(a)X[s.k]=a}return X}
 const stHtml=r=>`<span class="st ${r.s==="ok"?"ok":r.s==="unk"?"unk":"no"}" title="${esc(r.txt)}">${r.s==="ok"?"✓":r.s==="unk"?"?":"✗"} ${esc(short(r))}</span>`;
-function short(r){const w={cpu:"procesador",mobo:"placa",ram:"memoria",cooler:"cooler",case:"gabinete",gpu:"placa de video",psu:"fuente","cpu+gpu":"consumo",pc:"PC"}[r.with]||r.with;return (r.s==="ok"?"compatible con ":r.s==="unk"?"sin verificar con ":"no va con ")+w}
+function short(r){const w={cpu:"procesador",mobo:"placa",ram:"memoria",cooler:"cooler",case:"gabinete",gpu:"placa de video",psu:"fuente","cpu+gpu":"consumo",pc:"PC"}[BLD.slot(r.with)?base(r.with):r.with]||r.with;return (r.s==="ok"?"compatible con ":r.s==="unk"?"sin verificar con ":"no va con ")+w}
 const img=g=>g&&g.image?`<img loading="lazy" decoding="async" width="60" height="60" src="${esc(g.image)}" alt="" onerror="this.outerHTML=ICONS.svg('${esc(g.category)}',26)">`:ICONS.svg(g?g.category:"otros",26);
 
 /* ---------- tabla del armado ---------- */
 function render(){
   const S=E.summary(BUILD,byId);
-  $("#slots").innerHTML=BLD.SLOTS.map(s=>{
-    const e=BUILD[s.k],g=e&&e.id?byId(e.id):null,a=S.X[s.k];
+  const vis=BLD.SLOTS.filter(s=>!s.base||BUILD[s.k]);
+  $("#slots").innerHTML=vis.map((s,i)=>{
+    const e=BUILD[s.k],g=e&&e.id?byId(e.id):null,a=S.X[s.k],b=base(s.k);
+    const nx=vis[i+1],last=!nx||base(nx.k)!==b,grp=BLD.slot(b),free=grp.multi&&BLD.SLOTS.find(x=>base(x.k)===b&&x.base&&!BUILD[x.k]);
+    const add=last&&free&&e&&!e.skip?`<div class="sl add"><div></div><div><button class="mini" data-pick="${free.k}">${ADDL[b]}</button> <button class="mini" data-own="${free.k}">${{ram:"Ya tengo otra",ssd:"Ya tengo otro",fan:"Ya tengo otros"}[b]}</button></div><div></div></div>`:"";
+    const head=s.per&&(!vis[i-1]||!vis[i-1].per)?`<div class="slh">${ICONS.svg("perifericos",18)} Periféricos <span class="note">· opcionales, se suman aparte</span></div>`:"";
     let v,acts;
     if(!e){const cpu=S.X.cpu,noSkip=(s.k==="gpu"&&cpu&&cpu.igpu&&cpu.igpu.v===false)?"el procesador elegido no tiene gráficos integrados: necesitás placa de video":(s.k==="cooler"&&cpu&&cpu.cooler&&cpu.cooler.v===false)?"el procesador elegido no trae cooler en la caja":"";
-      v=`<div class="note">Sin elegir${s.req?"":" (opcional)"}</div>${noSkip?`<div class="note">${esc(noSkip)}</div>`:""}`;acts=`<button class="pri" data-pick="${s.k}">+ Elegir</button><button data-own="${s.k}">Ya lo tengo</button>${SKIPOK[s.k]&&s.k!=="ssd"&&!noSkip?`<button data-skip="${s.k}">${s.k==="gpu"?"No la necesito":s.k==="cooler"?"Uso el del procesador":"No lo necesito"}</button>`:""}`}
+      v=`<div class="note">Sin elegir${s.req?"":" (opcional)"}</div>${noSkip?`<div class="note">${esc(noSkip)}</div>`:""}`;acts=`<button class="pri" data-pick="${s.k}">+ Elegir</button><button data-own="${s.k}">Ya lo tengo</button>${SKIPOK[s.k]&&s.k!=="ssd"&&!noSkip?`<button data-skip="${s.k}">${SKIPBTN[s.k]||"No lo necesito"}</button>`:""}`}
     else if(e.skip){v=`<div class="nm">${esc(SKIPOK[s.k]||"No lo necesito")}</div>`;acts=`<button data-clear="${s.k}">Cambiar</button>`}
     else{const o=g&&C.recOffer(g),own=e.own;
       const checks=S.checks.filter(c=>c.slot===s.k||c.with===s.k);
-      v=`<div class="nm">${g?QV.link(g,g.name):"Tu "+esc(s.l.toLowerCase())}</div><div class="meta">${own?"<b>Ya lo tenés</b> · no suma al total":o?`${ARS(CT.price(o))} · ${esc(o.store)}`:"sin precio"}${e.attrs?` · datos cargados: ${esc(Object.entries(e.attrs).map(([k,v])=>k+" "+v).join(", "))}`:""}</div>`;
-      acts=`<button data-pick="${s.k}">Cambiar</button><button data-clear="${s.k}" aria-label="Quitar ${esc(s.l)}">✕</button>`}
+      v=`<div class="pc">${g?ICONS.thumb(g,56):""}<div><div class="nm">${g?QV.link(g,g.name):"Tu "+esc(slotL(s.k).toLowerCase())}</div><div class="meta">${own?"<b>Ya lo tenés</b> · no suma al total":o?`${ARS(CT.price(o))} · ${esc(o.store)}`:"sin precio"}${e.attrs?` · datos cargados: ${esc(Object.entries(e.attrs).map(([k,v])=>k+" "+v).join(", "))}`:""}</div></div></div>`;
+      acts=`<button data-pick="${s.k}">Cambiar</button><button data-clear="${s.k}" aria-label="Quitar ${esc(slotL(s.k))}">✕</button>`}
     const mine=S.checks.filter(c=>c.slot===s.k);
     const bad=S.issues.filter(c=>c.slot===s.k||c.with===s.k).length,unk=mine.filter(c=>c.s==="unk").length;
-    const badge=e&&!e.skip?(bad?'<span class="st no">✗ incompatible</span>':unk?'<span class="st unk">? sin verificar</span>':Object.keys(S.X).length>1?'<span class="st ok">✓ compatible</span>':""):"";
-    return `<div class="sl"><div class="k">${ICONS.svg(ICONK[s.k],20)}<span>${esc(s.l)}<small>${esc(HINT[s.k])}</small></span></div><div class="v">${v}${badge?`<div style="margin-top:4px">${badge}</div>`:""}</div><div class="acts">${acts}</div></div>`}).join("");
+    const nochk=s.per||b==="fan";   // periféricos y ventiladores: no hay compatibilidad que comprobar con el resto
+    const badge=e&&!e.skip&&!nochk?(bad?'<span class="st no">✗ incompatible</span>':unk?'<span class="st unk">? sin verificar</span>':Object.keys(S.X).length>1?'<span class="st ok">✓ compatible</span>':""):"";
+    return `${head}<div class="sl${s.base?" xt":""}"><div class="k">${ICONS.svg(ICONK[b],20)}<span>${esc(slotL(s.k))}<small>${esc(s.base?"opcional":HINT[s.k])}</small></span></div><div class="v">${v}${badge?`<div style="margin-top:4px">${badge}</div>`:""}</div><div class="acts">${acts}</div></div>${add}`}).join("");
   renderSum(S);QV.sync();save();remember(S);
 }
 /* «Mi historial»: este armado se guarda (y se va actualizando) desde que tiene al menos 2 piezas elegidas */
 function remember(S){
-  if(!window.HIST)return;const ch=BLD.SLOTS.filter(s=>BUILD[s.k]&&!BUILD[s.k].skip);if(ch.length<2)return;
+  if(!window.HIST)return;const ch=BLD.MAIN().filter(s=>BUILD[s.k]&&!BUILD[s.k].skip);if(ch.length<2)return;
+  const req=BLD.SLOTS.filter(s=>s.req),nReq=req.filter(s=>BUILD[s.k]).length,nX=BLD.SLOTS.filter(s=>!s.req&&BUILD[s.k]&&!BUILD[s.k].skip).length;
   const nm=k=>{const e=BUILD[k],g=e&&e.id?byId(e.id):null;if(!g)return null;const hw=k==="cpu"?C.hwCpu(g.name):k==="gpu"?(C.hwGpu(g.name)||C.hwGpuX(g.name)):null;
     return hw?hw.name:g.name.replace(/^(micro(procesador)?|procesador|placa de video|vga|video)\s+/i,"").slice(0,42)};
   const head=[nm("cpu"),nm("gpu")].filter(Boolean).join(" + ")||ch.map(s=>s.l.toLowerCase()).join(", ");
   const st=S.issues.length?" · ⚠ con incompatibilidades":S.unk.length?" · con piezas sin verificar":"";
-  HIST.save("armados",{title:"Armalo vos · "+head,sub:`${ch.length} de ${BLD.SLOTS.length} piezas · total ${ARS(S.total)}${st}`,url:"armar.html?b="+encodeURIComponent(E.encode(BUILD)),kind:"vos",total:S.total},"armar");
+  HIST.save("armados",{title:"Armalo vos · "+head,sub:`${nReq} de ${req.length} piezas${nX?` + ${nX} extra${nX>1?"s":""}`:""} · total ${ARS(S.totalAll)}${st}`,url:"armar.html?b="+encodeURIComponent(E.encode(BUILD)),kind:"vos",total:S.totalAll},"armar");
 }
 function renderSum(S){
   const left=S.missing.filter(k=>!BUILD[k]).map(k=>BLD.slot(k).l.toLowerCase());
   const ids=BLD.SLOTS.map(s=>BUILD[s.k]).filter(e=>e&&e.id&&!e.own).map(e=>e.id);
   const li=[];
   S.issues.forEach(c=>li.push(`<li class="no-t"><b>✗ Incompatible:</b> ${esc(c.txt)}</li>`));
-  S.unk.forEach(c=>li.push(`<li class="unk-t"><b>? Sin verificar:</b> ${esc(c.txt)} <span class="note">(${esc(BLD.slot(c.slot)?BLD.slot(c.slot).l:"")})</span></li>`));
+  S.unk.forEach(c=>li.push(`<li class="unk-t"><b>? Sin verificar:</b> ${esc(c.txt)} <span class="note">(${esc(BLD.slot(c.slot)?slotL(c.slot):"")})</span></li>`));
   S.warns.forEach(w=>li.push(`<li><b>⚠ Ojo:</b> ${esc(w)}</li>`));
   const okN=S.checks.filter(c=>c.s==="ok").length;
-  $("#sum").innerHTML=`<h3>Tu armado</h3><div class="tot">${ARS(S.total)}</div><div class="note">${S.priced} ${S.priced===1?"pieza":"piezas"} con precio, lo más barato con stock · sin envío</div>
+  const hasPer=BLD.SLOTS.some(s=>s.per&&BUILD[s.k]&&BUILD[s.k].id&&!BUILD[s.k].own);
+  $("#sum").innerHTML=`<h3>Tu armado</h3>${hasPer?`<div class="tl"><span>PC</span><b>${ARS(S.total)}</b></div><div class="tl"><span>Periféricos</span><b>${ARS(S.totalPer)}</b></div><div class="tl all"><span>Total</span><b class="big">${ARS(S.totalAll)}</b></div>`:`<div class="tot">${ARS(S.total)}</div>`}<div class="note">${S.priced} ${S.priced===1?"pieza":"piezas"} con precio, lo más barato con stock · sin envío</div>
    ${S.watts?`<div style="margin-top:8px">Consumo estimado: <b>~${S.watts} W</b>${S.need?` · fuente recomendada: <b>${S.need.w} W</b>`:""}</div>`:""}
    <ul>${okN?`<li class="ok-t"><b>✓ ${okN} ${okN===1?"control comprobado":"controles comprobados"}</b></li>`:""}${li.join("")}${left.length?`<li><b>Falta elegir:</b> ${esc(left.join(", "))}</li>`:""}${!S.issues.length&&!S.unk.length&&!left.length&&okN?`<li class="ok-t"><b>Todo compatible y comprobado.</b></li>`:""}</ul>
    <div class="btns">${ids.length?`<button class="btn pri qv-all" data-qall="${ids.join(",")}"></button>`:""}<button class="btn" id="share">🔗 Copiar enlace del armado</button><button class="btn" id="reset">Empezar de nuevo</button></div>`;
@@ -172,7 +193,11 @@ function renderSum(S){
 const BRANDS={cpu:["AMD","Intel"],mobo:["AMD","Intel"],gpu:["NVIDIA","AMD","Intel"]};
 const SORTS=[["rec","Recomendados"],["price","Menor precio"],["priceDesc","Mayor precio"],["name","Nombre"]];
 function openPick(k,own){
-  const slot=BLD.slot(k),X=others(k);
+  const slot=BLD.slot(k);
+  if(PERCATS.includes(slot.cat)&&!PR.some(g=>g.category===slot.cat)){   // primera vez: traer mouse, teclados y auriculares
+    document.documentElement.classList.add("lock");$("#pick").classList.add("on");$("#pbox").innerHTML=`<div class="phead"><h2>Cargando ${esc(slot.l.toLowerCase())}…</h2></div>`;
+    loadPer().then(d=>{if(!d.length){$("#pbox").innerHTML=`<div class="phead"><button class="x" id="px" aria-label="Cerrar">×</button><h2>${esc(slot.l)}</h2><p class="note">No pudimos cargar los productos. Probá de nuevo en un rato.</p></div>`;$("#px").onclick=closePick;return}openPick(k,own)});return}
+  const X=others(k);
   const R=E.candidates(k,X,PR.filter(g=>g.category===slot.cat));          // se calcula una sola vez por apertura
   // marca inicial: la de la pieza que ya elegiste (procesador ↔ motherboard)
   let brand="";const pair={cpu:"mobo",mobo:"cpu"}[k];
@@ -185,8 +210,9 @@ function openPick(k,own){
 function closePick(){$("#pick").classList.remove("on");document.documentElement.classList.remove("lock");PICK=null}
 function drawShell(){
   const {k,own,X}=PICK,slot=BLD.slot(k);
-  $("#pbox").innerHTML=`<div class="phead"><button class="x" id="px" aria-label="Cerrar">×</button><h2>${own?"¿Cuál "+esc(slot.l.toLowerCase())+" tenés?":"Elegí "+esc(slot.l.toLowerCase())}</h2>
-   <div class="note">${Object.keys(X).length?`Se muestran solo los compatibles con lo que ya elegiste (${Object.keys(X).map(x=>BLD.slot(x).l.toLowerCase()).join(", ")}).`:"Todavía no elegiste otras piezas: cualquier opción sirve para empezar."}</div>
+  const nm=low(slotL(k)),bk=base(k);
+  $("#pbox").innerHTML=`<div class="phead"><button class="x" id="px" aria-label="Cerrar">×</button><h2>${own?(slot.per||bk==="fan"?"¿Qué "+esc(nm)+" tenés?":"¿Cuál "+esc(nm)+" tenés?"):"Elegí "+esc(nm)}</h2>
+   <div class="note">${slot.per||bk==="fan"?(bk==="fan"?"Ventiladores para el gabinete. Confirmá en la ficha del gabinete la medida (120 o 140 mm) y cuántos acepta.":"Se conectan por USB o Bluetooth: no hay compatibilidad que comprobar con el resto del equipo."):Object.keys(X).length?`Se muestran solo los compatibles con lo que ya elegiste (${[...new Set(Object.keys(X).filter(x=>!BLD.slot(x).per&&base(x)!=="fan").map(x=>low(slotL(base(x)))))].join(", ")}).`:"Todavía no elegiste otras piezas: cualquier opción sirve para empezar."}</div>
    <div class="ptools"><input type="search" id="pq" placeholder="Buscar modelo…" aria-label="Buscar modelo" autocomplete="off"><select id="psort" aria-label="Ordenar">${SORTS.map(([v,l])=>`<option value="${v}">${l}</option>`).join("")}</select></div>
    <div class="btabs" id="ptabs" role="tablist" aria-label="Marca"></div></div>
    ${own?ownForm(k):""}<div id="pfx"></div><div id="plist"></div>`;
@@ -196,7 +222,7 @@ function drawShell(){
   const of=$("#ownsave");if(of)of.onclick=()=>{const at={};document.querySelectorAll("[data-own-a]").forEach(i=>{if(i.value)at[i.dataset.ownA]=i.value});if(!Object.keys(at).length){alertOwn();return}BUILD[k]={own:true,attrs:at};closePick();render()};
 }
 function drawList(){
-  const {k,own,R}=PICK,slot=BLD.slot(k),brands=BRANDS[k];
+  const {k,own,R}=PICK,slot=BLD.slot(k),brands=BRANDS[BLD.base(k)];
   const inBrand=r=>!PICK.brand||r.b===PICK.brand;
   // pestañas de marca con la cantidad de compatibles
   const tabs=$("#ptabs");
@@ -213,10 +239,10 @@ function drawList(){
   $("#pfx").innerHTML=defs.map(d=>{const c={};base.forEach(r=>{const v=FX.val(r.g,d)??FX.NONE;c[v]=(c[v]||0)+1});
     const sel=PICK.fx[d.k]||new Set();const opts=FX.sortOpts(d,Object.entries(c)).filter(([v])=>v!==FX.NONE);if(opts.length<2&&!sel.size)return"";
     return `<div class="fxrow" role="group" aria-label="${esc(d.l)}"><span class="ttl">${esc(d.l)}:</span>${opts.map(([v,n])=>`<label class="${sel.has(v)?"on":""}"><input type="checkbox" data-pfx="${esc(d.k)}" value="${esc(v)}" ${sel.has(v)?"checked":""}>${esc(v)} <span class="c">${n}</span></label>`).join("")}</div>`}).join("")+(anyFx?`<button class="fxclear" id="pfxclear">Quitar filtros</button>`:"");
-  const row=(r,unv)=>{const o=r.o;return `<div class="prow"><div class="im">${img(r.g)}</div><div><div class="nm">${QV.link(r.g,r.g.name)} ${QV.btns(r.g.id)}</div><div class="chk">${r.r.res.map(stHtml).join("")}${!r.r.res.length?'<span class="st n">elegí otra pieza para comprobar</span>':""}</div>${unv?`<div class="why">${esc(r.r.res.filter(x=>x.s==="unk").map(x=>x.txt).join(" · "))}</div>`:""}${srcLine(r.a,k,r)}</div><div class="pr"><b>${ARS(r.p)}</b><span class="note">${esc(o.store)}${r.n>1?` · ${r.n} tiendas`:""}${o.stock===true?"":" · stock a confirmar"}</span><br><button class="mini ${unv?"":"pri"}" data-choose="${esc(r.g.id)}">${own?"Es el mío":"Elegir"}${unv?" igual":""}</button></div></div>`};
+  const row=(r,unv)=>{const o=r.o;return `<div class="prow"><div class="im">${img(r.g)}</div><div><div class="nm">${QV.link(r.g,r.g.name)} ${QV.btns(r.g.id)}</div><div class="chk">${r.r.res.map(stHtml).join("")}${!r.r.res.length&&!slot.per&&BLD.base(k)!=="fan"?'<span class="st n">elegí otra pieza para comprobar</span>':""}</div>${unv?`<div class="why">${esc(r.r.res.filter(x=>x.s==="unk").map(x=>x.txt).join(" · "))}</div>`:""}${srcLine(r.a,k,r)}</div><div class="pr"><b>${ARS(r.p)}</b><span class="note">${esc(o.store)}${r.n>1?` · ${r.n} tiendas`:""}${o.stock===true?"":" · stock a confirmar"}</span><br><button class="mini ${unv?"":"pri"}" data-choose="${esc(r.g.id)}">${own?"Es el mío":"Elegir"}${unv?" igual":""}</button></div></div>`};
   const whyNo=Object.entries(R.why).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([t,n])=>`${n} · ${esc(t)}`).join("<br>");
   const whyUnk=Object.entries(R.unkWhy).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([t,n])=>`${n} · ${esc(t)}`).join("<br>");
-  $("#plist").innerHTML=`<div class="sec-t"><span class="st ok">✓</span> Compatibles y comprobados (${ok.length})</div>
+  $("#plist").innerHTML=`<div class="sec-t">${slot.per||BLD.base(k)==="fan"?`Disponibles (${ok.length})`:`<span class="st ok">✓</span> Compatibles y comprobados (${ok.length})`}</div>
    ${ok.slice(0,PICK.limit).map(r=>row(r,false)).join("")||`<p class="note">No hay productos comprobados para esta combinación${q.length||anyFx?" con esa búsqueda o esos filtros":""}.</p>`}
    ${ok.length>PICK.limit?`<button class="btn more" id="pmore">Ver más (${ok.length-PICK.limit})</button>`:""}
    ${R.no?`<p class="why"><b>${R.no} ocultos por incompatibles</b>${whyNo?":<br>"+whyNo:""}</p>`:""}
@@ -230,9 +256,9 @@ function alertOwn(){const n=$("#ownmsg");if(n)n.textContent="Completá al menos 
 function ownForm(k){
   const sel=(a,l,opts)=>`<label>${l}<select data-own-a="${a}"><option value="">—</option>${opts.map(o=>`<option>${o}</option>`).join("")}</select></label>`;
   const num=(a,l,ph)=>`<label>${l}<input data-own-a="${a}" type="number" min="0" placeholder="${ph}"></label>`;
-  const F={cpu:sel("socket","Socket",BLD.SOCKETS),mobo:sel("socket","Socket",BLD.SOCKETS)+sel("ddr","Memoria",["DDR4","DDR5"])+sel("form","Tamaño",BLD.FORMS),ram:sel("ddr","Tipo",["DDR4","DDR5"]),
+  const F={cpu:sel("socket","Socket",BLD.SOCKETS),mobo:sel("socket","Socket",BLD.SOCKETS)+sel("ddr","Memoria",["DDR4","DDR5"])+sel("form","Tamaño",BLD.FORMS),ram:sel("ddr","Tipo",["DDR4","DDR5"])+num("mods","Cantidad de módulos","ej. 2"),
     gpu:num("len","Largo de la placa (mm)","ej. 250")+num("tgp","Consumo (W)","ej. 170"),case:sel("forms","Placa más grande que entra",BLD.FORMS)+num("gpuMax","Largo máximo de placa de video (mm)","ej. 330")+num("coolerMax","Alto máximo de cooler (mm)","ej. 160"),
-    psu:num("w","Potencia (W)","ej. 650"),cooler:"",ssd:"",monitor:""}[k];
+    psu:num("w","Potencia (W)","ej. 650"),cooler:"",ssd:"",monitor:""}[base(k)];
   if(!F)return `<p class="note" style="margin-top:10px">Elegí tu modelo de la lista (aunque no esté a la venta, sirve para comprobar el resto).</p>`;
   return `<div class="panel" style="margin:12px 0"><b>Si no encontrás tu modelo, cargá el dato clave</b> (lo ves en la caja o en la ficha del fabricante):<div class="ownf">${F}</div><button class="mini pri" id="ownsave">Usar estos datos</button> <span class="note" id="ownmsg"></span><p class="note" style="margin:6px 0 0">O elegí tu modelo de la lista de abajo.</p></div>`;
 }
@@ -246,7 +272,7 @@ document.addEventListener("click",e=>{
   if(t.dataset.pick){openPick(t.dataset.pick,false)}
   else if(t.dataset.own){openPick(t.dataset.own,true)}
   else if(t.dataset.skip){const k=t.dataset.skip;BUILD[k]={skip:k==="cooler"?"incl":true};render()}
-  else if(t.dataset.clear){delete BUILD[t.dataset.clear];render()}
+  else if(t.dataset.clear){delete BUILD[t.dataset.clear];compact();render()}
   else if(t.dataset.choose){BUILD[PICK.k]=PICK.own?{own:true,id:t.dataset.choose}:{id:t.dataset.choose};closePick();render()}
   else if(t.dataset.brand!=null&&PICK){PICK.brand=t.dataset.brand;PICK.fx={};PICK.limit=40;drawList()}
 });
@@ -262,7 +288,9 @@ $("#pick").addEventListener("click",e=>{if(e.target.id==="pick")closePick()});
   C=CT.create(HW,PR,meta,specs,VER);E=BLD.create(C,VER);byIdM=new Map(PR.map(g=>[g.id,g]));QV.setData(PR);
   const u=new URLSearchParams(location.search).get("b");
   if(u)BUILD=E.decode(u);else{try{BUILD=JSON.parse(localStorage.getItem("armar")||"{}")||{}}catch(e){BUILD={}}}
+  if(BLD.SLOTS.some(s=>PERCATS.includes(s.cat)&&BUILD[s.k]&&BUILD[s.k].id))await loadPer();   // el armado trae mouse, teclado o auriculares
   for(const k of Object.keys(BUILD)){const e=BUILD[k];if(e&&e.id&&!byId(e.id))delete BUILD[k]}   // productos que ya no están en el catálogo
+  compact();
   render();
 })();
 </script>
