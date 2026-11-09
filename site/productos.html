@@ -215,8 +215,13 @@ function renderSide(){
   // Marca: solo con una categoría elegida (muchas marcas fabrican un solo tipo de producto)
   $("#brandbox").hidden=!S.cat;
   const bb=filtered("brand"),bc={};bb.forEach(g=>{if(g.brand)bc[g.brand]=(bc[g.brand]||0)+1});
-  let bl=Object.entries(bc).sort((a,b)=>b[1]-a[1]);if(S.bq)bl=bl.filter(([b])=>b.toLowerCase().includes(S.bq));
-  const total=bl.length;if(!S.allBrands&&!S.bq)bl=bl.slice(0,10);
+  // actualización 38: marcas en orden alfabético. Resumido: las 10 con más productos (más las tildadas), también de la A a la Z.
+  S.brands.forEach(b=>{if(!(b in bc))bc[b]=0});
+  const az=(a,b)=>a[0].localeCompare(b[0],"es",{sensitivity:"base",numeric:true});
+  let bl=Object.entries(bc);if(S.bq)bl=bl.filter(([b])=>b.toLowerCase().includes(S.bq));
+  const total=bl.length;
+  if(!S.allBrands&&!S.bq&&total>10){const top=new Set(bl.slice().sort((a,b)=>b[1]-a[1]).slice(0,10).map(x=>x[0]));bl=bl.filter(([b])=>top.has(b)||S.brands.has(b))}
+  bl.sort(az);
   $("#brands").innerHTML=bl.map(([b,n])=>`<label><input type="checkbox" data-b="${esc(b)}" ${S.brands.has(b)?"checked":""}> ${esc(b)}<span class="c">${n}</span></label>`).join("");
   $("#bmore").textContent=total>10&&!S.bq?(S.allBrands?"Ver menos":`Ver todas (${total})`):"";
   renderFx();

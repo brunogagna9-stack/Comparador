@@ -41,6 +41,8 @@ let FOLLOW={};try{FOLLOW=JSON.parse(localStorage.getItem("seg")||"{}")}catch{}
 let LIST=[];try{LIST=JSON.parse(localStorage.getItem("lista")||"[]")}catch{}
 const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}};
 const tagH=(t,n)=>{const [l,h]=CT.TAGS[t]||CT.TAGS.nd;return `<span class="tag t-${t}" title="${esc(h+(n?" — "+n:""))}">${l}</span>`};
+// misma cuenta que build_data.py → shard_of (SHARDS = 64)
+function shardOf(id){let h=0;for(const ch of String(id)){h=(h*31+ch.codePointAt(0))>>>0}return h%64}
 async function j(u,d){try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw 0;return await r.json()}catch{return d}}
 function imgFail(el){const fb=el.dataset.fb;if(fb&&el.src!==fb){el.src=fb;return}const sp=document.createElement("span");sp.className="ph";sp.innerHTML=`${ICONS.svg(el.dataset.cat||"otros",44)}Sin foto`;el.replaceWith(sp)}
 window.imgFail=imgFail;
@@ -54,9 +56,13 @@ function specs(g,HW,PR,META,SP){
 }
 (async()=>{
   const id=new URLSearchParams(location.search).get("id");
-  const [PR,HIST,META,CFG,STORES,HW,SP]=await Promise.all([j("data/products.json",[]),j("data/history.json",{}),j("data/meta.json",{}),j("data/config.json",{stores:{}}),j("data/stores.json",{stores:{}}),j("data/hardware.json",null),j("data/specs.json",null)]);
+  // actualización 38: se baja solo la parte del catálogo de este producto (data/p/NN.json, ~50 KB); si todavía no
+  // existe (sitio sin regenerar) o no lo tiene, se usa el catálogo completo como antes.
+  const [SH,META,CFG,STORES,HW,SP]=await Promise.all([id?j(`data/p/${String(shardOf(id)).padStart(2,"0")}.json`,null):null,j("data/meta.json",{}),j("data/config.json",{stores:{}}),j("data/stores.json",{stores:{}}),j("data/hardware.json",null),j("data/specs.json",null)]);
+  let g=SH&&SH.g&&SH.g[id],HIST=(SH&&SH.h)||{};
+  if(!g){const [PR,H]=await Promise.all([j("data/products.json",[]),j("data/history.json",{})]);g=(Array.isArray(PR)?PR:[]).find(x=>x.id===id);HIST=H}
+  const PR=g?[g]:[];
   REP.set(STORES);
-  const g=(Array.isArray(PR)?PR:[]).find(x=>x.id===id);
   if(!g||!g.offers||!g.offers.length){$("#pd").innerHTML=`<div class="empty"><h2>No encontramos este producto</h2><p>Puede que la tienda ya no lo publique o que el enlace esté incompleto.</p><p><a class="btn pri" href="productos.html" style="display:inline-block">Ver todos los productos</a></p></div>`;document.title="Producto no encontrado · ComparáTech";return}
   window.CURID=g.id;document.title=g.name+" · ComparáTech";
   $("#bc").innerHTML=` · <a href="productos.html?cat=${encodeURIComponent(g.category)}">${esc(CATS[g.category]||g.category)}</a>`;

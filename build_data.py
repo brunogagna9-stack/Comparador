@@ -190,10 +190,15 @@ def hq_image(url):
     return url
 
 
+# Servidores que solo publican la foto original sin achicar (static.nb.com.ar: PNG de 0,5 a 1,5 MB cada una, sin
+# versión reducida): se usan solo si ninguna otra tienda tiene foto del producto (actualización 38).
+HEAVY_IMG_RE = re.compile(r"^https?://static\.nb\.com\.ar/", re.I)
+
+
 def pick_image(offers):
     """(imagen, imagen de respaldo): la mejor foto válida entre TODAS las tiendas que venden el producto."""
     cands = sorted((o for o in offers if good_image(o.get("image"))),
-                   key=lambda o: IMG_RANK.index(o["store"]) if o["store"] in IMG_RANK else 99)
+                   key=lambda o: (bool(HEAVY_IMG_RE.search(o["image"])), IMG_RANK.index(o["store"]) if o["store"] in IMG_RANK else 99))
     if not cands:
         return None, None
     raw = cands[0]["image"]
@@ -420,6 +425,42 @@ def search_index(groups):
     return {"v": 1, "items": rows}
 
 
+SHARDS = 64   # actualización 38: la ficha de producto descarga solo su parte del catálogo (site/data/p/NN.json)
+
+
+def shard_of(pid):
+    """Número de parte (0..SHARDS-1) de un producto. La misma cuenta está en site/producto.html (shardOf)."""
+    h = 0
+    for ch in str(pid):
+        h = (h * 31 + ord(ch)) & 0xFFFFFFFF
+    return h % SHARDS
+
+
+def product_shards(groups, hist):
+    """Parte el catálogo en SHARDS archivos chicos: cada uno con sus productos completos y el historial de sus
+    ofertas. Así la ficha de un producto baja ~50 KB en vez de products.json + history.json (~4 MB comprimidos)."""
+    parts = [{"v": 1, "g": {}, "h": {}} for _ in range(SHARDS)]
+    for g in groups:
+        p = parts[shard_of(g["id"])]
+        p["g"][g["id"]] = g
+        for o in g.get("offers") or []:
+            k = o.get("k")
+            if k and k in hist:
+                p["h"][k] = hist[k]
+    return parts
+
+
+def write_shards(groups, hist, data_dir=None):
+    d = Path(data_dir or DATA) / "p"
+    d.mkdir(parents=True, exist_ok=True)
+    # Se regeneran en cada corrida y solo se publican: no se guardan en el repositorio (no lo engordan cada 6 h).
+    (d / ".gitignore").write_text("*.json\n")
+    for old in d.glob("*.json"):
+        old.unlink()
+    for i, part in enumerate(product_shards(groups, hist)):
+        (d / f"{i:02d}.json").write_text(json.dumps(part, ensure_ascii=False, separators=(",", ":")))
+
+
 ARMAR_PER_CATS = ("mouses", "teclados", "auriculares")   # actualización 35: se descargan aparte, solo al elegir un periférico
 ARMAR_OFFER = ("store", "url", "price_cash", "price_list", "stock", "cuotas", "anom")
 
@@ -544,6 +585,7 @@ def main(only):
     (DATA / "armar_per.json").write_text(json.dumps(armar_catalog(groups, ARMAR_PER_CATS), ensure_ascii=False, separators=(",", ":")))
     (DATA / "home.json").write_text(json.dumps(home_summary(groups), ensure_ascii=False, separators=(",", ":")))
     (DATA / "buscar.json").write_text(json.dumps(search_index(groups), ensure_ascii=False, separators=(",", ":")))
+    write_shards(groups, hist)
     (DATA / "meta.json").write_text(json.dumps({
         "updated": dt.datetime.now(dt.timezone.utc).isoformat(timespec="minutes"),
         "stores": status, "specs": spec_status, "groups": len(groups), "demo": False}, ensure_ascii=False))

@@ -43,7 +43,7 @@
     "Backup Computación": /backup ?(computaci|store|tienda)/, "Max Tecno": /max ?tecno/, "HF Tecnología": /\bhf\b/, "Liontech Gaming": /lion ?tech/, Dinobyte: /dino ?byte/, HardCore: /hard ?core/,
     "37 Bytes": /37 ?bytes/, ShopGamer: /shop ?gamer/, "Integrados Argentinos": /integrados/, "Slot One": /slot ?one/, "Vertex Retail": /vertex|\bvrx\b/,
     "Rocket Hard": /rocket ?hard/, "Acuario Insumos": /acuario/, Megasoft: /mega ?soft/, "Hyper Gaming": /hyper ?gaming/, "Noxie Store": /noxie/,
-    "WIZ TECH": /wiz ?tech/, "XT-PC": /xt-? ?pc/, "Compufan Store": /compufan/,
+    "WIZ TECH": /wiz ?tech/, "XT-PC": /xt-? ?pc/, "Compufan Store": /compufan/, Nickhard: /nick ?hard/,
   };
 
   const USO_WORDS = [

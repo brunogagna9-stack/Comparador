@@ -27,6 +27,20 @@ def check(root=ROOT):
             errs.append(f"products.json tiene {len(d) if isinstance(d, list) else '?'} productos (se esperan cientos): no se publica")
     elif not p.exists():
         errs.append("falta site/data/products.json")
+    # actualización 38: si están las partes del catálogo (site/data/p/NN.json), tienen que estar todas y tener
+    # todos los productos; si no existen, las fichas usan el catálogo completo y no es un error.
+    sh = root / "site/data/p"
+    if sh.exists() and p.exists() and not errs:
+        files = sorted(sh.glob("*.json"))
+        try:
+            ids = set()
+            for f in files:
+                ids.update(json.loads(f.read_text(encoding="utf-8")).get("g", {}))
+            want = {g["id"] for g in json.loads(p.read_text(encoding="utf-8"))}
+            if files and (len(files) != 64 or ids != want):
+                errs.append(f"site/data/p: {len(files)} partes con {len(ids)} productos (se esperan 64 con {len(want)}): no se publica")
+        except Exception as e:
+            errs.append(f"site/data/p: parte ilegible ({e})")
     return errs
 
 

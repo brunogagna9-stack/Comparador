@@ -1,6 +1,0 @@
-# ComparáTech — se permite indexar todo el sitio.
-# Nota: los buscadores leen robots.txt solo en la raíz del dominio. Con la dirección actual
-# (brunogagna9-stack.github.io/Comparador/) este archivo empieza a valer cuando el sitio tenga dominio propio.
-User-agent: *
-Allow: /
-Sitemap: https://brunogagna9-stack.github.io/Comparador/sitemap.xml

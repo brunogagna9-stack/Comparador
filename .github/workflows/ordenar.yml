@@ -1,4 +1,8 @@
-name: Ordenar archivos
+name: Limpiar archivos sueltos
+
+# Actualización 38. Antes este flujo MOVÍA archivos de la raíz a su carpeta: con copias viejas sueltas en la raíz,
+# eso podía pisar las versiones nuevas. Ahora solo BORRA una copia suelta cuando la versión buena ya existe en su
+# lugar (nunca mueve ni reemplaza nada). Se ejecuta al guardar este archivo o con el botón «Run workflow».
 
 on:
   workflow_dispatch:
@@ -10,102 +14,31 @@ permissions:
   contents: write
 
 jobs:
-  ordenar:
+  limpiar:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Mover archivos a su carpeta
+      - name: Borrar copias sueltas de la raíz
         run: |
-          mover() {
-            if [ -f "$1" ]; then
-              mkdir -p "$(dirname "$2")"
-              mv -f "$1" "$2"
-              echo "movido: $2"
-            fi
+          borrar_si() {   # borrar_si <copia suelta> <ubicación correcta>
+            if [ -f "$1" ] && [ -f "$2" ]; then git rm -q "$1"; echo "borrada: $1 (queda $2)"; fi
           }
-          mover armytech.py scrapers/armytech.py
-          mover common.py scrapers/common.py
-          mover compragamer.py scrapers/compragamer.py
-          mover fullh4rd.py scrapers/fullh4rd.py
-          mover gamingcity.py scrapers/gamingcity.py
-          mover gezatek.py scrapers/gezatek.py
-          mover goldentech.py scrapers/goldentech.py
-          mover katech.py scrapers/katech.py
-          mover logg.py scrapers/logg.py
-          mover maximus.py scrapers/maximus.py
-          mover mexx.py scrapers/mexx.py
-          mover netgaming.py scrapers/netgaming.py
-          mover specs.py scrapers/specs.py
-          mover venex.py scrapers/venex.py
-          mover woo.py scrapers/woo.py
-          mover check_data.py scripts/check_data.py
-          mover enviar_resumen.py scripts/enviar_resumen.py
-          mover actualizar.html site/actualizar.html
-          mover armado.html site/armado.html
-          mover comparar.html site/comparar.html
-          mover layout.css site/css/layout.css
-          mover shared.css site/css/shared.css
-          mover hardware.json site/data/hardware.json
-          mover imagenes_extra.json site/data/imagenes_extra.json
-          mover stores.json site/data/stores.json
-          mover encontra.html site/encontra.html
-          mover index.html site/index.html
-          mover assistant.js site/js/assistant.js
-          mover compare.js site/js/compare.js
-          mover finder.js site/js/finder.js
-          mover layout.js site/js/layout.js
-          mover lib.js site/js/lib.js
-          mover rep.js site/js/rep.js
-          mover upgrade.js site/js/upgrade.js
-          mover productos.html site/productos.html
-          mover armytech.html tests/fixtures/armytech.html
-          mover catalog.json tests/fixtures/catalog.json
-          mover gamingcity.html tests/fixtures/gamingcity.html
-          mover goldentech.json tests/fixtures/goldentech.json
-          mover katech.json tests/fixtures/katech.json
-          mover netgaming.html tests/fixtures/netgaming.html
-          mover specs_cg.json tests/fixtures/specs_cg.json
-          mover venex.html tests/fixtures/venex.html
-          mover woo_stores.json tests/fixtures/woo_stores.json
-          mover make_fixture.py tests/make_fixture.py
-          mover run_tests.py tests/run_tests.py
-          mover test_all.py tests/test_all.py
-          mover test_assistant.js tests/test_assistant.js
-          mover test_js.js tests/test_js.js
-          mover test_worker.mjs tests/test_worker.mjs
-          mover assistant-proxy.js worker/assistant-proxy.js
-          if [ -f site/data/config.json ]; then
-            rm -f config.json
-          else
-            mover config.json site/data/config.json
-          fi
-          for f in __init__.py "__init__ (1).py"; do
-            if [ -f "$f" ] && grep -q "SCRAPERS" "$f"; then
-              mkdir -p scrapers
-              mv -f "$f" scrapers/__init__.py
-              echo "movido: scrapers/__init__.py"
-            fi
+          borrar_si actualizar.yml       .github/workflows/actualizar.yml
+          borrar_si resumen.yml          .github/workflows/resumen.yml
+          for f in preguntas.html privacidad.html producto.html productos.html robots.txt sitemap.xml terminos.html tiendas.html; do
+            borrar_si "$f" "site/$f"
           done
-          rm -f __init__.py "__init__ (1).py"
-          mkdir -p tests
-          if [ ! -f tests/__init__.py ]; then : > tests/__init__.py; fi
-          if [ -f .github/workflows/actualizar.yml ]; then rm -f actualizar.yml; fi
-          if [ -f .github/workflows/resumen.yml ]; then rm -f resumen.yml; fi
-      - name: Completar las tiendas nuevas en config.json
-        run: |
-          python3 - <<'PY'
-          import json
-          p = "site/data/config.json"
-          c = json.load(open(p, encoding="utf-8"))
-          st = c.setdefault("stores", {})
-          for n in ["Hardloots", "BitHard", "Try", "SCP Hardstore", "Click Gaming", "The Gamer Shop"]:
-              st.setdefault(n, {})
-          json.dump(c, open(p, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
-          print("config.json listo:", len(st), "tiendas")
-          PY
+          borrar_si supabase-2.117.3.js  site/js/vendor/supabase-2.117.3.js
+          borrar_si supabase.LICENSE.txt site/js/vendor/supabase.LICENSE.txt
+          borrar_si test_all.py          tests/test_all.py
+          # «download» es el .gitignore que se subió con otro nombre
+          if [ -f download ] && grep -q "__pycache__" download; then
+            if [ ! -f .gitignore ]; then git mv download .gitignore; echo "download -> .gitignore"; else git rm -q download; fi
+          fi
+          # archivos de caché de Python que se subieron por error (se regeneran solos)
+          git ls-files | grep -E '(^|/)__pycache__/|\.pyc$' | while read -r f; do git rm -q --cached "$f"; rm -f "$f"; echo "borrada: $f"; done
       - name: Guardar cambios
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
-          git add -A
-          git diff --cached --quiet || (git commit -m "Ordenar archivos en sus carpetas" && git push)
+          git diff --cached --quiet || (git commit -m "Limpiar copias sueltas de la raíz" && git push)

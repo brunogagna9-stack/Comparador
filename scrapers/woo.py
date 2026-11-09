@@ -3,8 +3,7 @@ la misma que usa el propio sitio. Antes de agregar una tienda se revisa su robot
 catálogo ni la API ni tiene pausa mínima) y se pide con la pausa normal del proyecto (1,5 s). Si una tienda responde
 403/429 se deja de pedir (ver common.get). El SKU es un código interno de cada tienda: no se usa para cruzar productos.
 """
-from .common import get
-from .goldentech import parse as _parse, PER_PAGE
+from .goldentech import parse as _parse, fetch_all
 
 # nombre en el comparador -> sitio base
 WOO_STORES = {
@@ -27,17 +26,8 @@ def parse(items, store):
     return _parse(items, store)
 
 
-def scrape_store(store, base, max_pages=80):   # Max Tecno tiene ~6.000 productos (61 páginas de 100)
-    out, page = [], 1
-    while page <= max_pages:
-        items = get(f"{base}/wp-json/wc/store/v1/products?per_page={PER_PAGE}&page={page}", as_json=True)
-        if not isinstance(items, list):
-            break
-        out += parse(items, store)
-        if len(items) < PER_PAGE:
-            break
-        page += 1
-    return out
+def scrape_store(store, base, max_pages=150):   # Max Tecno ~6.000 (60 páginas de 100); The Gamer Shop entrega de a 20 (~137)
+    return parse(fetch_all(base, max_pages), store)
 
 
 def make(store):

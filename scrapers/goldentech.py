@@ -54,15 +54,36 @@ def parse(items, store=STORE):
     return out
 
 
-def scrape():
-    out, page, total_pages = [], 1, 1
-    while page <= total_pages and page <= 40:
-        url = f"{BASE}/wp-json/wc/store/v1/products?per_page={PER_PAGE}&page={page}"
-        items = get(url, as_json=True)
-        if not isinstance(items, list):
+def fetch_all(base, max_pages=80):
+    """Recorre la API página por página (actualización 37). Sigue mientras lleguen productos nuevos:
+    - si la tienda entrega menos por página de lo pedido (p. ej. 20 en vez de 100), se toma ese tamaño como página llena;
+    - si una página repite productos ya vistos (tiendas cuyo servidor ignora ?page=), se corta para no pedir de más."""
+    items_all, seen, per, page, n = [], set(), PER_PAGE, 1, 0
+    while n < max_pages:
+        n += 1
+        try:
+            items = get(f"{base}/wp-json/wc/store/v1/products?per_page={per}&page={page}", as_json=True)
+        except RuntimeError as e:
+            if page > 1 and "HTTP 400" in str(e):     # algunas tiendas responden 400 pasado el final del catálogo
+                break
+            raise
+        if not isinstance(items, list) or not items:
             break
-        out += parse(items)
-        if len(items) < PER_PAGE:
+        new = [it for it in items if it.get("id") not in seen]
+        if not new:                                    # repite una página ya vista: el servidor ignora ?page=
             break
+        seen.update(it.get("id") for it in new)
+        items_all += new
+        if len(items) < per:
+            if page == 1 and per == PER_PAGE:
+                # La tienda entrega menos de lo pedido pero avanza de a PER_PAGE (The Gamer Shop: 20 de 100):
+                # se sigue pidiendo con su tamaño real para no saltear productos.
+                per = len(items)
+            else:
+                break
         page += 1
-    return out
+    return items_all
+
+
+def scrape():
+    return parse(fetch_all(BASE, max_pages=40))

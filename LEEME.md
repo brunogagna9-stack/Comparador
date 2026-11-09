@@ -639,3 +639,47 @@ Búsqueda del 4/11/2026 solo en sitios de los fabricantes (informe «Fichas ofic
   hacían una búsqueda por el nombre que quedaba activa y dejaba una sola categoría). En Productos, cuando hay una búsqueda
   activa se ve «Buscando: «…» ✕ Quitar búsqueda».
 - Pruebas: `test_actualizacion_36_buscador_y_armado` (Python) y el autocompletado en `tests/test_js.js`.
+
+## Actualización 37 — Nueva tienda Nickhard y más productos de GoldenTech y The Gamer Shop
+- **Nickhard** (nickhard.com.ar, Olivos): tienda Tiendanube; se lee su listado público como lo ve un visitante (su
+  robots.txt, revisado el 6/11/2026, lo permite). Su catálogo completo son ~8.100 productos en páginas muy pesadas y
+  la mitad no es computación (impresoras, TV, cámaras, hogar), así que se leen **solo sus categorías de computación**:
+  componentes, discos, PC y notebooks, monitores, periféricos y routers (~4.100 productos, unos 3 minutos). El precio
+  contado es el «con Transferencia o depósito bancario» que publica la tienda. Ficha en `site/data/stores.json`.
+  - `scrapers/tiendanube.py` ahora acepta varias categorías por tienda; un producto que está en dos se cuenta una vez.
+- **Corrección: catálogos incompletos en la API de WooCommerce** (`scrapers/goldentech.py` → `fetch_all`, usada también
+  por `scrapers/woo.py`):
+  - **GoldenTech** mostraba 100 productos de ~1.440: el lector se cortaba siempre después de la primera página.
+  - **The Gamer Shop** mostraba 20: su servidor entrega de a 20 aunque se pidan 100 (y avanza de a 100), y el lector
+    creía que el catálogo había terminado. Ahora, si la tienda entrega menos de lo pedido, se vuelve a pedir con su tamaño
+    real. Esa tienda **limita a propósito** su API a 10 páginas (200 de ~2.700 productos) y después responde «Usá la
+    búsqueda o las categorías de la tienda»: se respeta el límite (no se lo esquiva) y la ficha queda como «parcial».
+    Pasado el final, un «error 400» se toma como fin del catálogo, no como falla de la tienda.
+  - Si una tienda repite la misma página (Hardloots: su servidor ignora el número de página y devuelve siempre los mismos
+    20), se corta enseguida en vez de pedir de más. Su ficha también queda como «parcial».
+- `config.json` ya no necesita una entrada por cada tienda nueva (solo sirve para ocultar una tienda o anotar sus cuotas).
+- Prueba nueva: `test_actualizacion_37_paginado_y_nickhard`.
+
+## Actualización 38 — Fichas más rápidas, portada más liviana, cuotas de Tiendanube, marcas A-Z y limpieza
+- **Ficha de producto ~50 veces más liviana**: `build_data.py` (`write_shards`) parte el catálogo en 64 archivos
+  `site/data/p/00.json` … `63.json` (60-80 KB comprimidos cada uno), con los productos y el historial de sus ofertas.
+  `site/producto.html` baja solo la parte de su producto (misma cuenta `shardOf` que `shard_of` en Python) en vez de
+  `products.json` + `history.json` (~4 MB). Si la parte no existe, usa el catálogo completo como antes. Se comprobó
+  que la ficha queda idéntica. Las partes se publican pero no se guardan en el repositorio (`site/data/p/.gitignore`),
+  y `scripts/check_data.py` no publica si faltan partes o productos.
+- **Fotos livianas**: las fotos originales de `static.nb.com.ar` (PNG de 0,5 a 1,5 MB, sin versión chica) se usan
+  solo si ninguna otra tienda tiene foto del producto (`HEAVY_IMG_RE` en `build_data.py`): de 592 productos con esas
+  fotos quedan 72, y la portada ya no usa ninguna.
+- **Cuotas en tiendas Tiendanube** (`scrapers/tiendanube.py` → `cuotas_of`): se lee lo que muestra cada tarjeta
+  («18 x $19.555,56 sin interés») y se guarda como «18 cuotas sin interés de $ 19.556». Nickhard, ShopGamer,
+  Integrados Argentinos y Vertex lo muestran; 37 Bytes y Slot One no lo muestran por producto (quedan sin dato).
+- **Marcas en orden alfabético**: en Productos la lista «Marca» va de la A a la Z (resumida: las 10 con más
+  productos, también en orden alfabético, más las tildadas; «Ver todas» las muestra todas). El filtro «Chip» de placas
+  de video y las pestañas de «Armalo vos» quedan AMD · Intel · NVIDIA. Serie, socket y chipset siguen en orden técnico.
+- **Nickhard**: reputación verificada en Google Maps (ficha «NickHard», mismo sitio y teléfono: 5,0 con 15 opiniones
+  al 6/11/2026, con aviso de pocas opiniones) y dirección completa.
+- **Resumen semanal**: `resumen.yml` estaba en la raíz y nunca se ejecutaba; va en `.github/workflows/`.
+- **Limpieza de la raíz** (`.github/workflows/ordenar.yml`, reescrito): el flujo anterior MOVÍA archivos de la raíz a
+  su carpeta y, con copias viejas sueltas, podía pisar versiones nuevas. Ahora solo borra una copia suelta cuando la
+  buena existe en su lugar, renombra `download` a `.gitignore` y quita los `__pycache__` subidos por error.
+- Prueba nueva: `test_actualizacion_38_fichas_fotos_cuotas_marcas`.

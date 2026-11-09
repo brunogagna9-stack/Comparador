@@ -270,7 +270,7 @@ def test_stores_json_reputacion_verificable():
             assert any("ficha" in n.lower() or "reputación" in n.lower() for n in s.get("notes", [])), name + ": explicar por qué no hay puntaje"
     con = {n for n, s in d.items() if s["reputation"]}
     nuevas = {n for n, s in d.items() if s["checked"] == "2026-10-26"}   # actualización 15: reputación todavía sin fuente
-    assert len(con) == 17 and {"Gaming City", "Hardloots"} | nuevas == set(d) - con, "solo estas tiendas quedan sin puntaje verificado"
+    assert len(con) == 18 and {"Gaming City", "Hardloots"} | nuevas == set(d) - con, "solo estas tiendas quedan sin puntaje verificado"
     assert "average" not in json.dumps(d).lower()
 
 def test_logg_marcado_actual():
@@ -484,12 +484,14 @@ def test_tiendas_nuevas_actualizacion_15():
     assert cf[0]["price_list"] == 888599 and cf[0]["price_cash"] is None and cf[0]["category"] == "pcs-armadas" and cf[0]["image"].startswith("https://")
     assert compufan.page_url("https://www.compufanstore.com.ar/ARTICULOS/X/CAT_ID=63/SCAT_ID=3948/m=0/BUS=/compufanstore.aspx", 2) == \
         "https://www.compufanstore.com.ar/ARTICULOS/X;CAT_ID=63;SCAT_ID=3948;m=0;BUS=;A_PAGENUMBER=2;/compufanstore.aspx"
-    # registro: cada tienda nueva tiene lector, ficha en stores.json y entrada en config.json
+    # registro: cada tienda nueva tiene lector y ficha en stores.json. La entrada en config.json es opcional
+    # (solo sirve para ocultarla o anotar sus cuotas): config.json es del dueño del sitio y no viaja en las actualizaciones.
     stores = json.load(open("site/data/stores.json"))["stores"]
     cfg = json.load(open("site/data/config.json"))["stores"]
     nuevas = list(woohtml.HTML_STORES) + list(tiendanube.TN_STORES) + list(cardeco.CE_STORES) + ["WIZ TECH", "XT-PC", "Compufan Store"]
     for n in nuevas + list(woo.WOO_STORES):
-        assert n in SCRAPERS and n in stores and n in cfg, n
+        assert n in SCRAPERS and n in stores, n
+        assert isinstance(cfg.get(n, {}), dict), n
     assert stores["IgnaTech"]["integration"] == stores["Portal Tech & Gaming"]["integration"] == "no disponible"
 
 
@@ -1124,3 +1126,118 @@ def test_actualizacion_36_buscador_y_armado():
     ar = rd("armado.html")
     assert "data-gsel" in ar and "C.parts(g,c,false,\"min\"" in ar and 'p.set("placa",S.gid)' in ar
     assert '"buscar.json"' in (Path(build_data.__file__).read_text(encoding="utf-8"))
+
+
+def test_actualizacion_37_paginado_y_nickhard():
+    """Act. 37: la API de WooCommerce se recorre entera aunque la tienda entregue menos por página (The Gamer Shop: 20)
+    o tenga más de una página (GoldenTech: antes se cortaba en la primera); si la tienda repite la misma página
+    (Hardloots ignora ?page=) se corta. Nickhard se lee por categorías de Tiendanube, sin repetir productos."""
+    from scrapers import goldentech as gt, woo, tiendanube as tn, SCRAPERS
+    item = lambda i: {"id": i, "type": "simple", "name": f"Mouse Logitech G{i}", "permalink": f"https://x/{i}",
+                      "prices": {"currency_code": "ARS", "currency_minor_unit": 2, "price": "1000000", "regular_price": "1000000"},
+                      "is_in_stock": True, "images": [], "categories": []}
+    def fake_api(total, cap=100, repeat=False, end400=False):
+        """Simula la API: devuelve como mucho `cap` por página y avanza según el per_page PEDIDO (como The Gamer Shop)."""
+        calls = []
+        def get(url, as_json=False):
+            calls.append(url)
+            per = int(url.split("per_page=")[1].split("&")[0]); n = int(url.rsplit("page=", 1)[1])
+            start = 0 if repeat else (n - 1) * per
+            if end400 and start >= total:
+                raise RuntimeError(f"No se pudo leer {url}: HTTP 400")
+            return [item(i) for i in range(start, min(start + min(per, cap), total))]
+        return get, calls
+    orig = gt.get
+    try:
+        # 1) The Gamer Shop: entrega 20 aunque se pidan 100 y responde 400 pasado el final -> se leen los 45, sin huecos
+        gt.get, calls = fake_api(45, cap=20, end400=True)
+        r = woo.scrape_store("T", "https://t")
+        assert len(r) == 45 and len({p["url"] for p in r}) == 45, len(r)
+        assert "per_page=20&page=2" in calls[1] and "per_page=20&page=3" in calls[2]
+        # 2) GoldenTech con 250 productos de a 100: se leen las 3 páginas (antes solo 100)
+        gt.get, calls = fake_api(250)
+        assert len(gt.scrape()) == 250 and len(calls) == 3
+        # 3) servidor que ignora ?page= y repite siempre lo mismo (Hardloots): se corta en la segunda página
+        gt.get, calls = fake_api(20, repeat=True)
+        assert len(woo.scrape_store("T", "https://t")) == 20 and len(calls) == 2
+        # 4) catálogo vacío; 5) tienda chica (30 productos): una consulta de más y listo
+        gt.get, calls = fake_api(0)
+        assert woo.scrape_store("T", "https://t") == [] and len(calls) == 1
+        gt.get, calls = fake_api(30)
+        assert len(woo.scrape_store("T", "https://t")) == 30 and len(calls) == 2
+        # 6) un 400 en la primera página sí es un error de la tienda
+        gt.get, calls = fake_api(0, end400=True)
+        try:
+            woo.scrape_store("T", "https://t"); assert False
+        except RuntimeError:
+            pass
+    finally:
+        gt.get = orig
+    # Nickhard: alta completa y lectura por varias categorías
+    assert "Nickhard" in SCRAPERS and isinstance(tn.TN_STORES["Nickhard"][1], tuple)
+    st = json.load(open("site/data/stores.json"))["stores"]["Nickhard"]
+    assert st["site"] == "https://nickhard.com.ar" and st["integration"] == "completa"
+    ld = lambda u, n: ('<div><span data-priceraw-without-shipping="%d"></span><script type="application/ld+json">' % (n * 65) +
+                       json.dumps({"@type": "Product", "name": "Placa " + u, "offers": {"price": str(n), "priceCurrency": "ARS",
+                                   "url": "https://nickhard.com.ar/productos/" + u, "availability": "https://schema.org/InStock"}}) + "</script></div>")
+    pages = {"/a/": [ld("p1", 1000) + ld("p2", 2000), ld("p3", 3000)], "/b/": [ld("p2", 2000) + ld("p4", 4000)]}
+    def tget(url):
+        path, _, q = url.partition("?page=")
+        path = path.replace("https://n", "")
+        n = int(q or 1)
+        return pages[path][n - 1] if n <= len(pages[path]) else "<html></html>"
+    o = tn.get
+    try:
+        tn.get = tget
+        r = tn.scrape_store("Nickhard", "https://n", ("/a/", "/b/"))
+    finally:
+        tn.get = o
+    assert [p["url"].rsplit("/", 1)[1] for p in r] == ["p1", "p2", "p3", "p4"]        # p2 está en las dos: una sola vez
+    assert r[0]["price_cash"] == 650 and r[0]["price_list"] == 1000 and r[0]["stock"] is True   # 35% menos por transferencia
+
+
+def test_actualizacion_38_fichas_fotos_cuotas_marcas():
+    """Act. 38: catálogo partido para la ficha de producto, fotos pesadas al final, cuotas de Tiendanube,
+    marcas A-Z, limpieza segura de la raíz y resumen semanal en su lugar."""
+    import re, tempfile
+    from pathlib import Path
+    from scrapers import tiendanube as tn
+    # 1) partes del catálogo: cada producto en una sola parte, con el historial de sus ofertas
+    groups = [{"id": f"id{i}", "name": f"P{i}", "offers": [{"k": f"k{i}", "store": "A"}]} for i in range(300)]
+    hist = {f"k{i}": [["2026-11-01", 100.0]] for i in range(300)}
+    hist["_v"] = 2
+    parts = bd.product_shards(groups, hist)
+    assert len(parts) == bd.SHARDS and sum(len(p["g"]) for p in parts) == 300
+    p = parts[bd.shard_of("id7")]
+    assert p["g"]["id7"]["name"] == "P7" and p["h"]["k7"] == [["2026-11-01", 100.0]] and "_v" not in p["h"]
+    with tempfile.TemporaryDirectory() as d:
+        (Path(d) / "p").mkdir(); (Path(d) / "p" / "99.json").write_text("{}")      # parte vieja: se borra
+        bd.write_shards(groups, hist, d)
+        assert sorted(x.name for x in (Path(d) / "p").glob("*.json")) == [f"{i:02d}.json" for i in range(bd.SHARDS)]
+    html = open("site/producto.html", encoding="utf-8").read()
+    assert "function shardOf(id){let h=0;for(const ch of String(id)){h=(h*31+ch.codePointAt(0))>>>0}return h%64}" in html
+    assert "data/p/" in html and 'j("data/products.json",[])' in html               # con respaldo al catálogo completo
+    assert bd.SHARDS == 64
+    # 2) fotos: la original pesada (static.nb.com.ar) solo si no hay otra
+    offs = [{"store": "Compragamer", "image": "https://static.nb.com.ar/i/x.png"}, {"store": "Armytech", "image": "https://armytech.com.ar/a.jpg"}]
+    assert bd.pick_image(offs)[0] == "https://armytech.com.ar/a.jpg"
+    assert bd.pick_image(offs[:1])[0] == "https://static.nb.com.ar/i/x.png"
+    assert bd.pick_image([{"store": "BitHard", "image": "https://i3.wp.com/static.nb.com.ar/i/x.png?resize=300,300"}])[0].startswith("https://i3.wp.com/")
+    # 3) cuotas de Tiendanube
+    card = ("<div class=\"js-max-installments product-installments installment-no-interest\"> <span class='js-installment-amount product-installment-amount'>18</span>"
+            " <span> <span class=\"installment-short-separator\"> x </span> </span> <span class='js-installment-price product-installment-value'>$19.555,56</span> <span> sin interés </span> </div>")
+    assert tn.cuotas_of(card) == "18 cuotas sin interés de $ 19.556"
+    assert tn.cuotas_of(card.replace(" installment-no-interest", "").replace("sin interés", "")) == "18 cuotas de $ 19.556"
+    assert tn.cuotas_of("<div>sin cuotas</div>") is None
+    # 4) marcas de la A a la Z
+    prod = open("site/productos.html", encoding="utf-8").read()
+    assert 'localeCompare(b[0],"es"' in prod and "bl.sort(az)" in prod
+    assert '"chip", l: "Chip", get: g => gpuBrand(g.name), alpha: true' in open("site/js/facets.js", encoding="utf-8").read()
+    assert 'gpu:["AMD","Intel","NVIDIA"]' in open("site/armar.html", encoding="utf-8").read()
+    # 5) flujos automáticos: el resumen semanal en su carpeta; la limpieza nunca mueve archivos, solo borra copias
+    wf = open(".github/workflows/ordenar.yml", encoding="utf-8").read()
+    assert "borrar_si" in wf and not re.search(r"\bmv -f\b|\bmover\(", wf)
+    assert "scripts/enviar_resumen.py" in open(".github/workflows/resumen.yml", encoding="utf-8").read()
+    # 6) Nickhard con reputación verificada y aviso de muestra chica
+    nh = json.load(open("site/data/stores.json"))["stores"]["Nickhard"]
+    assert nh["reputation"][0]["count"] == 15 and any("Pocas opiniones" in n for n in nh["notes"])

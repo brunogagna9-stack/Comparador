@@ -21,11 +21,32 @@ TN_STORES = {
     "Integrados Argentinos": ("https://www.integradosargentinos.com", "/productos/"),
     "Slot One": ("https://www.slot-one.com.ar", "/productos/"),
     "Vertex Retail": ("https://vrx.com.ar", "/computacion-y-gaming/"),   # el resto del sitio son muebles de oficina
+    # actualización 37 (robots.txt revisado el 2026-11-06). Su catálogo completo son ~8.100 productos en páginas de
+    # 2,3 MB, con impresoras, TV, cámaras y robots aspiradores: se leen solo sus categorías de computación.
+    "Nickhard": ("https://nickhard.com.ar", (
+        "/componentes-de-pc/", "/almacenamiento/discos-ssd-11sx5/", "/almacenamiento/discos-rigidos-n5ijp/",
+        "/pc-y-notebooks/", "/audio-y-video/monitores-28l43/", "/perifericos-y-gaming/",
+        "/redes-y-seguridad/routers-y-wi-fi-1mrp9/")),
 }
 
 _LD = re.compile(r'<script type="application/ld\+json"[^>]*>(.*?)</script>', re.S)
 _RAW = re.compile(r'data-priceraw-without-shipping="(\d+)"')
 _VAR = re.compile(r'price_with_payment_discount_short(?:&quot;|")\s*:\s*(?:&quot;|")([^&"]+)')
+# cuotas que muestra la tarjeta del listado (actualización 38): «18 x $19.555,56 sin interés»
+_CUO = re.compile(r"js-max-installments product-installments([^\"']*)[\"'][^>]*>\s*<span[^>]*js-installment-amount[^>]*>\s*(\d+)\s*</span>"
+                  r".{0,300}?js-installment-price[^>]*>\s*([^<]+?)\s*</span>(.{0,120})", re.S)
+
+
+def cuotas_of(chunk):
+    """«18 cuotas sin interés de $ 19.556» (mismo formato que las otras tiendas) o None."""
+    m = _CUO.search(chunk)
+    if not m:
+        return None
+    n, val = int(m.group(2)), parse_ars(_html.unescape(m.group(3)))
+    if n < 2 or not val:
+        return None
+    sin = "no-interest" in m.group(1) or re.search(r"sin inter", m.group(4), re.I)
+    return f"{n} cuotas{' sin interés' if sin else ''} de $ {round(val):,}".replace(",", ".")
 
 
 def parse(html, store):
@@ -67,6 +88,7 @@ def parse(html, store):
         p = product(store, name, url, cash, lst, stock=stock, image=img if isinstance(img, str) else None,
                     category=canon_category(name))
         p["store_sku"] = ld.get("sku") or None
+        p["cuotas"] = cuotas_of(chunk)
         if p["category"] in ("perifericos", "mouses", "teclados", "auriculares") and ld.get("description"):
             p["desc"] = _plain(str(ld["description"]))        # texto de la propia tienda (ver descspecs.py)
         out.append(p)
@@ -74,14 +96,18 @@ def parse(html, store):
 
 
 def scrape_store(store, base, path, max_pages=150):
+    """path: un listado o varios (tupla). Un producto que aparece en dos categorías se cuenta una sola vez."""
     out, seen = [], set()
-    for page in range(1, max_pages + 1):
-        html = get(f"{base}{path}" + (f"?page={page}" if page > 1 else ""))
-        items = [i for i in parse(html, store) if i["url"] not in seen]
-        if not items:                                  # página vacía o repetida: se terminó el catálogo
-            break
-        seen.update(i["url"] for i in items)
-        out += items
+    for p in ((path,) if isinstance(path, str) else path):
+        here = set()
+        for page in range(1, max_pages + 1):
+            html = get(f"{base}{p}" + (f"?page={page}" if page > 1 else ""))
+            fresh = [i for i in parse(html, store) if i["url"] not in here]
+            if not fresh:                              # página vacía o repetida: se terminó esa categoría
+                break
+            here.update(i["url"] for i in fresh)
+            out += [i for i in fresh if i["url"] not in seen]
+            seen.update(i["url"] for i in fresh)
     return out
 
 

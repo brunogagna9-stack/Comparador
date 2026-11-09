@@ -115,7 +115,7 @@
         return t == null ? null : t ? "Incluye cooler" : "Sin cooler"; } },
     ],
     "placas-de-video": [
-      { k: "chip", l: "Chip", get: g => gpuBrand(g.name) },
+      { k: "chip", l: "Chip", get: g => gpuBrand(g.name), alpha: true },
       { k: "vram", l: "Memoria", get: g => { const v = CT.vramOf(g.name); return v ? v + " GB" : null; }, num: true },
       { k: "mem", l: "Tipo de memoria", get: g => gpuMem(g.name), note: "Si la tienda no lo dice, se toma de la ficha del fabricante del chip." },
     ],
@@ -209,6 +209,7 @@
   FX.clear = list => list.forEach(g => { delete g._fx; });
   /* orden de las opciones: el definido, o numérico si los valores son números, o por cantidad */
   FX.sortOpts = (def, entries) => {
+    if (def.alpha) return entries.sort((a, b) => (a[0] === FX.NONE) - (b[0] === FX.NONE) || String(a[0]).localeCompare(String(b[0]), "es", { sensitivity: "base", numeric: true }));   // marcas: de la A a la Z
     if (def.order) return entries.sort((a, b) => { const ia = def.order.indexOf(a[0]), ib = def.order.indexOf(b[0]); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || b[1] - a[1]; });
     const lead = s => { const m = String(s).match(/(\d+(?:[.,]\d+)?)/); return m ? parseFloat(m[1].replace(/\./g, "").replace(",", ".")) * (/TB/.test(s) ? 1000 : 1) : null; };
     if (def.num || entries.every(([v]) => lead(v) != null || v === FX.NONE)) {

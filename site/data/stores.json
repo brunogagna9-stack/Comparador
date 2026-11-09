@@ -294,12 +294,13 @@
   },
   "Hardloots": {
    "site": "https://hardloots.com.ar",
-   "integration": "completa",
+   "integration": "parcial",
    "how": "API pública de catálogo de WooCommerce (la misma que usa el sitio). Su robots.txt no bloquea el catálogo ni la API y no pide pausa entre pedidos.",
    "contact": {},
    "checked": "2026-10-24",
    "reputation": [],
    "notes": [
+    "Lectura parcial: su API devuelve siempre los mismos 20 productos sin importar la página pedida (revisado el 6/11/2026).",
     "Su SKU es un código interno: los productos se cruzan con otras tiendas por nombre y modelo.",
     "No encontramos una ficha de Google con el mismo sitio web: sin reputación mostrada."
    ]
@@ -401,7 +402,7 @@
   },
   "The Gamer Shop": {
    "site": "https://thegamershop.com.ar",
-   "integration": "completa",
+   "integration": "parcial",
    "how": "API pública de catálogo de WooCommerce (la misma que usa el sitio). Su robots.txt no bloquea el catálogo ni la API y no pide pausa entre pedidos.",
    "contact": {
     "address": "Av. Lisandro de la Torre 373 (Liniers) y Carhué 1409 (Mataderos), CABA",
@@ -420,6 +421,7 @@
     }
    ],
    "notes": [
+    "Lectura parcial: su API entrega solo las primeras 10 páginas (200 productos de unos 2.700) y después responde «Usá la búsqueda o las categorías de la tienda». (revisado el 6/11/2026). Respetamos ese límite: no se lo esquiva.",
     "Su SKU es un código interno: los productos se cruzan con otras tiendas por nombre y modelo.",
     "Su robots.txt bloquea el entrenamiento de IA (GPTBot, ClaudeBot…); este proyecto no entrena modelos: solo lee precios para compararlos.",
     "Pie del sitio: «Garantía oficial en todos los productos», botón de arrepentimiento, Ley 27.743 de defensa del consumidor; no muestra razón social ni CUIT en la página principal."
@@ -691,6 +693,33 @@
    "reputation": [],
    "notes": [
     "Sin reputación cargada: no la leemos porque la tienda no está integrada."
+   ]
+  },
+  "Nickhard": {
+   "site": "https://nickhard.com.ar",
+   "integration": "completa",
+   "how": "Listado público de productos de Tiendanube (?page=N), como lo ve un visitante, solo en sus categorías de computación (componentes, discos, PC y notebooks, monitores, periféricos y routers): nombre, precio, stock e imagen salen de los datos estructurados de cada producto. Su robots.txt permite el listado.",
+   "contact": {
+    "address": "Hilarión de la Quintana 2256, Olivos, Buenos Aires",
+    "phone": "011 15-5877-6032 (WhatsApp)"
+   },
+   "checked": "2026-11-06",
+   "reputation": [
+    {
+     "source": "Google Maps",
+     "listing": "NickHard",
+     "score": 5.0,
+     "count": 15,
+     "url": "https://www.google.com/maps/search/NickHard+Hilari%C3%B3n+de+la+Quintana+2256+Olivos",
+     "date": "2026-11-06"
+    }
+   ],
+   "notes": [
+    "El precio contado es el que la tienda publica «con Transferencia o depósito bancario» (al 6/11/2026, 35% menos que el de lista); el de lista es el precio general del producto.",
+    "No se leen sus categorías ajenas a computación (impresión, televisores, cámaras de seguridad, hogar).",
+    "Su código de producto es interno: los productos se cruzan con otras tiendas por nombre y modelo.",
+    "Pocas opiniones (menos de 100): el puntaje es poco representativo.",
+    "La ficha de Google Maps «NickHard» tiene el mismo sitio web y teléfono que la tienda (revisada el 6/11/2026)."
    ]
   }
  }
