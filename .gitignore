@@ -1,3 +1,7 @@
 __pycache__/
 *.pyc
 tests/fixtures/specs_out.json
+
+# actualización 39: se genera en cada actualización de precios (solo se publica)
+site/sitemap-productos.xml
+node_modules/

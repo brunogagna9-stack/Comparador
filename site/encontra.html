@@ -3,7 +3,28 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Encontrá tu equipo · ComparáTech</title>
+<title>Encontrá tu equipo · KyraNoHard</title>
+<meta name="description" content="Respondé unas preguntas simples y te mostramos la notebook, PC o monitor que te conviene, con precios reales de tiendas argentinas.">
+<!-- head:kyranohard -->
+<link rel="canonical" href="https://brunogagna9-stack.github.io/Comparador/encontra.html">
+<link rel="icon" href="favicon.ico" sizes="48x48">
+<link rel="icon" href="img/logo.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1020" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+<meta property="og:site_name" content="KyraNoHard">
+<meta property="og:locale" content="es_AR">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://brunogagna9-stack.github.io/Comparador/encontra.html">
+<meta property="og:title" content="Encontrá tu equipo · KyraNoHard">
+<meta property="og:description" content="Respondé unas preguntas simples y te mostramos la notebook, PC o monitor que te conviene, con precios reales de tiendas argentinas.">
+<meta property="og:image" content="https://brunogagna9-stack.github.io/Comparador/img/og.jpg">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Logo de KyraNoHard: comparador de precios de hardware en Argentina">
+<meta name="twitter:card" content="summary_large_image">
+<!-- /head:kyranohard -->
 <link rel="stylesheet" href="css/shared.css">
 <link rel="stylesheet" href="css/layout.css">
 <style>
@@ -204,7 +225,7 @@ function showResults(){
   const n0=CT.needs(A);
   const R=C.recommend({...A,usos:A.usos,have:A.have.tiene?A.have:null,tipo:A.tipo||"nose"});
   const n=R.n;let h=`<div class="panel"><b>Tu resumen:</b> ${A.usos.map(u=>esc(CT.USOS.find(x=>x.id===u).label)).join(" · ")}${A.budget?` · presupuesto ${ARS(A.budget)}`:" · sin tope de presupuesto"}${n.gaming?` · ${RES[n.res]}`:""}.<br>
-   <span class="note">Para eso buscamos: ${n.gaming?"placa de video dedicada, ":"gráficos integrados alcanzan, "}RAM de al menos ${n.ram.min} GB (ideal ${n.ram.rec} GB) y SSD de ${n.ssd>=1000?"1 TB":n.ssd+" GB"} o más. Son criterios de ComparáTech ${tagH("est")}.</span>
+   <span class="note">Para eso buscamos: ${n.gaming?"placa de video dedicada, ":"gráficos integrados alcanzan, "}RAM de al menos ${n.ram.min} GB (ideal ${n.ram.rec} GB) y SSD de ${n.ssd>=1000?"1 TB":n.ssd+" GB"} o más. Son criterios de KyraNoHard ${tagH("est")}.</span>
    <div style="margin-top:8px"><button class="btn" id="redo">← Cambiar respuestas</button></div></div>`;
   if(R.upgrade)h+=upgradeH(R.upgrade,n);
   else{

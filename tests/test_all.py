@@ -997,8 +997,9 @@ def test_actualizacion_31_paginas():
         assert link in lay, link
     cfg = json.loads((site / "data" / "config.json").read_text(encoding="utf-8"))
     assert cfg["ads"]["client"] is None and cfg["ads"]["analytics_id"] is None      # publicidad apagada hasta que se configure
-    sm = (site / "sitemap.xml").read_text(encoding="utf-8")
+    sm = (site / "sitemap-paginas.xml").read_text(encoding="utf-8")       # act. 39: sitemap.xml pasó a ser un índice
     assert "historial.html" not in sm and sm.count("<loc>") >= 10
+    assert "sitemap-paginas.xml" in (site / "sitemap.xml").read_text(encoding="utf-8")
     assert "Sitemap:" in (site / "robots.txt").read_text(encoding="utf-8")
     t = (site / "tiendas.html").read_text(encoding="utf-8")
     assert "js/layout.js" in t and "<header>" not in t                                 # mismo encabezado que el resto
@@ -1241,3 +1242,71 @@ def test_actualizacion_38_fichas_fotos_cuotas_marcas():
     # 6) Nickhard con reputación verificada y aviso de muestra chica
     nh = json.load(open("site/data/stores.json"))["stores"]["Nickhard"]
     assert nh["reputation"][0]["count"] == 15 and any("Pocas opiniones" in n for n in nh["notes"])
+
+
+def test_actualizacion_39_kyranohard():
+    """Act. 39: nombre KyraNoHard, logo e íconos, app instalable, etiquetas para compartir y buscadores, carga por
+    categoría en Productos, catálogo de piezas en Armado, mapa con todas las fichas y control de calidad."""
+    import re, subprocess, tempfile, xml.dom.minidom
+    from pathlib import Path
+    site = Path("site")
+    # 1) el nombre viejo no queda en ningún texto del sitio ni de los correos
+    for p in list(site.glob("*.html")) + list(site.glob("js/*.js")) + list(site.glob("css/*.css")) + list(Path("scripts").glob("*.py")) + [site / "robots.txt"]:
+        t = p.read_text(encoding="utf-8")
+        assert "ComparáTech" not in t and "Compará<span>Tech" not in t, p
+    lay = (site / "js" / "layout.js").read_text(encoding="utf-8")
+    assert 'aria-label="KyraNoHard, ir al inicio"><img src="img/logo.svg"' in lay and "<b>Kyra<i>No</i><span>Hard</span></b>" in lay
+    assert 'x.fillText("KyraNo"' in (site / "js" / "hero3d.js").read_text(encoding="utf-8")
+    # 2) archivos de marca y app instalable
+    for f in ("favicon.ico", "img/logo.svg", "img/icon-192.png", "img/icon-512.png", "img/maskable-512.png", "img/apple-touch-icon.png",
+              "img/og.jpg", "fonts/inter-latin.woff2", "fonts/Inter-OFL.txt", "sw.js", "manifest.webmanifest"):
+        assert (site / f).exists() and (site / f).stat().st_size > 0, f
+    man = json.loads((site / "manifest.webmanifest").read_text(encoding="utf-8"))
+    assert man["short_name"] == "KyraNoHard" and man["start_url"] == "./" and man["display"] == "standalone"
+    assert all((site / i["src"]).exists() for i in man["icons"]) and any(i.get("purpose") == "maskable" for i in man["icons"])
+    sw = (site / "sw.js").read_text(encoding="utf-8")
+    assert "networkFirst" in sw and "u.origin !== self.location.origin" in sw       # precios siempre frescos; nada de otros sitios
+    assert 'navigator.serviceWorker.register("sw.js")' in lay
+    # 3) etiquetas del <head> en las 15 páginas (y el programa no duplica al volver a correrlo)
+    for p in site.glob("*.html"):
+        t = p.read_text(encoding="utf-8")
+        assert t.count("<!-- head:kyranohard -->") == 1, p
+        assert '<link rel="manifest" href="manifest.webmanifest">' in t and 'og:image" content="https://' in t and '<meta name="description"' in t, p
+        assert ('<link rel="canonical"' in t) == (p.name != "producto.html"), p
+    assert '<meta name="robots" content="noindex">' in (site / "historial.html").read_text(encoding="utf-8")
+    # 4) tipografía Inter alojada en el sitio
+    css = (site / "css" / "layout.css").read_text(encoding="utf-8")
+    assert "@font-face{font-family:Inter" in css and "--font:Inter," in css and "fonts.googleapis" not in css
+    # 5) archivos por categoría y mapa de fichas
+    groups = [{"id": f"x{i}", "category": ("placas-de-video", "procesadores")[i % 2], "offers": [{"k": f"k{i}", "store": "A", "price_cash": 10}]} for i in range(10)]
+    groups.append({"id": "sinprecio", "category": "otros", "offers": [{"k": "kz", "store": "A"}]})
+    hist = {f"k{i}": [["2026-11-01", 10]] for i in range(10)}
+    parts = bd.category_files(groups, hist)
+    assert sorted(parts) == ["otros", "placas-de-video", "procesadores"] and len(parts["procesadores"]["g"]) == 5 and parts["procesadores"]["h"]["k1"]
+    with tempfile.TemporaryDirectory() as d:
+        bd.write_categories(groups, hist, d)
+        assert (Path(d) / "cat" / ".gitignore").read_text() == "*.json\n" and len(list((Path(d) / "cat").glob("*.json"))) == 3
+        n = bd.write_sitemap(groups, "2026-11-14T03:00", d)
+        x = (Path(d) / "sitemap-productos.xml").read_text(encoding="utf-8")
+        xml.dom.minidom.parseString(x)
+        assert n == 10 and "producto.html?id=x3</loc><lastmod>2026-11-14</lastmod>" in x and "sinprecio" not in x
+    assert "sitemap-productos.xml" in (site / "sitemap.xml").read_text(encoding="utf-8")
+    # 6) Productos en dos etapas, Armado con el catálogo de piezas, ficha con datos estructurados
+    pr = (site / "productos.html").read_text(encoding="utf-8")
+    assert "data/cat/${cat0}.json" in pr and "function loadFull()" in pr and "loadFull().then(openList)" in pr
+    assert 'j("data/armar.json",null).then(d=>d&&d.length?d:j("data/products.json",[]))' in (site / "armado.html").read_text(encoding="utf-8")
+    po = (site / "producto.html").read_text(encoding="utf-8")
+    assert '"@type":"AggregateOffer",priceCurrency:"ARS"' in po and "seo(g)" in po
+    # 7) portada: decide antes de dibujar si va el 3D (sin saltos y sin 3D por software)
+    ix = (site / "index.html").read_text(encoding="utf-8")
+    assert "window.__pc3dOk=ok" in ix and "swiftshader|llvmpipe" in ix and 'role="group"' in ix
+    # 8) accesibilidad: nombres en selectores, enlaces subrayados en textos, tablas enfocables
+    assert '<select id="sort" aria-label="Ordenar productos">' in pr and 'aria-labelledby="lsel"' in (site / "armado.html").read_text(encoding="utf-8")
+    assert "WCAG 1.4.1" in css and 'tabindex="0" role="region" aria-label="Precios por tienda"' in (site / "js" / "detail.js").read_text(encoding="utf-8")
+    # 9) control de calidad: versiones fijas y flujo aparte que no frena la publicación
+    pk = json.loads(Path("calidad/package.json").read_text(encoding="utf-8"))
+    assert all(re.fullmatch(r"\d+\.\d+\.\d+", v) for v in pk["devDependencies"].values())
+    assert Path("calidad/package-lock.json").exists()
+    wf = Path(".github/workflows/calidad.yml").read_text(encoding="utf-8")
+    assert "node revisar.js" in wf and "ruff check" in wf and "schedule" not in wf
+    assert subprocess.run(["node", "--check", "site/sw.js"]).returncode == 0

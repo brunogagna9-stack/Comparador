@@ -92,7 +92,7 @@ def evaluate(rows, products, stores_cfg):
 def render(items, site):
     downs = sum(1 for i in items for c in i["changes"] if c["type"] == "baja")
     subject = (f"Bajó de precio: {items[0]['name'][:60]}" if len(items) == 1 and downs
-               else f"ComparáTech: novedades en {len(items)} producto{'s' if len(items) != 1 else ''} que seguís")
+               else f"KyraNoHard: novedades en {len(items)} producto{'s' if len(items) != 1 else ''} que seguís")
     li = []
     for i in items:
         bits = []
@@ -108,7 +108,7 @@ def render(items, site):
                   f"Ahora {ars(i['price'])} en {_html.escape(str(i['store']))} · " + " · ".join(bits) + "</li>")
     body = (f"<div style='font-family:system-ui,Arial,sans-serif;max-width:560px;margin:auto;color:#111'>"
             f"<h2 style='margin:0 0 6px'>Novedades de precios</h2>"
-            f"<p style='color:#555'>Cambios en productos que seguís en ComparáTech.</p>"
+            f"<p style='color:#555'>Cambios en productos que seguís en KyraNoHard.</p>"
             f"<ul style='padding-left:18px'>{''.join(li)}</ul>"
             f"<p style='color:#777;font-size:12px'>Los precios y el stock se leen de cada tienda y pueden cambiar: confirmalos antes de comprar. "
             f"Las cuotas son las que publica la tienda; pueden depender del banco o de la tarjeta.</p>"
@@ -165,7 +165,7 @@ def main(argv=sys.argv[1:], env=os.environ, call=http, products=None, cfg=None):
             continue
         try:
             call("POST", "https://api.brevo.com/v3/smtp/email", {"api-key": brevo, "content-type": "application/json", "accept": "application/json"},
-                 {"sender": {"name": env.get("NOTIFY_FROM_NAME") or "ComparáTech", "email": sender}, "to": [{"email": email}],
+                 {"sender": {"name": env.get("NOTIFY_FROM_NAME") or "KyraNoHard", "email": sender}, "to": [{"email": email}],
                   "subject": subject, "htmlContent": body, "tags": ["avisos-precio"]})
             sent += 1
             sent_users.add(m["user_id"])

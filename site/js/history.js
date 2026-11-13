@@ -1,4 +1,4 @@
-/* ComparáTech · historial de armados de PC y de comparaciones (actualización 31).
+/* KyraNoHard · historial de armados de PC y de comparaciones (actualización 31).
    Se guarda SOLO en el navegador («historial» en el almacenamiento local): no sale de la computadora de la persona.
    Cada entrada: { id, t (fecha ISO), title, sub, url, total? }. Hasta 50 por tipo; la más reciente primero.
    Mientras la persona sigue armando o comparando en la misma visita, se actualiza la misma entrada (no se llena de copias).
@@ -40,7 +40,7 @@
       st.textContent = `#hist-dlg{position:fixed;inset:0;background:rgba(3,6,15,.6);display:flex;align-items:center;justify-content:center;z-index:99990;padding:16px}
 #hist-dlg .b{background:var(--card,#fff);color:var(--tx,#111);border:1px solid var(--line,#ddd);border-radius:16px;max-width:420px;width:100%;padding:20px;box-shadow:0 20px 50px rgba(0,0,0,.35)}
 #hist-dlg h2{margin:0 0 8px;font-size:18px}#hist-dlg p{margin:0 0 16px;color:var(--mut,#555);font-size:14px;line-height:1.5}
-#hist-dlg .r{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}#hist-dlg button{border-radius:999px;padding:9px 16px;font:700 14px system-ui,sans-serif;cursor:pointer}
+#hist-dlg .r{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}#hist-dlg button{border-radius:999px;padding:9px 16px;font:700 14px var(--font);cursor:pointer}
 #hist-dlg .no{border:1px solid var(--line,#ccc);background:var(--card,#fff);color:var(--tx,#111)}#hist-dlg .si{border:0;background:#c4301f;color:#fff}`;
       d.head.appendChild(st);
     }

@@ -1,4 +1,4 @@
-/* Proxy OPCIONAL para el asistente de ComparáTech (Cloudflare Workers, nivel gratuito).
+/* Proxy OPCIONAL para el asistente de KyraNoHard (Cloudflare Workers, nivel gratuito).
    GitHub Pages es estático: una IA externa necesita un intermediario para que la clave NO esté en el JavaScript público.
    Este archivo NO se publica en el sitio (vive en la carpeta worker/). La clave se guarda como secreto del Worker.
 
@@ -10,7 +10,7 @@
    Costos: el Worker tiene nivel gratuito con límites; algunos proveedores de IA ofrecen un nivel gratuito con límites propios.
    Verificá las condiciones actuales de cada uno: si se superan, el proveedor puede cobrar o cortar el servicio. */
 
-const SYSTEM = `Sos el asistente de ComparáTech, un comparador de hardware de tiendas argentinas. Respondé en español rioplatense, claro y breve, para gente que recién empieza.
+const SYSTEM = `Sos el asistente de KyraNoHard, un comparador de hardware de tiendas argentinas. Respondé en español rioplatense, claro y breve, para gente que recién empieza.
 Orden de verdad: 1) el CONTEXTO que te pasan (estado de la página) 2) datos verificados del catálogo incluidos en el contexto 3) conocimiento general, aclarando que es general.
 Reglas: no inventes precios, stock, especificaciones, reseñas ni puntuaciones. Si el dato no está en el contexto, decí que no lo tenés y qué se puede hacer para conseguirlo. No des como real la autonomía de batería de marketing. Recordá que precios y stock cambian. No pidas datos personales.`;
 

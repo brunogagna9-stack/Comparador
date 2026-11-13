@@ -1,4 +1,4 @@
-/* ComparáTech · motor de "¿Qué actualizar?": lee los componentes que la persona escribe, los ubica en la base de hardware
+/* KyraNoHard · motor de "¿Qué actualizar?": lee los componentes que la persona escribe, los ubica en la base de hardware
    y dice qué conviene cambiar para llegar a un objetivo (resolución + FPS), con productos REALES del catálogo.
    Regla de oro: lo que no sabemos se dice ("sin datos"); nunca se inventa un puntaje. */
 (function (root) {

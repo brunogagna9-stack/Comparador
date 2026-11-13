@@ -1,4 +1,4 @@
-/* ComparáTech · motor de "Comparar hardware": especificaciones por categoría, ventajas y ganador justificado. */
+/* KyraNoHard · motor de "Comparar hardware": especificaciones por categoría, ventajas y ganador justificado. */
 (function (root) {
   "use strict";
   const CT = root.CT || require("./lib.js");
@@ -8,7 +8,7 @@
   CT.TAGS = {
     ver: ["Verificado", "Dato del fabricante comprobado contra su ficha oficial."],
     bench: ["Benchmark", "Medición independiente (Tom's Hardware, jun 2026). No es un dato oficial."],
-    est: ["Estimado", "Calculado por ComparáTech a partir de otros datos; no es una medición."],
+    est: ["Estimado", "Calculado por KyraNoHard a partir de otros datos; no es una medición."],
     pend: ["Pendiente de verificar", "Tomado del título de la tienda o cargado sin comprobarlo todavía contra la ficha del fabricante."],
     nd: ["Sin datos", "No tenemos este dato: no lo inventamos."],
   };

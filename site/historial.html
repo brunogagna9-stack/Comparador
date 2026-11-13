@@ -3,14 +3,35 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Mi historial · ComparáTech</title>
+<title>Mi historial · KyraNoHard</title>
 <meta name="description" content="Tus armados de PC y comparaciones anteriores, guardados en este navegador.">
+<!-- head:kyranohard -->
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://brunogagna9-stack.github.io/Comparador/historial.html">
+<link rel="icon" href="favicon.ico" sizes="48x48">
+<link rel="icon" href="img/logo.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1020" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+<meta property="og:site_name" content="KyraNoHard">
+<meta property="og:locale" content="es_AR">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://brunogagna9-stack.github.io/Comparador/historial.html">
+<meta property="og:title" content="Mi historial · KyraNoHard">
+<meta property="og:description" content="Tus armados de PC y comparaciones anteriores, guardados en este navegador.">
+<meta property="og:image" content="https://brunogagna9-stack.github.io/Comparador/img/og.jpg">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Logo de KyraNoHard: comparador de precios de hardware en Argentina">
+<meta name="twitter:card" content="summary_large_image">
+<!-- /head:kyranohard -->
 <meta name="robots" content="noindex">
 <link rel="stylesheet" href="css/shared.css">
 <link rel="stylesheet" href="css/layout.css">
 <style>
 .htabs{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 14px}
-.htabs button{border:1px solid var(--line2,var(--line));background:var(--card);color:var(--tx);border-radius:999px;padding:9px 16px;font:700 14px system-ui,sans-serif;cursor:pointer}
+.htabs button{border:1px solid var(--line2,var(--line));background:var(--card);color:var(--tx);border-radius:999px;padding:9px 16px;font:700 14px var(--font);cursor:pointer}
 .htabs button .n{font-weight:500;opacity:.75;margin-left:4px}
 .htabs button.on{background:#2563eb;border-color:#2563eb;color:#fff}
 .hl{display:flex;flex-direction:column;gap:10px}
@@ -19,12 +40,12 @@
 .he .ic svg{width:22px;height:22px}
 .he .tt{font-weight:700;line-height:1.35;overflow-wrap:anywhere}.he .sb{color:var(--mut);font-size:13px;margin-top:2px}
 .he .ac{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
-.he .ac a,.he .ac button{border-radius:999px;padding:7px 14px;font:700 13px system-ui,sans-serif;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.he .ac a,.he .ac button{border-radius:999px;padding:7px 14px;font:700 13px var(--font);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
 .he .ac a{background:#2563eb;color:#fff;border:1px solid #2563eb}
 .he .ac button{background:var(--card);color:var(--bad);border:1px solid color-mix(in srgb,var(--bad) 45%,var(--line))}
 .he .ac button:hover{background:var(--badbg)}
 .hbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 10px}
-.hbar .all{border:0;background:none;color:var(--bad);font:700 13.5px system-ui,sans-serif;cursor:pointer;text-decoration:underline;padding:4px}
+.hbar .all{border:0;background:none;color:var(--bad);font:700 13.5px var(--font);cursor:pointer;text-decoration:underline;padding:4px}
 .empty{background:var(--card);border:1px dashed var(--line);border-radius:14px;padding:22px;text-align:center}
 .empty a{font-weight:700}
 @media(max-width:560px){.he{grid-template-columns:36px minmax(0,1fr)}.he .ac{grid-column:1/-1;justify-content:flex-start}.he .ic{width:36px;height:36px}}

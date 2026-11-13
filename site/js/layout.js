@@ -1,4 +1,4 @@
-/* ComparáTech · encabezado, pie de página y botón «Volver arriba» comunes a TODAS las páginas.
+/* KyraNoHard · encabezado, pie de página y botón «Volver arriba» comunes a TODAS las páginas.
    Así el encabezado es idéntico en cada sección (logo, menú, buscador y carrito siempre visibles). */
 (function () {
   "use strict";
@@ -22,7 +22,7 @@ const HIST_ICO = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" st
   function listCount() { try { const l = JSON.parse(localStorage.getItem("lista") || "[]"); return Array.isArray(l) ? l.length : 0; } catch { return 0; } }
 
   const header = `<header class="site"><div class="hin">
-    <a class="logo" href="index.html" aria-label="ComparáTech, ir al inicio">Compará<span>Tech</span></a>
+    <a class="logo" href="index.html" aria-label="KyraNoHard, ir al inicio"><img src="img/logo.svg" width="30" height="30" alt=""><b>Kyra<i>No</i><span>Hard</span></b></a>
     <nav aria-label="Secciones">${NAV.map(([h, t, id]) => `<a href="${h}"${id === page ? ' class="on" aria-current="page"' : ""}>${t}</a>`).join("")}</nav>
     <div class="hsearch">${LENS}<input id="qh" type="search" placeholder="Buscar productos: ryzen 5 5500, rtx 4060…" aria-label="Buscar productos" autocomplete="off"></div>
     <button class="bell" id="abtn" hidden aria-haspopup="dialog" aria-label="Avisos de bajas de precio" title="Avisos de bajas de precio">🔔</button>
@@ -32,7 +32,7 @@ const HIST_ICO = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" st
   </div></header>`;
 
   const footer = `<footer class="site"><div class="fin">
-    <div><div class="flogo">Compará<span>Tech</span></div>
+    <div><div class="flogo"><img src="img/logo.svg" width="26" height="26" alt=""><b>Kyra<i>No</i><span>Hard</span></b></div>
       <p>Comparador independiente de hardware en Argentina: precios, stock y cuotas de varias tiendas en un solo lugar, con datos técnicos verificados.</p>
       <p><b>No vendemos productos.</b> Cada botón «Ir a la tienda» te lleva al sitio del vendedor, donde se hace la compra.</p></div>
     <div><h4>Secciones</h4><ul>${[["index.html", "Inicio"]].concat(NAV.map(n => [n[0], n[1]])).map(([h, t]) => `<li><a href="${h}">${t}</a></li>`).join("")}</ul></div>
@@ -52,7 +52,7 @@ const HIST_ICO = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" st
       <p>Los precios y el stock se leen automáticamente de cada tienda y pueden cambiar: <b>verificá en la tienda antes de comprar</b>.</p>
       <p id="fupd" class="sub"></p></div>
   </div>
-  <div class="fbot"><span>© ${new Date().getFullYear()} ComparáTech · Proyecto independiente: no está afiliado, asociado ni respaldado por las tiendas ni por los fabricantes que se muestran. Marcas, logos y nombres comerciales: propiedad de sus dueños.</span>
+  <div class="fbot"><span>© ${new Date().getFullYear()} KyraNoHard · Proyecto independiente: no está afiliado, asociado ni respaldado por las tiendas ni por los fabricantes que se muestran. Marcas, logos y nombres comerciales: propiedad de sus dueños.</span>
     <button class="up" type="button" id="fup">↑ Volver arriba</button></div></footer>
   <button id="totop" type="button" aria-label="Volver arriba">↑ Volver arriba</button>`;
 
@@ -157,6 +157,8 @@ const HIST_ICO = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" st
     const on = () => { if (!t) root.classList.add("ct-scrolling"); clearTimeout(t); t = setTimeout(() => { root.classList.remove("ct-scrolling"); t = 0; }, 160); };
     document.addEventListener("scroll", on, { passive: true, capture: true });
   })();
+  // actualización 39: app instalable y apertura sin conexión (sw.js). Se registra después de cargar para no demorar nada.
+  if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => null); });
   if (document.body) mountHeader(); else document.addEventListener("DOMContentLoaded", mountHeader);
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => { mountFooter(); setupReveal(); }); else { mountFooter(); setupReveal(); }
 })();

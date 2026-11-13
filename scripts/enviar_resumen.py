@@ -43,7 +43,7 @@ def render(rows, today):
     """-> (asunto, html, texto). Si no hay bajas confiables devuelve None."""
     if not rows:
         return None
-    subject = f"ComparáTech: {len(rows)} productos bajaron de precio"
+    subject = f"KyraNoHard: {len(rows)} productos bajaron de precio"
     text = [f"📉 Bajas de precio — {today}", ""]
     li = []
     for r in rows:
@@ -57,7 +57,7 @@ def render(rows, today):
     body = (f"<div style='font-family:system-ui,Arial,sans-serif;max-width:560px;margin:auto'>"
             f"<h2>📉 Bajas de precio</h2><p style='color:#555'>Las mayores bajas confirmadas en los últimos días ({today}).</p>"
             f"<ul style='padding-left:18px'>{''.join(li)}</ul>"
-            f"<p><a href='{SITE_URL}'>Ver todos los precios en ComparáTech</a></p>"
+            f"<p><a href='{SITE_URL}'>Ver todos los precios en KyraNoHard</a></p>"
             f"<p style='color:#777;font-size:12px'>Los precios pueden cambiar o agotarse: confirmalos en la tienda antes de comprar. "
             f"Este mail no incluye envío ni garantías de las tiendas.</p></div>")
     return subject, body, "\n".join(text)
@@ -78,7 +78,7 @@ def crear_campana(subject, html, today, env=os.environ, call=brevo):
         return None
     res = call("/emailCampaigns", {
         "name": f"Bajas de precio {today}", "subject": subject, "htmlContent": html,
-        "sender": {"email": sender, "name": env.get("BREVO_SENDER_NAME", "ComparáTech")},
+        "sender": {"email": sender, "name": env.get("BREVO_SENDER_NAME", "KyraNoHard")},
         "recipients": {"listIds": [int(lst)]}}, key)
     cid = res.get("id")
     if cid and env.get("BREVO_ENVIAR_YA") == "1":

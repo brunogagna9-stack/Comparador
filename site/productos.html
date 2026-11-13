@@ -3,7 +3,28 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Productos · ComparáTech</title>
+<title>Productos · KyraNoHard</title>
+<meta name="description" content="Buscá y filtrá hardware de tiendas argentinas: precios contado y en cuotas, stock y bajas de precio de cada producto, en un solo lugar.">
+<!-- head:kyranohard -->
+<link rel="canonical" href="https://brunogagna9-stack.github.io/Comparador/productos.html">
+<link rel="icon" href="favicon.ico" sizes="48x48">
+<link rel="icon" href="img/logo.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1020" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+<meta property="og:site_name" content="KyraNoHard">
+<meta property="og:locale" content="es_AR">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://brunogagna9-stack.github.io/Comparador/productos.html">
+<meta property="og:title" content="Productos · KyraNoHard">
+<meta property="og:description" content="Buscá y filtrá hardware de tiendas argentinas: precios contado y en cuotas, stock y bajas de precio de cada producto, en un solo lugar.">
+<meta property="og:image" content="https://brunogagna9-stack.github.io/Comparador/img/og.jpg">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Logo de KyraNoHard: comparador de precios de hardware en Argentina">
+<meta name="twitter:card" content="summary_large_image">
+<!-- /head:kyranohard -->
 <link rel="stylesheet" href="css/layout.css">
 <style>
 .wrap{max-width:1280px;margin:auto;padding:16px 16px 20px;display:grid;grid-template-columns:260px minmax(0,1fr);gap:20px;align-items:start}
@@ -15,7 +36,7 @@ aside h4{margin:14px 0 6px;font-size:12px;text-transform:uppercase;letter-spacin
 .catlist button:hover{background:var(--soft)}.catlist button.on{background:color-mix(in srgb,var(--acc) 14%,transparent);font-weight:700}
 .catsel{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--soft)}
 .catsel svg{width:16px;height:16px;color:var(--acc);flex:none}.catsel b{flex:1;min-width:0}
-.catchg{border:0;background:none;color:var(--acc);font:600 13px system-ui,sans-serif;cursor:pointer;text-decoration:underline;padding:2px}
+.catchg{border:0;background:none;color:var(--acc);font:600 13px var(--font);cursor:pointer;text-decoration:underline;padding:2px}
 .fl label{display:flex;gap:7px;align-items:center;padding:2px 0;cursor:pointer}.fl .c{margin-left:auto;color:var(--mut);font-size:12px}
 select,input[type=number]{width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--tx);font:inherit}
 .rng{display:flex;gap:6px}.more{background:none;border:0;color:var(--acc);padding:4px 0;font-size:12px}
@@ -25,7 +46,7 @@ select,input[type=number]{width:100%;padding:8px;border:1px solid var(--line);bo
 .sortw{margin-left:auto;display:flex;gap:8px;align-items:center}.sortw select{width:auto}
 .summary{color:var(--mut);margin:4px 0 10px;font-size:13px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .qact{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;padding:4px 6px 4px 12px;border-radius:999px;background:color-mix(in srgb,var(--acc) 12%,var(--card));border:1px solid color-mix(in srgb,var(--acc) 45%,transparent);color:var(--tx)}
-.qact button{border:0;border-radius:999px;background:var(--acc);color:#fff;font:600 12.5px system-ui,sans-serif;padding:5px 11px;cursor:pointer}.qact button:hover{filter:brightness(1.1)}
+.qact button{border:0;border-radius:999px;background:var(--acc);color:#fff;font:600 12.5px var(--font);padding:5px 11px;cursor:pointer}.qact button:hover{filter:brightness(1.1)}
 .alert{background:var(--soft);border:1px solid var(--line);border-left:4px solid var(--up);border-radius:10px;padding:10px 14px;margin-bottom:12px}
 .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;cursor:pointer;position:relative;display:flex;flex-direction:column}
@@ -70,7 +91,7 @@ aside{border-radius:var(--r);box-shadow:var(--sh)}
 .im{border-radius:12px;background:#fff}.pr{font-size:19px;letter-spacing:-.4px}
 
 .cmpb{position:absolute;left:6px;bottom:6px;background:rgba(255,255,255,.94);border:0;border-radius:999px;padding:3px 9px;font-size:12px;font-weight:700;color:#0f172a;box-shadow:0 1px 4px rgba(0,0,0,.2);cursor:pointer}.cmpb.on{background:#1d4ed8;color:#fff}
-.addl{position:absolute;right:6px;bottom:6px;background:rgba(255,255,255,.94);border:0;border-radius:999px;padding:3px 9px;font-size:12px;font-weight:700;color:#0f172a;box-shadow:0 1px 4px rgba(0,0,0,.2)}.addl.on{background:#0b7a58;color:#fff}
+.addl{position:absolute;right:6px;bottom:6px;min-height:28px;background:rgba(255,255,255,.94);border:0;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700;color:#0f172a;box-shadow:0 1px 4px rgba(0,0,0,.2)}.addl.on{background:#0b7a58;color:#fff}
 .warnpill{display:inline-block;font-size:12px;padding:1px 7px;border-radius:999px;background:var(--warnbg);color:var(--warn);font-weight:600;margin-left:4px}
 .box{border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
 .rep{display:block;font-size:12px;color:var(--mut);font-weight:400}
@@ -94,7 +115,7 @@ aside details>*:not(summary){margin-top:6px}
   .sortw{margin-left:0;width:100%}.sortw select{flex:1;width:auto}
   .grid{gap:8px}.card{padding:7px;border-radius:12px}.card:hover{transform:none}
   .im{aspect-ratio:1/.85;margin-bottom:6px}.nm{font-size:13px;min-height:2.6em;margin-bottom:4px}.pr{font-size:16px}.sub,.st{font-size:12px}
-  .addl{padding:2px 8px;font-size:12px}
+  .addl{padding:2px 9px;font-size:12px;min-height:28px}
 }
 [hidden]{display:none!important}
 /* ---- filtros por categoría (actualización 27) ---- */
@@ -211,7 +232,7 @@ function renderSide(){
   const ico=k=>window.ICONS?ICONS.svg(k,16):"";
   $("#catbox").innerHTML=S.cat&&!S.catOpen
     ?`<h4>Categoría</h4><div class="catsel">${ico(S.cat)}<b>${esc(CATS[S.cat]||S.cat)}</b><button type="button" class="catchg" id="catchg">Cambiar</button></div>`
-    :`<h4>Categoría</h4><div class="catlist" role="list">${S.cat?`<button type="button" data-cat="" role="listitem">Todas<span class="c">${base.length}</span></button>`:""}${Object.keys(CATS).filter(k=>cc[k]||S.cat===k).map(k=>`<button type="button" data-cat="${k}" role="listitem" class="${S.cat===k?"on":""}" aria-pressed="${S.cat===k}">${ico(k)}<span>${esc(CATS[k])}</span><span class="c">${cc[k]||0}</span></button>`).join("")}</div>`;
+    :`<h4>Categoría</h4><div class="catlist" role="group" aria-label="Categorías">${S.cat?`<button type="button" data-cat="">Todas<span class="c">${base.length}</span></button>`:""}${Object.keys(CATS).filter(k=>cc[k]||S.cat===k).map(k=>`<button type="button" data-cat="${k}" class="${S.cat===k?"on":""}" aria-pressed="${S.cat===k}">${ico(k)}<span>${esc(CATS[k])}</span><span class="c">${cc[k]||0}</span></button>`).join("")}</div>`;
   // Marca: solo con una categoría elegida (muchas marcas fabrican un solo tipo de producto)
   $("#brandbox").hidden=!S.cat;
   const bb=filtered("brand"),bc={};bb.forEach(g=>{if(g.brand)bc[g.brand]=(bc[g.brand]||0)+1});
@@ -248,7 +269,7 @@ function renderChips(){
 function render(){
   const t=counts(),names={todos:"Todos",bajaron:"▼ Bajaron de precio",subieron:"▲ Subieron de precio",seguidos:"★ Seguidos"};
   $("#tabs").innerHTML=Object.keys(names).map(k=>`<button class="tab ${S.tab===k?"on":""}" data-t="${k}">${names[k]}<span class="n">${t[k]}</span></button>`).join("")+`<button class="tab" id="fbtn" aria-expanded="${$("#side").classList.contains("show")}">☰ Filtros</button>`+
-   `<div class="sortw"><span class="sub">Ordenar</span><select id="sort">${[["rel","Más relevante"],["price","Menor precio"],["priceDesc","Mayor precio"],["down","Mayor baja %"],["up","Mayor suba %"],["stores","Más tiendas"],["spread","Mayor diferencia entre tiendas"]].map(([v,l])=>`<option value="${v}" ${S.sort===v?"selected":""}>${l}</option>`).join("")}</select></div>`;
+   `<div class="sortw"><span class="sub">Ordenar</span><select id="sort" aria-label="Ordenar productos">${[["rel","Más relevante"],["price","Menor precio"],["priceDesc","Mayor precio"],["down","Mayor baja %"],["up","Mayor suba %"],["stores","Más tiendas"],["spread","Mayor diferencia entre tiendas"]].map(([v,l])=>`<option value="${v}" ${S.sort===v?"selected":""}>${l}</option>`).join("")}</select></div>`;
   $("#sort").onchange=e=>{S.sort=e.target.value;S.page=1;render()};
   const rows=filtered().sort(sorter());
   $("#sum").innerHTML=esc(`${rows.length.toLocaleString("es-AR")} resultados`+(S.tab==="bajaron"||S.tab==="subieron"?` · cambios de los últimos ${META.recent_days||14} días`:""))+
@@ -344,8 +365,8 @@ document.addEventListener("click",e=>{
 document.addEventListener("keydown",e=>{if(e.key==="Escape")$("#modal").classList.remove("on")});
 function bind(){
   const re=()=>{S.page=1;render()};
-  $("#qh").oninput=e=>{S.q=e.target.value;re()};
-  $("#catbox").onclick=e=>{const c=e.target.closest("#catchg");if(c){S.catOpen=true;renderSide();return}
+  $("#qh").oninput=e=>{S.q=e.target.value;if(!FULL)loadFull();re()};
+  $("#catbox").onclick=e=>{const c=e.target.closest("#catchg");if(c){S.catOpen=true;if(!FULL){$("#catbox").setAttribute("aria-busy","true");loadFull().then(()=>{$("#catbox").removeAttribute("aria-busy");renderSide()})}else renderSide();return}
     const b=e.target.closest("[data-cat]");if(!b)return;const v=b.dataset.cat;if(v!==S.cat){S.cat=v;S.fx={};S.brands=new Set();S.allBrands=false;S.bq="";$("#bq").value=""}S.catOpen=false;re()};
   $("#fxbox").onchange=e=>{const k=e.target.dataset.fx;if(!k)return;const set=S.fx[k]||(S.fx[k]=new Set());e.target.checked?set.add(e.target.value):set.delete(e.target.value);re()};
   const num=v=>v===""?null:Number(v);
@@ -355,25 +376,40 @@ function bind(){
   $("#stores").onchange=e=>{const b=e.target.dataset.s;e.target.checked?S.stores.add(b):S.stores.delete(b);re()};
   $("#bq").oninput=e=>{S.bq=e.target.value.toLowerCase();renderSide()};
   $("#bmore").onclick=()=>{S.allBrands=!S.allBrands;renderSide()};
-  $("#lbtn").onclick=openList;
+  $("#lbtn").onclick=()=>FULL?openList():loadFull().then(openList);
   {const A=CFG.alerts||{},ok=u=>typeof u==="string"&&/^https:\/\//.test(u);if(ok(A.email_form_url)||ok(A.whatsapp_channel_url)){$("#abtn").hidden=false;$("#abtn").onclick=openAlerts}}
   $("#reset").onclick=()=>{Object.assign(S,{cat:"",brands:new Set(),stores:new Set(),pmin:null,pmax:null,stock:false,multi:false,lowonly:false,q:"",bq:"",fx:{}});
     ["qh","pmin","pmax","bq"].forEach(i=>$("#"+i).value="");["stock","multi","lowonly"].forEach(i=>$("#"+i).checked=false);re()};
 }
-(async()=>{
-  [DATA,HIST,META,CFG,STORES]=await Promise.all([j("data/products.json",[]),j("data/history.json",{}),j("data/meta.json",{}),j("data/config.json",{stores:{}}),j("data/stores.json",{stores:{}})]);REP.set(STORES);
-  // base de hardware y fichas: completan los filtros por categoría (si no cargan, los filtros usan solo el título)
-  Promise.all([j("data/hardware.json",null),j("data/specs.json",null)]).then(([hw,sp])=>{try{if(hw&&window.FX){CX=CT.create(hw,DATA,META,sp);FX.init(CX);FX.clear(DATA);if(S.cat)render()}}catch(e){}});
+/* actualización 39: carga en dos etapas. Con una categoría en la dirección (productos.html?cat=…) primero se baja solo
+   esa categoría (data/cat/<cat>.json, unos cientos de KB) y se muestra; el catálogo completo llega después, en segundo
+   plano, y la página lo incorpora sola. Sin categoría (todas, búsqueda, mi lista) se espera el catálogo completo, como antes. */
+let FULL=false,FULLP=null,HWP=null;
+function loadFull(){return FULLP||(FULLP=Promise.all([j("data/products.json",[]),j("data/history.json",{})]).then(([d,h])=>{
+  if(Array.isArray(d)&&d.length){DATA=d;HIST=h||{};FULL=true;setupData();if(BOUND)render()}}))}
+let BOUND=false;
+function setupData(){
   DATA.forEach(g=>{if(g.image_fb)FB[g.id]=g.image_fb});
-  CTL.count(LIST.length);
-  {const h=META.updated?(Date.now()-new Date(META.updated).getTime())/36e5:null,el=$("#fresh");
-   el.className="fresh"+(h==null?" old":h>24?" old":h>12?" mid":"");
-   el.innerHTML=h==null?"<i></i>Sin fecha de actualización":`<i></i>Actualizado ${h<1?"hace menos de 1 h":h<48?"hace "+Math.round(h)+" h":"hace "+Math.round(h/24)+" días"}`;}
   const sc={};DATA.forEach(g=>g.offers.forEach(o=>sc[o.store]=(sc[o.store]||0)+1));
   // tiendas visibles en el menú: con productos y leídas bien en la última actualización. Las demás (bloqueadas, sin
   // productos u ocultadas en config.json) quedan ocultas, no borradas: vuelven solas cuando se lean bien.
   const showStore=s=>{const m=(META.stores||{})[s];return (sc[s]||0)>0&&!(m&&(m.hidden||!m.ok))&&!((CFG.stores||{})[s]||{}).ocultar};
-  $("#stores").innerHTML=Object.keys(META.stores||sc).filter(showStore).map(s=>{const m=(META.stores||{})[s];return `<label title="${esc(m&&m.error||"")}"><input type="checkbox" data-s="${esc(s)}"> ${esc(s)}${m&&!m.ok?" ⚠️":""}<span class="c">${sc[s]||0}</span></label>`}).join("");
+  $("#stores").innerHTML=Object.keys(META.stores||sc).filter(showStore).map(s=>{const m=(META.stores||{})[s];return `<label title="${esc(m&&m.error||"")}"><input type="checkbox" data-s="${esc(s)}"${S.stores.has(s)?" checked":""}> ${esc(s)}${m&&!m.ok?" ⚠️":""}<span class="c">${sc[s]||0}</span></label>`}).join("");
+  // base de hardware y fichas: completan los filtros por categoría (si no cargan, los filtros usan solo el título)
+  HWP=HWP||Promise.all([j("data/hardware.json",null),j("data/specs.json",null)]);
+  const mine=DATA;HWP.then(([hw,sp])=>{try{if(hw&&window.FX&&mine===DATA){CX=CT.create(hw,DATA,META,sp);FX.init(CX);FX.clear(DATA);if(S.cat&&BOUND)render()}}catch(e){}});
+}
+(async()=>{
+  const u0=new URLSearchParams(location.search),cat0=u0.get("cat")&&CATS[u0.get("cat")]?u0.get("cat"):"";
+  const fast=cat0&&!u0.get("q")&&!u0.get("lista")&&u0.get("tab")!=="seguidos";
+  const part=fast?j(`data/cat/${cat0}.json`,null):null;
+  [META,CFG,STORES]=await Promise.all([j("data/meta.json",{}),j("data/config.json",{stores:{}}),j("data/stores.json",{stores:{}})]);REP.set(STORES);
+  const p=part&&await part;
+  if(p&&Array.isArray(p.g)&&p.g.length){DATA=p.g;HIST=p.h||{};setupData()}else await loadFull();
+  CTL.count(LIST.length);
+  {const h=META.updated?(Date.now()-new Date(META.updated).getTime())/36e5:null,el=$("#fresh");
+   el.className="fresh"+(h==null?" old":h>24?" old":h>12?" mid":"");
+   el.innerHTML=h==null?"<i></i>Sin fecha de actualización":`<i></i>Actualizado ${h<1?"hace menos de 1 h":h<48?"hace "+Math.round(h)+" h":"hace "+Math.round(h/24)+" días"}`;}
   if(META.demo)$("#demo").innerHTML='<div class="demo">Datos de ejemplo (inventados) para probar el diseño.</div>';
   {const u=new URLSearchParams(location.search);
    if(u.get("q")){S.q=u.get("q").slice(0,120);$("#qh").value=S.q}
@@ -381,8 +417,9 @@ function bind(){
    if(S.cat)for(const [k,v] of u)if(k.startsWith("f_")&&v)S.fx[k.slice(2)]=new Set(v.split("~").slice(0,20));
    if(["bajaron","subieron","seguidos"].includes(u.get("tab"))){S.tab=u.get("tab");if(S.tab==="bajaron")S.sort="down";if(S.tab==="subieron")S.sort="up"}
    const p=parseInt(u.get("p"),10);if(p>0)S.page=p;
-   bind();alertBox();render();
+   bind();BOUND=true;alertBox();render();
    if(u.get("lista"))openList();else if(u.get("avisos")&&!$("#abtn").hidden)openAlerts();}
+  if(!FULL)(window.requestIdleCallback||(f=>setTimeout(f,400)))(()=>loadFull(),{timeout:3000});
 })();
 </script>
 <script src="js/lib.js"></script><script src="js/facets.js"></script><script src="js/icons.js"></script><script src="js/rep.js"></script><script src="js/detail.js"></script><script src="js/assistant.js"></script>

@@ -1,4 +1,4 @@
-/* ComparáTech · filtros propios de cada categoría (actualización 27).
+/* KyraNoHard · filtros propios de cada categoría (actualización 27).
    Cada filtro saca su valor de: 1) la ficha técnica guardada (specs.json), 2) la base de hardware
    (procesadores y placas de video, datos de los fabricantes) o 3) el título que publicó la tienda.
    Si el dato no aparece en ninguna parte, el producto cae en «Sin dato»: nunca se inventa.

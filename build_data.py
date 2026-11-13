@@ -461,6 +461,49 @@ def write_shards(groups, hist, data_dir=None):
         (d / f"{i:02d}.json").write_text(json.dumps(part, ensure_ascii=False, separators=(",", ":")))
 
 
+def category_files(groups, hist):
+    """Actualización 39: un archivo por categoría (site/data/cat/<categoría>.json) con sus productos completos y el
+    historial de sus ofertas. «Productos» abierto en una categoría muestra eso al instante y baja el catálogo entero
+    después, en segundo plano (antes esperaba ~4 MB para mostrar el primer resultado)."""
+    out = {}
+    for g in groups:
+        part = out.setdefault(g.get("category") or "otros", {"v": 1, "g": [], "h": {}})
+        part["g"].append(g)
+        for o in g.get("offers") or []:
+            k = o.get("k")
+            if k and k in hist:
+                part["h"][k] = hist[k]
+    return out
+
+
+def write_categories(groups, hist, data_dir=None):
+    d = Path(data_dir or DATA) / "cat"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / ".gitignore").write_text("*.json\n")       # se regeneran en cada corrida y solo se publican
+    for old in d.glob("*.json"):
+        old.unlink()
+    for cat, part in category_files(groups, hist).items():
+        if re.fullmatch(r"[a-z0-9-]+", cat):
+            (d / f"{cat}.json").write_text(json.dumps(part, ensure_ascii=False, separators=(",", ":")))
+
+
+SITE_URL = os.environ.get("SITE_URL", "https://brunogagna9-stack.github.io/Comparador/")
+
+
+def write_sitemap(groups, updated=None, site_dir=None):
+    """Actualización 39: mapa con todas las fichas de producto que tienen al menos una oferta con precio
+    (site/sitemap-productos.xml, lo enlaza sitemap.xml). Un mapa admite hasta 50.000 direcciones."""
+    from urllib.parse import quote
+    from xml.sax.saxutils import escape
+    day = (updated or "")[:10]
+    urls = [g["id"] for g in groups if g.get("id") and any((o.get("price_cash") or o.get("price_list")) for o in g.get("offers") or [])]
+    rows = [f"<url><loc>{escape(SITE_URL + 'producto.html?id=' + quote(i, safe=''))}</loc>" + (f"<lastmod>{day}</lastmod>" if day else "") + "</url>"
+            for i in urls[:50000]]
+    xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + "\n".join(rows) + "\n</urlset>\n"
+    (Path(site_dir or DATA.parent) / "sitemap-productos.xml").write_text(xml, encoding="utf-8")
+    return len(rows)
+
+
 ARMAR_PER_CATS = ("mouses", "teclados", "auriculares")   # actualización 35: se descargan aparte, solo al elegir un periférico
 ARMAR_OFFER = ("store", "url", "price_cash", "price_list", "stock", "cuotas", "anom")
 
@@ -586,6 +629,8 @@ def main(only):
     (DATA / "home.json").write_text(json.dumps(home_summary(groups), ensure_ascii=False, separators=(",", ":")))
     (DATA / "buscar.json").write_text(json.dumps(search_index(groups), ensure_ascii=False, separators=(",", ":")))
     write_shards(groups, hist)
+    write_categories(groups, hist)
+    write_sitemap(groups, dt.datetime.now(dt.timezone.utc).isoformat())
     (DATA / "meta.json").write_text(json.dumps({
         "updated": dt.datetime.now(dt.timezone.utc).isoformat(timespec="minutes"),
         "stores": status, "specs": spec_status, "groups": len(groups), "demo": False}, ensure_ascii=False))

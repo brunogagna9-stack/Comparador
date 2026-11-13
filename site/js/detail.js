@@ -1,4 +1,4 @@
-/* ComparáTech · piezas de detalle de producto compartidas (ventana de detalle de «Productos» y página producto.html). */
+/* KyraNoHard · piezas de detalle de producto compartidas (ventana de detalle de «Productos» y página producto.html). */
 (function (root) {
   "use strict";
   const DET = {};
@@ -41,7 +41,7 @@
     const cu=o.cuotas?esc(o.cuotas):(CFG.stores[o.store]?.cuotas&&o.price_list?`${CFG.stores[o.store].cuotas.n} cuotas${CFG.stores[o.store].cuotas.sin_interes?" sin interés":""} de ${ARS(o.price_list/CFG.stores[o.store].cuotas.n)}`:'<span class="sub">consultar</span>');
     return `<tr class="${k===0?"best":""}"><td><b>${esc(o.store)}</b>${rt}${REP.badge(o.store)}${stale(o.store)?'<span class="warnpill">dato viejo</span>':""}${o.anom?'<span class="warnpill">precio inusual</span>':""}</td><td class="n">${ARS(o.price_cash)}${ch}</td><td class="n">${ARS(o.price_list)}</td><td>${cu}</td><td>${st}</td><td><a target="_blank" rel="noopener nofollow" href="${esc(o.url)}">Ir a la tienda ↗</a></td></tr>`}).join("");
   };
-  DET.offersTable = (g, ctx) => `<div class="tw2"><table><tr><th>Tienda</th><th class="n">Efectivo / transf.</th><th class="n">Lista / tarjeta</th><th>Cuotas</th><th>Stock</th><th></th></tr>${DET.offerRows(g, ctx)}</table></div>`;
+  DET.offersTable = (g, ctx) => `<div class="tw2" tabindex="0" role="region" aria-label="Precios por tienda"><table><tr><th>Tienda</th><th class="n">Efectivo / transf.</th><th class="n">Lista / tarjeta</th><th>Cuotas</th><th>Stock</th><th></th></tr>${DET.offerRows(g, ctx)}</table></div>`;
   DET.url = id => "producto.html?id=" + encodeURIComponent(id);
   if (typeof module !== "undefined" && module.exports) module.exports = DET; else root.DET = DET;
 })(typeof self !== "undefined" ? self : this);

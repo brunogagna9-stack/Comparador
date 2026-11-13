@@ -1,0 +1,22 @@
+{
+ "name": "KyraNoHard · Precios de hardware en Argentina",
+ "short_name": "KyraNoHard",
+ "description": "Compará precios, stock y cuotas de hardware en tiendas argentinas, armá tu PC y fijate qué conviene actualizar.",
+ "lang": "es-AR",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "background_color": "#0b1020",
+ "theme_color": "#2563eb",
+ "icons": [
+  {"src": "img/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+  {"src": "img/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+  {"src": "img/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"},
+  {"src": "img/logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}
+ ],
+ "shortcuts": [
+  {"name": "Productos", "url": "productos.html", "icons": [{"src": "img/icon-192.png", "sizes": "192x192"}]},
+  {"name": "Armado de PC", "url": "armado.html", "icons": [{"src": "img/icon-192.png", "sizes": "192x192"}]},
+  {"name": "Comparar hardware", "url": "comparar.html", "icons": [{"src": "img/icon-192.png", "sizes": "192x192"}]}
+ ]
+}

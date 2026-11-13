@@ -3,7 +3,28 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Comparar hardware · ComparáTech</title>
+<title>Comparar hardware · KyraNoHard</title>
+<meta name="description" content="Compará procesadores, placas de video, memorias y más, lado a lado: especificaciones de fábrica, ventajas de cada uno y precios.">
+<!-- head:kyranohard -->
+<link rel="canonical" href="https://brunogagna9-stack.github.io/Comparador/comparar.html">
+<link rel="icon" href="favicon.ico" sizes="48x48">
+<link rel="icon" href="img/logo.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1020" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+<meta property="og:site_name" content="KyraNoHard">
+<meta property="og:locale" content="es_AR">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://brunogagna9-stack.github.io/Comparador/comparar.html">
+<meta property="og:title" content="Comparar hardware · KyraNoHard">
+<meta property="og:description" content="Compará procesadores, placas de video, memorias y más, lado a lado: especificaciones de fábrica, ventajas de cada uno y precios.">
+<meta property="og:image" content="https://brunogagna9-stack.github.io/Comparador/img/og.jpg">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Logo de KyraNoHard: comparador de precios de hardware en Argentina">
+<meta name="twitter:card" content="summary_large_image">
+<!-- /head:kyranohard -->
 <link rel="stylesheet" href="css/shared.css">
 <link rel="stylesheet" href="css/layout.css">
 <style>
@@ -30,7 +51,7 @@ details.nod{margin-top:10px;background:var(--card);border:1px solid var(--line2)
 .radar{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
 .catbar .cmpn{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;margin-left:6px;border-radius:999px;background:#1d4ed8;color:#fff;font-size:12px;font-weight:800}
 .saved{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 12px;padding:10px 12px;border:1px solid color-mix(in srgb,var(--acc) 40%,var(--line));border-radius:12px;background:color-mix(in srgb,var(--acc) 8%,var(--card))}
-.saved button{border:1px solid var(--line2,var(--line));background:var(--card);color:var(--tx);border-radius:999px;padding:6px 12px;font:600 13px system-ui,sans-serif;cursor:pointer}
+.saved button{border:1px solid var(--line2,var(--line));background:var(--card);color:var(--tx);border-radius:999px;padding:6px 12px;font:600 13px var(--font);cursor:pointer}
 .saved button.on{background:#1d4ed8;border-color:#1d4ed8;color:#fff}
 .dd button{align-items:center}.dd .dn{display:flex;align-items:center;gap:10px;min-width:0}.dd .dn>span:last-child{min-width:0}
 .pill{padding:4px 8px 4px 4px}.pill .ct-th{border-radius:50%}
@@ -118,7 +139,7 @@ function radar(cmp){
   ax.forEach((a,i)=>{const [x,y]=pt(i,100),[lx,ly]=pt(i,118);svg+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--line)"/><text x="${lx}" y="${ly}" font-size="12" font-weight="600" fill="var(--tx)" text-anchor="${lx<cx-8?"end":lx>cx+8?"start":"middle"}" dominant-baseline="middle">${esc(RL(a.label))}</text>`});
   cmp.items.forEach((it,j)=>{const p=ax.map((a,i)=>pt(i,a.vals[j]).join(",")).join(" ");svg+=`<polygon points="${p}" fill="${COL[j]}" fill-opacity=".18" stroke="${COL[j]}" stroke-width="2"/>`});
   svg+="</svg>";
-  return `<h2>Vista general</h2><div class="panel radar">${svg}<div style="flex:1;min-width:220px"><div class="rleg">${cmp.items.map((it,j)=>`<div style="--c:${COL[j]}">${ICONS.thumb(byId(S.ids[j])||{category:cmp.cat},56)}<span><span style="color:${COL[j]}">●</span> ${esc(it.name.slice(0,60))}</span></div>`).join("")}</div><p class="note">Puntuación relativa calculada por ComparáTech ${tagH("est")}: 100 = el mejor de esta comparación en cada métrica (si menos es mejor, se invierte). Solo incluye métricas con dato para todos. No es un benchmark.</p></div></div>`;
+  return `<h2>Vista general</h2><div class="panel radar">${svg}<div style="flex:1;min-width:220px"><div class="rleg">${cmp.items.map((it,j)=>`<div style="--c:${COL[j]}">${ICONS.thumb(byId(S.ids[j])||{category:cmp.cat},56)}<span><span style="color:${COL[j]}">●</span> ${esc(it.name.slice(0,60))}</span></div>`).join("")}</div><p class="note">Puntuación relativa calculada por KyraNoHard ${tagH("est")}: 100 = el mejor de esta comparación en cada métrica (si menos es mejor, se invierte). Solo incluye métricas con dato para todos. No es un benchmark.</p></div></div>`;
 }
 
 /* ---------- veredicto ---------- */

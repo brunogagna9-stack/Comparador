@@ -1,4 +1,4 @@
-/* ComparáTech · desplegable con buscador y fotos (actualización 35).
+/* KyraNoHard · desplegable con buscador y fotos (actualización 35).
    COMBO.mount(input, {items, onPick, limit, empty}) convierte un <input> en un campo con autocompletado:
    - items: lista [{label, value, sub, thumb, keys}] o función que la devuelve (se busca en label + keys).
    - al elegir, el campo queda con item.value (o label) y se llama onPick(item); también se puede escribir libre.

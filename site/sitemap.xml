@@ -1,15 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://brunogagna9-stack.github.io/Comparador/</loc><changefreq>hourly</changefreq><priority>1.0</priority></url>
-  <url><loc>https://brunogagna9-stack.github.io/Comparador/productos.html</loc><changefreq>hourly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://brunogagna9-stack.github.io/Comparador/armado.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://brunogagna9-stack.github.io/Comparador/armar.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://brunogagna9-stack.github.io/Comparador/comparar.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://brunogagna9-stack.github.io/Comparador/actualizar.html</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://brunogagna9-stack.github.io/Comparador/encontra.html</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://brunogagna9-stack.github.io/Comparador/tiendas.html</loc><changefreq>daily</changefreq><priority>0.6</priority></url>
-  <url><loc>https://brunogagna9-stack.github.io/Comparador/preguntas.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
-  <url><loc>https://brunogagna9-stack.github.io/Comparador/contacto.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
-  <url><loc>https://brunogagna9-stack.github.io/Comparador/privacidad.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
-  <url><loc>https://brunogagna9-stack.github.io/Comparador/terminos.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
-</urlset>
+<!-- KyraNoHard · índice de mapas del sitio (actualización 39): las páginas fijas y todas las fichas de producto.
+     sitemap-productos.xml se genera en cada actualización de precios (build_data.py → write_sitemap). -->
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap><loc>https://brunogagna9-stack.github.io/Comparador/sitemap-paginas.xml</loc></sitemap>
+  <sitemap><loc>https://brunogagna9-stack.github.io/Comparador/sitemap-productos.xml</loc></sitemap>
+</sitemapindex>

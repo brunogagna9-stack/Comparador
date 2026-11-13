@@ -1,0 +1,54 @@
+name: Control de calidad
+
+# Actualización 39. Revisa el sitio con herramientas de código abierto cuando cambia su código (no en cada
+# actualización de precios): html-validate, ESLint, Ruff, axe-core (accesibilidad) y Lighthouse.
+# Es una revisión aparte: si falla, avisa con una cruz roja, pero NO frena la publicación de precios.
+# El resumen con los puntajes queda en la ejecución (pestaña Actions → «Control de calidad» → Summary).
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "site/*.html"
+      - "site/js/**"
+      - "site/css/**"
+      - "*.py"
+      - "scrapers/**"
+      - "scripts/**"
+      - "calidad/**"
+      - ".github/workflows/calidad.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: calidad
+  cancel-in-progress: true
+
+jobs:
+  revisar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Ruff (errores en Python)
+        run: |
+          pip install ruff==0.16.9
+          ruff check --select E9,F63,F7,F82 .
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: calidad/package-lock.json
+      - name: Instalar herramientas
+        working-directory: calidad
+        run: |
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Revisar el sitio
+        working-directory: calidad
+        run: node revisar.js

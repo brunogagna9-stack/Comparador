@@ -1,4 +1,4 @@
-/* ComparáTech · motor de "Encontrá tu equipo": traduce respuestas sencillas en requisitos y busca productos REALES del catálogo. */
+/* KyraNoHard · motor de "Encontrá tu equipo": traduce respuestas sencillas en requisitos y busca productos REALES del catálogo. */
 (function (root) {
   "use strict";
   const CT = root.CT || require("./lib.js");

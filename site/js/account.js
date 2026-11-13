@@ -1,4 +1,4 @@
-/* ComparáTech · cuentas de usuario con Supabase (actualización 32).
+/* KyraNoHard · cuentas de usuario con Supabase (actualización 32).
    APAGADO mientras data/config.json no tenga "accounts" completo: sin eso no se carga nada y el sitio funciona igual que antes.
    Con cuenta, lo que ya se guarda en el navegador («seg» = productos seguidos, «historial» = armados y comparaciones)
    se copia a la cuenta y vuelve a cualquier dispositivo donde la persona inicie sesión.
@@ -82,7 +82,7 @@
   A.ready = (async () => {
     let cfg = null; try { const r = await fetch("data/config.json", { cache: "no-cache" }); cfg = r.ok ? await r.json() : null; } catch (e) { }
     const v = A.validCfg(cfg && cfg.accounts);
-    if (!v.ok) { A.status = v.why; if (v.why === "secret") console.error("ComparáTech: config.json tiene una clave SECRETA de Supabase. No se usa. Borrala de inmediato y rotala en Supabase."); fire("acc:ready", A); return A; }
+    if (!v.ok) { A.status = v.why; if (v.why === "secret") console.error("KyraNoHard: config.json tiene una clave SECRETA de Supabase. No se usa. Borrala de inmediato y rotala en Supabase."); fire("acc:ready", A); return A; }
     try { await loadScript(SB_JS); } catch (e) { A.status = "error"; fire("acc:ready", A); return A; }
     sb = root.supabase.createClient(v.url, v.key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
     A.enabled = true;
@@ -139,7 +139,7 @@
       put(BK, nb);
       fire("acc:synced", { ok: true, changed: changed || JSON.stringify(mf.out) !== JSON.stringify(locF) });
     } catch (e) {
-      console.warn("ComparáTech: no se pudo sincronizar la cuenta", e); fire("acc:synced", { ok: false, error: e.message || String(e) });
+      console.warn("KyraNoHard: no se pudo sincronizar la cuenta", e); fire("acc:synced", { ok: false, error: e.message || String(e) });
     } finally { busy = false; if (again) { again = false; setTimeout(A.sync, 300); } }
   };
 

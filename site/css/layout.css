@@ -1,4 +1,7 @@
-/* ComparáTech · estilos comunes a TODAS las páginas: colores (con contraste), encabezado único, pie de página y botones.
+/* Inter (código abierto, licencia OFL: fonts/Inter-OFL.txt), alojada en el propio sitio: sin pedidos a Google. */
+@font-face{font-family:Inter;font-style:normal;font-weight:100 900;font-display:swap;src:url(../fonts/inter-latin.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+:root{--font:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+/* KyraNoHard · estilos comunes a TODAS las páginas: colores (con contraste), encabezado único, pie de página y botones.
    Se carga después de shared.css, así que estas reglas mandan. */
 :root{
   --bg:#e7ebf3;--card:#ffffff;--card2:#f6f8fc;--tx:#0f172a;--mut:#46546b;--line:#c2cddf;--line2:#9fb0cc;
@@ -15,8 +18,12 @@
   --up:#ff8f84;--down:#52d1a3;--best:#143a30;--hbg:rgba(10,15,30,.97);
 }}
 *{box-sizing:border-box}
-body{margin:0;color:var(--tx);font:14px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;-webkit-font-smoothing:antialiased}
-a{color:var(--acc);text-decoration:none}button{font:inherit;cursor:pointer}
+body{margin:0;color:var(--tx);font:14px/1.5 var(--font);-webkit-font-smoothing:antialiased}
+a{color:var(--acc);text-decoration:none}
+/* actualización 39: el contenido ocupa al menos la pantalla; así el pie no aparece arriba mientras se dibuja la página y después salta */
+main{min-height:calc(100vh - 64px)}
+/* actualización 39: los enlaces dentro de un texto se distinguen también con subrayado, no solo con el color (WCAG 1.4.1) */
+main :where(p,li,td,dd,span,.box,.note,.lead,.sub,small,label,figcaption)>a:not([class]),.modal :where(p,li,td,dd,.note)>a:not([class]){text-decoration:underline;text-underline-offset:2px;text-decoration-thickness:1px}button{font:inherit;cursor:pointer}
 [hidden]{display:none!important}
 body{background:var(--bg)}
 body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(1100px 380px at 50% -140px,color-mix(in srgb,var(--acc) 12%,transparent),transparent)}
@@ -24,7 +31,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
 /* ---- encabezado único ---- */
 header.site{position:sticky;top:0;z-index:40;background:var(--hbg);border-bottom:1px solid var(--line)}
 header.site .hin{max-width:1280px;margin:auto;padding:0 16px;height:var(--hh);display:flex;align-items:center;gap:14px}
-header.site .logo{font-weight:800;font-size:19px;letter-spacing:-.4px;color:var(--tx);white-space:nowrap}
+header.site .logo{display:inline-flex;align-items:center;gap:8px;font-weight:800;font-size:19px;letter-spacing:-.4px;color:var(--tx);white-space:nowrap}
+header.site .logo img,footer.site .flogo img{flex:none;display:block}
+header.site .logo i,footer.site .flogo i{font-style:normal;font-weight:500;color:var(--mut)}
 header.site .logo span{background:var(--gradt);-webkit-background-clip:text;background-clip:text;color:transparent}
 header.site nav{display:flex;gap:2px;align-items:center}
 header.site nav a{color:var(--mut);padding:7px 11px;border-radius:999px;font-weight:600;white-space:nowrap;transition:background .15s,color .15s;margin:0;border:0}
@@ -61,13 +70,13 @@ footer.site .fin{max-width:1280px;margin:auto;padding:30px 16px 20px;display:gri
 footer.site h4{margin:0 0 9px;color:var(--tx);font-size:13px;text-transform:uppercase;letter-spacing:.5px}
 footer.site a{color:var(--mut)}footer.site a:hover{color:var(--tx);text-decoration:underline}
 footer.site ul{list-style:none;margin:0;padding:0}footer.site li{margin:5px 0}
-footer.site .flogo{font-weight:800;font-size:18px;color:var(--tx);margin-bottom:6px}footer.site .flogo span{color:var(--acc)}
+footer.site .flogo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:18px;letter-spacing:-.3px;color:var(--tx);margin-bottom:6px}footer.site .flogo span{color:var(--acc)}
 footer.site p{margin:0 0 8px;line-height:1.5}
 footer.site .fbot{border-top:1px solid var(--line);max-width:1248px;width:calc(100% - 32px);margin:auto;padding:14px 0 90px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-size:12px}
 footer.site .up{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;border:1px solid var(--line2);background:var(--card2);color:var(--tx);font:inherit;font-weight:700;cursor:pointer}
 footer.site .up:hover{background:var(--soft)}
 @media(max-width:800px){footer.site .fin{grid-template-columns:1fr 1fr;gap:20px}footer.site .fin>div:first-child{grid-column:1/-1}}
-#totop{position:fixed;right:16px;bottom:74px;z-index:60;display:none;align-items:center;gap:6px;padding:10px 14px;border-radius:999px;border:1px solid var(--line2);background:var(--card);color:var(--tx);font:700 13px system-ui,sans-serif;cursor:pointer;box-shadow:var(--sh)}
+#totop{position:fixed;right:16px;bottom:74px;z-index:60;display:none;align-items:center;gap:6px;padding:10px 14px;border-radius:999px;border:1px solid var(--line2);background:var(--card);color:var(--tx);font:700 13px var(--font);cursor:pointer;box-shadow:var(--sh)}
 #totop.on{display:inline-flex}#totop:hover{background:var(--soft)}
 
 /* ---- botones y fichas con contraste ---- */
@@ -137,7 +146,7 @@ html.ct-scrolling .card,html.ct-scrolling .prow,html.ct-scrolling .tile,html.ct-
 /* publicidad (apagada hasta configurar data/config.json) y aviso de cookies */
 .ad-slot{margin:18px 0;padding:8px;border:1px dashed var(--line);border-radius:12px;min-height:100px}.ad-slot .ad-lbl{display:block;font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
 #ckbar{position:fixed;left:16px;right:16px;bottom:16px;z-index:9997;max-width:720px;margin:auto;display:flex;gap:12px;align-items:center;background:var(--card);color:var(--tx);border:1px solid var(--line2,var(--line));border-radius:14px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
-#ckbar p{margin:0;font-size:14px;flex:1}#ckbar button{border:0;border-radius:999px;padding:9px 16px;background:#2563eb;color:#fff;font:700 14px system-ui,sans-serif;cursor:pointer}
+#ckbar p{margin:0;font-size:14px;flex:1}#ckbar button{border:0;border-radius:999px;padding:9px 16px;background:#2563eb;color:#fff;font:700 14px var(--font);cursor:pointer}
 
 header.site .acct[hidden]{display:none}
 header.site .acct.in{border-color:#2563eb;color:#2563eb}
@@ -153,6 +162,6 @@ header.site .acct.in::after{content:"";position:absolute;right:2px;bottom:2px;wi
 .sr-t{min-width:0;display:flex;flex-direction:column}.sr-n{font-size:13.5px;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .sr-t small{color:var(--mut);font-size:12px}.sr-dd b{font-size:14px;white-space:nowrap}
 .sr-dd mark{background:color-mix(in srgb,var(--acc) 26%,transparent);color:inherit;border-radius:3px;padding:0 1px}
-.sr-all{display:block;width:100%;border:0;background:none;color:var(--acc);font:600 13.5px system-ui,sans-serif;padding:10px 12px;text-align:left;cursor:pointer}
+.sr-all{display:block;width:100%;border:0;background:none;color:var(--acc);font:600 13.5px var(--font);padding:10px 12px;text-align:left;cursor:pointer}
 .sr-m{padding:12px;color:var(--mut);font-size:13px}
 @media(max-width:640px){.sr-dd a{grid-template-columns:40px minmax(0,1fr) auto}.sr-im{width:40px;height:40px}}

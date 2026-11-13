@@ -1,4 +1,4 @@
-/* ComparáTech · asistente virtual.
+/* KyraNoHard · asistente virtual.
    Motor local (reglas + datos de la página y del catálogo) con respaldo opcional de una IA a través de un proxy propio.
    Orden de confianza de cada respuesta:  1) estado de la página  2) catálogo verificado (productos, fichas, tiendas)
    3) explicación general (marcada como tal)  4) "no tengo ese dato".
@@ -30,7 +30,7 @@
     { re: /cuello de botella|bottleneck/, term: "Cuello de botella", text: "Ocurre cuando un componente limita el rendimiento de otro, por ejemplo un procesador lento que no deja lucirse a una placa de video potente. No es una falla: se resuelve equilibrando las piezas." },
     { re: /\bfps\b|cuadros por segundo/, term: "FPS", text: "Son los cuadros por segundo del juego. Alrededor de 30 es jugable pero poco fluido, 60 es lo cómodo y 100 o más se aprecia en juegos competitivos con monitor de alta frecuencia." },
     { re: /dlss|fsr|frame ?gen|escalado/, term: "DLSS, FSR y generación de cuadros", text: "Son técnicas que renderizan a menor resolución y escalan la imagen, o inventan cuadros intermedios, para dar más FPS. Ayudan, pero dependen de cada juego y de la placa, y no reemplazan la potencia bruta." },
-    { re: /\bwh\b|\bmah\b|autonomia|bateria/, term: "Batería y autonomía", text: "La capacidad se mide en Wh (vatios-hora); los mAh no son comparables sin conocer el voltaje. La autonomía que anuncia un fabricante se mide en pruebas livianas y casi nunca coincide con el uso real. ComparáTech no la usa como si fuera un dato medido." },
+    { re: /\bwh\b|\bmah\b|autonomia|bateria/, term: "Batería y autonomía", text: "La capacidad se mide en Wh (vatios-hora); los mAh no son comparables sin conocer el voltaje. La autonomía que anuncia un fabricante se mide en pruebas livianas y casi nunca coincide con el uso real. KyraNoHard no la usa como si fuera un dato medido." },
     { re: /garantia oficial|garantia de la tienda|garantia/, term: "Garantía", text: "La garantía oficial la da el fabricante y se rige por sus plazos. Muchas tiendas suman una garantía propia más corta, o una prueba de pocos días. Conviene leer la política de la tienda antes de comprar." },
     { re: /cuota|precio de lista|contado|efectivo/, term: "Precio de contado y de lista", text: "El precio de contado (efectivo o transferencia) suele ser menor que el de lista, que es el que se usa para las cuotas. Mostramos el de contado como referencia y marcamos las cuotas que cada tienda informa." },
     { re: /pc armada|armar|por componentes/, term: "PC armada o por componentes", text: "Una PC armada llega lista y con garantía del conjunto; por componentes suele rendir más por el mismo dinero y se puede mejorar pieza por pieza, pero hay que cuidar la compatibilidad y armarla." },
@@ -137,7 +137,7 @@
     };
 
     const reply = (blocks, o = {}) => Object.assign({ blocks, links: [], follow: [], src: "local", basis: "general" }, o);
-    const BASIS = { app: "Basado en lo que ves en la página", cat: "Basado en el catálogo de ComparáTech", gen: "Explicación general (no es un dato de una tienda)", none: "Sin datos suficientes" };
+    const BASIS = { app: "Basado en lo que ves en la página", cat: "Basado en el catálogo de KyraNoHard", gen: "Explicación general (no es un dato de una tienda)", none: "Sin datos suficientes" };
 
     /* ---- respuestas por tema ---- */
     function aboutTags() {
@@ -150,7 +150,7 @@
       const S = (STORES && STORES.stores) || {}, names = wanted.length ? wanted : null;
       if (!names) {
         const live = Object.keys(S).filter(k => S[k].integration !== "no disponible"), down = Object.keys(S).filter(k => S[k].integration === "no disponible");
-        return reply([P("Tiendas con precios en ComparáTech: " + (live.join(", ") || "ninguna") + "."), down.length ? P("Por ahora sin datos: " + down.map(k => `${k} (${S[k].how})`).join("; ") + ".") : P(""),
+        return reply([P("Tiendas con precios en KyraNoHard: " + (live.join(", ") || "ninguna") + "."), down.length ? P("Por ahora sin datos: " + down.map(k => `${k} (${S[k].how})`).join("; ") + ".") : P(""),
           P("Preguntame por una tienda en particular (por ejemplo «¿es confiable GoldenTech?») y te cuento su reputación verificada, contacto y garantía.")], { basis: "cat" });
       }
       const blocks = [];
@@ -271,7 +271,7 @@
       ctx = ctx || {};
       const q = norm(question).trim();
       if (!q) return reply([P("Escribí tu pregunta y te ayudo.")], { basis: "none" });
-      if (has(q, /^(hola|buenas|buen dia|buenas tardes|buenas noches|hey|que tal)\b/) && q.length < 25) return reply([P("¡Hola! Soy el asistente de ComparáTech. Puedo explicarte términos técnicos, comparar productos, contarte qué datos tenemos de las tiendas y recomendarte un equipo. ¿Qué necesitás?")], { basis: "gen", follow: A.suggestions(ctx) });
+      if (has(q, /^(hola|buenas|buen dia|buenas tardes|buenas noches|hey|que tal)\b/) && q.length < 25) return reply([P("¡Hola! Soy el asistente de KyraNoHard. Puedo explicarte términos técnicos, comparar productos, contarte qué datos tenemos de las tiendas y recomendarte un equipo. ¿Qué necesitás?")], { basis: "gen", follow: A.suggestions(ctx) });
       const stores = Object.keys(STORE_ALIASES).filter(k => STORE_ALIASES[k].test(q));
       if (A.state.rec && !has(q, /^(que es|cuanto|precio)/)) return recommend(question, ctx);
       if (has(q, /etiqueta|verificado|estimado|pendiente de verif|sin datos|que significa (el|la) (cartel|marca)/)) return aboutTags();
@@ -332,9 +332,9 @@
 
   /* ---------------- widget (solo navegador) ---------------- */
   const CSS = `
-#ctas-btn{position:fixed;right:16px;bottom:16px;z-index:9998;display:flex;align-items:center;gap:8px;padding:12px 16px;border:0;border-radius:999px;background:#2a56d8;color:#fff;font:600 14px system-ui,sans-serif;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+#ctas-btn{position:fixed;right:16px;bottom:16px;z-index:9998;display:flex;align-items:center;gap:8px;padding:12px 16px;border:0;border-radius:999px;background:#2a56d8;color:#fff;font:600 14px var(--font);cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.25)}
 #ctas-btn:focus-visible,#ctas-p button:focus-visible,#ctas-p input:focus-visible,#ctas-p a:focus-visible{outline:3px solid #ffb703;outline-offset:2px}
-#ctas-p{position:fixed;right:16px;bottom:16px;z-index:9999;width:min(380px,calc(100vw - 32px));height:min(560px,calc(100dvh - 32px));display:none;flex-direction:column;background:var(--card,#fff);color:var(--tx,#16191f);border:1px solid var(--line,#e3e6ea);border-radius:14px;box-shadow:0 10px 36px rgba(0,0,0,.3);font:14px/1.45 system-ui,sans-serif;overflow:hidden}
+#ctas-p{position:fixed;right:16px;bottom:16px;z-index:9999;width:min(380px,calc(100vw - 32px));height:min(560px,calc(100dvh - 32px));display:none;flex-direction:column;background:var(--card,#fff);color:var(--tx,#16191f);border:1px solid var(--line,#e3e6ea);border-radius:14px;box-shadow:0 10px 36px rgba(0,0,0,.3);font:14px/1.45 var(--font);overflow:hidden}
 #ctas-p.open{display:flex}#ctas-p.min{height:auto}#ctas-p.min #ctas-body,#ctas-p.min #ctas-form,#ctas-p.min #ctas-chips{display:none}
 #ctas-h{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--acc,#1f6feb);color:#fff}#ctas-h b{flex:1}
 #ctas-h button{background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:6px;width:30px;height:30px;font-size:16px;cursor:pointer}
@@ -376,8 +376,8 @@
       const st = document.createElement("style"); st.textContent = CSS; document.head.appendChild(st);
       const btn = document.createElement("button"); btn.id = "ctas-btn"; btn.type = "button"; btn.setAttribute("aria-haspopup", "dialog"); btn.setAttribute("aria-expanded", "false");
       btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Asistente';
-      const p = document.createElement("section"); p.id = "ctas-p"; p.setAttribute("role", "dialog"); p.setAttribute("aria-label", "Asistente virtual de ComparáTech");
-      p.innerHTML = '<div id="ctas-h"><b>Asistente ComparáTech</b><button type="button" id="ctas-min" aria-label="Minimizar">–</button><button type="button" id="ctas-x" aria-label="Cerrar asistente">×</button></div><div id="ctas-mode"></div><div id="ctas-body" role="log" aria-live="polite"></div><div id="ctas-chips"></div><form id="ctas-form"><input id="ctas-in" type="text" maxlength="500" autocomplete="off" placeholder="Preguntame lo que quieras…" aria-label="Tu pregunta"><button type="submit">Enviar</button></form>';
+      const p = document.createElement("section"); p.id = "ctas-p"; p.setAttribute("role", "dialog"); p.setAttribute("aria-label", "Asistente virtual de KyraNoHard");
+      p.innerHTML = '<div id="ctas-h"><b>Asistente KyraNoHard</b><button type="button" id="ctas-min" aria-label="Minimizar">–</button><button type="button" id="ctas-x" aria-label="Cerrar asistente">×</button></div><div id="ctas-mode"></div><div id="ctas-body" role="log" aria-live="polite"></div><div id="ctas-chips"></div><form id="ctas-form"><input id="ctas-in" type="text" maxlength="500" autocomplete="off" placeholder="Preguntame lo que quieras…" aria-label="Tu pregunta"><button type="submit">Enviar</button></form>';
       document.body.append(btn, p);
       const body = p.querySelector("#ctas-body"), chips = p.querySelector("#ctas-chips"), input = p.querySelector("#ctas-in"), mode = p.querySelector("#ctas-mode");
 

@@ -1,4 +1,4 @@
-/* ComparáTech · autocompletado de los buscadores con foto (actualización 36).
+/* KyraNoHard · autocompletado de los buscadores con foto (actualización 36).
    SRCH.mount(input, {go}) muestra hasta 8 productos mientras se escribe. Elegir uno abre su ficha (producto.html?id=…);
    Enter sin elegir, o «Ver todos los resultados», hace la búsqueda en Productos (go). El índice (data/buscar.json:
    [id, nombre, categoría, foto, precio, tiendas]) se descarga recién la primera vez que se toca un buscador. */

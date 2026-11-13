@@ -1,4 +1,4 @@
-# Comparador de tiendas — guía paso a paso (sin programar)
+# KyraNoHard (comparador de tiendas de hardware) — guía paso a paso (sin programar)
 
 Todo es gratis. Necesitás una cuenta de GitHub (gratis). Eso no lo puedo crear yo por vos.
 
@@ -281,7 +281,7 @@ Lo que falta en `fichas_incompletas.csv` es sobre todo el **puntaje de rendimien
 ## Actualización 22 — Animación 3D versión 3 + fluidez a 120 Hz
 - Más efectos: piso espejado que refleja la PC, chispas cuando cada pieza encastra, líquido que circula por los caños de la
   refrigeración, pulsos de luz que viajan por los cables de la placa de video, RGB arcoíris en movimiento (memorias, placa de video,
-  cubierta), logo «ComparáTech» iluminado en la cubierta de la fuente, botón de encendido con luz, destello que recorre el vidrio
+  cubierta), logo «KyraNoHard» iluminado en la cubierta de la fuente, botón de encendido con luz, destello que recorre el vidrio
   al encender, aspas curvas, antialiasing con el brillo activado y una órbita de cámara más cinematográfica.
 - **Fluidez:** la animación siempre corre a la frecuencia de la pantalla (60, 120, 144 Hz…): el navegador la marca, no se puede
   forzar más de lo que da el monitor. Para sostener 120 cuadros por segundo:
@@ -531,7 +531,7 @@ carga nada de Supabase y no se envía ningún mail.
 4. **Mails de la cuenta (confirmación y contraseña)** por Brevo, para que lleguen a cualquier persona: Brevo → SMTP & API →
    pestaña SMTP → «Generate a new SMTP key». Después, en Supabase → **Authentication → Emails → SMTP Settings** → activar
    «Enable custom SMTP» y completar:
-   - Sender email: el remitente verificado · Sender name: `ComparáTech`
+   - Sender email: el remitente verificado · Sender name: `KyraNoHard`
    - Host: `smtp-relay.brevo.com` · Port: `587`
    - Username: el mail con el que entrás a Brevo · Password: la **SMTP key** (no la API key)
    Sin este paso, Supabase solo manda mails de prueba a los miembros del proyecto (2 por hora): **las cuentas no se pueden
@@ -683,3 +683,38 @@ Búsqueda del 4/11/2026 solo en sitios de los fabricantes (informe «Fichas ofic
   su carpeta y, con copias viejas sueltas, podía pisar versiones nuevas. Ahora solo borra una copia suelta cuando la
   buena existe en su lugar, renombra `download` a `.gitignore` y quita los `__pycache__` subidos por error.
 - Prueba nueva: `test_actualizacion_38_fichas_fotos_cuotas_marcas`.
+
+## Actualización 39 — KyraNoHard: nombre, logo, app instalable, velocidad, accesibilidad, SEO y control de calidad
+- **Nombre nuevo: KyraNoHard** en todo el sitio, el asistente, los correos (avisos y resumen semanal), términos,
+  privacidad y preguntas. La dirección sigue siendo `brunogagna9-stack.github.io/Comparador/` y las claves internas
+  del navegador (lista, armados, sesión) no cambian: nadie pierde nada.
+  - Si en los secretos de GitHub está `BREVO_SENDER_NAME` o `NOTIFY_FROM_NAME` con el nombre viejo, hay que cambiarlo ahí.
+- **Logo** (chip con K, `site/img/logo.svg`) en el encabezado y el pie; `favicon.ico` (antes no había y cada página daba
+  un error 404), íconos de app (`img/icon-*.png`, `img/maskable-512.png`, `img/apple-touch-icon.png`) e imagen para
+  compartir (`img/og.jpg`, 1200×630).
+- **Etiquetas del `<head>`** en las 15 páginas (`scripts/head_tags.py`, se puede volver a correr sin duplicar):
+  ícono, manifiesto, color de la barra del celular, vista previa al compartir (Open Graph), dirección canónica y
+  descripción (las 7 páginas que no tenían ahora la tienen). Historial y Mi cuenta: `noindex`.
+- **App instalable** (`site/manifest.webmanifest` + `site/sw.js`): páginas, código y precios siempre se piden a
+  internet y lo guardado se usa solo sin conexión; tipografía, logo e íconos se sirven desde lo guardado.
+- **Tipografía Inter** (código abierto, OFL) alojada en `site/fonts/`, sin pedidos a Google. Todo el sitio usa la
+  variable `--font`.
+- **Portada**: antes de dibujar se decide si va la animación 3D (se reserva su lugar: el salto de la página bajó de
+  0,499 a 0,001). Sin animación en equipos sin aceleración 3D (la dibujaría el procesador y trababa la página) o con
+  ahorro de datos. En el celular se arma cuando el teléfono está libre y se dibuja a 30 cuadros por segundo.
+- **Productos en dos etapas**: con categoría en la dirección baja primero `data/cat/<categoría>.json` y muestra los
+  resultados; el catálogo completo llega después, en segundo plano (`build_data.py` → `write_categories`). Se comprobó
+  que el resultado final es idéntico. **Armado** usa el catálogo de piezas (`armar.json`, 40 % del completo).
+- **Accesibilidad (axe-core, WCAG 2.2 AA): de 310 fallas a 0** en las 15 páginas, claro y oscuro, computadora y
+  celular: nombres en selectores, enlaces subrayados dentro de textos, contraste, botones táctiles de 28 px, tablas con
+  desplazamiento enfocables, panel de categorías y animación sin elementos anidados mal marcados.
+- **Saltos al cargar**: el contenido ocupa al menos la pantalla (el pie ya no aparece arriba y salta).
+- **Buscadores**: cada ficha agrega su dirección canónica, una descripción con precio y datos estructurados
+  (schema.org `Product` + `AggregateOffer`). `sitemap.xml` es ahora un índice: `sitemap-paginas.xml` (fijas) y
+  `sitemap-productos.xml` (todas las fichas con precio; se genera en cada actualización y no se guarda en el repo).
+  Para que Google lo use, cargá `sitemap.xml` en Google Search Console (con la dirección actual, robots.txt no alcanza).
+- **Control de calidad automático** (`.github/workflows/calidad.yml` + carpeta `calidad/`): Ruff, html-validate,
+  ESLint, axe-core y Lighthouse con versiones fijas. Corre cuando cambia el código del sitio y deja un resumen con
+  puntajes en Actions; falla si aparece un error, una falla de accesibilidad o si Lighthouse baja de 95 en
+  accesibilidad o de 90 en buenas prácticas o SEO. No frena la publicación de precios.
+- Prueba nueva: `test_actualizacion_39_kyranohard`.

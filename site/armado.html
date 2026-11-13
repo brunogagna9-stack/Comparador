@@ -3,7 +3,28 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Armado de PC · ComparáTech</title>
+<title>Armado de PC · KyraNoHard</title>
+<meta name="description" content="Armado de PC recomendado por presupuesto o juegos, con piezas compatibles y precios reales de tiendas argentinas.">
+<!-- head:kyranohard -->
+<link rel="canonical" href="https://brunogagna9-stack.github.io/Comparador/armado.html">
+<link rel="icon" href="favicon.ico" sizes="48x48">
+<link rel="icon" href="img/logo.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1020" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+<meta property="og:site_name" content="KyraNoHard">
+<meta property="og:locale" content="es_AR">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://brunogagna9-stack.github.io/Comparador/armado.html">
+<meta property="og:title" content="Armado de PC · KyraNoHard">
+<meta property="og:description" content="Armado de PC recomendado por presupuesto o juegos, con piezas compatibles y precios reales de tiendas argentinas.">
+<meta property="og:image" content="https://brunogagna9-stack.github.io/Comparador/img/og.jpg">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Logo de KyraNoHard: comparador de precios de hardware en Argentina">
+<meta name="twitter:card" content="summary_large_image">
+<!-- /head:kyranohard -->
 <link rel="stylesheet" href="css/shared.css">
 <link rel="stylesheet" href="css/layout.css">
 
@@ -33,7 +54,7 @@
 
 <div class="panel"><div class="row">
   <div class="f" style="max-width:260px"><label>Empezar por</label><div class="seg" id="mode"><button data-v="gpu" class="on">Placa de video</button><button data-v="cpu">Procesador</button></div></div>
-  <div class="f"><label id="lsel">Placa de video</label><select id="sel"></select></div>
+  <div class="f"><label id="lsel" for="sel">Placa de video</label><select id="sel" aria-labelledby="lsel"></select></div>
   <div class="f" style="max-width:330px" id="vbox"><label>Marca del procesador</label><div class="seg" id="ven"><button data-v="" class="on">La más conveniente</button><button data-v="AMD">AMD</button><button data-v="Intel">Intel</button></div></div>
   <div class="f" style="max-width:300px"><label>Resolución de tu monitor</label><div class="seg" id="res"><button data-v="0" class="on">1080p</button><button data-v="1">1440p</button><button data-v="2">4K</button></div></div>
 </div></div>
@@ -165,7 +186,8 @@ function setMode(){
 }
 (async()=>{
   const j=async(u,d)=>{try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw 0;return await r.json()}catch{return d}};
-  let m,ver;[HW,PR,m,ver]=await Promise.all([j("data/hardware.json",null),j("data/products.json",[]),j("data/meta.json",{}),j("data/verified.json",null),REP.load()]);META=m;
+  // actualización 39: catálogo de piezas (armar.json, ~40 % del completo); si falta, el catálogo entero
+  let m,ver;[HW,PR,m,ver]=await Promise.all([j("data/hardware.json",null),j("data/armar.json",null).then(d=>d&&d.length?d:j("data/products.json",[])),j("data/meta.json",{}),j("data/verified.json",null),REP.load()]);META=m;
   if(!HW){$("#out").textContent="No se pudieron cargar los datos de hardware.";return}
   C=CT.create(HW,PR,META,null,ver);S.id="rtx-5070";QV.setData(PR);
   {const u=new URLSearchParams(location.search);if(["gpu","cpu"].includes(u.get("modo")))S.mode=u.get("modo");if(u.get("id"))S.id=u.get("id");if(u.get("placa"))S.gid=u.get("placa");

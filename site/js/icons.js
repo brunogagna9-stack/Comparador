@@ -1,4 +1,4 @@
-/* ComparáTech · íconos de categorías (actualización 27).
+/* KyraNoHard · íconos de categorías (actualización 27).
    Dibujos de Lucide (https://lucide.dev, versión 1.57.0), licencia ISC: uso libre, incluso comercial, conservando este aviso.
    Copyright (c) Lucide Contributors 2022 y, en parte, Cole Bemis 2013-2022 (Feather, MIT).
    Van dentro del sitio (no se piden a otro servidor) y toman el color del texto, así funcionan en modo claro y oscuro. */

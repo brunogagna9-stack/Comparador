@@ -3,7 +3,26 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Producto · ComparáTech</title>
+<title>Producto · KyraNoHard</title>
+<meta name="description" content="Precios, stock y cuotas de un producto en todas las tiendas argentinas que lo venden, con historial de precios y datos técnicos verificados.">
+<!-- head:kyranohard -->
+<link rel="icon" href="favicon.ico" sizes="48x48">
+<link rel="icon" href="img/logo.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1020" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+<meta property="og:site_name" content="KyraNoHard">
+<meta property="og:locale" content="es_AR">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Producto · KyraNoHard">
+<meta property="og:description" content="Precios, stock y cuotas de un producto en todas las tiendas argentinas que lo venden, con historial de precios y datos técnicos verificados.">
+<meta property="og:image" content="https://brunogagna9-stack.github.io/Comparador/img/og.jpg">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Logo de KyraNoHard: comparador de precios de hardware en Argentina">
+<meta name="twitter:card" content="summary_large_image">
+<!-- /head:kyranohard -->
 <link rel="stylesheet" href="css/shared.css">
 <link rel="stylesheet" href="css/layout.css">
 <style>
@@ -16,7 +35,7 @@
 .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
 .acts .btn{border-radius:999px;display:inline-flex;align-items:center;gap:6px}.acts .btn.pri{color:#fff}
 .tag2{display:inline-block;font-size:12px;padding:3px 10px;border-radius:999px;background:var(--soft);border:1px solid var(--line);margin-right:6px;font-weight:600}
-.tw2{overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}.tw2 table{min-width:640px}
+.tw2:focus-visible{outline:2px solid var(--acc);outline-offset:2px}.tw2{overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}.tw2 table{min-width:640px}
 td.n,th.n{text-align:right;white-space:nowrap}tr.best td{background:var(--best)}.in{color:var(--down);font-weight:600}.out{color:var(--up);font-weight:600}
 .warnpill{display:inline-block;font-size:12px;padding:1px 7px;border-radius:999px;background:var(--warnbg);color:var(--warn);font-weight:700;margin-left:4px}
 .chart{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--card)}.chart svg{width:100%;height:auto;display:block}
@@ -41,6 +60,27 @@ let FOLLOW={};try{FOLLOW=JSON.parse(localStorage.getItem("seg")||"{}")}catch{}
 let LIST=[];try{LIST=JSON.parse(localStorage.getItem("lista")||"[]")}catch{}
 const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}};
 const tagH=(t,n)=>{const [l,h]=CT.TAGS[t]||CT.TAGS.nd;return `<span class="tag t-${t}" title="${esc(h+(n?" — "+n:""))}">${l}</span>`};
+/* actualización 39: para buscadores. Dirección canónica, descripción y datos estructurados (schema.org Product con
+   AggregateOffer: rango de precios, cantidad de tiendas y disponibilidad). Solo datos reales de las ofertas. */
+function seo(g){
+  try{
+    const url=new URL("producto.html?id="+encodeURIComponent(g.id),location.href).href;
+    const set=(sel,mk)=>{let el=document.head.querySelector(sel);if(!el){el=mk();document.head.appendChild(el)}return el};
+    set('link[rel="canonical"]',()=>Object.assign(document.createElement("link"),{rel:"canonical"})).href=url;
+    const live=(g.offers||[]).filter(o=>!o.anom&&(o.price_cash??o.price_list)>0),inStock=live.filter(o=>o.stock!==false);
+    const pool=inStock.length?inStock:live,ps=pool.map(o=>o.price_cash??o.price_list).sort((a,b)=>a-b);
+    const n=new Set(live.map(o=>o.store)).size,money=v=>"$"+Math.round(v).toLocaleString("es-AR");
+    const d=ps.length?`${g.name}: desde ${money(ps[0])} en ${n} tienda${n===1?"":"s"} de Argentina. Compará precios, stock y cuotas en KyraNoHard.`:`${g.name}: precios y stock en tiendas de Argentina, en KyraNoHard.`;
+    set('meta[name="description"]',()=>Object.assign(document.createElement("meta"),{name:"description"})).content=d;
+    if(!ps.length)return;
+    const ld={"@context":"https://schema.org","@type":"Product",name:g.name,url,
+      ...(g.image&&/^https:\/\//.test(g.image)?{image:[g.image]}:{}),...(g.brand?{brand:{"@type":"Brand",name:g.brand}}:{}),
+      offers:{"@type":"AggregateOffer",priceCurrency:"ARS",lowPrice:ps[0],highPrice:ps[ps.length-1],offerCount:pool.length,
+        availability:inStock.length?"https://schema.org/InStock":"https://schema.org/OutOfStock"}};
+    let sc=document.getElementById("ld-product");if(!sc){sc=document.createElement("script");sc.type="application/ld+json";sc.id="ld-product";document.head.appendChild(sc)}
+    sc.textContent=JSON.stringify(ld).replace(/</g,"\\u003c");
+  }catch(e){}
+}
 // misma cuenta que build_data.py → shard_of (SHARDS = 64)
 function shardOf(id){let h=0;for(const ch of String(id)){h=(h*31+ch.codePointAt(0))>>>0}return h%64}
 async function j(u,d){try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw 0;return await r.json()}catch{return d}}
@@ -51,7 +91,7 @@ function specs(g,HW,PR,META,SP){
     const C=CT.makeCompare(CT.create(HW,PR,META,SP)),cmp=C.compare([C.item(g)],{res:1});
     const rows=cmp.rows.filter(r=>!["name","price","store","stock"].includes(r.id)&&r.cells[0].tag!=="nd");
     if(!rows.length)return `<p class="sub">Todavía no tenemos especificaciones para este producto. No las inferimos: preferimos mostrar solo lo que podemos respaldar.</p>`;
-    return `<div class="tw2"><table class="spec">${rows.map(r=>{const c=r.cells[0];return `<tr><td>${esc(r.label)}</td><td>${r.id==="official"&&c.url?`<a href="${esc(c.url)}" target="_blank" rel="noopener nofollow">${esc(c.disp)}</a>`:esc(c.disp)} ${c.tag?tagH(c.tag,c.note):""}</td></tr>`}).join("")}</table></div><p class="sub" style="margin-top:6px">Las etiquetas indican qué tan confiable es cada dato (verificado contra la ficha oficial, estimado, pendiente de verificar).</p>`;
+    return `<div class="tw2" tabindex="0" role="region" aria-label="Especificaciones técnicas"><table class="spec">${rows.map(r=>{const c=r.cells[0];return `<tr><td>${esc(r.label)}</td><td>${r.id==="official"&&c.url?`<a href="${esc(c.url)}" target="_blank" rel="noopener nofollow">${esc(c.disp)}</a>`:esc(c.disp)} ${c.tag?tagH(c.tag,c.note):""}</td></tr>`}).join("")}</table></div><p class="sub" style="margin-top:6px">Las etiquetas indican qué tan confiable es cada dato (verificado contra la ficha oficial, estimado, pendiente de verificar).</p>`;
   }catch{return `<p class="sub">No se pudieron calcular las especificaciones de este producto.</p>`}
 }
 (async()=>{
@@ -63,8 +103,8 @@ function specs(g,HW,PR,META,SP){
   if(!g){const [PR,H]=await Promise.all([j("data/products.json",[]),j("data/history.json",{})]);g=(Array.isArray(PR)?PR:[]).find(x=>x.id===id);HIST=H}
   const PR=g?[g]:[];
   REP.set(STORES);
-  if(!g||!g.offers||!g.offers.length){$("#pd").innerHTML=`<div class="empty"><h2>No encontramos este producto</h2><p>Puede que la tienda ya no lo publique o que el enlace esté incompleto.</p><p><a class="btn pri" href="productos.html" style="display:inline-block">Ver todos los productos</a></p></div>`;document.title="Producto no encontrado · ComparáTech";return}
-  window.CURID=g.id;document.title=g.name+" · ComparáTech";
+  if(!g||!g.offers||!g.offers.length){$("#pd").innerHTML=`<div class="empty"><h2>No encontramos este producto</h2><p>Puede que la tienda ya no lo publique o que el enlace esté incompleto.</p><p><a class="btn pri" href="productos.html" style="display:inline-block">Ver todos los productos</a></p></div>`;document.title="Producto no encontrado · KyraNoHard";return}
+  window.CURID=g.id;document.title=g.name+" · KyraNoHard";seo(g);
   $("#bc").innerHTML=` · <a href="productos.html?cat=${encodeURIComponent(g.category)}">${esc(CATS[g.category]||g.category)}</a>`;
   const stale=s=>{const m=(META.stores||{})[s];return !!(m&&!m.ok)},ctx={HIST,META,CFG,REP,stale};
   const best=price(g.offers[0]),c=(g.chg&&!(g.offers[0]&&g.offers[0].anom))?g.chg:null;

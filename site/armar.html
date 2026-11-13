@@ -3,8 +3,28 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Armalo vos · Armado de PC · ComparáTech</title>
+<title>Armalo vos · Armado de PC · KyraNoHard</title>
 <meta name="description" content="Armá tu PC pieza por pieza: solo te mostramos componentes compatibles con lo que ya elegiste, comprobados con las fichas de los fabricantes.">
+<!-- head:kyranohard -->
+<link rel="canonical" href="https://brunogagna9-stack.github.io/Comparador/armar.html">
+<link rel="icon" href="favicon.ico" sizes="48x48">
+<link rel="icon" href="img/logo.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1020" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+<meta property="og:site_name" content="KyraNoHard">
+<meta property="og:locale" content="es_AR">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://brunogagna9-stack.github.io/Comparador/armar.html">
+<meta property="og:title" content="Armalo vos · Armado de PC · KyraNoHard">
+<meta property="og:description" content="Armá tu PC pieza por pieza: solo te mostramos componentes compatibles con lo que ya elegiste, comprobados con las fichas de los fabricantes.">
+<meta property="og:image" content="https://brunogagna9-stack.github.io/Comparador/img/og.jpg">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Logo de KyraNoHard: comparador de precios de hardware en Argentina">
+<meta name="twitter:card" content="summary_large_image">
+<!-- /head:kyranohard -->
 <link rel="stylesheet" href="css/shared.css">
 <link rel="stylesheet" href="css/layout.css">
 <style>
@@ -19,7 +39,7 @@
 .sl .k small{display:block;font-weight:400;color:var(--mut);font-size:11.5px}
 .sl .v{min-width:0}.sl .v .nm{font-weight:600;line-height:1.3}.sl .v .meta{font-size:12.5px;color:var(--mut);margin-top:2px}
 .sl .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
-.sl .acts button,.mini{border:1px solid var(--chipbd);background:var(--chip);color:var(--tx);border-radius:999px;padding:7px 13px;font:600 13px system-ui,sans-serif;cursor:pointer}
+.sl .acts button,.mini{border:1px solid var(--chipbd);background:var(--chip);color:var(--tx);border-radius:999px;padding:7px 13px;font:600 13px var(--font);cursor:pointer}
 .sl .acts button.pri,.mini.pri{background:var(--btn);border-color:var(--btn);color:#fff}
 .sl .acts button:hover,.mini:hover{border-color:var(--btn)}.sl .acts button.pri:hover,.mini.pri:hover{background:var(--btnh)}
 .st{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;margin-right:4px}
@@ -45,21 +65,21 @@
 .ptools input[type=search],.ptools select{padding:9px 12px;border:1px solid var(--chipbd);border-radius:10px;background:var(--chip);color:var(--tx);font:inherit}
 .ptools input[type=search]{flex:1;min-width:180px}
 .btabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 0}
-.btabs button{border:1px solid var(--chipbd);background:var(--chip);color:var(--tx);border-radius:999px;padding:7px 14px;font:700 13.5px system-ui,sans-serif;cursor:pointer}
+.btabs button{border:1px solid var(--chipbd);background:var(--chip);color:var(--tx);border-radius:999px;padding:7px 14px;font:700 13.5px var(--font);cursor:pointer}
 .btabs button .n{font-weight:500;opacity:.75;margin-left:4px}
 .btabs button.on{background:var(--btn);border-color:var(--btn);color:#fff}
 .btabs button:hover:not(.on){border-color:var(--btn)}
 #pfx{margin:12px 0 4px}
 .fxrow{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px;align-items:center}
 .fxrow .ttl{font-size:12.5px;color:var(--mut);font-weight:700;margin-right:2px;white-space:nowrap}
-.fxrow label{position:relative;display:inline-flex;gap:6px;align-items:center;border:1px solid var(--chipbd);border-radius:999px;padding:5px 11px;font:600 13px system-ui,sans-serif;color:var(--tx);cursor:pointer;background:var(--chip);text-transform:none;letter-spacing:0;white-space:nowrap}
+.fxrow label{position:relative;display:inline-flex;gap:6px;align-items:center;border:1px solid var(--chipbd);border-radius:999px;padding:5px 11px;font:600 13px var(--font);color:var(--tx);cursor:pointer;background:var(--chip);text-transform:none;letter-spacing:0;white-space:nowrap}
 .fxrow label .c{font-weight:500;color:var(--mut);font-size:12px}
 .fxrow label:hover{border-color:var(--btn)}
 .fxrow label.on{background:var(--btn);border-color:var(--btn);color:#fff}.fxrow label.on .c{color:#fff;opacity:.85}
 .fxrow label.on::before{content:"✓";font-weight:800}
 .fxrow input{position:absolute;opacity:0;pointer-events:none}
 .fxrow label:focus-within{box-shadow:0 0 0 3px color-mix(in srgb,var(--btn) 40%,transparent)}
-.fxclear{border:0;background:none;color:var(--acc);font:600 13px system-ui,sans-serif;cursor:pointer;padding:4px 6px;text-decoration:underline}
+.fxclear{border:0;background:none;color:var(--acc);font:600 13px var(--font);cursor:pointer;padding:4px 6px;text-decoration:underline}
 .prow{display:grid;grid-template-columns:60px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 12px;margin:8px 0;background:var(--row);border:1px solid var(--rowbd);border-radius:12px}
 .prow .im{width:60px;height:60px;background:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .prow .im img{max-width:100%;max-height:100%;object-fit:contain}.prow .im svg{width:26px;height:26px;color:#94a3b8}

@@ -1,4 +1,4 @@
-/* ComparáTech · núcleo compartido (precios, especificaciones, armado de PC).
+/* KyraNoHard · núcleo compartido (precios, especificaciones, armado de PC).
    Se usa desde el navegador (window.CT) y desde las pruebas en Node (require). */
 (function (root) {
   "use strict";

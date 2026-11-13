@@ -1,4 +1,4 @@
-/* ComparáTech · «Armalo vos»: motor de compatibilidad pieza por pieza (actualización 28).
+/* KyraNoHard · «Armalo vos»: motor de compatibilidad pieza por pieza (actualización 28).
    Se usa desde armar.html y desde las pruebas en Node.
 
    Cada dato tiene un origen:

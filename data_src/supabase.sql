@@ -1,4 +1,4 @@
--- ComparáTech · cuentas de usuario (actualización 32)
+-- KyraNoHard · cuentas de usuario (actualización 32)
 -- Pegá TODO este archivo en Supabase → SQL Editor → «New query» → «Run». Se puede correr más de una vez sin romper nada.
 -- Seguridad: cada persona solo puede leer y modificar SUS filas (Row Level Security). La clave «publishable» que va en
 -- la web no puede saltear estas reglas; la clave «secret» (solo en los secretos de GitHub) se usa para enviar los avisos.

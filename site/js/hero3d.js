@@ -159,7 +159,7 @@ function start() {
   caseG.add(at(RB(0.05, 0.48, D - 0.08, mat.frame, 0.015), W / 2 - 0.3, -0.85, 0));
   caseG.add(at(B(W - 0.6, 0.012, 0.012, flow("rainbow", 0.66, 0.9, { repeat: 1, speed: 0.12 })), -0.25, -0.575, D / 2 - 0.06));
   const logoTex = tex(512, 96, (x, w, h) => { x.fillStyle = "#000"; x.fillRect(0, 0, w, h); x.font = "800 64px Inter, system-ui, sans-serif"; x.textBaseline = "middle";
-    x.fillStyle = "#fff"; x.fillText("Compará", 20, h / 2 + 4); const cw = x.measureText("Compará").width; x.fillText("Tech", 20 + cw + 1, h / 2 + 4); });
+    x.fillStyle = "#fff"; x.fillText("KyraNo", 20, h / 2 + 4); const cw = x.measureText("KyraNo").width; x.fillText("Hard", 20 + cw + 1, h / 2 + 4); });
     const logoMat = new THREE.MeshStandardMaterial({ color: 0x000000, emissive: new THREE.Color(1, 1, 1), emissiveMap: logoTex, emissiveIntensity: 0, transparent: true, alphaMap: logoTex, roughness: 0.5 });
   logoMat.userData = { hue: 0.7, k: 1.1, order: rgb.length }; rgb.push(logoMat);
   caseG.add(at(new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.116), logoMat), 0.25, -0.86, D / 2 - 0.035));
@@ -494,7 +494,7 @@ function start() {
     if (perf) perfLog(performance.now() - r0, rawDt);
     adapt(rawDt);
   }
-  if (small) { tier = 1; }
+  if (small) { tier = 1; halfRate = true; }   // celular: 30 cuadros por segundo (se ve igual de fluido y gasta la mitad de batería)
   applyTier();
   STEPS.forEach(s => { s.o.visible = true; }); bursts.forEach(b => { b.pts.visible = true; });
   try { renderer.compile(scene, camera); if (useBloom) composer.render(); } catch (e) { /* sin importancia */ }

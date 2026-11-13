@@ -41,6 +41,18 @@ def check(root=ROOT):
                 errs.append(f"site/data/p: {len(files)} partes con {len(ids)} productos (se esperan 64 con {len(want)}): no se publica")
         except Exception as e:
             errs.append(f"site/data/p: parte ilegible ({e})")
+    # actualización 39: archivos por categoría (site/data/cat/<cat>.json): si están, entre todos tienen todo el catálogo
+    cd = root / "site/data/cat"
+    if cd.exists() and p.exists() and not errs:
+        try:
+            ids = set()
+            for f in cd.glob("*.json"):
+                ids.update(g["id"] for g in json.loads(f.read_text(encoding="utf-8")).get("g", []))
+            want = {g["id"] for g in json.loads(p.read_text(encoding="utf-8"))}
+            if ids and ids != want:
+                errs.append(f"site/data/cat: {len(ids)} productos (se esperan {len(want)}): no se publica")
+        except Exception as e:
+            errs.append(f"site/data/cat: archivo ilegible ({e})")
     return errs
 
 
