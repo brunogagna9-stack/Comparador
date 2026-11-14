@@ -345,8 +345,10 @@ t("placas de generaciones anteriores (RTX 2060 Super…): se reconocen, se marca
 const REP = require("../site/js/rep.js"), STO = require("../site/data/stores.json");
 REP.set(STO);
 t("la reputación se muestra con puntaje, cantidad y fuente", () => {
-  const h = REP.badge("Venex");
-  assert(/★ 4,6/.test(h) && /8\.388 op\. Google/.test(h) && /consultado el 2026-10-24/.test(h) && !/pocas opiniones/.test(h));
+  // act. 42: los valores salen del propio stores.json (se actualizan al volver a consultar las fichas)
+  const h = REP.badge("Venex"), r = STO.stores.Venex.reputation[0], nf = n => Number(n).toLocaleString("es-AR");
+  assert(h.includes("★ " + r.score.toLocaleString("es-AR", { minimumFractionDigits: 1 })) && h.includes(nf(r.count) + " op. Google")
+    && h.includes("consultado el " + r.date) && r.count >= 100 && !/pocas opiniones/.test(h));
 });
 t("pocas opiniones se avisa; sin ficha verificable no se inventa puntaje", () => {
   assert(/pocas opiniones/.test(REP.badge("BitHard")) && REP.low(REP.get("BitHard")) && !REP.low(REP.get("Gamer Factory")));

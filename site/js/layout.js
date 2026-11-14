@@ -94,7 +94,13 @@ const HIST_ICO = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" st
       const ac = cfg.accounts || {};
       if (typeof ac.supabase_url === "string" && ac.supabase_url) document.getElementById("facct").hidden = false;
       if (typeof ac.supabase_url === "string" && ac.supabase_url && typeof ac.supabase_publishable_key === "string" && ac.supabase_publishable_key && !window.ACC && !document.querySelector('script[src$="js/account.js"]')) {
-        const sc = document.createElement("script"); sc.src = "js/account.js"; document.head.appendChild(sc); }
+        // actualización 42: fuera de «Mi cuenta», la parte de cuentas (librería de Supabase, ~55 KB) se carga cuando la
+        // página ya terminó de dibujarse y el teléfono está libre; la sincronización llega igual, unos segundos después.
+        const load = () => { if (window.ACC || document.querySelector('script[src$="js/account.js"]')) return;
+          const sc = document.createElement("script"); sc.src = "js/account.js"; document.head.appendChild(sc); };
+        if (/cuenta\.html$/.test(location.pathname)) load();
+        else { const idle = () => (window.requestIdleCallback || (f => setTimeout(f, 1500)))(load, { timeout: 4000 });
+          if (document.readyState === "complete") idle(); else addEventListener("load", idle, { once: true }); } }
       if (!isProducts && (ok(A.email_form_url) || ok(A.whatsapp_channel_url))) { const b = document.getElementById("abtn"); b.hidden = false; b.onclick = () => { location.href = "productos.html?avisos=1"; }; }
     });
     fetch("data/meta.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).catch(() => null).then(m => {

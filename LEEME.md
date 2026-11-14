@@ -729,3 +729,16 @@ Búsqueda del 4/11/2026 solo en sitios de los fabricantes (informe «Fichas ofic
 - El registro de GitHub muestra cuánto tardó cada tienda: `[tiempo] Tienda: 3 min 12 s · ok · 1500 productos`.
 - Para volver a leer de a una: variable `STORE_WORKERS=1` en el paso «Recolectar precios».
 - Prueba nueva: `test_actualizacion_42_tiendas_en_paralelo`.
+- **Reputación de tiendas** (`site/data/stores.json`): se completaron 16 tiendas más con su ficha de Google Maps
+  (34 de 41) y se actualizaron las 18 que ya estaban (consulta del 2026-11-14). Solo se carga el puntaje si la ficha
+  tiene el mismo sitio web que la tienda; si no, queda «sin reputación verificada» y una nota explica por qué
+  (Gaming City, Hardloots, ShopGamer, WIZ TECH, XT-PC; IgnaTech y Portal no están integradas).
+- **Cuentas más livianas**: fuera de «Mi cuenta», la librería de Supabase (~55 KB) se carga cuando la página terminó
+  de dibujarse (`site/js/layout.js`).
+- **Mails de la cuenta con la marca** (`data_src/mails/`): `confirmar-cuenta.html` y `cambiar-contrasena.html`, para
+  pegar en Supabase → **Authentication → Emails → Templates**:
+  - «Confirm signup» → asunto `Confirmá tu cuenta de KyraNoHard`, cuerpo: todo `confirmar-cuenta.html`.
+  - «Reset password» → asunto `Cambiá tu contraseña de KyraNoHard`, cuerpo: todo `cambiar-contrasena.html`.
+  - En **Authentication → URL Configuration**: «Site URL» = `https://brunogagna9-stack.github.io/Comparador/` y en
+    «Redirect URLs» agregar `https://brunogagna9-stack.github.io/Comparador/cuenta.html` (si no, el enlace del mail
+    lleva a otra página).
