@@ -55,7 +55,7 @@ function eslint() {
 
 async function axe(base, chromium) {
   const { AxeBuilder } = require("@axe-core/playwright");
-  const br = await chromium.launch(); let n = 0; const seen = {};
+  const br = await chromium.launch(); let n = 0; const seen = {}, det = [];
   for (const vp of [{ width: 1280, height: 900 }, { width: 390, height: 844 }]) {
     for (const gpu of [false, true]) {
       if (gpu && vp.width < 1000) continue;
@@ -66,9 +66,12 @@ async function axe(base, chromium) {
       for (const p of gpu ? [""] : PAGES) {
         const pg = await ctx.newPage(); await pg.goto(base + p, { waitUntil: "networkidle" }); await pg.waitForTimeout(gpu ? 3000 : 1200);
         for (const sch of ["light", "dark"]) {
-          await pg.emulateMedia({ colorScheme: sch });
+          // se espera a que terminen las transiciones de color (0,15 s) para medir el contraste con los colores finales
+          await pg.emulateMedia({ colorScheme: sch }); await pg.waitForTimeout(500);
           const r = await new AxeBuilder({ page: pg }).withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze();
-          for (const v of r.violations) { n += v.nodes.length; const k = `${v.id} (${p || "inicio"}${gpu ? ", con 3D" : ""})`; seen[k] = (seen[k] || 0) + v.nodes.length; }
+          for (const v of r.violations) { n += v.nodes.length; const k = `${v.id} (${p || "inicio"}${gpu ? ", con 3D" : ""})`; seen[k] = (seen[k] || 0) + v.nodes.length;
+            // detalle: qué elemento exacto falló y por qué (modo, ancho de pantalla)
+            for (const nd of v.nodes) if (det.length < 25) det.push(`${k}, ${sch}, ${vp.width}px: \`${nd.target.join(" ")}\` — ${((nd.any[0] || nd.all[0] || {}).message || v.help).replace(/\s+/g, " ").slice(0, 200)}`); }
         }
         await pg.close();
       }
@@ -77,7 +80,9 @@ async function axe(base, chromium) {
   }
   await br.close();
   log(`- **axe-core (accesibilidad WCAG 2.2 AA):** ${n ? n + " fallas" : "sin fallas"} — ${PAGES.length} páginas, claro y oscuro, computadora y celular`);
-  Object.entries(seen).slice(0, 15).forEach(([k, v]) => log(`  - ${k}: ${v}`)); if (n) fail.push("accesibilidad");
+  Object.entries(seen).slice(0, 15).forEach(([k, v]) => log(`  - ${k}: ${v}`));
+  if (det.length) { log("  - Detalle:"); det.forEach(d => log("    - " + d)); }
+  if (n) fail.push("accesibilidad");
 }
 
 async function lighthouse(base, chromePath) {
