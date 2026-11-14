@@ -28,11 +28,13 @@ const t = async (name, fn) => { try { await fn(); n++; } catch (e) { console.err
     const r = await A.ask("cuánto sale la RTX 9999 Quantum", {}); assert(/No tengo ese dato/.test(txt(r))); assert.strictEqual(r.basis, "none");
   });
   await t("tiendas: reputación con fuente, fecha y sin promediar; sin datos si no hay", async () => {
-    const g = txt(await A.ask("¿Es confiable GoldenTech?", {})); assert(/4,9 sobre 5/.test(g) && /677/.test(g) && /Google Maps/.test(g) && /2026-10-23/.test(g));
+    const g = txt(await A.ask("¿Es confiable GoldenTech?", {})); const R = n => STORES.stores[n].reputation[0], sc = n => R(n).score.toLocaleString("es-AR", { minimumFractionDigits: 1 }) + " sobre 5",
+      cn = n => Number(R(n).count).toLocaleString("es-AR");   // act. 42: los números salen de stores.json (se actualizan)
+    assert(g.includes(sc("GoldenTech")) && g.includes(cn("GoldenTech")) && /Google Maps/.test(g) && g.includes(R("GoldenTech").date));
     const m = txt(await A.ask("¿Y la reputación de Hardloots?", {})); assert(/No tenemos una puntuación pública verificada/.test(m) && !/\d,\d sobre 5/.test(m));
-    const mx = txt(await A.ask("¿Y la reputación de Maximus?", {})); assert(/4,8 sobre 5/.test(mx) && /14\.557/.test(mx));
+    const mx = txt(await A.ask("¿Y la reputación de Maximus?", {})); assert(mx.includes(sc("Maximus")) && mx.includes(cn("Maximus")));
     const bh = txt(await A.ask("¿Es confiable BitHard?", {})); assert(/5,0 sobre 5/.test(bh) && /pocas opiniones/i.test(bh));
-    const a = txt(await A.ask("army tech es confiable?", {})); assert(/4,4 sobre 5/.test(a) && /877/.test(a));
+    const a = txt(await A.ask("army tech es confiable?", {})); assert(a.includes(sc("Armytech")) && a.includes(cn("Armytech")));
     const all = txt(await A.ask("qué tiendas están conectadas", {})); assert(/GoldenTech/.test(all) && /Armytech/.test(all) && /Fullh4rd/.test(all) && /403/.test(all));
     assert(!/promedi(o|amos) de/.test(g));
   });

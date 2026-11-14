@@ -269,8 +269,9 @@ def test_stores_json_reputacion_verificable():
         if not s["reputation"]:
             assert any("ficha" in n.lower() or "reputación" in n.lower() for n in s.get("notes", [])), name + ": explicar por qué no hay puntaje"
     con = {n for n, s in d.items() if s["reputation"]}
-    nuevas = {n for n, s in d.items() if s["checked"] == "2026-10-26"}   # actualización 15: reputación todavía sin fuente
-    assert len(con) == 18 and {"Gaming City", "Hardloots"} | nuevas == set(d) - con, "solo estas tiendas quedan sin puntaje verificado"
+    # actualización 42: se completaron 16 tiendas más (ficha de Google Maps con el mismo sitio web que la tienda)
+    sin = {"Gaming City", "Hardloots", "ShopGamer", "WIZ TECH", "XT-PC", "IgnaTech", "Portal Tech & Gaming"}
+    assert len(con) == 34 and sin == set(d) - con, "solo estas tiendas quedan sin puntaje verificado"
     assert "average" not in json.dumps(d).lower()
 
 def test_logg_marcado_actual():
