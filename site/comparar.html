@@ -228,7 +228,7 @@ function drawAll(){
   drawAll();
 })();
 </script>
-<script src="js/assistant.js"></script>
-<script>CT.CTAssistant.mount({section:"comparar",context:()=>({ids:S.ids,cat:S.cat,res:S.res})});</script>
+<script src="js/assistant.js" defer></script>
+<script>addEventListener("DOMContentLoaded",()=>{CT.CTAssistant.mount({section:"comparar",context:()=>({ids:S.ids,cat:S.cat,res:S.res})})});</script>
 </body>
 </html>

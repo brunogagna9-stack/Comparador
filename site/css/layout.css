@@ -165,3 +165,7 @@ header.site .acct.in::after{content:"";position:absolute;right:2px;bottom:2px;wi
 .sr-all{display:block;width:100%;border:0;background:none;color:var(--acc);font:600 13.5px var(--font);padding:10px 12px;text-align:left;cursor:pointer}
 .sr-m{padding:12px;color:var(--mut);font-size:13px}
 @media(max-width:640px){.sr-dd a{grid-template-columns:40px minmax(0,1fr) auto}.sr-im{width:40px;height:40px}}
+/* actualización 40: transición suave entre páginas (View Transitions del navegador); el encabezado queda fijo.
+   Quien pidió menos movimiento en su sistema no la ve. Los navegadores que no la soportan cambian de página como siempre. */
+@media (prefers-reduced-motion:no-preference){@view-transition{navigation:auto}::view-transition-old(root),::view-transition-new(root){animation-duration:.18s}}
+header.site{view-transition-name:kyra-header}

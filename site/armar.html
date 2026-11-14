@@ -314,7 +314,7 @@ $("#pick").addEventListener("click",e=>{if(e.target.id==="pick")closePick()});
   render();
 })();
 </script>
-<script src="js/assistant.js"></script>
-<script>CT.CTAssistant.mount({section:"armado",context:()=>({})});</script>
+<script src="js/assistant.js" defer></script>
+<script>addEventListener("DOMContentLoaded",()=>{CT.CTAssistant.mount({section:"armado",context:()=>({})})});</script>
 </body>
 </html>

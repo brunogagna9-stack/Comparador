@@ -118,7 +118,7 @@ document.querySelectorAll("[data-mail]").forEach(e=>{e.innerHTML=okm?`<a href="m
 const ti=typeof c.titular==="string"&&c.titular.trim()?c.titular.trim().replace(/[<>"&]/g,""):"";document.querySelectorAll("[data-titular]").forEach(e=>{if(ti)e.textContent=ti});
 })();
 </script>
-<script src="js/lib.js"></script><script src="js/assistant.js"></script>
-<script>CT.CTAssistant&&CT.CTAssistant.mount({section:"info",context:()=>({})});</script>
+<script src="js/lib.js"></script><script src="js/assistant.js" defer></script>
+<script>addEventListener("DOMContentLoaded",()=>{CT.CTAssistant&&CT.CTAssistant.mount({section:"info",context:()=>({})})});</script>
 </body>
 </html>

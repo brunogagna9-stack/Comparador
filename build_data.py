@@ -466,8 +466,20 @@ def category_files(groups, hist):
     historial de sus ofertas. «Productos» abierto en una categoría muestra eso al instante y baja el catálogo entero
     después, en segundo plano (antes esperaba ~4 MB para mostrar el primer resultado)."""
     out = {}
+    # actualización 40: los totales de las pestañas (Todos / Bajaron / Subieron) de TODO el catálogo, calculados igual que
+    # en la página (un salto sospechoso no cuenta), para no tener que bajar el catálogo entero solo para mostrarlos
+    tot = {"todos": len(groups), "bajaron": 0, "subieron": 0}
     for g in groups:
-        part = out.setdefault(g.get("category") or "otros", {"v": 1, "g": [], "h": {}})
+        offs = g.get("offers") or []
+        if g.get("chg") and not (offs and offs[0].get("anom")):
+            tot["bajaron" if (g["chg"].get("pct") or 0) < 0 else "subieron"] += 1
+    # ofertas por tienda en todo el catálogo (los números del menú «Tiendas»)
+    tot["sc"] = {}
+    for g in groups:
+        for o in g.get("offers") or []:
+            tot["sc"][o.get("store")] = tot["sc"].get(o.get("store"), 0) + 1
+    for g in groups:
+        part = out.setdefault(g.get("category") or "otros", {"v": 1, "t": tot, "g": [], "h": {}})
         part["g"].append(g)
         for o in g.get("offers") or []:
             k = o.get("k")

@@ -131,6 +131,7 @@
     else if (/\batx\b/i.test(n)) o.form = "ATX";
     return o;
   }
+  const PSU = psuSpec, MOBO = moboSpec, RAM = ramSpec, STORAGE = storageSpec;
   const RESMAP = { "fhd": [1920, 1080, "FHD 1080p"], "1080p": [1920, 1080, "FHD 1080p"], "qhd": [2560, 1440, "QHD 1440p"], "wqhd": [2560, 1440, "QHD 1440p"],
     "fullhd": [1920, 1080, "FHD 1080p"], "ultrahd": [3840, 2160, "4K UHD"], "1440p": [2560, 1440, "QHD 1440p"], "2k": [2560, 1440, "QHD 1440p"], "4k": [3840, 2160, "4K UHD"], "uhd": [3840, 2160, "4K UHD"] };
   function monitorSpec(n) {
@@ -239,8 +240,13 @@
       return { v: r.v, u: r.u || "", tag: r.l || "ver", note: r.n || "", src: it.s, url: it.url, date: it.d, sku: it.sku };
     };
     C.specMissing = (g, field) => { const it = C.spec(g); return !it ? "sin ficha" : (it.miss || []).includes(field) ? "no publicado" : null; };
-    const inCat = c => PR.filter(g => g.category === c);
-    C.inCat = inCat;
+    /* actualización 40: el catálogo no cambia mientras la página está abierta, así que se agrupa UNA vez por categoría y
+       se recuerdan los resultados ya calculados (antes Armado recorría las ~14.000 piezas decenas de veces y trababa el celular) */
+    const BYCAT = new Map(); PR.forEach(g => { let a = BYCAT.get(g.category); if (!a) BYCAT.set(g.category, a = []); a.push(g); });
+    const inCat = c => BYCAT.get(c) || [];
+    C.inCat = c => inCat(c).slice();
+    const memo = f => { const m = new Map(); return k => { let v = m.get(k); if (v === undefined && !m.has(k)) { v = f(k); m.set(k, v); } return v; }; };
+    const psuSpec = memo(PSU), moboSpec = memo(MOBO), ramSpec = memo(RAM), storageSpec = memo(STORAGE);
     C.updated = (meta && meta.updated) || null;
 
     /* ofertas: la más barata con stock (o stock sin confirmar); nunca sin stock confirmado */
@@ -276,7 +282,7 @@
     C.hwGpuX = (name, vram) => { if (NOT_PC.test(name)) return null; name = gpuName(name); const v = vram === undefined ? vramOf(name) : vram;
       const hit = gpuxTests.find(([g, t]) => t(name) && (v == null || v === g.vram)); return hit ? hit[0] : null; };
     /* "Sin Cooler" / "con cooler Wraith" describen al procesador, no lo convierten en un cooler */
-    const cpuClean = n => n.replace(/\((?:simil|similar|equivalente|tipo)\b[^)]*\)|\b(?:simil|similar a|equivalente a)\s+\S+(?:\s+\S+)?/ig, " ").replace(/\+?\s*\bwraith\s+(?:stealth|spire|prism|max)\b(?:\s+cooler)?/ig, " ").replace(/\+\s*(?:cooler|disipador)\b/ig, " ").replace(/\b(?:sin|con|incluye|no incluye|s\/|c\/)\s?(?:cooler|disipador|ventilador|fan)(?:\s+(?:wraith|stock|original|stealth|prism))?(?:\s+(?:stealth|spire))?/ig, " ");
+    const cpuClean = memo(n => n.replace(/\((?:simil|similar|equivalente|tipo)\b[^)]*\)|\b(?:simil|similar a|equivalente a)\s+\S+(?:\s+\S+)?/ig, " ").replace(/\+?\s*\bwraith\s+(?:stealth|spire|prism|max)\b(?:\s+cooler)?/ig, " ").replace(/\+\s*(?:cooler|disipador)\b/ig, " ").replace(/\b(?:sin|con|incluye|no incluye|s\/|c\/)\s?(?:cooler|disipador|ventilador|fan)(?:\s+(?:wraith|stock|original|stealth|prism))?(?:\s+(?:stealth|spire))?/ig, " "));
     /* Por qué un producto no tiene ficha (para decirlo en lugar de un aviso genérico). */
     C.hwWhy = (name, cat) => {
       if (cat === "placas-de-video") {
@@ -296,10 +302,10 @@
       if (/cooler|disipador|fan|pasta|\bkit\b/i.test(name)) return null; const hit = cpuTests.find(([c, t]) => t(name)); return hit ? hit[0] : null; };
 
     const isPc = n => /^pc\b|\bpc (armada|gamer|powered)|powered by|notebook|combo|\bkit\b|all in one/i.test(n);
-    C.findGpu = g => { const t = rxm(g.m, g.x);
-      return C.cheapest(inCat("placas-de-video").filter(p => !isPc(p.name) && !NOT_PC.test(p.name) && t(p.name) && (vramOf(p.name) == null || vramOf(p.name) === g.vram))); };
-    C.findCpu = c => { const t = rxm(c.m);
-      return C.cheapest(inCat("procesadores").filter(p => { const n = cpuClean(p.name); return t(n) && !/cooler|disipador|fan|\bkit\b|combo|pc /i.test(n); })); };
+    C.findGpu = memo(g => { const t = rxm(g.m, g.x);
+      return C.cheapest(inCat("placas-de-video").filter(p => !isPc(p.name) && !NOT_PC.test(p.name) && t(p.name) && (vramOf(p.name) == null || vramOf(p.name) === g.vram))); });
+    C.findCpu = memo(c => { const t = rxm(c.m);
+      return C.cheapest(inCat("procesadores").filter(p => { const n = cpuClean(p.name); return t(n) && !/cooler|disipador|fan|\bkit\b|combo|pc /i.test(n); })); });
     C.findPsu = w => C.cheapest(inCat("fuentes").filter(p => { const s = psuSpec(p.name); return s.w && s.w >= w && s.w <= w + 250 && s.cert && !/combo|gabinete/i.test(p.name); }));
     C.findMobo = c => C.cheapest(inCat("motherboards").filter(p => moboSpec(p.name).socket === c.socket));
     C.findRam = (c, gb) => { const ddr = c.mem === "DDR5" ? /ddr5/i : c.mem === "DDR4" ? /ddr4/i : /ddr[45]/i;
@@ -336,8 +342,8 @@
     const vprep = l => (l || []).map(e => Object.assign({ t: rxm(e.m, e.x) }, e));
     const VCO = vprep(VER && VER.coolers), VCA = vprep(VER && VER.cases), VGP = vprep(VER && VER.gpus);
     const MOUNT_EQ = { AM5: ["AM4"], LGA1851: ["LGA1700"] }, VARIANT = /\b(max|plus)\b/i;
-    C.verCooler = n => VCO.find(e => e.t(n)) || null;
-    C.verCase = n => VCA.find(e => e.t(n)) || null;
+    C.verCooler = memo(n => VCO.find(e => e.t(n)) || null);
+    C.verCase = memo(n => VCA.find(e => e.t(n)) || null);
     C.verGpu = (n, chip) => VGP.find(e => e.t(n) && (!e.chip || e.chip === chip) && (!VARIANT.test(n) || VARIANT.test(e.name))) || null;
     // true = la ficha dice que soporta el socket · false = la ficha dice que no · null = no hay ficha
     C.coolerSocketOk = (n, socket) => { const v = C.verCooler(n); if (!v) return null; const s = /^LGA115/.test(socket) ? "LGA115x" : socket;

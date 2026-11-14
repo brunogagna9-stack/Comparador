@@ -220,7 +220,7 @@ function render(){
   $("#go").onclick=render;
 })();
 </script>
-<script src="js/assistant.js"></script>
-<script>CT.CTAssistant.mount({section:"actualizar",context:()=>({})});</script>
+<script src="js/assistant.js" defer></script>
+<script>addEventListener("DOMContentLoaded",()=>{CT.CTAssistant.mount({section:"actualizar",context:()=>({})})});</script>
 </body>
 </html>

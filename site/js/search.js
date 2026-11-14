@@ -39,8 +39,18 @@
       out.push([score, it]);
     }
     out.sort((a, b) => b[0] - a[0]);
-    return { total: out.length, list: out.slice(0, max || 8).map(x => x[1]) };
+    // actualización 40: sin coincidencias exactas, se buscan parecidas (errores de tipeo) con uFuzzy (js/fuzzy.js)
+    if (!out.length && root.FZY && root.FZY.ready()) {
+      const fl = root.FZY.search(DATA, it => it.name, q) || [];
+      const sc = fl.map((it, i) => [(RANK[it.cat] || 0) * 0.4 + Math.min(it.n, 6) * 0.35 + (it.p ? 0 : -3) + (it.img ? 0.5 : 0) - i * 0.03, it]).sort((a, b) => b[0] - a[0]);
+      return { total: sc.length, list: sc.slice(0, max || 8).map(x => x[1]), fuzzy: true };
+    }
+    return { total: out.length, list: out.slice(0, max || 8).map(x => x[1]), needFuzzy: !out.length };
   }
+  let FZP = null;
+  const fuzzy = () => root.FZY ? root.FZY.load() : (FZP || (FZP = new Promise(r => { if (typeof document === "undefined") return r(false);
+    const s = document.createElement("script"); s.src = "js/fuzzy.js"; s.async = true; s.onload = () => (root.FZY ? root.FZY.load() : Promise.resolve(false)).then(r);
+    s.onerror = () => { FZP = null; r(false); }; document.head.appendChild(s); })));
   const mark = (txt, q) => { let h = esc(txt); norm(q).split(/\s+/).filter(w => w.length > 1).forEach(w => {
     h = h.replace(new RegExp("(" + w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")", "ig"), "<mark>$1</mark>"); }); return h; };
   const thumb = it => { const ic = root.ICONS ? root.ICONS.svg(it.cat, 22) : "";
@@ -69,7 +79,10 @@
       res = find(q, innerWidth < 640 ? 5 : 8);
       const rows = res.list.map((it, i) => `<a role="option" id="${id}-${i}" href="producto.html?id=${encodeURIComponent(it.id)}" data-i="${i}" class="${i === act ? "act" : ""}"${i === act ? ' aria-selected="true"' : ""}>${thumb(it)}<span class="sr-t"><span class="sr-n">${mark(it.name, q)}</span><small>${esc(CAT[it.cat] || "")}${it.n > 1 ? " · " + it.n + " tiendas" : ""}</small></span><b>${it.p ? ARS(it.p) : ""}</b></a>`).join("");
       const all = `<button type="button" class="sr-all${act === res.list.length ? " act" : ""}" id="${id}-all">Ver todos los resultados para «${esc(q)}»${res.total ? ` (${res.total.toLocaleString("es-AR")})` : ""} →</button>`;
-      dd.innerHTML = (rows || `<div class="sr-m">No encontramos productos con «${esc(q)}».</div>`) + all;
+      if (res.needFuzzy && !(root.FZY && root.FZY.ready())) { dd.innerHTML = `<div class="sr-m">Buscando parecidos…</div>`; dd.hidden = false; place();
+        fuzzy().then(ok => { if (document.activeElement === inp && inp.value.trim() === q) { if (ok) draw(); else { dd.innerHTML = `<div class="sr-m">No encontramos productos con «${esc(q)}».</div>` + all; } } }); return; }
+      const fz = res.fuzzy && rows ? `<div class="sr-m">No hay coincidencias exactas con «${esc(q)}»: estos son los más parecidos.</div>` : "";
+      dd.innerHTML = fz + (rows || `<div class="sr-m">No encontramos productos con «${esc(q)}».</div>`) + all;
       dd.hidden = false; place(); inp.setAttribute("aria-expanded", "true");
       if (act >= 0) inp.setAttribute("aria-activedescendant", act === res.list.length ? id + "-all" : id + "-" + act);
     }

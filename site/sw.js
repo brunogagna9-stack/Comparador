@@ -4,7 +4,7 @@
    - Tipografía, logo e íconos (no cambian): se sirven desde lo guardado.
    - Nada de otros sitios (fotos de las tiendas, cuentas de Supabase) pasa por acá. */
 "use strict";
-const VER = "kyra-v1";
+const VER = "kyra-v2";
 const STATIC = ["fonts/inter-latin.woff2", "img/logo.svg", "img/icon-192.png", "favicon.ico"];
 const OFFLINE_SHELL = ["./", "index.html", "productos.html", "css/layout.css", "css/shared.css", "js/layout.js", "js/icons.js", "manifest.webmanifest"];
 

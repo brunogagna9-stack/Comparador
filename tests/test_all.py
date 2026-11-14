@@ -1244,6 +1244,59 @@ def test_actualizacion_38_fichas_fotos_cuotas_marcas():
     assert nh["reputation"][0]["count"] == 15 and any("Pocas opiniones" in n for n in nh["notes"])
 
 
+def test_actualizacion_40_velocidad_e_interfaz():
+    """Act. 40: Armado agrupa el catálogo y recuerda cálculos; Productos no baja el catálogo entero si no hace falta
+    (totales precalculados); JS/CSS achicados con esbuild al publicar; asistente diferido; precarga y transiciones;
+    búsqueda tolerante a errores con uFuzzy."""
+    import json, subprocess
+    from pathlib import Path
+    import build_data as bd
+    site = Path("site")
+    lib = (site / "js" / "lib.js").read_text(encoding="utf-8")
+    assert "const BYCAT = new Map()" in lib and "C.findGpu = memo(" in lib and "C.verCase = memo(" in lib
+    # el contexto sigue funcionando en Node y los resultados no dependen de la memoria
+    js = r"""
+    const CT=require('./site/js/lib.js');const HW=require('./site/data/hardware.json');
+    const PR=[{id:'a',name:'Fuente 650w 80 Plus Bronze',category:'fuentes',offers:[{store:'X',price_cash:100}]},
+              {id:'b',name:'Fuente 700w 80 Plus Gold',category:'fuentes',offers:[{store:'Y',price_cash:90}]}];
+    const C=CT.create(HW,PR,{});const x=C.findPsu(650),y=C.findPsu(650);
+    const ic=C.inCat('fuentes');ic.push(1);
+    console.log(JSON.stringify([x.map(z=>z.g.id),y.map(z=>z.g.id),C.inCat('fuentes').length]));"""
+    out = subprocess.run(["node", "-e", js], capture_output=True, text=True, check=True).stdout.strip()
+    assert json.loads(out) == [["b", "a"], ["b", "a"], 2]
+    # totales de todo el catálogo en cada archivo por categoría
+    G = [{"id": "1", "category": "fuentes", "chg": {"pct": -5}, "offers": [{"store": "A"}]},
+         {"id": "2", "category": "fuentes", "chg": {"pct": 3}, "offers": [{"store": "A", "anom": True}]},
+         {"id": "3", "category": "mouses", "chg": {"pct": 0}, "offers": [{"store": "B"}, {"store": "A"}]}]
+    cf = bd.category_files(G, {})
+    assert cf["fuentes"]["t"] == cf["mouses"]["t"] == {"todos": 3, "bajaron": 1, "subieron": 1, "sc": {"A": 3, "B": 1}}
+    pr = (site / "productos.html").read_text(encoding="utf-8")
+    assert "TOT=p.t&&typeof p.t.todos===" in pr and "if(!FULL&&(!TOT||Object.keys(FOLLOW).length))" in pr and "fuzzyQ();" in pr
+    # asistente diferido en todas las páginas que lo usan
+    for f in site.glob("*.html"):
+        h = f.read_text(encoding="utf-8")
+        if "js/assistant.js" in h:
+            assert '<script src="js/assistant.js" defer></script>' in h and 'addEventListener("DOMContentLoaded",()=>{CT.CTAssistant' in h, f
+    lay = (site / "js" / "layout.js").read_text(encoding="utf-8")
+    assert 'sr.type = "speculationrules"' in lay and "a.stretch, [data-open]" in lay
+    assert "@view-transition{navigation:auto}" in (site / "css" / "layout.css").read_text(encoding="utf-8")
+    # búsqueda tolerante: librería con licencia y carga solo cuando hace falta
+    assert (site / "js" / "vendor" / "ufuzzy-1.0.19.min.js").exists() and "MIT" in (site / "js" / "vendor" / "ufuzzy.LICENSE.txt").read_text()
+    fz = (site / "js" / "fuzzy.js").read_text(encoding="utf-8")
+    assert "js/vendor/ufuzzy-1.0.19.min.js" in fz
+    srch = (site / "js" / "search.js").read_text(encoding="utf-8")
+    assert "needFuzzy" in srch and 'src = "js/fuzzy.js"' in srch
+    # normalización: letras y números separados
+    js2 = "require('./site/js/fuzzy.js');console.log(globalThis.FZY.norm('RTX4060Ti 8GB (OC)'))"
+    assert subprocess.run(["node", "-e", js2], capture_output=True, text=True, check=True).stdout.strip() == "rtx 4060 ti 8 gb oc"
+    # compresión al publicar: solo la copia, con esbuild fijado y sin frenar la publicación si falla
+    wf = Path(".github/workflows/actualizar.yml").read_text(encoding="utf-8")
+    assert "esbuild@0.28.2" in wf and 'minificar.mjs" "$RUNNER_TEMP/site_publicar"' in wf
+    assert wf.index("site_publicar\"\n") < wf.index("minificar.mjs") < wf.index("upload-pages-artifact")
+    mj = Path("scripts/minificar.mjs").read_text(encoding="utf-8")
+    assert '"vendor"' in mj and '"data"' in mj and "speculationrules" in mj
+
+
 def test_actualizacion_39_kyranohard():
     """Act. 39: nombre KyraNoHard, logo e íconos, app instalable, etiquetas para compartir y buscadores, carga por
     categoría en Productos, catálogo de piezas en Armado, mapa con todas las fichas y control de calidad."""

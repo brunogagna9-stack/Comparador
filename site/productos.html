@@ -190,13 +190,25 @@ async function j(u,d){try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)thr
 function visible(g){ // oferta(s) que pasan los filtros de tienda/stock
   return g.offers.filter(o=>(!S.stores.size||S.stores.has(o.store))&&(!S.stock||o.stock!==false));
 }
+/* actualización 40: si la búsqueda no coincide exactamente con ningún producto, se muestran los parecidos (errores de
+   tipeo, «rtx4060ti» pegado…) con uFuzzy (js/fuzzy.js). Con alguna coincidencia exacta todo sigue igual que antes. */
+let QF=null,QK="",FZL=null;
+function fuzzyQ(){
+  const q=S.q.trim(),k=q+"\u0001"+DATA.length;if(k===QK)return;QK=k;QF=null;
+  if(!q)return;const ts=q.toLowerCase().split(/\s+/).filter(Boolean);
+  if(DATA.some(g=>{const n=g.name.toLowerCase();return ts.every(t=>n.includes(t))}))return;
+  if(window.FZY&&FZY.ready()){const r=FZY.search(DATA,g=>g.name,q);if(r&&r.length)QF=new Set(r.map(g=>g.id));return}
+  if(!FULL)return;   // primero hace falta el catálogo entero (ya se está bajando)
+  if(!FZL){FZL=new Promise(res=>{const sc=document.createElement("script");sc.src="js/fuzzy.js";sc.onload=()=>window.FZY?FZY.load().then(res):res(false);sc.onerror=()=>res(false);document.head.appendChild(sc)})}
+  FZL.then(ok=>{if(ok){QK="";render()}});
+}
 function filtered(skip){
   const q=S.q.toLowerCase().split(/\s+/).filter(Boolean);
   return DATA.filter(g=>{
     if(skip!=="cat"&&S.cat&&g.category!==S.cat)return false;
     if(skip!=="brand"&&S.brands.size&&!S.brands.has(g.brand))return false;
     if(S.cat&&window.FX){for(const d of FX.defs(S.cat)){const set=S.fx[d.k];if(!set||!set.size||skip==="fx:"+d.k)continue;if(!set.has(FX.val(g,d)??FX.NONE))return false}}
-    if(q.length){const n=g.name.toLowerCase();if(!q.every(t=>n.includes(t)))return false}
+    if(q.length){if(QF){if(!QF.has(g.id))return false}else{const n=g.name.toLowerCase();if(!q.every(t=>n.includes(t)))return false}}
     const v=visible(g);if(!v.length)return false;
     const p=price(v[0]);if(S.pmin!=null&&p<S.pmin)return false;if(S.pmax!=null&&p>S.pmax)return false;
     if(S.multi&&g.offers.length<2)return false;
@@ -224,7 +236,8 @@ function card(g){
   <div class="pr">${ARS(price(o))}${c&&c.pct<0?`<span class="old">${ARS(c.prev)}</span>`:""}</div>
   <div class="sub">${g.offers.length>1?`Comparado en ${g.offers.length} tiendas`:"1 tienda"}${g.low?' · <span class="low">mínimo histórico</span>':""}</div></div>`;
 }
-function counts(){const t={todos:DATA.length,bajaron:0,subieron:0,seguidos:0};
+function counts(){if(!FULL&&TOT)return {todos:TOT.todos,bajaron:TOT.bajaron,subieron:TOT.subieron,seguidos:Object.keys(FOLLOW).length};   // act. 40: totales precalculados mientras no está el catálogo entero
+  const t={todos:DATA.length,bajaron:0,subieron:0,seguidos:0};
   DATA.forEach(g=>{if(chgOk(g))g.chg.pct<0?t.bajaron++:t.subieron++;if(FOLLOW[g.id])t.seguidos++});return t}
 function renderSide(){
   const base=filtered("cat"),cc={};base.forEach(g=>cc[g.category]=(cc[g.category]||0)+1);
@@ -271,9 +284,9 @@ function render(){
   $("#tabs").innerHTML=Object.keys(names).map(k=>`<button class="tab ${S.tab===k?"on":""}" data-t="${k}">${names[k]}<span class="n">${t[k]}</span></button>`).join("")+`<button class="tab" id="fbtn" aria-expanded="${$("#side").classList.contains("show")}">☰ Filtros</button>`+
    `<div class="sortw"><span class="sub">Ordenar</span><select id="sort" aria-label="Ordenar productos">${[["rel","Más relevante"],["price","Menor precio"],["priceDesc","Mayor precio"],["down","Mayor baja %"],["up","Mayor suba %"],["stores","Más tiendas"],["spread","Mayor diferencia entre tiendas"]].map(([v,l])=>`<option value="${v}" ${S.sort===v?"selected":""}>${l}</option>`).join("")}</select></div>`;
   $("#sort").onchange=e=>{S.sort=e.target.value;S.page=1;render()};
-  const rows=filtered().sort(sorter());
+  fuzzyQ();const rows=filtered().sort(sorter());
   $("#sum").innerHTML=esc(`${rows.length.toLocaleString("es-AR")} resultados`+(S.tab==="bajaron"||S.tab==="subieron"?` · cambios de los últimos ${META.recent_days||14} días`:""))+
-    (S.q.trim()?` <span class="qact">Buscando: <b>«${esc(S.q.trim())}»</b> <button type="button" id="qclear">✕ Quitar búsqueda</button></span>`:"");   // act. 36: que se vea la búsqueda activa y se pueda quitar
+    (S.q.trim()?` <span class="qact">${QF?"Sin coincidencias exactas; parecidos a":"Buscando:"} <b>«${esc(S.q.trim())}»</b> <button type="button" id="qclear">✕ Quitar búsqueda</button></span>`:"");   // act. 36: que se vea la búsqueda activa y se pueda quitar
   {const qc=$("#qclear");if(qc)qc.onclick=()=>{S.q="";$("#qh").value="";S.page=1;render()}}
   const pages=Math.max(1,Math.ceil(rows.length/PER));if(S.page>pages)S.page=pages;if(S.page<1)S.page=1;
   const from=(S.page-1)*PER;
@@ -354,7 +367,7 @@ document.addEventListener("click",e=>{
   if(t.dataset.f){e.stopPropagation();toggleF(t.dataset.f);return}
   if(t.dataset.l){e.stopPropagation();toggleL(t.dataset.l);return}
   if(t.dataset.cmp){e.stopPropagation();e.preventDefault();toggleC(t.dataset.cmp,false);return}
-  const tb=t.closest("[data-t]");if(tb){e.preventDefault();S.tab=tb.dataset.t;S.page=1;if(S.tab==="bajaron")S.sort="down";else if(S.tab==="subieron")S.sort="up";else if(S.tab==="todos"&&(S.sort==="down"||S.sort==="up"))S.sort="rel";render();return}
+  const tb=t.closest("[data-t]");if(tb){e.preventDefault();S.tab=tb.dataset.t;if(!FULL&&S.tab==="seguidos")loadFull();S.page=1;if(S.tab==="bajaron")S.sort="down";else if(S.tab==="subieron")S.sort="up";else if(S.tab==="todos"&&(S.sort==="down"||S.sort==="up"))S.sort="rel";render();return}
   if(t.closest("#fbtn")){$("#side").classList.toggle("show");render();return}
   const ch=t.closest("[data-chip]");if(ch){const set=S.fx[ch.dataset.chip];if(set)set.delete(ch.dataset.v);S.page=1;render();return}
   const pb=t.closest("[data-pg]");if(pb&&!pb.disabled){goPage(+pb.dataset.pg);return}
@@ -384,13 +397,13 @@ function bind(){
 /* actualización 39: carga en dos etapas. Con una categoría en la dirección (productos.html?cat=…) primero se baja solo
    esa categoría (data/cat/<cat>.json, unos cientos de KB) y se muestra; el catálogo completo llega después, en segundo
    plano, y la página lo incorpora sola. Sin categoría (todas, búsqueda, mi lista) se espera el catálogo completo, como antes. */
-let FULL=false,FULLP=null,HWP=null;
+let FULL=false,FULLP=null,HWP=null,TOT=null;
 function loadFull(){return FULLP||(FULLP=Promise.all([j("data/products.json",[]),j("data/history.json",{})]).then(([d,h])=>{
   if(Array.isArray(d)&&d.length){DATA=d;HIST=h||{};FULL=true;setupData();if(BOUND)render()}}))}
 let BOUND=false;
 function setupData(){
   DATA.forEach(g=>{if(g.image_fb)FB[g.id]=g.image_fb});
-  const sc={};DATA.forEach(g=>g.offers.forEach(o=>sc[o.store]=(sc[o.store]||0)+1));
+  let sc={};DATA.forEach(g=>g.offers.forEach(o=>sc[o.store]=(sc[o.store]||0)+1));if(!FULL&&TOT&&TOT.sc)sc=TOT.sc;   // act. 40: totales de todo el catálogo
   // tiendas visibles en el menú: con productos y leídas bien en la última actualización. Las demás (bloqueadas, sin
   // productos u ocultadas en config.json) quedan ocultas, no borradas: vuelven solas cuando se lean bien.
   const showStore=s=>{const m=(META.stores||{})[s];return (sc[s]||0)>0&&!(m&&(m.hidden||!m.ok))&&!((CFG.stores||{})[s]||{}).ocultar};
@@ -405,7 +418,7 @@ function setupData(){
   const part=fast?j(`data/cat/${cat0}.json`,null):null;
   [META,CFG,STORES]=await Promise.all([j("data/meta.json",{}),j("data/config.json",{stores:{}}),j("data/stores.json",{stores:{}})]);REP.set(STORES);
   const p=part&&await part;
-  if(p&&Array.isArray(p.g)&&p.g.length){DATA=p.g;HIST=p.h||{};setupData()}else await loadFull();
+  if(p&&Array.isArray(p.g)&&p.g.length){DATA=p.g;HIST=p.h||{};TOT=p.t&&typeof p.t.todos==="number"?p.t:null;setupData()}else await loadFull();
   CTL.count(LIST.length);
   {const h=META.updated?(Date.now()-new Date(META.updated).getTime())/36e5:null,el=$("#fresh");
    el.className="fresh"+(h==null?" old":h>24?" old":h>12?" mid":"");
@@ -419,10 +432,13 @@ function setupData(){
    const p=parseInt(u.get("p"),10);if(p>0)S.page=p;
    bind();BOUND=true;alertBox();render();
    if(u.get("lista"))openList();else if(u.get("avisos")&&!$("#abtn").hidden)openAlerts();}
-  if(!FULL)(window.requestIdleCallback||(f=>setTimeout(f,400)))(()=>loadFull(),{timeout:3000});
+  /* act. 40: el catálogo entero (~20 MB sin comprimir) trababa el celular varios segundos aunque nadie lo usara. Con los
+     totales precalculados ya no hace falta: se baja recién al buscar, cambiar de categoría o abrir la lista. Solo se baja
+     solo si la persona sigue productos (para avisarle cuáles bajaron en todo el catálogo) o si faltan los totales. */
+  if(!FULL&&(!TOT||Object.keys(FOLLOW).length))(window.requestIdleCallback||(f=>setTimeout(f,400)))(()=>loadFull(),{timeout:3000});
 })();
 </script>
-<script src="js/lib.js"></script><script src="js/facets.js"></script><script src="js/icons.js"></script><script src="js/rep.js"></script><script src="js/detail.js"></script><script src="js/assistant.js"></script>
-<script>CT.CTAssistant.mount({section:"precios",context:()=>({query:S.q,cat:S.cat,ids:filtered().slice(0,3).map(g=>g.id)})});</script>
+<script src="js/lib.js"></script><script src="js/facets.js"></script><script src="js/icons.js"></script><script src="js/rep.js"></script><script src="js/detail.js"></script><script src="js/assistant.js" defer></script>
+<script>addEventListener("DOMContentLoaded",()=>{CT.CTAssistant.mount({section:"precios",context:()=>({query:S.q,cat:S.cat,ids:filtered().slice(0,3).map(g=>g.id)})})});</script>
 </body>
 </html>

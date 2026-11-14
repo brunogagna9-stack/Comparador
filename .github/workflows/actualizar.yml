@@ -50,6 +50,13 @@ jobs:
           NOTIFY_FROM: ${{ secrets.NOTIFY_FROM }}
       - name: Copiar el sitio listo para publicar (antes de tocar git)
         run: cp -r site "$RUNNER_TEMP/site_publicar"
+      - name: Achicar JavaScript y CSS de la copia que se publica (esbuild; si falla se publica sin achicar)
+        continue-on-error: true
+        timeout-minutes: 5
+        run: |
+          npm install --no-save --no-audit --no-fund --prefix "$RUNNER_TEMP/esb" esbuild@0.28.2
+          cp scripts/minificar.mjs "$RUNNER_TEMP/esb/"
+          node "$RUNNER_TEMP/esb/minificar.mjs" "$RUNNER_TEMP/site_publicar"
       - name: Guardar datos en el repositorio
         run: |
           git config user.name "actualizador"

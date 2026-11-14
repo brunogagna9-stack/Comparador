@@ -200,7 +200,7 @@ const go = () => { if (!window.__pc3dOk || !document.getElementById("pc3d")) ret
   idle(() => import("./js/hero3d.js").catch(() => { document.getElementById("pc3d")?.remove(); document.querySelector(".hero").classList.remove("has3d"); }), { timeout: 2500 }); };
 if (document.readyState === "complete") go(); else addEventListener("load", go);
 </script>
-<script src="js/assistant.js"></script>
-<script>CT.CTAssistant.mount({section:"inicio",context:()=>({})});</script>
+<script src="js/assistant.js" defer></script>
+<script>addEventListener("DOMContentLoaded",()=>{CT.CTAssistant.mount({section:"inicio",context:()=>({})})});</script>
 </body>
 </html>

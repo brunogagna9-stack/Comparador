@@ -201,7 +201,7 @@ function setMode(){
   setMode();
 })();
 </script>
-<script src="js/assistant.js"></script>
-<script>CT.CTAssistant.mount({section:"armado",context:()=>({gpuId:S.mode==="gpu"?S.id:null,res:S.res})});</script>
+<script src="js/assistant.js" defer></script>
+<script>addEventListener("DOMContentLoaded",()=>{CT.CTAssistant.mount({section:"armado",context:()=>({gpuId:S.mode==="gpu"?S.id:null,res:S.res})})});</script>
 </body>
 </html>

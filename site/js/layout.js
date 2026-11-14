@@ -158,6 +158,17 @@ const HIST_ICO = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" st
     document.addEventListener("scroll", on, { passive: true, capture: true });
   })();
   // actualización 39: app instalable y apertura sin conexión (sw.js). Se registra después de cargar para no demorar nada.
+  /* actualización 40: precarga la página a la que probablemente vas (al apoyar el mouse ~0,2 s o al tocar con el dedo),
+     con las «Speculation Rules» del navegador (la técnica del proyecto quicklink de Google, sin librerías). Solo páginas de
+     este sitio y solo el HTML (no ejecuta nada); los navegadores que no lo soportan lo ignoran. */
+  try {
+    if (HTMLScriptElement.supports && HTMLScriptElement.supports("speculationrules")) {
+      const sr = document.createElement("script"); sr.type = "speculationrules";
+      sr.textContent = JSON.stringify({ prefetch: [{ where: { and: [{ href_matches: "/*" }, { not: { href_matches: "*cuenta.html*" } },
+        { not: { selector_matches: "a.stretch, [data-open], [target=_blank], [download]" } }] }, eagerness: "moderate" }] });
+      document.head.appendChild(sr);
+    }
+  } catch (e) { /* sin precarga */ }
   if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => null); });
   if (document.body) mountHeader(); else document.addEventListener("DOMContentLoaded", mountHeader);
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => { mountFooter(); setupReveal(); }); else { mountFooter(); setupReveal(); }

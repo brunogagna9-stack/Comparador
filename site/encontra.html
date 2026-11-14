@@ -257,7 +257,7 @@ function showResults(){
   draw();
 })();
 </script>
-<script src="js/assistant.js"></script>
-<script>CT.CTAssistant.mount({section:"encontra",context:()=>({answers:A,step})});</script>
+<script src="js/assistant.js" defer></script>
+<script>addEventListener("DOMContentLoaded",()=>{CT.CTAssistant.mount({section:"encontra",context:()=>({answers:A,step})})});</script>
 </body>
 </html>

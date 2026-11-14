@@ -79,7 +79,7 @@ function card(name,s,meta,count){
   $("#out").innerHTML=Object.entries(STORES.stores).filter(([n])=>!(META.stores&&META.stores[n]&&META.stores[n].hidden)).map(([n,s])=>card(n,s,META,cnt[n]==null&&META.stores&&META.stores[n]?null:(cnt[n]||0))).join("");
 })();
 </script>
-<script src="js/assistant.js"></script>
-<script>CT.CTAssistant.mount({section:"tiendas"});</script>
+<script src="js/assistant.js" defer></script>
+<script>addEventListener("DOMContentLoaded",()=>{CT.CTAssistant.mount({section:"tiendas"})});</script>
 </body>
 </html>

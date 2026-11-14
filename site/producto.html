@@ -130,7 +130,7 @@ function specs(g,HW,PR,META,SP){
   addEventListener("acc:synced",e=>{if(!e.detail||!e.detail.changed)return;try{FOLLOW=JSON.parse(localStorage.getItem("seg")||"{}")}catch{}$("#hd").innerHTML=head();bind()});
 })();
 </script>
-<script src="js/assistant.js"></script>
-<script>CT.CTAssistant.mount({section:"precios",context:()=>({ids:window.CURID?[window.CURID]:[]})});</script>
+<script src="js/assistant.js" defer></script>
+<script>addEventListener("DOMContentLoaded",()=>{CT.CTAssistant.mount({section:"precios",context:()=>({ids:window.CURID?[window.CURID]:[]})})});</script>
 </body>
 </html>
