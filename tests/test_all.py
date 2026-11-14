@@ -1404,3 +1404,59 @@ def test_actualizacion_39_kyranohard():
     wf = Path(".github/workflows/calidad.yml").read_text(encoding="utf-8")
     assert "node revisar.js" in wf and "ruff check" in wf and "schedule" not in wf
     assert subprocess.run(["node", "--check", "site/sw.js"]).returncode == 0
+
+
+def test_actualizacion_42_tiendas_en_paralelo():
+    """Act. 42: las tiendas se leen de a varias a la vez. Cada una conserva sus errores (sin mezclarse), las que
+    comparten plataforma (Tiendanube, Cardeco) nunca se leen al mismo tiempo, y el resultado es idéntico a leerlas
+    de a una (mismo orden, mismos estados)."""
+    import threading, time, tempfile, pathlib
+    import build_data as B
+    from scrapers import common, tiendanube, cardeco
+    tn, ce = list(tiendanube.TN_STORES)[:3], list(cardeco.CE_STORES)[:2]
+    activos, lock, pico = {"tn": 0, "ce": 0}, threading.Lock(), {"tn": 0, "ce": 0}
+
+    def fake(name, ok=True, grupo=None):
+        def fn():
+            if grupo:
+                with lock:
+                    activos[grupo] += 1; pico[grupo] = max(pico[grupo], activos[grupo])
+            time.sleep(0.05)
+            common.LOG.append(f"https://{name}/x -> HTTP 500")
+            time.sleep(0.05)
+            if grupo:
+                with lock:
+                    activos[grupo] -= 1
+            if not ok:
+                raise RuntimeError("falló")
+            return [{"store": name, "name": f"prod {name}", "price_cash": 1000}]
+        return fn
+    scr = {"A": fake("A"), "B": fake("B", ok=False), **{s: fake(s, grupo="tn") for s in tn}, "C": fake("C"),
+           **{s: fake(s, grupo="ce") for s in ce}, "D": fake("D", ok=False)}
+    lanes = B.store_lanes(list(scr))
+    assert lanes[0] == ["A"] and tn in lanes and ce in lanes and ["D"] in lanes, lanes
+    old = B.RAW
+    with tempfile.TemporaryDirectory() as d:
+        B.RAW = pathlib.Path(d)
+        try:
+            par = B.read_stores(list(scr), scr, time.monotonic(), workers=6)
+            uno = B.read_stores(list(scr), scr, time.monotonic(), workers=1)
+            assert pico["tn"] == 1 and pico["ce"] == 1, f"misma plataforma al mismo tiempo: {pico}"
+            assert par == uno, "en paralelo da lo mismo que de a una"
+            assert par["B"][1]["ok"] is False and par["B"][1]["error"] == "https://B/x -> HTTP 500", "cada tienda con sus propios errores"
+            assert par["D"][1]["error"] == "https://D/x -> HTTP 500"
+            assert par["A"][1] == {"ok": True, "count": 1} and (pathlib.Path(d) / "A.json").exists()
+            # sin tiempo: se usa la lectura anterior y se marca para ir primero la próxima vez
+            vieja = B.read_stores(["A"], scr, time.monotonic() - (B.BUDGET_MIN + 1) * 60, workers=6)
+            assert vieja["A"][1]["skipped"] is True and vieja["A"][1]["stale"] is True and vieja["A"][0][0]["store"] == "A"
+        finally:
+            B.RAW = old
+    # el registro de errores es por hilo: lo de otro hilo no aparece en este
+    common.LOG.clear(); common.LOG.append("principal")
+    t = threading.Thread(target=lambda: (common.LOG.append("otro"), common.LOG.pop())); t.start(); t.join()
+    assert common.LOG == ["principal"] and len(common.LOG) == 1 and common.LOG[-1] == "principal"; common.LOG.clear()
+    assert common.session() is common._session
+    s2 = []
+    t = threading.Thread(target=lambda: s2.append(common.session())); t.start(); t.join()
+    assert s2[0] is not common._session and s2[0].headers["User-Agent"].startswith("ComparadorARBot")
+    print("tiendas en paralelo: OK")

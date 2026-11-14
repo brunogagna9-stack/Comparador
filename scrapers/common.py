@@ -1,15 +1,63 @@
 """Utilidades compartidas por todos los recolectores."""
 import re
+import threading
 import time
 import requests
 
 UA = "ComparadorARBot/0.1 (proyecto personal sin fines de lucro; respeta robots.txt)"
 DELAY = 1.5  # segundos entre pedidos a una misma tienda (para no molestar)
 
-LOG = []  # mensajes de error de la corrida actual (los lee build_data.py)
+class _ThreadLog:
+    """Lista de errores de la tienda que se está leyendo. Desde la actualización 42 se leen varias tiendas a la vez
+    (cada una en su propio hilo), así que cada hilo tiene su propia lista: los errores de una tienda no se mezclan
+    con los de otra. Se usa igual que una lista común (append, pop, clear, [:3], len, ==)."""
+    def __init__(self):
+        self._tl = threading.local()
 
-_session = requests.Session()
-_session.headers.update({"User-Agent": UA, "Accept-Language": "es-AR,es;q=0.9"})
+    def _l(self):
+        if not hasattr(self._tl, "v"):
+            self._tl.v = []
+        return self._tl.v
+
+    def __getattr__(self, name):   # append, pop, clear, extend…
+        return getattr(self._l(), name)
+
+    def __getitem__(self, i):
+        return self._l()[i]
+
+    def __len__(self):
+        return len(self._l())
+
+    def __iter__(self):
+        return iter(self._l())
+
+    def __eq__(self, other):
+        return self._l() == other
+
+    def __repr__(self):
+        return repr(self._l())
+
+
+LOG = _ThreadLog()  # mensajes de error de la corrida actual (los lee build_data.py)
+
+
+def _new_session():
+    s = requests.Session()
+    s.headers.update({"User-Agent": UA, "Accept-Language": "es-AR,es;q=0.9"})
+    return s
+
+
+_session = _new_session()   # la del hilo principal (la usan también las fichas de Icecat)
+_tls = threading.local()
+
+
+def session():
+    """Una sesión por hilo: requests.Session no garantiza ser segura si varios hilos la usan a la vez."""
+    if threading.current_thread() is threading.main_thread():
+        return _session
+    if not hasattr(_tls, "s"):
+        _tls.s = _new_session()
+    return _tls.s
 
 
 def get(url, as_json=False, retries=3, delay=None):
@@ -18,7 +66,7 @@ def get(url, as_json=False, retries=3, delay=None):
     for i in range(retries):
         try:
             time.sleep(DELAY if delay is None else delay)
-            r = _session.get(url, timeout=40)
+            r = session().get(url, timeout=40)
             if r.status_code == 200:
                 return r.json() if as_json else r.text
             last = f"HTTP {r.status_code}"
@@ -44,7 +92,7 @@ def post(url, data, as_json=False, retries=3):
     for i in range(retries):
         try:
             time.sleep(DELAY)
-            r = _session.post(url, data=data, timeout=40)
+            r = session().post(url, data=data, timeout=40)
             if r.status_code == 200:
                 return r.json() if as_json else r.text
             last = f"HTTP {r.status_code}"

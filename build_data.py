@@ -546,8 +546,105 @@ def hidden_stores(path=None):
         return set()
 
 
+class _LineOut:
+    """Salida segura con varios hilos: cada hilo junta su texto hasta el fin de renglón y lo escribe entero (los mensajes
+    de dos tiendas no se mezclan en el mismo renglón). Cada renglón sale enseguida al registro de GitHub."""
+    def __init__(self, out):
+        import threading
+        self._out, self._lock, self._tl = out, threading.Lock(), threading.local()
+
+    def write(self, txt):
+        buf = getattr(self._tl, "b", "") + txt
+        *lines, self._tl.b = buf.split("\n")
+        if lines:
+            with self._lock:
+                self._out.write("".join(x + "\n" for x in lines))
+                self._out.flush()
+        return len(txt)
+
+    def flush(self):
+        rest = getattr(self._tl, "b", "")
+        with self._lock:
+            if rest:
+                self._out.write(rest); self._tl.b = ""
+            self._out.flush()
+
+    def __getattr__(self, name):
+        return getattr(self._out, name)
+
+
+STORE_WORKERS = int(os.environ.get("STORE_WORKERS", "6"))   # tiendas que se leen al mismo tiempo
+
+
+def store_lanes(stores):
+    """Agrupa las tiendas en «carriles» que se leen uno por hilo. Cada tienda va en su propio carril, salvo las que
+    comparten plataforma (Tiendanube, Cardeco): esas van juntas en un solo carril, una después de la otra, para que
+    la plataforma no reciba pedidos de varias tiendas al mismo tiempo. Así ningún servidor recibe más pedidos
+    por segundo que antes: cada tienda sigue con sus pausas (1,5 s, o lo que pida su robots.txt)."""
+    from scrapers import tiendanube, cardeco
+    lanes, by_key = [], {}
+    for s in stores:
+        key = "tiendanube" if s in tiendanube.TN_STORES else "cardeco" if s in cardeco.CE_STORES else s
+        if key not in by_key:
+            by_key[key] = []
+            lanes.append(by_key[key])
+        by_key[key].append(s)
+    return lanes
+
+
+def read_one(store, fn, t0):
+    """Lee una tienda. Devuelve (productos, estado). Si falla, usa la lectura anterior marcada como desactualizada."""
+    from scrapers import common
+    raw = RAW / f"{store}.json"
+    if (time.monotonic() - t0) / 60 > BUDGET_MIN:
+        # Sin tiempo en esta corrida (el trabajo de GitHub tiene un límite): se usan los datos anteriores
+        # de la tienda, marcados como desactualizados, y la próxima corrida empieza por ella.
+        items = read_raw(raw) if raw.exists() else []
+        return items, {"ok": False, "count": len(items), "stale": bool(items), "skipped": True,
+                       "error": "No alcanzó el tiempo de esta corrida: se muestran los precios de la lectura anterior."}
+    common.LOG.clear()
+    t1 = time.monotonic()
+    try:
+        items = fn()
+        if not items:
+            raise RuntimeError("0 productos")
+        raw.write_text(json.dumps(items, ensure_ascii=False))
+        st = {"ok": True, "count": len(items)}
+    except Exception as e:
+        why = " | ".join(common.LOG[:3]) or str(e)
+        print(f"[{store}] ERROR: {why}", flush=True)
+        items = read_raw(raw) if raw.exists() else []
+        st = {"ok": False, "count": len(items), "error": why[:400], "stale": bool(items)}
+    secs = time.monotonic() - t1
+    print(f"[tiempo] {store}: {int(secs // 60)} min {int(secs % 60)} s · {'ok' if st['ok'] else 'con error'} · {st['count']} productos", flush=True)
+    return items, st
+
+
+def read_stores(stores, scrapers, t0, workers=None):
+    """Lee las tiendas en paralelo (de a STORE_WORKERS carriles a la vez) y devuelve {tienda: (productos, estado)}."""
+    from concurrent.futures import ThreadPoolExecutor
+    workers = max(1, workers or STORE_WORKERS)
+    out = {}
+
+    def lane(names):
+        for s in names:
+            out[s] = read_one(s, scrapers[s], t0)
+
+    lanes = store_lanes(stores)
+    if workers == 1:
+        for names in lanes:
+            lane(names)
+        return out
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        for f in [ex.submit(lane, names) for names in lanes]:
+            f.result()   # si algo inesperado falla fuera de read_one, que se vea
+    return out
+
+
 def main(only):
-    from scrapers import SCRAPERS, common
+    from scrapers import SCRAPERS
+    if not isinstance(sys.stdout, _LineOut):
+        sys.stdout = _LineOut(sys.stdout)   # renglones enteros aunque escriban varias tiendas a la vez, y al instante
     DATA.mkdir(parents=True, exist_ok=True)
     RAW.mkdir(exist_ok=True)
     hist = load_history()
@@ -555,36 +652,17 @@ def main(only):
     status, all_items = {}, []
     t0 = time.monotonic()
     hidden = hidden_stores()   # se siguen leyendo para saber su estado, pero no se publican
-    for store in store_order(SCRAPERS, DATA / "meta.json"):
-        fn = SCRAPERS[store]
+    order = store_order(SCRAPERS, DATA / "meta.json")
+    todo = [s for s in order if not only or s in only]
+    res = read_stores(todo, SCRAPERS, t0)   # actualización 42: varias tiendas a la vez (ver read_stores)
+    # se arma todo en el mismo orden de siempre, así el resultado es idéntico al de leer de a una
+    for store in order:
         raw = RAW / f"{store}.json"
-        if only and store not in only:
+        if store not in res:
             if raw.exists() and store not in hidden:
                 all_items += read_raw(raw)
             continue
-        if (time.monotonic() - t0) / 60 > BUDGET_MIN:
-            # Sin tiempo en esta corrida (el trabajo de GitHub tiene un límite): se usan los datos anteriores
-            # de la tienda, marcados como desactualizados, y la próxima corrida empieza por ella.
-            items = read_raw(raw) if raw.exists() else []
-            status[store] = {"ok": False, "count": len(items), "stale": bool(items), "skipped": True,
-                             "error": "No alcanzó el tiempo de esta corrida: se muestran los precios de la lectura anterior."}
-            if store in hidden:
-                status[store]["hidden"] = True
-                continue
-            all_items += items
-            continue
-        common.LOG.clear()
-        try:
-            items = fn()
-            if not items:
-                raise RuntimeError("0 productos")
-            raw.write_text(json.dumps(items, ensure_ascii=False))
-            status[store] = {"ok": True, "count": len(items)}
-        except Exception as e:
-            why = " | ".join(common.LOG[:3]) or str(e)
-            print(f"[{store}] ERROR: {why}")
-            items = read_raw(raw) if raw.exists() else []
-            status[store] = {"ok": False, "count": len(items), "error": why[:400], "stale": bool(items)}
+        items, status[store] = res[store]
         if store in hidden:
             status[store]["hidden"] = True
             continue

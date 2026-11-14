@@ -718,3 +718,14 @@ Búsqueda del 4/11/2026 solo en sitios de los fabricantes (informe «Fichas ofic
   puntajes en Actions; falla si aparece un error, una falla de accesibilidad o si Lighthouse baja de 95 en
   accesibilidad o de 90 en buenas prácticas o SEO. No frena la publicación de precios.
 - Prueba nueva: `test_actualizacion_39_kyranohard`.
+
+## Actualización 42 — Tiendas leídas en paralelo
+
+- **Publicación más rápida**: `build_data.py` lee varias tiendas a la vez (`STORE_WORKERS`, 6 por defecto) en vez
+  de una por una. **Ninguna tienda recibe más pedidos**: cada una sigue con sus pausas (1,5 s, o lo que pida su
+  robots.txt) y respeta los 403/429 igual que antes. Las tiendas que comparten plataforma (Tiendanube, Cardeco) se
+  leen una después de la otra, en el mismo carril, para no sumar pedidos a la plataforma.
+- El resultado es **idéntico** al de leerlas de a una: se arma en el mismo orden (se comprobó con los datos reales).
+- El registro de GitHub muestra cuánto tardó cada tienda: `[tiempo] Tienda: 3 min 12 s · ok · 1500 productos`.
+- Para volver a leer de a una: variable `STORE_WORKERS=1` en el paso «Recolectar precios».
+- Prueba nueva: `test_actualizacion_42_tiendas_en_paralelo`.
