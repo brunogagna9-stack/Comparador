@@ -643,7 +643,7 @@ def test_estructura_del_sitio():
     for h in ("productos.html", "armado.html", "actualizar.html", "encontra.html", "comparar.html"):
         assert h in lay
     p = (site / "productos.html").read_text(encoding="utf-8")
-    assert "const PER=32" in p and "repeat(4,minmax(0,1fr))" in p and "Mostrar más" not in p and "position:sticky" in p and "margin:auto" in p
+    assert "const PER=perPage()" in p and "repeat(3,minmax(0,1fr))" in p  # act. 41: 15/35/50 por página según la vista and "Mostrar más" not in p and "position:sticky" in p and "margin:auto" in p
     # el buscador del encabezado no puede llamarse "q": comparar.html tiene su propio buscador y los dos se pisaban
     assert 'id="qh"' in lay and 'id="q"' not in lay
     assert 'id="q"' in (site / "comparar.html").read_text(encoding="utf-8")
@@ -1242,6 +1242,47 @@ def test_actualizacion_38_fichas_fotos_cuotas_marcas():
     # 6) Nickhard con reputación verificada y aviso de muestra chica
     nh = json.load(open("site/data/stores.json"))["stores"]["Nickhard"]
     assert nh["reputation"][0]["count"] == 15 and any("Pocas opiniones" in n for n in nh["notes"])
+
+
+def test_actualizacion_41_vistas_y_guia():
+    """Act. 41: tiendas A-Z en Productos; vistas íconos grandes / chicos / lista (15 / 35 / 50 por página, se recuerda);
+    banner de la portada con accesos directos (sin buscador ni números); guía rápida con Driver.js sección por sección."""
+    import re, subprocess
+    from pathlib import Path
+    site = Path("site")
+    pr = (site / "productos.html").read_text(encoding="utf-8")
+    assert '.sort((a,b)=>a.localeCompare(b,"es",{sensitivity:"base",numeric:true}))' in pr, "tiendas en orden alfabético"
+    assert 'm:{t:"Íconos grandes",d:"3 columnas",i:"▦",per:15}' in pr and 's:{t:"Íconos chicos",d:"5 columnas",i:"▪",per:35}' in pr and 'l:{t:"Lista",d:"50 por página",i:"☰",per:50}' in pr
+    assert 'localStorage.getItem("kn_vista")' in pr and 'S.vista="m"' in pr, "vista inicial: íconos grandes, y se recuerda"
+    assert 'closest("[data-f],[data-l],[data-cmp]")' in pr, "los botones con texto adentro siguen funcionando"
+    assert "const PER=32" not in pr and "function lrow(g)" in pr
+    for k in ("lista", "seg"):
+        assert f'localStorage.getItem("{k}")' in pr, "claves de siempre intactas"
+    ix = (site / "index.html").read_text(encoding="utf-8")
+    assert 'id="hq"' not in ix and 'id="stats"' not in ix and 'id="quick"' not in ix and 'class="tiles"' not in ix
+    for h in ("productos.html", "armado.html", "actualizar.html", "encontra.html", "comparar.html"):
+        assert f'<a class="ha" href="{h}">' in ix
+    assert 'data-guia="inicio"' in ix and 'id="pc3d"' in ix
+    lay = (site / "js" / "layout.js").read_text(encoding="utf-8")
+    assert 'g.src = "js/guia.js"' in lay and 'href="#guia" data-guia="inicio"' in lay
+    g = (site / "js" / "guia.js").read_text(encoding="utf-8")
+    assert 'const VER = "1.10.2"' in g and (site / "js" / "vendor" / "driver-1.10.2.js").is_file() and (site / "js" / "vendor" / "driver-1.10.2.css").is_file()
+    assert "MIT" in (site / "js" / "vendor" / "driver.LICENSE.txt").read_text(encoding="utf-8")
+    ids = re.findall(r'\{ id: "([a-z]+)", u: "([a-z]+)\.html"', g)
+    assert [i for i, _ in ids] == ["index", "productos", "armado", "actualizar", "encontra", "comparar"] and all(i == u for i, u in ids)
+    assert "navigator.webdriver" in g and "kn_guia_visto" in g, "la invitación aparece una sola vez y nunca arranca sola"
+    asst = (site / "js" / "assistant.js").read_text(encoding="utf-8")
+    assert 'href: "#guia"' in asst
+    css = (site / "css" / "layout.css").read_text(encoding="utf-8")
+    assert "#kn-guia{" in css and ".driver-popover.kn-tour" in css
+    # las fichas del recorrido existen en cada página (los que se dibujan con JS están en el código de la página)
+    need = {"productos.html": ["id=\"side\"", "id=\"tabs\"", "id=\"grid\""], "armado.html": ["id=\"mode\"", "id=\"sel\"", "id=\"ven\"", "id=\"res\"", "id=\"out\""],
+            "actualizar.html": ["id=\"slots\"", "id=\"txt\"", "id=\"fps\"", "id=\"go\""], "encontra.html": ["id=\"app\""], "comparar.html": ["id=\"cats\"", "id=\"q\"", "id=\"out\""]}
+    for f, keys in need.items():
+        src = (site / f).read_text(encoding="utf-8")
+        for k in keys:
+            assert k in src, (f, k)
+    subprocess.run(["node", "--check", str(site / "js" / "guia.js")], check=True)
 
 
 def test_actualizacion_40_velocidad_e_interfaz():

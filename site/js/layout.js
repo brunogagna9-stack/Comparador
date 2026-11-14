@@ -39,6 +39,7 @@ const HIST_ICO = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" st
     <div><h4>Información</h4><ul>
       <li><a href="index.html#como">Cómo funciona</a></li>
       <li><a href="tiendas.html">Tiendas</a></li>
+      <li><a href="#guia" data-guia="inicio">Guía rápida</a></li>
       <li><a href="preguntas.html">Preguntas frecuentes</a></li>
       <li><a href="index.html#confianza">Datos y confiabilidad</a></li>
       <li><a href="historial.html">Mi historial</a></li>
@@ -78,6 +79,8 @@ const HIST_ICO = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" st
     document.body.insertAdjacentHTML("beforeend", footer);
     const top = () => window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion:reduce)").matches ? "auto" : "smooth" });
     document.getElementById("fup").onclick = top; document.getElementById("totop").onclick = top;
+    // actualización 41: guía rápida (botón ❓ abajo a la izquierda; Driver.js se baja recién al abrirla)
+    if (!document.querySelector('script[src$="js/guia.js"]')) { const g = document.createElement("script"); g.src = "js/guia.js"; g.async = true; document.head.appendChild(g); }
     const tt = document.getElementById("totop"), onScroll = () => tt.classList.toggle("on", window.scrollY > 700);
     addEventListener("scroll", onScroll, { passive: true }); onScroll();
     // Datos opcionales del sitio (aviso de actualización, mail de contacto, avisos de bajas).

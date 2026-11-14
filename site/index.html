@@ -35,22 +35,8 @@
 .hero>*{position:relative;z-index:1}
 .hero h1{margin:0 0 8px;font-size:38px;line-height:1.1;letter-spacing:-1px;max-width:26ch}
 .hero p.lead{margin:0 0 20px;font-size:16.5px;opacity:.95;max-width:56ch}
-.hs{display:flex;gap:8px;max-width:640px;background:#fff;border-radius:999px;padding:6px;box-shadow:0 8px 28px rgba(0,0,0,.25)}
-.hs input{flex:1;min-width:0;border:0;background:transparent;color:#0f172a;font:inherit;font-size:16px;padding:10px 16px;outline:none}
-.hs button{border:0;border-radius:999px;background:#0f172a;color:#fff;font-weight:700;padding:0 22px}
-.hs button:hover{background:#1e293b}
-.quick{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center;font-size:13px}
-.quick a{color:#fff;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.45);padding:5px 13px;border-radius:999px;font-weight:600}
-.quick a:hover{background:rgba(255,255,255,.32)}
-.stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
-.stat{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);border-radius:14px;padding:9px 16px;min-width:118px}.stat b{display:block;font-size:22px;letter-spacing:-.5px}.stat span{font-size:12px;opacity:.92}
 .sec-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:34px 0 12px;flex-wrap:wrap}
 .sec-h h2{margin:0;font-size:22px;letter-spacing:-.5px}.sec-h a{font-weight:700}
-.tiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
-.tile{display:flex;flex-direction:column;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;color:var(--tx);box-shadow:var(--sh);transition:transform .15s,border-color .15s}
-.tile:hover{transform:translateY(-3px);border-color:var(--acc)}
-.tile .ic{width:46px;height:46px;border-radius:13px;background:color-mix(in srgb,var(--acc) 14%,var(--card));color:var(--acc);display:flex;align-items:center;justify-content:center;margin-bottom:4px}.tile .ic svg{width:24px;height:24px}
-.tile b{font-size:16px;letter-spacing:-.2px}.tile span{color:var(--mut);font-size:13px;line-height:1.45}.tile em{margin-top:auto;padding-top:8px;font-style:normal;color:var(--acc);font-weight:700;font-size:13px}
 /* categorías: foto real de un producto del catálogo + ícono de línea (actualización 27) */
 .cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px}
 .cat{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;color:var(--tx);font-weight:600;transition:border-color .15s,transform .15s}
@@ -76,6 +62,16 @@
 .trust{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:var(--sh);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 28px}
 .trust h3{margin:0 0 3px;font-size:15px}.trust p{margin:0;color:var(--mut)}.trust .ok{color:var(--ok);font-weight:800;margin-right:4px}
 .empty{color:var(--mut);padding:10px 2px}
+/* accesos directos del banner (actualización 41) */
+.hacts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;max-width:880px}
+.hero.has3d .hacts{grid-template-columns:repeat(2,minmax(0,1fr));--mw:640px}
+.ha{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);color:#fff;transition:background .15s,transform .15s}
+.ha:hover{background:rgba(255,255,255,.26);transform:translateY(-2px)}.ha:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.ha .ic{flex:none;width:40px;height:40px;border-radius:12px;background:#fff;color:var(--acc);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px}.ha .ic svg{width:22px;height:22px}
+.ha b{display:block;font-size:15px;letter-spacing:-.2px}.ha small{display:block;font-size:12.5px;opacity:.9;line-height:1.35;margin-top:1px}
+.ha.guia{background:rgba(15,23,42,.28);border-style:dashed}.ha.guia:hover{background:rgba(15,23,42,.4)}
+.ha.guia .ic{background:var(--grad);color:#fff;box-shadow:inset 0 0 0 2px rgba(255,255,255,.6)}
+@media(max-width:560px){.hacts{grid-template-columns:1fr!important;gap:8px}.ha{padding:10px 12px}.ha small{font-size:12.5px}}
 /* animación 3D del armado (js/hero3d.js) */
 .hero>.pc3d{position:absolute;z-index:1;right:16px;top:16px;bottom:16px;width:45%;min-height:360px;touch-action:pan-y;cursor:grab;opacity:0;transition:opacity .9s;border-radius:18px;overflow:hidden;background:#0b0a1f;box-shadow:0 0 0 1px rgba(255,255,255,.16),0 18px 50px rgba(8,4,40,.45)}
 .hero>.pc3d.ready{opacity:1}
@@ -93,15 +89,15 @@
 .pc3d .hint{position:absolute;right:16px;top:14px;font-size:11.5px;opacity:.7;pointer-events:none}
 .pc3d .pc3d-pause{position:absolute;left:12px;top:10px;z-index:2;border:1px solid rgba(255,255,255,.28);background:rgba(12,12,34,.6);color:#fff;border-radius:999px;padding:4px 11px;font:600 12px var(--font);cursor:pointer}.pc3d .pc3d-pause:hover{background:rgba(255,255,255,.18)}.pc3d .pc3d-pause:focus-visible{outline:2px solid #fff;outline-offset:2px}
 .hero.has3d{min-height:440px}
-.hero.has3d h1,.hero.has3d p.lead,.hero.has3d .hs,.hero.has3d .quick,.hero.has3d .stats{max-width:min(var(--mw,640px),54%)}
+.hero.has3d h1,.hero.has3d p.lead,.hero.has3d .hacts{max-width:min(var(--mw,640px),54%)}
 .hero.has3d h1{--mw:26ch}.hero.has3d p.lead{--mw:56ch}
 @media(max-width:1000px){.hero>.pc3d{position:relative;width:auto;height:340px;min-height:0;margin:20px 0 0;right:auto;top:auto;bottom:auto}
-  .hero.has3d h1,.hero.has3d p.lead,.hero.has3d .hs,.hero.has3d .quick,.hero.has3d .stats{max-width:none}.hero.has3d{min-height:0}}
+  .hero.has3d h1,.hero.has3d p.lead,.hero.has3d .hacts{max-width:none}.hero.has3d{min-height:0}}
 @media(max-width:800px){.hero>.pc3d{height:300px}.pc3d .hint{display:none}.pc3d .step{font-size:12.5px;gap:8px}.pc3d .step b{font-size:13.5px;white-space:nowrap}.pc3d .step .n{display:none}.pc3d .cap{bottom:12px}}
 
-@media(max-width:1100px){.tiles{grid-template-columns:repeat(3,minmax(0,1fr))}.drops{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:800px){.hero{padding:26px 18px 22px;border-radius:18px;margin-top:12px}.hero h1{font-size:27px}.hero p.lead{font-size:15px}.hs input{padding:9px 12px}.hs button{padding:0 16px}
-  .tiles{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.tile{padding:14px}.how,.trust{grid-template-columns:1fr}.stat{min-width:0;flex:1 1 30%;padding:8px 10px}.stat b{font-size:18px}.sec-h{margin-top:26px}.sec-h h2{font-size:19px}}
+@media(max-width:1100px){.drops{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:800px){.hero{padding:26px 18px 22px;border-radius:18px;margin-top:12px}.hero h1{font-size:27px}.hero p.lead{font-size:15px}
+  .hacts{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.ha{padding:10px;gap:9px}.ha .ic{width:34px;height:34px}.ha b{font-size:14px}.ha small{font-size:11.5px}.how,.trust{grid-template-columns:1fr}.sec-h{margin-top:26px}.sec-h h2{font-size:19px}}
 </style>
 </head>
 <body data-page="index">
@@ -109,10 +105,16 @@
 <main class="hm">
   <section class="hero" aria-label="Bienvenida">
     <h1>Hardware al mejor precio, sin vueltas</h1>
-    <p class="lead">Comparamos precio, stock y cuotas de las tiendas argentinas y te ayudamos a elegir: armar una PC, saber qué actualizar o encontrar el equipo justo, con datos técnicos verificados.</p>
-    <form class="hs" id="hs" role="search"><input id="hq" type="search" placeholder="¿Qué buscás? Ej.: rtx 4060, ryzen 5 5600, ssd 1tb…" aria-label="Buscar productos" autocomplete="off"><button type="submit">Buscar</button></form>
-    <div class="quick" id="quick"><span>Más buscados:</span></div>
-    <div class="stats" id="stats"></div>
+    <p class="lead">Compará precios de las tiendas argentinas y elegí mejor. ¿Qué querés hacer?</p>
+    <!-- actualización 41: accesos directos en lugar del buscador y los números (el buscador queda arriba, en el encabezado) -->
+    <nav class="hacts" aria-label="¿Qué querés hacer?">
+      <a class="ha" href="productos.html"><span class="ic" data-ico="_productos"></span><span><b>Productos</b><small>Precios, stock y cuotas de todas las tiendas</small></span></a>
+      <a class="ha" href="armado.html"><span class="ic" data-ico="_armado"></span><span><b>Armá tu PC</b><small>Piezas compatibles según tu presupuesto</small></span></a>
+      <a class="ha" href="actualizar.html"><span class="ic" data-ico="_actualizar"></span><span><b>¿Qué actualizar?</b><small>La mejora que más rinde en tu PC</small></span></a>
+      <a class="ha" href="encontra.html"><span class="ic" data-ico="_encontra"></span><span><b>Encontrá tu equipo</b><small>Unas preguntas y te sugerimos qué comprar</small></span></a>
+      <a class="ha" href="comparar.html"><span class="ic" data-ico="_comparar"></span><span><b>Comparar hardware</b><small>Hasta 4 piezas lado a lado</small></span></a>
+      <a class="ha guia" href="#guia" data-guia="inicio"><span class="ic" aria-hidden="true">?</span><span><b>¿Primera vez?</b><small>Ver la guía rápida</small></span></a>
+    </nav>
     <div class="pc3d" id="pc3d" role="group" aria-label="Animación: se arma una PC pieza por pieza (placa madre, procesador, memorias, disco, refrigeración líquida, placa de video, fuente, ventiladores y cables) y se enciende">
       <div class="hint">Arrastrá para girar</div>
       <div class="cap"><div class="step" id="pc3d-step" aria-live="off"></div><div class="dots" id="pc3d-dots"></div></div>
@@ -127,15 +129,6 @@
       window.__pc3dOk=ok;if(ok)document.querySelector(".hero").classList.add("has3d");else{var h=document.getElementById("pc3d");if(h)h.remove();}})();
     </script>
   </section>
-
-  <div class="sec-h"><h2>¿Qué querés hacer?</h2></div>
-  <div class="tiles">
-    <a class="tile" href="productos.html"><div class="ic" data-ico="_productos"></div><b>Productos</b><span>Precios, stock y cuotas de varias tiendas, con historial y avisos de bajas.</span><em>Ver productos →</em></a>
-    <a class="tile" href="armado.html"><div class="ic" data-ico="_armado"></div><b>Armado de PC</b><span>Elegí un presupuesto o una placa de video y armá la PC con piezas compatibles.</span><em>Armar mi PC →</em></a>
-    <a class="tile" href="actualizar.html"><div class="ic" data-ico="_actualizar"></div><b>¿Qué actualizar?</b><span>Contanos qué tenés y te decimos qué pieza mejora más tu PC por el dinero.</span><em>Ver mi mejora →</em></a>
-    <a class="tile" href="encontra.html"><div class="ic" data-ico="_encontra"></div><b>Encontrá tu equipo</b><span>Unas preguntas simples y te sugerimos qué comprar según tu uso y presupuesto.</span><em>Empezar →</em></a>
-    <a class="tile" href="comparar.html"><div class="ic" data-ico="_comparar"></div><b>Comparar hardware</b><span>Poné hasta 4 piezas lado a lado: especificaciones, rendimiento y conclusión.</span><em>Comparar →</em></a>
-  </div>
 
   <div class="sec-h"><h2>Explorá por categoría</h2><a href="productos.html">Ver todos →</a></div>
   <div class="cats" id="cats"></div>
@@ -167,10 +160,6 @@ const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"]/g,c=>(
 const CATS={procesadores:"Procesadores",motherboards:"Motherboards","placas-de-video":"Placas de video","memorias-ram":"Memorias RAM",almacenamiento:"Almacenamiento",refrigeracion:"Refrigeración",fuentes:"Fuentes",gabinetes:"Gabinetes",monitores:"Monitores",notebooks:"Notebooks","pcs-armadas":"PCs armadas",mouses:"Mouse",teclados:"Teclados",auriculares:"Auriculares",perifericos:"Otros periféricos",redes:"Redes",accesorios:"Cables y accesorios",otros:"Otros"};
 document.querySelectorAll("[data-ico]").forEach(el=>el.innerHTML=ICONS.svg(el.dataset.ico,24));
 function catPhotoFail(img){const ph=img.parentNode,fb=img.dataset.fb;if(fb&&img.src!==fb){img.src=fb;img.removeAttribute("data-fb");return}ph.innerHTML=ICONS.svg(ph.dataset.c,42,"big")}
-const QUICK=["RTX 4060","Ryzen 5 5600","SSD 1TB","DDR4 16GB","Monitor 24"];
-$("#quick").insertAdjacentHTML("beforeend",QUICK.map(q=>`<a href="productos.html?q=${encodeURIComponent(q)}">${esc(q)}</a>`).join(""));
-$("#hs").addEventListener("submit",e=>{e.preventDefault();const q=$("#hq").value.trim();location.href="productos.html"+(q?"?q="+encodeURIComponent(q):"")});
-if(window.SRCH)SRCH.mount($("#hq"),{host:$("#hs")});   // si el autocompletado ya cargó (si no, lo monta layout.js al cargar)
 const chgOk=g=>!!(g.chg&&!(g.offers[0]&&g.offers[0].anom));
 const price=o=>o.price_cash??o.price_list;
 async function j(u,d){try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw 0;return await r.json()}catch{return d}}
@@ -181,10 +170,6 @@ async function j(u,d){try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)thr
     const dr=(Array.isArray(list)?list:[]).filter(g=>g.offers&&g.offers.length&&chgOk(g)&&g.chg.pct<0).sort((a,b)=>a.chg.pct-b.chg.pct);
     H={products:list.length||0,stores:stores.size,dropped:dr.length,cats,photo:{},drops:dr.slice(0,8)}}
   const drops=H.drops||[];
-  if(H.products)$("#stats").innerHTML=`<div class="stat"><b>${H.products.toLocaleString("es-AR")}</b><span>productos</span></div><div class="stat"><b>${H.stores}</b><span>tiendas con datos</span></div><div class="stat"><b>${H.dropped}</b><span>bajaron de precio</span></div>`;
-  // los números de la portada cuentan hacia arriba (salvo con "reducir movimiento")
-  if(!matchMedia("(prefers-reduced-motion:reduce)").matches)document.querySelectorAll(".stat b").forEach(b=>{const end=+b.textContent.replace(/\D/g,"");if(!end)return;const t0=performance.now(),D=900;
-    const step=t=>{const k=Math.min(1,(t-t0)/D),e=1-Math.pow(1-k,3);b.textContent=Math.round(end*e).toLocaleString("es-AR");if(k<1)requestAnimationFrame(step)};requestAnimationFrame(step)});
   const cc=H.cats||{},PH=H.photo||{};
   $("#cats").innerHTML=Object.keys(CATS).filter(k=>cc[k]).map(k=>{const p=PH[k];
     return `<a class="cat" href="productos.html?cat=${k}"><div class="ph" data-c="${k}">${p&&p.image?`<img loading="lazy" decoding="async" src="${esc(p.image)}" ${p.image_fb?`data-fb="${esc(p.image_fb)}"`:""} alt="" title="${esc(p.name)}" onerror="catPhotoFail(this)">`:ICONS.svg(k,42,"big")}</div><div class="row"><span class="bi">${ICONS.svg(k,17)}</span><span>${CATS[k]}<small>${cc[k].toLocaleString("es-AR")} productos</small></span></div></a>`}).join("")||`<div class="empty">Los productos aparecen apenas se lean las tiendas.</div>`;

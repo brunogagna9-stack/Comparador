@@ -272,6 +272,8 @@
       const q = norm(question).trim();
       if (!q) return reply([P("Escribí tu pregunta y te ayudo.")], { basis: "none" });
       if (has(q, /^(hola|buenas|buen dia|buenas tardes|buenas noches|hey|que tal)\b/) && q.length < 25) return reply([P("¡Hola! Soy el asistente de KyraNoHard. Puedo explicarte términos técnicos, comparar productos, contarte qué datos tenemos de las tiendas y recomendarte un equipo. ¿Qué necesitás?")], { basis: "gen", follow: A.suggestions(ctx) });
+      // actualización 41: «¿cómo se usa la web?» → guía rápida (js/guia.js abre cualquier enlace a «#guia»)
+      if (has(q, /guia( rapida)?|tutorial|recorrido|primera vez|como (se )?(usa|uso|utiliza|funciona) (la|esta) (web|pagina|sitio)|como (se )?usa (kyranohard|esto)|no se (como )?usar/)) return reply([P("Tenemos una guía rápida que te muestra, sección por sección, para qué sirve cada parte de la web: Productos, Armado de PC, ¿Qué actualizar?, Encontrá tu equipo y Comparar hardware."), P("También la abrís cuando quieras con el botón «? Guía» de abajo a la izquierda.")], { basis: "app", links: [{ label: "Ver la guía rápida", href: "#guia" }] });
       const stores = Object.keys(STORE_ALIASES).filter(k => STORE_ALIASES[k].test(q));
       if (A.state.rec && !has(q, /^(que es|cuanto|precio)/)) return recommend(question, ctx);
       if (has(q, /etiqueta|verificado|estimado|pendiente de verif|sin datos|que significa (el|la) (cartel|marca)/)) return aboutTags();

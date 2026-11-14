@@ -117,6 +117,38 @@ aside details>*:not(summary){margin-top:6px}
   .im{aspect-ratio:1/.85;margin-bottom:6px}.nm{font-size:13px;min-height:2.6em;margin-bottom:4px}.pr{font-size:16px}.sub,.st{font-size:12px}
   .addl{padding:2px 9px;font-size:12px;min-height:28px}
 }
+/* ---- vistas: íconos grandes, íconos chicos y lista (actualización 41, como en ComparáSúper) ---- */
+.vmenu{position:relative}.vmenu summary{list-style:none;cursor:pointer}.vmenu summary::-webkit-details-marker{display:none}
+.vbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);color:var(--tx);padding:7px 13px;border-radius:999px;font-weight:600;font-size:14px;box-shadow:var(--sh);white-space:nowrap}.vbtn:hover{border-color:var(--acc)}
+.vmenu summary:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.vopts{position:absolute;right:0;top:calc(100% + 6px);z-index:30;background:var(--card);border:1px solid var(--line2);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.22);padding:6px;min-width:220px}
+.vopts button{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;color:var(--tx);padding:9px 10px;border-radius:8px;text-align:left;font:inherit;font-size:14.5px;cursor:pointer}
+.vopts button:hover,.vopts button.on{background:color-mix(in srgb,var(--acc) 12%,transparent)}
+.vopts .vi{font-size:20px;width:24px;text-align:center}.vopts small{display:block;color:var(--mut);font-size:12px}.vopts b{margin-left:auto;color:var(--acc)}
+.grid.v-m{grid-template-columns:repeat(3,minmax(0,1fr))}
+.grid.v-s{grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.grid.v-s .card{padding:8px}.grid.v-s .im{margin-bottom:6px}.grid.v-s .nm{font-size:13px;min-height:2.6em;margin-bottom:3px}
+.grid.v-s .pr{font-size:16px}.grid.v-s .old,.grid.v-s .sub,.grid.v-s .rep{display:none}.grid.v-s .st{font-size:11px}
+.grid.v-s .tx{display:none}.grid.v-s .cmpb,.grid.v-s .addl{min-width:30px;min-height:28px;padding:3px 8px;font-size:13px}
+.grid.v-l{display:flex;flex-direction:column;gap:0;background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--sh)}
+.grid.v-l .card.lrow{display:grid;grid-template-columns:72px minmax(0,1fr) auto auto;gap:14px;align-items:center;border:0;border-bottom:1px solid var(--line);border-radius:0;box-shadow:none;padding:10px 14px}
+.grid.v-l .card.lrow:last-child{border-bottom:0}.grid.v-l .card.lrow:hover{transform:none;box-shadow:none;background:var(--soft)}
+.lrow .im{width:72px;margin:0;border-radius:10px}.lrow .im .ph{font-size:0}.lrow .im .ph svg{width:28px;height:28px}
+.lrow .nm{min-height:0;margin:0 0 2px}.lrow .st{text-transform:none;letter-spacing:0}
+.lrow .li-p{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:3px;white-space:nowrap}.lrow .li-p .badge{position:static}.lrow .li-p .old{margin:0}
+.lrow .li-a{display:flex;gap:6px;align-items:center}.lrow .li-a button{position:relative;inset:auto;z-index:2;box-shadow:none;border:1px solid var(--line)}
+.lrow .star{background:var(--card)}
+.grid.v-l .empty{padding:40px}
+@media(max-width:1180px){.grid.v-m{grid-template-columns:repeat(3,minmax(0,1fr))}.grid.v-s{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:800px){.grid.v-m{grid-template-columns:repeat(2,minmax(0,1fr))}.grid.v-s{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+  .wrap>main{min-width:0}.sortw{flex-wrap:nowrap}.sortw select{min-width:0}.vopts{right:auto;left:0}
+  .grid.v-s .card{padding:6px}.grid.v-s .nm{font-size:11.5px}.grid.v-s .pr{font-size:14px}.grid.v-s .st{display:none}
+  .grid.v-s .star{width:24px;height:24px;line-height:24px;font-size:13px}.grid.v-s .cmpb,.grid.v-s .addl{min-width:26px;min-height:24px;padding:1px 6px;font-size:12px}
+  .grid.v-l .card.lrow{grid-template-columns:56px minmax(0,1fr) auto;grid-template-areas:"im inf pr" "im ac ac";gap:6px 10px;padding:10px}
+  .lrow .im{width:56px;grid-area:im;align-self:start}.lrow .li-i{grid-area:inf}.lrow .li-p{grid-area:pr;align-self:start}.lrow .li-a{grid-area:ac;justify-content:flex-start}
+  .lrow .nm{font-size:13px}.lrow .pr{font-size:15px}
+}
+@media(max-width:400px){.grid.v-m .old{display:block;margin-left:0}}
 [hidden]{display:none!important}
 /* ---- filtros por categoría (actualización 27) ---- */
 #fxbox details{border-top:1px solid var(--line);padding:8px 0}
@@ -147,7 +179,7 @@ aside details>*:not(summary){margin-top:6px}
     <div id="alert"></div>
     <div class="tabs" id="tabs"></div>
     <div class="summary" id="sum"></div><div class="chips" id="chips"></div>
-    <div class="grid" id="grid" aria-busy="true"><div class="sk" aria-hidden="true"><i></i><b></b><b></b></div><div class="sk" aria-hidden="true"><i></i><b></b><b></b></div><div class="sk" aria-hidden="true"><i></i><b></b><b></b></div><div class="sk" aria-hidden="true"><i></i><b></b><b></b></div><div class="sk" aria-hidden="true"><i></i><b></b><b></b></div><div class="sk" aria-hidden="true"><i></i><b></b><b></b></div><div class="sk" aria-hidden="true"><i></i><b></b><b></b></div><div class="sk" aria-hidden="true"><i></i><b></b><b></b></div></div>
+    <div class="grid v-m" id="grid" aria-busy="true"><div class="sk" aria-hidden="true"><i></i><b></b><b></b></div><div class="sk" aria-hidden="true"><i></i><b></b><b></b></div><div class="sk" aria-hidden="true"><i></i><b></b><b></b></div><div class="sk" aria-hidden="true"><i></i><b></b><b></b></div><div class="sk" aria-hidden="true"><i></i><b></b><b></b></div><div class="sk" aria-hidden="true"><i></i><b></b><b></b></div><div class="sk" aria-hidden="true"><i></i><b></b><b></b></div><div class="sk" aria-hidden="true"><i></i><b></b><b></b></div></div>
     <nav class="pager" id="pager" aria-label="Páginas de resultados"></nav><div class="ad-slot" data-slot="productos" hidden></div><div class="pinfo" id="pinfo"></div>
   </main>
 </div>
@@ -165,7 +197,12 @@ const COLORS=["#1f6feb","#e0763a","#12a37a","#b04ad6","#d6a31f","#d64a6a","#4a9e
 let DATA=[],HIST={},META={},CFG={stores:{}};
 const S={tab:"todos",cat:"",brands:new Set(),stores:new Set(),pmin:null,pmax:null,stock:false,multi:false,lowonly:false,sort:"rel",q:"",page:1,allBrands:false,bq:"",fx:{}};
 let CX=null;   // contexto con la base de hardware y las fichas (para los filtros por categoría)
-const PER=32;   // 4 columnas × 8 filas por página
+/* actualización 41: tres formas de ver los productos (como en ComparáSúper). Se recuerda en el navegador (clave kn_vista). */
+const VISTAS={m:{t:"Íconos grandes",d:"3 columnas",i:"▦",per:15},s:{t:"Íconos chicos",d:"5 columnas",i:"▪",per:35},l:{t:"Lista",d:"50 por página",i:"☰",per:50}};
+S.vista="m";try{const v=localStorage.getItem("kn_vista");if(VISTAS[v])S.vista=v}catch{}
+const perPage=()=>VISTAS[S.vista].per;
+function setVista(v){if(!VISTAS[v]||v===S.vista){closeVmenu();return}const first=(S.page-1)*perPage();S.vista=v;try{localStorage.setItem("kn_vista",v)}catch{}S.page=Math.floor(first/perPage())+1;render();const b=$("#vmenu summary");if(b)b.focus()}
+function closeVmenu(){const d=$("#vmenu");if(d)d.open=false}
 const chgOk=g=>!!(g.chg&&!(g.offers[0]&&g.offers[0].anom));   // un salto sospechoso no cuenta como "bajó/subió"
 const price=o=>o.price_cash??o.price_list,best=g=>price(g.offers[0]);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -231,10 +268,18 @@ function card(g){
   const o=visible(g)[0]||g.offers[0],c=chgOk(g)?g.chg:null;
   const badge=c?`<span class="badge ${c.pct<0?"d":"u"}">${c.pct<0?"▼":"▲"} ${Math.abs(c.pct).toLocaleString("es-AR")}%</span>`:"";
   const f=FOLLOW[g.id]?" on":"";
-  return `<div class="card" data-id="${esc(g.id)}"><a class="stretch" href="${DET.url(g.id)}" data-open="${esc(g.id)}" aria-label="${esc("Ver "+g.name)}"></a><div class="im">${imgTag(g,true)}${badge}<button class="star${f}" data-f="${esc(g.id)}" title="Seguir este producto" aria-label="Seguir precio">${f?"★":"☆"}</button><button class="cmpb${CT.cmp.has(g.id,g.category)?" on":""}" data-cmp="${esc(g.id)}" title="${CT.cmp.has(g.id,g.category)?"Quitar de la comparación":"Agregar a la comparación"}" aria-label="${CT.cmp.has(g.id,g.category)?"Quitar de la comparación":"Agregar a la comparación"}">${CT.cmp.has(g.id,g.category)?"✓ Comparar":"⚖ Comparar"}</button><button class="addl${LIST.includes(g.id)?" on":""}" data-l="${esc(g.id)}" aria-label="${LIST.includes(g.id)?"Quitar de mi lista":"Agregar a mi lista"}">${LIST.includes(g.id)?"✓ En lista":"+ Lista"}</button></div>
+  return `<div class="card" data-id="${esc(g.id)}"><a class="stretch" href="${DET.url(g.id)}" data-open="${esc(g.id)}" aria-label="${esc("Ver "+g.name)}"></a><div class="im">${imgTag(g,true)}${badge}<button class="star${f}" data-f="${esc(g.id)}" title="Seguir este producto" aria-label="Seguir precio">${f?"★":"☆"}</button><button class="cmpb${CT.cmp.has(g.id,g.category)?" on":""}" data-cmp="${esc(g.id)}" title="${CT.cmp.has(g.id,g.category)?"Quitar de la comparación":"Agregar a la comparación"}" aria-label="${CT.cmp.has(g.id,g.category)?"Quitar de la comparación":"Agregar a la comparación"}">${CT.cmp.has(g.id,g.category)?'✓<span class="tx"> Comparar</span>':'⚖<span class="tx"> Comparar</span>'}</button><button class="addl${LIST.includes(g.id)?" on":""}" data-l="${esc(g.id)}" aria-label="${LIST.includes(g.id)?"Quitar de mi lista":"Agregar a mi lista"}">${LIST.includes(g.id)?'✓<span class="tx"> En lista</span>':'+<span class="tx"> Lista</span>'}</button></div>
   <div class="st">${esc(o.store)}${REP.badge(o.store)}${stale(o.store)?'<span class="warnpill" title="La tienda no respondió en la última lectura: este precio puede estar desactualizado">dato viejo</span>':""}${o.anom?'<span class="warnpill" title="El precio cambió de forma muy brusca: confirmalo en la tienda">precio inusual</span>':""}${g.dif?'<span class="warnpill" title="Los precios de las tiendas difieren 3 veces o más: confirmá que sea exactamente el mismo modelo">precios muy distintos</span>':""}</div><div class="nm">${esc(g.name)}</div>
   <div class="pr">${ARS(price(o))}${c&&c.pct<0?`<span class="old">${ARS(c.prev)}</span>`:""}</div>
   <div class="sub">${g.offers.length>1?`Comparado en ${g.offers.length} tiendas`:"1 tienda"}${g.low?' · <span class="low">mínimo histórico</span>':""}</div></div>`;
+}
+/* vista Lista: una fila por producto (foto chica, nombre, tienda más barata, precio y botones) */
+function lrow(g){
+  const o=visible(g)[0]||g.offers[0],c=chgOk(g)?g.chg:null,f=FOLLOW[g.id]?" on":"",inC=CT.cmp.has(g.id,g.category),inL=LIST.includes(g.id);
+  return `<div class="card lrow" data-id="${esc(g.id)}"><a class="stretch" href="${DET.url(g.id)}" data-open="${esc(g.id)}" aria-label="${esc("Ver "+g.name)}"></a><div class="im">${imgTag(g,true)}</div>
+  <div class="li-i"><div class="nm">${esc(g.name)}</div><div class="st">${esc(o.store)}${REP.badge(o.store)}${stale(o.store)?'<span class="warnpill" title="La tienda no respondió en la última lectura: este precio puede estar desactualizado">dato viejo</span>':""}${o.anom?'<span class="warnpill" title="El precio cambió de forma muy brusca: confirmalo en la tienda">precio inusual</span>':""}${g.dif?'<span class="warnpill" title="Los precios de las tiendas difieren 3 veces o más: confirmá que sea exactamente el mismo modelo">precios muy distintos</span>':""}</div><div class="sub">${g.offers.length>1?`Comparado en ${g.offers.length} tiendas`:"1 tienda"}${g.low?' · <span class="low">mínimo histórico</span>':""}</div></div>
+  <div class="li-p"><div class="pr">${ARS(price(o))}</div>${c?`<span class="badge ${c.pct<0?"d":"u"}">${c.pct<0?"▼":"▲"} ${Math.abs(c.pct).toLocaleString("es-AR")}%</span>`:""}${c&&c.pct<0?`<span class="old">${ARS(c.prev)}</span>`:""}</div>
+  <div class="li-a"><button class="star${f}" data-f="${esc(g.id)}" title="Seguir este producto" aria-label="Seguir precio">${f?"★":"☆"}</button><button class="cmpb${inC?" on":""}" data-cmp="${esc(g.id)}" title="${inC?"Quitar de la comparación":"Agregar a la comparación"}" aria-label="${inC?"Quitar de la comparación":"Agregar a la comparación"}">${inC?'✓<span class="tx"> Comparar</span>':'⚖<span class="tx"> Comparar</span>'}</button><button class="addl${inL?" on":""}" data-l="${esc(g.id)}" aria-label="${inL?"Quitar de mi lista":"Agregar a mi lista"}">${inL?'✓<span class="tx"> En lista</span>':'+<span class="tx"> Lista</span>'}</button></div></div>`;
 }
 function counts(){if(!FULL&&TOT)return {todos:TOT.todos,bajaron:TOT.bajaron,subieron:TOT.subieron,seguidos:Object.keys(FOLLOW).length};   // act. 40: totales precalculados mientras no está el catálogo entero
   const t={todos:DATA.length,bajaron:0,subieron:0,seguidos:0};
@@ -282,16 +327,16 @@ function renderChips(){
 function render(){
   const t=counts(),names={todos:"Todos",bajaron:"▼ Bajaron de precio",subieron:"▲ Subieron de precio",seguidos:"★ Seguidos"};
   $("#tabs").innerHTML=Object.keys(names).map(k=>`<button class="tab ${S.tab===k?"on":""}" data-t="${k}">${names[k]}<span class="n">${t[k]}</span></button>`).join("")+`<button class="tab" id="fbtn" aria-expanded="${$("#side").classList.contains("show")}">☰ Filtros</button>`+
-   `<div class="sortw"><span class="sub">Ordenar</span><select id="sort" aria-label="Ordenar productos">${[["rel","Más relevante"],["price","Menor precio"],["priceDesc","Mayor precio"],["down","Mayor baja %"],["up","Mayor suba %"],["stores","Más tiendas"],["spread","Mayor diferencia entre tiendas"]].map(([v,l])=>`<option value="${v}" ${S.sort===v?"selected":""}>${l}</option>`).join("")}</select></div>`;
+   `<div class="sortw"><details class="vmenu" id="vmenu"><summary class="vbtn" aria-label="Cambiar la vista (ahora: ${VISTAS[S.vista].t})"><span aria-hidden="true">${VISTAS[S.vista].i}</span> Ver ▾</summary><div class="vopts" role="group" aria-label="Vista de los productos">${Object.entries(VISTAS).map(([k,v])=>`<button type="button" data-vista="${k}" class="${S.vista===k?"on":""}" aria-pressed="${S.vista===k}"><span class="vi" aria-hidden="true">${v.i}</span><span>${v.t}<small>${v.d}</small></span>${S.vista===k?'<b aria-hidden="true">•</b>':""}</button>`).join("")}</div></details><span class="sub">Ordenar</span><select id="sort" aria-label="Ordenar productos">${[["rel","Más relevante"],["price","Menor precio"],["priceDesc","Mayor precio"],["down","Mayor baja %"],["up","Mayor suba %"],["stores","Más tiendas"],["spread","Mayor diferencia entre tiendas"]].map(([v,l])=>`<option value="${v}" ${S.sort===v?"selected":""}>${l}</option>`).join("")}</select></div>`;
   $("#sort").onchange=e=>{S.sort=e.target.value;S.page=1;render()};
   fuzzyQ();const rows=filtered().sort(sorter());
   $("#sum").innerHTML=esc(`${rows.length.toLocaleString("es-AR")} resultados`+(S.tab==="bajaron"||S.tab==="subieron"?` · cambios de los últimos ${META.recent_days||14} días`:""))+
     (S.q.trim()?` <span class="qact">${QF?"Sin coincidencias exactas; parecidos a":"Buscando:"} <b>«${esc(S.q.trim())}»</b> <button type="button" id="qclear">✕ Quitar búsqueda</button></span>`:"");   // act. 36: que se vea la búsqueda activa y se pueda quitar
   {const qc=$("#qclear");if(qc)qc.onclick=()=>{S.q="";$("#qh").value="";S.page=1;render()}}
-  const pages=Math.max(1,Math.ceil(rows.length/PER));if(S.page>pages)S.page=pages;if(S.page<1)S.page=1;
+  const PER=perPage(),pages=Math.max(1,Math.ceil(rows.length/PER));if(S.page>pages)S.page=pages;if(S.page<1)S.page=1;
   const from=(S.page-1)*PER;
-  $("#grid").removeAttribute("aria-busy");
-  $("#grid").innerHTML=rows.slice(from,from+PER).map(card).join("")||`<div class="empty">${S.tab==="seguidos"?"Todavía no seguís productos. Tocá la ☆ de cualquier producto.":S.tab==="todos"?"Sin resultados.":"Todavía no hay cambios de precio registrados. Aparecen a medida que se actualizan los datos."}</div>`;
+  $("#grid").removeAttribute("aria-busy");$("#grid").className="grid v-"+S.vista;
+  $("#grid").innerHTML=rows.slice(from,from+PER).map(S.vista==="l"?lrow:card).join("")||`<div class="empty">${S.tab==="seguidos"?"Todavía no seguís productos. Tocá la ☆ de cualquier producto.":S.tab==="todos"?"Sin resultados.":"Todavía no hay cambios de precio registrados. Aparecen a medida que se actualizan los datos."}</div>`;
   renderPager(pages,rows.length,from);syncUrl();renderChips();
   renderSide();
 }
@@ -300,7 +345,7 @@ function renderPager(pages,total,from){
   if(pages<=1){pg.innerHTML="";info.textContent=total?`Mostrando los ${total} resultados`:"";return}
   const b=(n,l,dis,on)=>`<button data-pg="${n}" ${dis?"disabled":""} ${on?'class="on" aria-current="page"':""} aria-label="${on?"Página "+n+" (actual)":/^\d+$/.test(l)?"Ir a la página "+l:l}">${l}</button>`;
   pg.innerHTML=b(S.page-1,"‹ Anterior",S.page<=1)+CT.pageList(S.page,pages).map(n=>n==="…"?'<span class="gap">…</span>':b(n,String(n),false,n===S.page)).join("")+b(S.page+1,"Siguiente ›",S.page>=pages);
-  info.textContent=`Página ${S.page} de ${pages} · productos ${from+1}–${Math.min(from+PER,total)} de ${total.toLocaleString("es-AR")}`;
+  info.textContent=`Página ${S.page} de ${pages} · productos ${from+1}–${Math.min(from+perPage(),total)} de ${total.toLocaleString("es-AR")}`;
 }
 function syncUrl(){   // la página, la búsqueda y la categoría quedan en la dirección: se puede volver atrás o compartir
   try{const u=new URLSearchParams();if(S.q)u.set("q",S.q);if(S.cat)u.set("cat",S.cat);if(S.tab!=="todos")u.set("tab",S.tab);if(S.page>1)u.set("p",S.page);
@@ -363,10 +408,12 @@ function openList(){
 }
 function toggleF(id){const g=DATA.find(x=>x.id===id);if(FOLLOW[id])delete FOLLOW[id];else FOLLOW[id]={price:best(g),name:g.name};saveF();alertBox();render()}
 document.addEventListener("click",e=>{
-  const t=e.target;
-  if(t.dataset.f){e.stopPropagation();toggleF(t.dataset.f);return}
-  if(t.dataset.l){e.stopPropagation();toggleL(t.dataset.l);return}
-  if(t.dataset.cmp){e.stopPropagation();e.preventDefault();toggleC(t.dataset.cmp,false);return}
+  const t=e.target,bt=t.closest&&t.closest("[data-f],[data-l],[data-cmp]");
+  if(bt&&bt.dataset.f){e.stopPropagation();toggleF(bt.dataset.f);return}
+  if(bt&&bt.dataset.l){e.stopPropagation();toggleL(bt.dataset.l);return}
+  if(bt&&bt.dataset.cmp){e.stopPropagation();e.preventDefault();toggleC(bt.dataset.cmp,false);return}
+  const vb=t.closest("[data-vista]");if(vb){setVista(vb.dataset.vista);return}
+  if(!t.closest("#vmenu"))closeVmenu();
   const tb=t.closest("[data-t]");if(tb){e.preventDefault();S.tab=tb.dataset.t;if(!FULL&&S.tab==="seguidos")loadFull();S.page=1;if(S.tab==="bajaron")S.sort="down";else if(S.tab==="subieron")S.sort="up";else if(S.tab==="todos"&&(S.sort==="down"||S.sort==="up"))S.sort="rel";render();return}
   if(t.closest("#fbtn")){$("#side").classList.toggle("show");render();return}
   const ch=t.closest("[data-chip]");if(ch){const set=S.fx[ch.dataset.chip];if(set)set.delete(ch.dataset.v);S.page=1;render();return}
@@ -375,7 +422,7 @@ document.addEventListener("click",e=>{
   const c=t.closest(".card");if(c){openModal(c.dataset.id);return}
   if(t.id==="modal")t.classList.remove("on");
 });
-document.addEventListener("keydown",e=>{if(e.key==="Escape")$("#modal").classList.remove("on")});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){const d=$("#vmenu");if(d&&d.open){d.open=false;d.querySelector("summary").focus();return}$("#modal").classList.remove("on")}});
 function bind(){
   const re=()=>{S.page=1;render()};
   $("#qh").oninput=e=>{S.q=e.target.value;if(!FULL)loadFull();re()};
@@ -407,7 +454,8 @@ function setupData(){
   // tiendas visibles en el menú: con productos y leídas bien en la última actualización. Las demás (bloqueadas, sin
   // productos u ocultadas en config.json) quedan ocultas, no borradas: vuelven solas cuando se lean bien.
   const showStore=s=>{const m=(META.stores||{})[s];return (sc[s]||0)>0&&!(m&&(m.hidden||!m.ok))&&!((CFG.stores||{})[s]||{}).ocultar};
-  $("#stores").innerHTML=Object.keys(META.stores||sc).filter(showStore).map(s=>{const m=(META.stores||{})[s];return `<label title="${esc(m&&m.error||"")}"><input type="checkbox" data-s="${esc(s)}"${S.stores.has(s)?" checked":""}> ${esc(s)}${m&&!m.ok?" ⚠️":""}<span class="c">${sc[s]||0}</span></label>`}).join("");
+  // actualización 41: tiendas en orden alfabético (sin importar mayúsculas ni acentos)
+  $("#stores").innerHTML=Object.keys(META.stores||sc).filter(showStore).sort((a,b)=>a.localeCompare(b,"es",{sensitivity:"base",numeric:true})).map(s=>{const m=(META.stores||{})[s];return `<label title="${esc(m&&m.error||"")}"><input type="checkbox" data-s="${esc(s)}"${S.stores.has(s)?" checked":""}> ${esc(s)}${m&&!m.ok?" ⚠️":""}<span class="c">${sc[s]||0}</span></label>`}).join("");
   // base de hardware y fichas: completan los filtros por categoría (si no cargan, los filtros usan solo el título)
   HWP=HWP||Promise.all([j("data/hardware.json",null),j("data/specs.json",null)]);
   const mine=DATA;HWP.then(([hw,sp])=>{try{if(hw&&window.FX&&mine===DATA){CX=CT.create(hw,DATA,META,sp);FX.init(CX);FX.clear(DATA);if(S.cat&&BOUND)render()}}catch(e){}});
