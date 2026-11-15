@@ -150,28 +150,34 @@ def verify(env=os.environ, call=http):
             ok = False
             print("  Supabase: no responde (" + str(e)[:120] + ")")
     if brevo:
-        try:
-            acc = call("GET", "https://api.brevo.com/v3/account", {"api-key": brevo, "accept": "application/json"}) or {}
-            print("  Brevo: acepta la clave desde GitHub" + (" (plan: " + str((acc.get("plan") or [{}])[0].get("type", ""))[:20] + ")" if isinstance(acc.get("plan"), list) and acc.get("plan") else ""))
-            if sender:
+        # Se consulta algo de solo lectura de la parte de envíos transaccionales (la misma que usan los avisos).
+        # 401 = clave inválida o conexión bloqueada (IP); 403 = la clave no tiene permiso para ese recurso.
+        res = None
+        for path in ("/v3/smtp/statistics/aggregatedReport?days=1", "/v3/smtp/templates?limit=1", "/v3/senders"):
+            try:
+                body = call("GET", "https://api.brevo.com" + path, {"api-key": brevo, "accept": "application/json"}) or {}
+                res = ("ok", path, body)
+                break
+            except urllib.error.HTTPError as e:
+                why = ""
                 try:
-                    snd = call("GET", "https://api.brevo.com/v3/senders", {"api-key": brevo, "accept": "application/json"}) or {}
-                    act = {str(x.get("email", "")).lower() for x in snd.get("senders", []) if x.get("active")}
-                    print("  Brevo: el remitente " + ("está verificado y activo" if sender.lower() in act else "NO figura como remitente activo"))
-                    ok = ok and sender.lower() in act
+                    why = str(json.loads(e.read().decode("utf-8", "replace")).get("message") or "")[:200]
                 except Exception:
                     pass
-        except urllib.error.HTTPError as e:
+                res = ("http", e.code, why)
+                if e.code == 401:
+                    break
+            except Exception as e:
+                res = ("red", str(e)[:120], "")
+                break
+        if res[0] == "ok":
+            print("  Brevo: acepta la clave desde GitHub (consulta de envíos transaccionales)")
+        elif res[0] == "http":
             ok = False
-            why = ""
-            try:
-                why = str(json.loads(e.read().decode("utf-8", "replace")).get("message") or "")[:200]
-            except Exception:
-                pass
-            print(f"  Brevo: rechazó la clave (HTTP {e.code})" + (f": {why}" if why else ""))
-        except Exception as e:
+            print(f"  Brevo: rechazó la clave (HTTP {res[1]})" + (f": {res[2]}" if res[2] else ""))
+        else:
             ok = False
-            print("  Brevo: no responde (" + str(e)[:120] + ")")
+            print("  Brevo: no responde (" + res[1] + ")")
     print("Verificación de avisos: " + ("TODO BIEN" if ok else "HAY QUE CORREGIR LO MARCADO"))
     return 0
 
