@@ -155,6 +155,7 @@ aside details>*:not(summary){margin-top:6px}
 #fxbox .fl{max-height:236px;overflow-y:auto;overscroll-behavior:contain}
 #fxbox label.zero{opacity:.45}#fxbox .fxn{font-size:11.5px;color:var(--mut);margin:4px 0 0;line-height:1.35}
 #fxbox .fxh{font-size:12px;color:var(--mut);margin:12px 0 0;padding-top:8px;border-top:2px solid var(--line)}
+.zl{display:block;font-size:12px;color:var(--mut);margin:2px 0 3px}.zs{width:100%;min-width:0;padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--tx);margin-bottom:6px;font:inherit}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin:-2px 0 10px}.chip{border:1px solid var(--acc);background:color-mix(in srgb,var(--acc) 10%,var(--card));color:var(--tx);border-radius:999px;padding:3px 10px;font-size:12.5px;cursor:pointer}.chip:hover{text-decoration:line-through}
 </style>
 </head>
@@ -167,7 +168,7 @@ aside details>*:not(summary){margin-top:6px}
     <h4>Precio (ARS)</h4><div class="rng"><input id="pmin" type="number" min="0" placeholder="Mín"><input id="pmax" type="number" min="0" placeholder="Máx"></div>
     <div id="fxbox"></div>
     <details open id="brandbox" hidden><summary>Marca</summary><input id="bq" aria-label="Buscar marca" placeholder="Buscar marca…" style="width:100%;padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--tx);margin-bottom:4px"><div class="fl" id="brands"></div><button class="more" id="bmore"></button></details>
-    <details open><summary>Tienda</summary><div class="fl" id="stores"></div></details>
+    <details open><summary>Tienda</summary><label class="zl" for="zone">Con local en</label><select id="zone" class="zs" title="Muestra solo tiendas con un local verificado en esa zona. Consultá con la tienda si se puede retirar ahí."><option value="">Todo el país</option></select><div class="fl" id="stores"></div></details>
     <details open><summary>Opciones</summary><div class="fl">
       <label><input type="checkbox" id="stock"> Solo con stock</label>
       <label><input type="checkbox" id="multi"> En 2 o más tiendas</label>
@@ -196,7 +197,7 @@ function imgFail(el){const id=el.dataset.id,fb=FB[id];
 const imgTag=(g,lazy)=>g.image?`<img ${lazy?'loading="lazy" ':""}data-id="${esc(g.id)}" src="${esc(g.image)}" alt="" onerror="imgFail(this)">`:`<span class="ph">${ICONS.svg(g.category||"otros",38)}Sin foto</span>`;
 const COLORS=["#1f6feb","#e0763a","#12a37a","#b04ad6","#d6a31f","#d64a6a","#4a9ed6"];
 let DATA=[],HIST={},META={},CFG={stores:{}};
-const S={tab:"todos",cat:"",brands:new Set(),stores:new Set(),pmin:null,pmax:null,stock:false,multi:false,lowonly:false,csi:false,sort:"rel",q:"",page:1,allBrands:false,bq:"",fx:{}};
+const S={tab:"todos",cat:"",brands:new Set(),stores:new Set(),pmin:null,pmax:null,stock:false,multi:false,lowonly:false,csi:false,zone:"",sort:"rel",q:"",page:1,allBrands:false,bq:"",fx:{}};
 let CX=null;   // contexto con la base de hardware y las fichas (para los filtros por categoría)
 /* actualización 41: tres formas de ver los productos (como en ComparáSúper). Se recuerda en el navegador (clave kn_vista). */
 const VISTAS={m:{t:"Íconos grandes",d:"3 columnas",i:"▦",per:15},s:{t:"Íconos chicos",d:"5 columnas",i:"▪",per:35},l:{t:"Lista",d:"50 por página",i:"☰",per:50}};
@@ -231,7 +232,7 @@ function openAlerts(){
 async function j(u,d){try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw 0;return await r.json()}catch{return d}}
 
 function visible(g){ // oferta(s) que pasan los filtros de tienda/stock
-  return g.offers.filter(o=>(!S.stores.size||S.stores.has(o.store))&&(!S.stock||o.stock!==false));
+  return g.offers.filter(o=>(!S.stores.size||S.stores.has(o.store))&&(!S.stock||o.stock!==false)&&(!S.zone||REP.zone(o.store)===S.zone));
 }
 /* actualización 40: si la búsqueda no coincide exactamente con ningún producto, se muestran los parecidos (errores de
    tipeo, «rtx4060ti» pegado…) con uFuzzy (js/fuzzy.js). Con alguna coincidencia exacta todo sigue igual que antes. */
@@ -441,13 +442,15 @@ function bind(){
   const num=v=>v===""?null:Number(v);
   $("#pmin").oninput=e=>{S.pmin=num(e.target.value);re()};$("#pmax").oninput=e=>{S.pmax=num(e.target.value);re()};
   ["stock","multi","lowonly","csi"].forEach(k=>$("#"+k).onchange=e=>{S[k]=e.target.checked;re()});
+  $("#zone").innerHTML='<option value="">Todo el país</option>'+REP.zones().map(z=>`<option>${esc(z)}</option>`).join("");
+  $("#zone").onchange=e=>{S.zone=e.target.value;re()};
   $("#brands").onchange=e=>{const b=e.target.dataset.b;e.target.checked?S.brands.add(b):S.brands.delete(b);re()};
   $("#stores").onchange=e=>{const b=e.target.dataset.s;e.target.checked?S.stores.add(b):S.stores.delete(b);re()};
   $("#bq").oninput=e=>{S.bq=e.target.value.toLowerCase();renderSide()};
   $("#bmore").onclick=()=>{S.allBrands=!S.allBrands;renderSide()};
   $("#lbtn").onclick=()=>FULL?openList():loadFull().then(openList);
   {const A=CFG.alerts||{},ok=u=>typeof u==="string"&&/^https:\/\//.test(u);if(ok(A.email_form_url)||ok(A.whatsapp_channel_url)){$("#abtn").hidden=false;$("#abtn").onclick=openAlerts}}
-  $("#reset").onclick=()=>{Object.assign(S,{cat:"",brands:new Set(),stores:new Set(),pmin:null,pmax:null,stock:false,multi:false,lowonly:false,csi:false,q:"",bq:"",fx:{}});
+  $("#reset").onclick=()=>{Object.assign(S,{cat:"",brands:new Set(),stores:new Set(),pmin:null,pmax:null,stock:false,multi:false,lowonly:false,csi:false,zone:"",q:"",bq:"",fx:{}});$("#zone").value="";
     ["qh","pmin","pmax","bq"].forEach(i=>$("#"+i).value="");["stock","multi","lowonly","csi"].forEach(i=>$("#"+i).checked=false);re()};
 }
 /* actualización 39: carga en dos etapas. Con una categoría en la dirección (productos.html?cat=…) primero se baja solo

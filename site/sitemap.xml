@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- KyraNoHard · índice de mapas del sitio (actualización 39): las páginas fijas y todas las fichas de producto.
-     sitemap-productos.xml se genera en cada actualización de precios (build_data.py → write_sitemap). -->
+     sitemap-productos.xml se genera en cada actualización de precios (build_data.py → write_sitemap);
+     sitemap-guias.xml y las páginas precios-<categoría>.html, también (scripts/guias.py, actualización 43). -->
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap><loc>https://brunogagna9-stack.github.io/Comparador/sitemap-paginas.xml</loc></sitemap>
   <sitemap><loc>https://brunogagna9-stack.github.io/Comparador/sitemap-productos.xml</loc></sitemap>
+  <sitemap><loc>https://brunogagna9-stack.github.io/Comparador/sitemap-guias.xml</loc></sitemap>
 </sitemapindex>

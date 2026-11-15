@@ -335,6 +335,23 @@
       return { X, issues, warns, checks, unk: checks.filter(c => c.s === "unk"), missing, total, totalPer, totalAll: total + totalPer, priced, watts: E.watts(X), need };
     };
 
+    /* actualización 43: ¿se puede comprar todo en una misma tienda? Para cada tienda suma su precio (con stock, sin
+       precios inusuales) de cada pieza elegida. → { pieces, full: [hasta 3 tiendas que tienen TODO, de menor a mayor],
+       best: la tienda que más piezas tiene si ninguna tiene todo }. Con menos de 2 piezas con precio no aplica. */
+    E.oneStore = (build, byId) => {
+      const groups = B.SLOTS.map(s => build[s.k]).filter(e => e && e.id && !e.own).map(e => byId(e.id)).filter(Boolean);
+      if (groups.length < 2) return null;
+      const per = {};
+      for (const g of groups) {
+        const seen = {};
+        for (const o of g.offers || []) { if (o.stock === false || o.anom) continue; const p = CT.price(o); if (!(p > 0)) continue; if (!(o.store in seen) || p < seen[o.store]) seen[o.store] = p; }
+        for (const st of Object.keys(seen)) { const x = per[st] || (per[st] = { store: st, total: 0, n: 0 }); x.total += seen[st]; x.n++; }
+      }
+      const all = Object.values(per);
+      return { pieces: groups.length, full: all.filter(x => x.n === groups.length).sort((a, b) => a.total - b.total).slice(0, 3),
+        best: all.filter(x => x.n < groups.length).sort((a, b) => b.n - a.n || a.total - b.total)[0] || null };
+    };
+
     /* armado <-> texto para la dirección de la página (para compartir): cpu=id;gpu=-;case=own:id… */
     E.encode = build => Object.entries(build).filter(([, e]) => e).map(([k, e]) => k + "=" + (e.skip ? "-" + (e.skip === "incl" ? "i" : "") : (e.own ? "o" : "") + (e.id ? encodeURIComponent(e.id) : "") + (e.attrs ? "~" + Object.entries(e.attrs).map(([a, v]) => a + ":" + encodeURIComponent(v)).join(",") : ""))).join(";");
     E.decode = s => { const b = {}; String(s || "").split(";").forEach(p => { const m = p.match(/^(\w+)=(.*)$/); if (!m || !B.slot(m[1])) return; const v = m[2];

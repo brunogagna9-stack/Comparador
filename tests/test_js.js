@@ -585,3 +585,35 @@ t("autocompletado (act. 36): todas las palabras, sin acentos y lo más relevante
   assert.strictEqual(SR.find("zzz").total, 0); assert.deepStrictEqual(SR.find(" ").list || [], []);
 });
 console.log(n + " pruebas de JavaScript OK");
+
+// ---- actualización 43: ¿la baja es real?, todo en una tienda, ubicación de tiendas ----
+{
+  const DET43 = require("../site/js/detail.js"), REP43 = require("../site/js/rep.js");
+  const day = n => new Date(Date.parse("2026-11-15") - n * 864e5).toISOString().slice(0, 10);
+  const G = (cur, chg) => ({ offers: [{ k: "a", store: "A", price_cash: cur }, { k: "b", store: "B", price_cash: cur + 500 }], chg });
+  // habitual 1000 durante 40 días; hoy 900 → baja real del 10%
+  let H = { a: [[day(40), 1000], [day(0), 900]], b: [[day(40), 1500]] };
+  let u = DET43.usual(G(900), H, "2026-11-15");
+  assert(u && u.med === 1000 && u.days === 30 && Math.abs(u.diff + 0.1) < 1e-9);
+  assert(/Baja real: está 10% por debajo/.test(DET43.verdict(G(900, { pct: -10 }), { HIST: H, META: { updated: "2026-11-15T10:00:00Z" } })));
+  // subió a 1300 hace 5 días y «bajó» a 1000: volvió a lo habitual, no es oferta
+  H = { a: [[day(40), 1000], [day(5), 1300], [day(0), 1000]], b: [[day(40), 1500]] };
+  assert(/no es una oferta especial/.test(DET43.verdict(G(1000, { pct: -23 }), { HIST: H, META: { updated: "2026-11-15" } })));
+  // hoy más caro que lo habitual
+  H = { a: [[day(40), 1000], [day(0), 1200]], b: [[day(40), 1500]] };
+  assert(/20% más caro/.test(DET43.verdict(G(1200), { HIST: H, META: { updated: "2026-11-15" } })));
+  // poco historial (menos de 14 días): no se opina
+  H = { a: [[day(6), 1000], [day(0), 800]] };
+  assert.strictEqual(DET43.verdict(G(800, { pct: -20 }), { HIST: H, META: { updated: "2026-11-15" } }), "");
+  assert.strictEqual(DET43.verdict(G(1000), { HIST: { a: [[day(40), 1000]], b: [[day(40), 1500]] }, META: { updated: "2026-11-15" } }), "", "sin cambios: no se muestra nada");
+
+  // ubicación: solo con dirección verificada y zona
+  REP43.set({ stores: { A: { zone: "CABA", contact: { address: "Calle 1, CABA" } }, B: { contact: { address: "Calle 2" } }, C: { zone: "Córdoba", contact: {} } } });
+  assert.strictEqual(REP43.zone("A"), "CABA"); assert.strictEqual(REP43.place("B"), null); assert.strictEqual(REP43.place("C"), null);
+  assert(/Local: Calle 1, CABA/.test(REP43.placeLine("A")) && REP43.placeLine("B") === "" && REP43.placeLine("X") === "");
+  assert.deepStrictEqual(REP43.zones(), ["CABA", "Córdoba"]);
+  REP43.set(STO);
+  assert(REP43.zone("Max Tecno") === "Córdoba" && REP43.zone("Compragamer") === null && REP43.zones().length === 5);
+  for (const [n, s] of Object.entries(STO.stores)) if (s.zone) assert(s.contact && s.contact.address, n + ": zona sin dirección");
+  console.log("act. 43 (baja real y ubicación): OK");
+}

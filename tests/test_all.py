@@ -1587,3 +1587,38 @@ def test_actualizacion_43_precio_objetivo():
     p = open("site/productos.html", encoding="utf-8").read(); f = open("site/producto.html", encoding="utf-8").read()
     assert 'id="csi"' in p and "hasCsi" in p and "tgHit" in p and 'id="tg"' in f and "reportLink" in f
     print("precio objetivo: OK")
+
+
+def test_actualizacion_43_guias_de_precios():
+    """Act. 43 (3): páginas de precios por categoría para buscadores. Solo con datos reales: sin stock o con precio
+    inusual no cuentan, una categoría con pocos productos no genera página y los nombres se escapan."""
+    import tempfile, pathlib, importlib.util
+    spec = importlib.util.spec_from_file_location("guias", "scripts/guias.py"); G = importlib.util.module_from_spec(spec); spec.loader.exec_module(G)
+    def g(i, cat, offers, chg=None):
+        d = {"id": f"p{i}", "name": f"Producto <{i}> & co", "category": cat, "offers": offers}
+        if chg: d["chg"] = chg
+        return d
+    o = lambda s, p, **k: dict({"store": s, "price_cash": p, "url": "https://s/x"}, **k)
+    groups = [g(i, "fuentes", [o("A", 1000 + i), o("B", 1200 + i)]) for i in range(12)]
+    groups += [g(50, "fuentes", [o("A", 1, stock=False), o("B", 5000)]), g(51, "fuentes", [o("C", 2, anom=True)]),
+               g(52, "fuentes", [o("A", 900)], chg={"pct": -10.5, "prev": 1005})]
+    groups += [g(100 + i, "mouses", [o("A", 10)]) for i in range(3)]          # pocos: sin página
+    with tempfile.TemporaryDirectory() as d:
+        site = pathlib.Path(d); (site / "data").mkdir()
+        (site / "data/products.json").write_text(json.dumps(groups)); (site / "data/meta.json").write_text(json.dumps({"updated": "2026-11-15T03:00:00Z"}))
+        (site / "precios-vieja.html").write_text("x")
+        G.main(site)
+        files = sorted(p.name for p in site.glob("precios-*.html"))
+        assert files == ["precios-fuentes.html"], files
+        h = (site / "precios-fuentes.html").read_text(encoding="utf-8")
+        assert "Precios de fuentes de alimentación en Argentina" in h and "15 de noviembre de 2026" in h
+        assert "<b>14</b> fuentes" in h, "13 con precio válido + 1 con baja; el de precio inusual no cuenta"
+        assert ">Producto &lt;1&gt; &amp; co</a>" in h and "<1></a>" not in h and "</script><" not in h.split("ld+json")[1].split("</head>")[0][:-10].replace("</script>\n", ""), "nombres escapados"
+        assert "arrancan en <b>$900</b>" in h and "▼ 10,5%" in h and 'href="producto.html?id=p52"' in h
+        assert ">$1<" not in h and ">$2<" not in h, "sin stock o precio inusual no se muestran como mejor precio"
+        assert 'rel="canonical" href="https://brunogagna9-stack.github.io/Comparador/precios-fuentes.html"' in h and "application/ld+json" in h
+        sm = (site / "sitemap-guias.xml").read_text()
+        assert sm.count("<url>") == 1 and "precios-fuentes.html" in sm and "<lastmod>2026-11-15</lastmod>" in sm
+    assert "sitemap-guias.xml" in open("site/sitemap.xml").read() and "site/precios-*.html" in open(".gitignore").read()
+    assert "scripts/guias.py" in open(".github/workflows/actualizar.yml").read()
+    print("guías de precios: OK")

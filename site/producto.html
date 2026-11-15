@@ -31,7 +31,7 @@
 .im{aspect-ratio:1;background:#fff;border:1px solid var(--line);border-radius:16px;display:flex;align-items:center;justify-content:center;overflow:hidden}.im img{max-width:100%;max-height:100%;object-fit:contain}
 .im .ph{display:flex;flex-direction:column;align-items:center;gap:4px;color:#6b7482;font-size:13px}.im .ph i{font-style:normal;font-size:64px;opacity:.75}
 .pd h1{margin:6px 0 8px;font-size:26px;line-height:1.2}
-.usd{margin:2px 0 4px;font-weight:600;font-size:15px}.big{font-size:34px;font-weight:800;letter-spacing:-.8px}.big .sub{font-weight:500;letter-spacing:0}.sub{font-size:13px;color:var(--mut)}.dn{color:var(--down);font-weight:700}.up{color:var(--up);font-weight:700}
+.vd{margin:4px 0;font-weight:600;font-size:14px}.vd.sub{font-weight:400}.usd{margin:2px 0 4px;font-weight:600;font-size:15px}.big{font-size:34px;font-weight:800;letter-spacing:-.8px}.big .sub{font-weight:500;letter-spacing:0}.sub{font-size:13px;color:var(--mut)}.dn{color:var(--down);font-weight:700}.up{color:var(--up);font-weight:700}
 .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
 .tg{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:color-mix(in srgb,var(--acc) 6%,var(--card))}.tg label{font-weight:600}.tg .tgi{display:inline-flex;align-items:center;gap:4px;font-weight:700}.tg input{width:9.5em;padding:8px;border:1px solid var(--line2,var(--line));border-radius:8px;background:var(--card);color:var(--tx);font:inherit}.tg .sub{flex-basis:100%;margin:0}
 .acts .btn{border-radius:999px;display:inline-flex;align-items:center;gap:6px}.acts .btn.pri{color:#fff}
@@ -135,7 +135,7 @@ function specs(g,HW,PR,META,SP){
   const cmpLink=CT.CATS&&CT.CATS[g.category]?`comparar.html#${new URLSearchParams({cat:g.category,ids:g.id})}`:null;
   // actualización 43: precio objetivo («avisarme cuando baje de $X»), solo para productos seguidos
   const tgt=()=>{const t=FOLLOW[g.id]&&+FOLLOW[g.id].target;return isFinite(t)&&t>0?Math.round(t):null};
-  let TGMSG="";
+  let TGMSG="",SHMSG="";
   // el mail solo se promete si hay sesión iniciada y la cuenta ya guarda precios objetivo (lo informa js/account.js)
   const ACCON=()=>{try{return !!(window.ACC&&ACC.user&&ACC.user()&&ACC.targets===true)}catch{return false}};
   const targetBox=()=>{
@@ -148,8 +148,9 @@ function specs(g,HW,PR,META,SP){
     <h1>${esc(g.name)}</h1>
     <div class="big">${ARS(best)} <span class="sub">en ${esc(g.offers[0].store)}${g.offers.length>1?` · comparado en ${g.offers.length} tiendas`:" · 1 tienda"}</span></div>
     ${usdLine(best,DOL)}
+    ${DET.verdict(g,ctx)}
     ${c?`<div class="${c.pct<0?"dn":"up"}">${c.pct<0?"▼ Bajó":"▲ Subió"} ${Math.abs(c.pct)}% (antes ${ARS(c.prev)})</div>`:""}${g.low?'<div class="dn">Está en su mínimo histórico</div>':""}
-    <div class="acts"><a class="btn pri" href="${esc(g.offers[0].url)}" target="_blank" rel="noopener nofollow">Ir a la tienda más barata ↗</a><button class="btn" id="fl">${inList()?"✓ En mi lista (quitar)":"+ Agregar a mi lista"}</button><button class="btn" id="fb">${fol()?"★ Siguiendo":"☆ Seguir precio"}</button><button class="btn" id="fcmp">${CT.cmp.has(g.id,g.category)?"✓ En la comparación (quitar)":"⚖ Agregar a la comparación"}</button></div>
+    <div class="acts"><a class="btn pri" href="${esc(g.offers[0].url)}" target="_blank" rel="noopener nofollow">Ir a la tienda más barata ↗</a><button class="btn" id="fl">${inList()?"✓ En mi lista (quitar)":"+ Agregar a mi lista"}</button><button class="btn" id="fb">${fol()?"★ Siguiendo":"☆ Seguir precio"}</button><button class="btn" id="fcmp">${CT.cmp.has(g.id,g.category)?"✓ En la comparación (quitar)":"⚖ Agregar a la comparación"}</button><button class="btn" id="fs">${SHMSG||"↗ Compartir"}</button></div>
     ${targetBox()}
     ${CT.cmp.list(g.category).length?`<div class="sub" style="margin-top:8px" role="status">${CMPMSG?`<b>${esc(CMPMSG)}</b><br>`:""}Comparación de ${esc((CT.CATS[g.category]||g.category).toLowerCase())}: <b>${CT.cmp.list(g.category).length} de ${CT.CMP_MAX}</b> · <a href="comparar.html#cat=${encodeURIComponent(g.category)}">Ver comparación →</a></div>`:CMPMSG?`<div class="sub" style="margin-top:8px" role="status"><b>${esc(CMPMSG)}</b></div>`:""}
     ${g.offers.some(o=>o.anom)?'<div class="alert">Alguna oferta cambió de precio de forma muy brusca. Puede ser un error de la tienda: confirmalo antes de comprar.</div>':""}</div></div>`;
@@ -162,6 +163,13 @@ function specs(g,HW,PR,META,SP){
     $("#fcmp").onclick=()=>{const r=CT.cmp.toggle(g.id,g.category),l=(CT.CATS[g.category]||g.category).toLowerCase();CMPMSG=r.full?`Ya tenés ${CT.CMP_MAX} ${l} para comparar: quitá uno en Comparar para sumar otro.`:r.on?`Agregado a la comparación de ${l}.`:"Quitado de la comparación.";$("#hd").innerHTML=head();CMPMSG="";bind()};
     $("#fl").onclick=()=>{const i=LIST.indexOf(g.id);i>=0?LIST.splice(i,1):LIST.push(g.id);save("lista",LIST);CTL.count(LIST.length);$("#hd").innerHTML=head();bind()};
     $("#fb").onclick=()=>{if(FOLLOW[g.id])delete FOLLOW[g.id];else FOLLOW[g.id]={price:best,name:g.name};save("seg",FOLLOW);$("#hd").innerHTML=head();bind()};
+    // actualización 43: compartir la ficha (menú del teléfono si existe; si no, copia el texto con el enlace)
+    $("#fs").onclick=async()=>{
+      const url=location.href.split("#")[0],text=`${g.name}: ${ARS(best)} en ${g.offers[0].store}${g.offers.length>1?` (comparado en ${g.offers.length} tiendas)`:""} · KyraNoHard`;
+      try{if(navigator.share){await navigator.share({title:g.name,text,url});return}}catch(e){if(e&&e.name==="AbortError")return}
+      let ok=false;try{await navigator.clipboard.writeText(text+"\n"+url);ok=true}catch(e){}
+      SHMSG=ok?"✓ Enlace copiado":"No se pudo copiar";$("#hd").innerHTML=head();SHMSG="";bind();
+    };
     const tg=$("#tg");
     if(tg){
       const redo=(m,focus)=>{TGMSG=m;$("#hd").innerHTML=head();TGMSG="";bind();if(focus){const i=$("#tgv");if(i)i.focus()}};

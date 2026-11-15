@@ -32,6 +32,37 @@
   const msg=tv.length>=3&&price(top)<=Math.min(...tv)?"Es el precio más bajo registrado de esta tienda.":tv.length?`Precio más bajo registrado en ${esc(top.store)}: ${ARS(Math.min(...tv))}.`:"";
   return `<div class="chart"><b>Historial de precio</b> <span class="sub">${msg} ${n<3?"El historial se va armando con cada actualización.":""}</span>${svg}</div>`;
   };
+  /* actualización 43: ¿la baja es real? Precio habitual = mediana del mejor precio de cada día en los últimos 30 días
+     (sin contar hoy), con el historial de las ofertas actuales. Hacen falta al menos 14 días con datos; si no, no se opina.
+     → { med, days, cur, diff (fracción respecto de lo habitual) } o null. */
+  DET.usual = function (g, HIST, today) {
+    const DAY = 864e5, t1 = Date.parse(String(today || "").slice(0, 10));
+    if (!(t1 > 0) || !g || !g.offers || !g.offers.length) return null;
+    const series = g.offers.filter(o => !o.anom && o.stock !== false).map(o => (HIST[o.k] || []).filter(x => x[0] && x[1] > 0).map(x => [Date.parse(x[0]), x[1]]).sort((a, b) => a[0] - b[0])).filter(s => s.length);
+    const vals = [];
+    for (let d = 1; d <= 30; d++) {
+      const t = t1 - d * DAY; let best = null;
+      for (const s of series) { let v = null; for (const x of s) { if (x[0] <= t) v = x[1]; else break; } if (v != null && (best == null || v < best)) best = v; }
+      if (best != null) vals.push(best);
+    }
+    const top = g.offers.find(o => !o.anom && o.stock !== false), cur = top && price(top);
+    if (vals.length < 14 || !(cur > 0)) return null;
+    vals.sort((a, b) => a - b);
+    const med = vals.length % 2 ? vals[(vals.length - 1) / 2] : (vals[vals.length / 2 - 1] + vals[vals.length / 2]) / 2;
+    return { med, days: vals.length, cur, diff: (cur - med) / med };
+  };
+  DET.verdict = function (g, ctx) {
+    const u = DET.usual(g, ctx.HIST || {}, (ctx.META && ctx.META.updated) || new Date().toISOString());
+    if (!u) return "";
+    const pct = Math.round(Math.abs(u.diff) * 100), drop = !!(g.chg && g.chg.pct < 0 && !(g.offers[0] && g.offers[0].anom));
+    const base = `su precio habitual de los últimos ${u.days} días (${ARS(u.med)})`;
+    let cls = "", txt = "";
+    if (u.diff <= -0.05) { cls = "dn"; txt = `✓ ${drop ? "Baja real" : "Buen precio"}: está ${pct}% por debajo de ${base}.`; }
+    else if (u.diff >= 0.05) { cls = "up"; txt = `▲ Hoy está ${pct}% más caro que ${base}.${drop ? " Bajó hace poco, pero antes había subido más." : ""}`; }
+    else if (drop && g.chg.pct <= -5) { cls = "sub"; /* solo si la «baja» fue grande: una de 1 o 2% no merece el aviso */ txt = `La baja reciente lo dejó en ${base.replace(/ \(.*\)$/, "")}: no es una oferta especial.`; }
+    else return "";
+    return `<div class="vd ${cls}" title="Se compara el mejor precio de hoy con la mediana del mejor precio de cada día, con el historial que guardamos.">${esc(txt)}</div>`;
+  };
   DET.offerRows = function (g, ctx) {
     const { CFG, REP, stale } = ctx;
   return g.offers.map((o,k)=>{
@@ -39,7 +70,7 @@
     const rt=o.rating?` ⭐${o.rating.score}${o.rating.count?` (${o.rating.count})`:""}`:"";
     const ch=o.chg?` <span class="${o.chg.pct<0?"dn":"up"}">${o.chg.pct<0?"▼":"▲"}${Math.abs(o.chg.pct)}%</span>`:"";
     const cu=o.cuotas?esc(o.cuotas):(CFG.stores[o.store]?.cuotas&&o.price_list?`${CFG.stores[o.store].cuotas.n} cuotas${CFG.stores[o.store].cuotas.sin_interes?" sin interés":""} de ${ARS(o.price_list/CFG.stores[o.store].cuotas.n)}`:'<span class="sub">consultar</span>');
-    return `<tr class="${k===0?"best":""}"><td><b>${esc(o.store)}</b>${rt}${REP.badge(o.store)}${stale(o.store)?'<span class="warnpill">dato viejo</span>':""}${o.anom?'<span class="warnpill">precio inusual</span>':""}</td><td class="n">${ARS(o.price_cash)}${ch}</td><td class="n">${ARS(o.price_list)}</td><td>${cu}</td><td>${st}</td><td><a target="_blank" rel="noopener nofollow" href="${esc(o.url)}">Ir a la tienda ↗</a></td></tr>`}).join("");
+    return `<tr class="${k===0?"best":""}"><td><b>${esc(o.store)}</b>${rt}${REP.badge(o.store)}${stale(o.store)?'<span class="warnpill">dato viejo</span>':""}${o.anom?'<span class="warnpill">precio inusual</span>':""}${REP.placeLine?REP.placeLine(o.store):""}</td><td class="n">${ARS(o.price_cash)}${ch}</td><td class="n">${ARS(o.price_list)}</td><td>${cu}</td><td>${st}</td><td><a target="_blank" rel="noopener nofollow" href="${esc(o.url)}">Ir a la tienda ↗</a></td></tr>`}).join("");
   };
   DET.offersTable = (g, ctx) => `<div class="tw2" tabindex="0" role="region" aria-label="Precios por tienda"><table><tr><th>Tienda</th><th class="n">Efectivo / transf.</th><th class="n">Lista / tarjeta</th><th>Cuotas</th><th>Stock</th><th></th></tr>${DET.offerRows(g, ctx)}</table></div>`;
   DET.url = id => "producto.html?id=" + encodeURIComponent(id);

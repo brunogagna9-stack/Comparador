@@ -42,7 +42,8 @@
      "date": "2026-11-14"
     }
    ],
-   "notes": []
+   "notes": [],
+   "zone": "CABA"
   },
   "Maximus": {
    "site": "https://www.maximus.com.ar",
@@ -65,7 +66,8 @@
    ],
    "notes": [
     "Tiene dos fichas en Google (Galería Jardín y sucursal Floresta); mostramos solo la de Galería Jardín, sin sumarlas."
-   ]
+   ],
+   "zone": "CABA"
   },
   "GoldenTech": {
    "site": "https://goldentechstore.com.ar",
@@ -93,7 +95,8 @@
    "notes": [
     "Trustpilot: no se pudo consultar (la página pide una verificación anti-bots que no se intenta saltear).",
     "Su SKU es un código interno de la tienda, así que los productos se cruzan con otras tiendas por nombre y no por número de parte."
-   ]
+   ],
+   "zone": "CABA"
   },
   "Armytech": {
    "site": "https://www.armytech.com.ar",
@@ -123,7 +126,8 @@
    "notes": [
     "Trustpilot: no se pudo consultar.",
     "Sin notebooks publicadas en el catálogo al momento de la verificación (la categoría figura vacía)."
-   ]
+   ],
+   "zone": "CABA"
   },
   "Gezatek": {
    "site": "https://gezatek.com.ar",
@@ -144,7 +148,8 @@
      "date": "2026-11-14"
     }
    ],
-   "notes": []
+   "notes": [],
+   "zone": "CABA"
   },
   "Fullh4rd": {
    "site": "https://fullh4rd.com.ar",
@@ -167,7 +172,8 @@
    ],
    "notes": [
     "Comparte galería (Florida 537) con otras tiendas: la ficha de Google es la del local con el mismo sitio web."
-   ]
+   ],
+   "zone": "CABA"
   },
   "Logg": {
    "site": "https://logg.com.ar",
@@ -190,7 +196,8 @@
    ],
    "notes": [
     "Corregido el 2026-10-23: el sitio cambió el marcado de las tarjetas de producto y el lector anterior no encontraba nada."
-   ]
+   ],
+   "zone": "CABA"
   },
   "Katech": {
    "site": "https://katech.com.ar",
@@ -213,7 +220,8 @@
    ],
    "notes": [
     "Su SKU es un código interno: los productos se cruzan con otras tiendas por nombre y modelo."
-   ]
+   ],
+   "zone": "Gran Buenos Aires"
   },
   "Venex": {
    "site": "https://www.venex.com.ar",
@@ -234,7 +242,8 @@
      "date": "2026-11-14"
     }
    ],
-   "notes": []
+   "notes": [],
+   "zone": "CABA"
   },
   "Gaming City": {
    "site": "https://www.gamingcity.com.ar",
@@ -269,7 +278,8 @@
    ],
    "notes": [
     "Su código de artículo es interno de la tienda (no es número de parte)."
-   ]
+   ],
+   "zone": "CABA"
   },
   "Gamer Factory": {
    "site": "https://www.gamerfactory.com.ar",
@@ -290,7 +300,8 @@
      "date": "2026-11-14"
     }
    ],
-   "notes": []
+   "notes": [],
+   "zone": "CABA"
   },
   "Hardloots": {
    "site": "https://hardloots.com.ar",
@@ -328,7 +339,8 @@
     "Su SKU es un código interno: los productos se cruzan con otras tiendas por nombre y modelo.",
     "Pocas opiniones (menos de 100): el puntaje es poco representativo.",
     "El pie del sitio muestra Ley 24.240, enlaces a botón de arrepentimiento y garantía/devoluciones y QR de AFIP; no publica razón social ni CUIT. Se detectó una versión anterior del pie con otro horario y «Santiago del Estero, Capital»."
-   ]
+   ],
+   "zone": "Santiago del Estero"
   },
   "Try": {
    "site": "https://try.com.ar",
@@ -372,7 +384,8 @@
    ],
    "notes": [
     "Su SKU es un código interno: los productos se cruzan con otras tiendas por nombre y modelo."
-   ]
+   ],
+   "zone": "CABA"
   },
   "Click Gaming": {
    "site": "https://clickgaming.com.ar",
@@ -397,7 +410,8 @@
     "Su SKU es un código interno: los productos se cruzan con otras tiendas por nombre y modelo.",
     "Pocas opiniones (menos de 100): el puntaje es poco representativo.",
     "El sitio muestra dos sucursales (Rosario y Arequito) y un QR de AFIP; no muestra razón social ni CUIT en la página de contacto."
-   ]
+   ],
+   "zone": "Santa Fe"
   },
   "The Gamer Shop": {
    "site": "https://thegamershop.com.ar",
@@ -424,13 +438,16 @@
     "Su SKU es un código interno: los productos se cruzan con otras tiendas por nombre y modelo.",
     "Su robots.txt bloquea el entrenamiento de IA (GPTBot, ClaudeBot…); este proyecto no entrena modelos: solo lee precios para compararlos.",
     "Pie del sitio: «Garantía oficial en todos los productos», botón de arrepentimiento, Ley 27.743 de defensa del consumidor; no muestra razón social ni CUIT en la página principal."
-   ]
+   ],
+   "zone": "CABA"
   },
   "Backup Computación": {
    "site": "https://backupcomputacion.com.ar",
    "integration": "completa",
    "how": "API pública de catálogo de WooCommerce (la misma que usa el sitio). Su robots.txt no bloquea el catálogo ni la API y no pide pausa entre pedidos.",
-   "contact": {},
+   "contact": {
+    "address": "Malabia 2135, CABA"
+   },
    "checked": "2026-10-26",
    "reputation": [
     {
@@ -445,13 +462,16 @@
    "notes": [
     "Su código de producto es interno: los productos se cruzan con otras tiendas por nombre y modelo.",
     "Pocas opiniones (menos de 100): el puntaje es poco representativo."
-   ]
+   ],
+   "zone": "CABA"
   },
   "Max Tecno": {
    "site": "https://maxtecno.com.ar",
    "integration": "completa",
    "how": "API pública de catálogo de WooCommerce (la misma que usa el sitio). Su robots.txt no bloquea el catálogo ni la API y no pide pausa entre pedidos.",
-   "contact": {},
+   "contact": {
+    "address": "Domingo F. Sarmiento 986, Córdoba"
+   },
    "checked": "2026-10-26",
    "reputation": [
     {
@@ -465,13 +485,16 @@
    ],
    "notes": [
     "Su código de producto es interno: los productos se cruzan con otras tiendas por nombre y modelo."
-   ]
+   ],
+   "zone": "Córdoba"
   },
   "HF Tecnología": {
    "site": "https://hftecnologia.com.ar",
    "integration": "completa",
    "how": "API pública de catálogo de WooCommerce (la misma que usa el sitio). Su robots.txt no bloquea el catálogo ni la API y no pide pausa entre pedidos.",
-   "contact": {},
+   "contact": {
+    "address": "Belgrano 55, Morón, Buenos Aires"
+   },
    "checked": "2026-10-26",
    "reputation": [
     {
@@ -485,13 +508,16 @@
    ],
    "notes": [
     "Su código de producto es interno: los productos se cruzan con otras tiendas por nombre y modelo."
-   ]
+   ],
+   "zone": "Gran Buenos Aires"
   },
   "Liontech Gaming": {
    "site": "https://www.liontech-gaming.com",
    "integration": "completa",
    "how": "API pública de catálogo de WooCommerce (la misma que usa el sitio). Su robots.txt no bloquea el catálogo ni la API y no pide pausa entre pedidos.",
-   "contact": {},
+   "contact": {
+    "address": "Av. Lope de Vega 86, CABA"
+   },
    "checked": "2026-10-26",
    "reputation": [
     {
@@ -505,7 +531,8 @@
    ],
    "notes": [
     "Su código de producto es interno: los productos se cruzan con otras tiendas por nombre y modelo."
-   ]
+   ],
+   "zone": "CABA"
   },
   "Dinobyte": {
    "site": "https://dinobyte.ar",
@@ -532,7 +559,9 @@
    "site": "https://hardcorecomputacion.com.ar",
    "integration": "completa",
    "how": "Listado HTML de la tienda (/tienda/page/N/). Su robots.txt prohíbe la API de WooCommerce (/wp-json/wc/), así que no se usa; el catálogo sí está permitido.",
-   "contact": {},
+   "contact": {
+    "address": "Mendoza 1215, Rosario, Santa Fe"
+   },
    "checked": "2026-10-26",
    "reputation": [
     {
@@ -547,13 +576,16 @@
    "notes": [
     "Su código de producto es interno: los productos se cruzan con otras tiendas por nombre y modelo.",
     "Los productos «armá tu PC» configurables no tienen un precio único y no se incluyen."
-   ]
+   ],
+   "zone": "Santa Fe"
   },
   "37 Bytes": {
    "site": "https://www.37bytes.com.ar",
    "integration": "completa",
    "how": "Listado público de productos de Tiendanube (?page=N), como lo ve un visitante: nombre, precio, stock e imagen salen de los datos estructurados de cada producto. Su robots.txt permite el listado.",
-   "contact": {},
+   "contact": {
+    "address": "Ituzaingó 94, Córdoba"
+   },
    "checked": "2026-10-26",
    "reputation": [
     {
@@ -568,7 +600,8 @@
    "notes": [
     "El precio contado es el que la tienda publica «con Transferencia» (o el medio con descuento que indique); el de lista es el precio general del producto.",
     "Su código de producto es interno: los productos se cruzan con otras tiendas por nombre y modelo."
-   ]
+   ],
+   "zone": "Córdoba"
   },
   "ShopGamer": {
    "site": "https://www.shopgamer.com.ar",
@@ -587,7 +620,9 @@
    "site": "https://www.integradosargentinos.com",
    "integration": "completa",
    "how": "Listado público de productos de Tiendanube (?page=N), como lo ve un visitante: nombre, precio, stock e imagen salen de los datos estructurados de cada producto. Su robots.txt permite el listado.",
-   "contact": {},
+   "contact": {
+    "address": "Av. Forest 365, CABA"
+   },
    "checked": "2026-10-26",
    "reputation": [
     {
@@ -602,13 +637,16 @@
    "notes": [
     "El precio contado es el que la tienda publica «con Transferencia» (o el medio con descuento que indique); el de lista es el precio general del producto.",
     "Su código de producto es interno: los productos se cruzan con otras tiendas por nombre y modelo."
-   ]
+   ],
+   "zone": "CABA"
   },
   "Slot One": {
    "site": "https://www.slot-one.com.ar",
    "integration": "completa",
    "how": "Listado público de productos de Tiendanube (?page=N), como lo ve un visitante: nombre, precio, stock e imagen salen de los datos estructurados de cada producto. Su robots.txt permite el listado.",
-   "contact": {},
+   "contact": {
+    "address": "Av. Juan Bautista Alberdi 5549, CABA"
+   },
    "checked": "2026-10-26",
    "reputation": [
     {
@@ -624,7 +662,8 @@
     "El precio contado es el que la tienda publica «con Transferencia» (o el medio con descuento que indique); el de lista es el precio general del producto.",
     "La tienda llama «Precio Slot One» al precio con descuento por transferencia o efectivo; el de lista es el «Precio de lista con tarjeta de crédito».",
     "Su código de producto es interno: los productos se cruzan con otras tiendas por nombre y modelo."
-   ]
+   ],
+   "zone": "CABA"
   },
   "Vertex Retail": {
    "site": "https://vrx.com.ar",
@@ -641,7 +680,9 @@
    "site": "https://rockethard.com.ar",
    "integration": "completa",
    "how": "Categorías del sitemap de la tienda, recorridas con ?page=N. Su robots.txt permite el catálogo y solo prohíbe orden, filtros y búsqueda, que no se usan.",
-   "contact": {},
+   "contact": {
+    "address": "Maipú 592, Merlo, Buenos Aires"
+   },
    "checked": "2026-10-26",
    "reputation": [
     {
@@ -656,7 +697,8 @@
    "notes": [
     "En su ficha, la tienda aclara que el «Precio especial» es abonando en efectivo o transferencia bancaria: lo mostramos como precio contado.",
     "Su código de producto es interno: los productos se cruzan con otras tiendas por nombre y modelo."
-   ]
+   ],
+   "zone": "Gran Buenos Aires"
   },
   "Acuario Insumos": {
    "site": "https://insumosacuario.com.ar",
@@ -684,7 +726,9 @@
    "site": "https://megasoftargentina.com.ar",
    "integration": "completa",
    "how": "Categorías del sitemap de la tienda, recorridas con ?page=N. Su robots.txt permite el catálogo y solo prohíbe orden, filtros y búsqueda, que no se usan.",
-   "contact": {},
+   "contact": {
+    "address": "Av. Rivadavia 5320, local 22, CABA"
+   },
    "checked": "2026-10-26",
    "reputation": [
     {
@@ -699,13 +743,16 @@
    "notes": [
     "Mostramos como contado el «Precio especial» de la tarjeta. En otra tienda de la misma plataforma (Rocket Hard) ese precio es para efectivo o transferencia; confirmá el medio de pago en la tienda.",
     "Su código de producto es interno: los productos se cruzan con otras tiendas por nombre y modelo."
-   ]
+   ],
+   "zone": "CABA"
   },
   "Hyper Gaming": {
    "site": "https://hypergaming.com.ar",
    "integration": "completa",
    "how": "Categorías del sitemap de la tienda, recorridas con ?page=N. Su robots.txt permite el catálogo y solo prohíbe orden, filtros y búsqueda, que no se usan.",
-   "contact": {},
+   "contact": {
+    "address": "Av. Dr. Ricardo Balbín 3319, CABA"
+   },
    "checked": "2026-10-26",
    "reputation": [
     {
@@ -721,13 +768,16 @@
     "La tienda llama «HYPER PRECIO» a su precio principal; cuando coincide con el de lista mostramos un solo precio.",
     "Mostramos como contado el «Precio especial» de la tarjeta. En otra tienda de la misma plataforma (Rocket Hard) ese precio es para efectivo o transferencia; confirmá el medio de pago en la tienda.",
     "Su código de producto es interno: los productos se cruzan con otras tiendas por nombre y modelo."
-   ]
+   ],
+   "zone": "CABA"
   },
   "Noxie Store": {
    "site": "https://noxiestore.com",
    "integration": "completa",
    "how": "Categorías del sitemap de la tienda, recorridas con ?page=N. Su robots.txt permite el catálogo y solo prohíbe orden, filtros y búsqueda, que no se usan.",
-   "contact": {},
+   "contact": {
+    "address": "Saladillo 3040, CABA"
+   },
    "checked": "2026-10-26",
    "reputation": [
     {
@@ -743,7 +793,8 @@
     "Las cuotas sin interés de la tienda son sobre el precio de lista (el «con tarjeta»), más alto que el «Precio especial».",
     "Mostramos como contado el «Precio especial» de la tarjeta. En otra tienda de la misma plataforma (Rocket Hard) ese precio es para efectivo o transferencia; confirmá el medio de pago en la tienda.",
     "Su código de producto es interno: los productos se cruzan con otras tiendas por nombre y modelo."
-   ]
+   ],
+   "zone": "CABA"
   },
   "WIZ TECH": {
    "site": "https://wiztech.com.ar",
@@ -775,7 +826,9 @@
    "site": "https://www.compufanstore.com.ar",
    "integration": "parcial",
    "how": "Listados de subcategoría del sitemap de la tienda (A_PAGENUMBER=N). Su robots.txt permite todo. El listado no informa stock.",
-   "contact": {},
+   "contact": {
+    "address": "Antonio Malaver 3283, Florida Oeste, Buenos Aires"
+   },
    "checked": "2026-10-26",
    "reputation": [
     {
@@ -790,7 +843,8 @@
    "notes": [
     "El listado muestra un precio sin aclarar el medio de pago: lo mostramos como precio de lista, no como contado.",
     "Su código de producto es interno: los productos se cruzan con otras tiendas por nombre y modelo."
-   ]
+   ],
+   "zone": "Gran Buenos Aires"
   },
   "IgnaTech": {
    "site": "https://ignatech.com.ar",
@@ -839,7 +893,9 @@
     "Su código de producto es interno: los productos se cruzan con otras tiendas por nombre y modelo.",
     "Pocas opiniones (menos de 100): el puntaje es poco representativo.",
     "La ficha de Google Maps «NickHard» tiene el mismo sitio web y teléfono que la tienda (revisada el 6/11/2026)."
-   ]
+   ],
+   "zone": "Gran Buenos Aires"
   }
- }
+ },
+ "_ayuda_zone": "zone: provincia o zona del local que figura en contact.address (para el filtro «Zona de la tienda»). Solo se carga si hay una dirección verificada; sin dirección, la tienda no entra en ninguna zona. Tener local no garantiza retiro en el local: se aclara en la web."
 }
