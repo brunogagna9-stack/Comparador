@@ -176,9 +176,14 @@ def main(argv=sys.argv[1:], env=os.environ, call=http, products=None, cfg=None):
                 print("  (no se pudo anotar el envío en el registro: " + str(e)[:120] + ")")
         except urllib.error.HTTPError as e:
             failed += 1
-            print(f"  Brevo rechazó un envío (HTTP {e.code}).")
+            why = ""
+            try:   # actualización 42: se muestra el motivo que da Brevo (nunca incluye la clave)
+                why = str(json.loads(e.read().decode("utf-8", "replace")).get("message") or "")[:200]
+            except Exception:
+                pass
+            print(f"  Brevo rechazó un envío (HTTP {e.code})" + (f": {why}" if why else "."))
             if e.code in (401, 403):
-                print("  La clave de Brevo o el remitente no son válidos: se cancela el resto.")
+                print("  Brevo no acepta la clave, el remitente o la conexión (ver el motivo de arriba): se cancela el resto.")
                 break
         except Exception as e:
             failed += 1
