@@ -154,6 +154,13 @@ def verify(env=os.environ, call=http):
             rows = call("POST", url + "/rest/v1/rpc/notify_targets", {"apikey": key, "Authorization": "Bearer " + key,
                         "content-type": "application/json", "accept": "application/json"}, {}) or []
             print(f"  Supabase: responde bien ({len(rows)} seguimientos)")
+            # actualización 43: ¿ya se corrió data_src/supabase_43_precio_objetivo.sql?
+            if rows:
+                has = all(isinstance(r, dict) and "target_price" in r for r in rows)
+                n = sum(1 for r in rows if isinstance(r, dict) and r.get("target_price"))
+                print("  Precio objetivo: " + (f"activado en la cuenta ({n} seguimientos con objetivo)" if has else "FALTA correr data_src/supabase_43_precio_objetivo.sql en Supabase"))
+            else:
+                print("  Precio objetivo: no se puede saber todavía (no hay seguimientos para mirar)")
         except urllib.error.HTTPError as e:
             ok = False
             print(f"  Supabase: rechazó la consulta (HTTP {e.code}). Revisá SUPABASE_URL y SUPABASE_SECRET_KEY (la sb_secret_).")
