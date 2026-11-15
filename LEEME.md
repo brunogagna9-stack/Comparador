@@ -793,3 +793,8 @@ Búsqueda del 4/11/2026 solo en sitios de los fabricantes (informe «Fichas ofic
   elegidas con stock, cuánto sale y cuánto más que repartido.
 - **¿La baja es real?** (`js/detail.js` → `DET.usual` / `DET.verdict`, en la ficha): compara el precio de hoy con la
   mediana del mejor precio diario de los últimos 30 días (mínimo 14 días de historial; si no, no opina).
+- **Páginas de precios por categoría para buscadores** (`scripts/guias.py`): en cada actualización se generan
+  `precios-<categoría>.html` (14 hoy) con los más comparados, los que bajaron y los más baratos, más
+  `sitemap-guias.xml`. Solo se publican (no se guardan en el repositorio). Prueba: `test_actualizacion_43_guias_de_precios`.
+- **Compartir** en la ficha (menú del teléfono o copia del enlace con nombre y precio) y sección
+  **«¿Tenés una tienda?»** en Contacto (enlace «Sumá tu tienda» en el pie).

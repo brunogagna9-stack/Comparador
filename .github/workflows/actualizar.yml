@@ -42,6 +42,10 @@ jobs:
         continue-on-error: true
         timeout-minutes: 5
         run: python scripts/cruces_dudosos.py > /dev/null
+      - name: Páginas de precios por categoría para buscadores (si falla, no frena la publicación)
+        continue-on-error: true
+        timeout-minutes: 3
+        run: python scripts/guias.py
       - name: Cotización del dólar (DolarApi.com; si falla queda la anterior, nunca frena la publicación)
         continue-on-error: true
         timeout-minutes: 2

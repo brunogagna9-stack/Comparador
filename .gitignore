@@ -5,3 +5,7 @@ tests/fixtures/specs_out.json
 # actualización 39: se genera en cada actualización de precios (solo se publica)
 site/sitemap-productos.xml
 node_modules/
+
+# actualización 43: páginas de precios por categoría (se generan en cada actualización; solo se publican)
+site/precios-*.html
+site/sitemap-guias.xml

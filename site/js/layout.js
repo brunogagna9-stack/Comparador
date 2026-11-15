@@ -39,6 +39,7 @@ const HIST_ICO = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" st
     <div><h4>Información</h4><ul>
       <li><a href="index.html#como">Cómo funciona</a></li>
       <li><a href="tiendas.html">Tiendas</a></li>
+      <li><a href="contacto.html#tiendas">Sumá tu tienda</a></li>
       <li><a href="#guia" data-guia="inicio">Guía rápida</a></li>
       <li><a href="preguntas.html">Preguntas frecuentes</a></li>
       <li><a href="index.html#confianza">Datos y confiabilidad</a></li>
