@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="google-site-verification" content="24iJAJs0mW4ACd0ENeoT0kQnPo67h7M31oHgKuBHy18">
 <title>KyraNoHard · Precios y datos de hardware en Argentina</title>
 <meta name="description" content="Compará precios, stock y cuotas de hardware en tiendas argentinas, armá tu PC y fijate qué conviene actualizar, con datos técnicos verificados.">
@@ -12,8 +12,8 @@
 <link rel="icon" href="img/logo.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0b1020" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a0f1e" media="(prefers-color-scheme: dark)">
 <link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
 <meta property="og:site_name" content="KyraNoHard">
 <meta property="og:locale" content="es_AR">
@@ -40,9 +40,9 @@
 /* categorías: foto real de un producto del catálogo + ícono de línea (actualización 27) */
 .cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px}
 .cat{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;color:var(--tx);font-weight:600;transition:border-color .15s,transform .15s}
-.cat:hover{border-color:var(--acc);transform:translateY(-2px)}
+@media (hover:hover) and (pointer:fine){.cat:hover{border-color:var(--acc);transform:translateY(-2px)}}
 .cat .ph{position:relative;aspect-ratio:16/10;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.cat .ph img{width:78%;height:82%;object-fit:contain;transition:transform .25s}.cat:hover .ph img{transform:scale(1.05)}
+.cat .ph img{width:78%;height:82%;object-fit:contain;transition:transform .25s}@media (hover:hover) and (pointer:fine){.cat:hover .ph img{transform:scale(1.05)}}
 .cat .ph .big{width:42px;height:42px;color:#94a3b8}
 .cat .row{display:flex;align-items:center;gap:9px;padding:10px 12px}
 .cat .bi{flex:none;width:30px;height:30px;border-radius:9px;background:color-mix(in srgb,var(--acc) 14%,var(--card));color:var(--acc);display:flex;align-items:center;justify-content:center}.cat .bi svg{width:17px;height:17px}
@@ -50,7 +50,7 @@
 .cats.compact .cat .ph{display:none}
 @media(max-width:560px){.cats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.cat .row{padding:8px 10px}}
 .drops{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
-.dp{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px;color:var(--tx);box-shadow:var(--sh);display:flex;flex-direction:column;transition:transform .15s,border-color .15s}.dp:hover{transform:translateY(-3px);border-color:var(--acc)}
+.dp{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px;color:var(--tx);box-shadow:var(--sh);display:flex;flex-direction:column;transition:transform .15s,border-color .15s}@media (hover:hover) and (pointer:fine){.dp:hover{transform:translateY(-3px);border-color:var(--acc)}}
 .dp .im{aspect-ratio:1;background:#fff;border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:8px;position:relative}.dp .im img{max-width:100%;max-height:100%;object-fit:contain}.dp .im .ph{font-size:34px;opacity:.6}.dp .im svg{width:40px;height:40px;color:#94a3b8}
 .dp .bd{position:absolute;left:6px;top:6px;background:#cdf5df;color:#0b6b4a;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px}
 .dp .st{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px}.dp .nm{font-weight:600;margin:2px 0 6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.8em}
@@ -66,10 +66,10 @@
 .hacts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;max-width:880px}
 .hero.has3d .hacts{grid-template-columns:repeat(2,minmax(0,1fr));--mw:640px}
 .ha{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);color:#fff;transition:background .15s,transform .15s}
-.ha:hover{background:rgba(255,255,255,.26);transform:translateY(-2px)}.ha:focus-visible{outline:3px solid #fff;outline-offset:2px}
+@media (hover:hover) and (pointer:fine){.ha:hover{background:rgba(255,255,255,.26);transform:translateY(-2px)}}.ha:focus-visible{outline:3px solid #fff;outline-offset:2px}
 .ha .ic{flex:none;width:40px;height:40px;border-radius:12px;background:#fff;color:var(--acc);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px}.ha .ic svg{width:22px;height:22px}
 .ha b{display:block;font-size:15px;letter-spacing:-.2px}.ha small{display:block;font-size:12.5px;opacity:.9;line-height:1.35;margin-top:1px}
-.ha.guia{background:rgba(15,23,42,.28);border-style:dashed}.ha.guia:hover{background:rgba(15,23,42,.4)}
+.ha.guia{background:rgba(15,23,42,.28);border-style:dashed}@media (hover:hover) and (pointer:fine){.ha.guia:hover{background:rgba(15,23,42,.4)}}
 .ha.guia .ic{background:var(--grad);color:#fff;box-shadow:inset 0 0 0 2px rgba(255,255,255,.6)}
 @media(max-width:560px){.hacts{grid-template-columns:1fr!important;gap:8px}.ha{padding:10px 12px}.ha small{font-size:12.5px}}
 /* animación 3D del armado (js/hero3d.js) */
@@ -83,11 +83,11 @@
 .pc3d .step .n{opacity:.75;font-size:12px}
 .pc3d .step b{font-size:14.5px}
 .pc3d .step a{color:#fff;background:rgba(255,255,255,.18);border-radius:999px;padding:4px 11px;font-weight:700;font-size:12.5px;white-space:nowrap}
-.pc3d .step a:hover{background:rgba(255,255,255,.32)}
+@media (hover:hover) and (pointer:fine){.pc3d .step a:hover{background:rgba(255,255,255,.32)}}
 .pc3d .dots{display:flex;gap:5px}.pc3d .dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.3);transition:background .3s,transform .3s}
 .pc3d .dots i.on{background:#fff;transform:scale(1.15)}
 .pc3d .hint{position:absolute;right:16px;top:14px;font-size:11.5px;opacity:.7;pointer-events:none}
-.pc3d .pc3d-pause{position:absolute;left:12px;top:10px;z-index:2;border:1px solid rgba(255,255,255,.28);background:rgba(12,12,34,.6);color:#fff;border-radius:999px;padding:4px 11px;font:600 12px var(--font);cursor:pointer}.pc3d .pc3d-pause:hover{background:rgba(255,255,255,.18)}.pc3d .pc3d-pause:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.pc3d .pc3d-pause{position:absolute;left:12px;top:10px;z-index:2;border:1px solid rgba(255,255,255,.28);background:rgba(12,12,34,.6);color:#fff;border-radius:999px;padding:4px 11px;font:600 12px var(--font);cursor:pointer}@media (hover:hover) and (pointer:fine){.pc3d .pc3d-pause:hover{background:rgba(255,255,255,.18)}}.pc3d .pc3d-pause:focus-visible{outline:2px solid #fff;outline-offset:2px}
 .hero.has3d{min-height:440px}
 .hero.has3d h1,.hero.has3d p.lead,.hero.has3d .hacts{max-width:min(var(--mw,640px),54%)}
 .hero.has3d h1{--mw:26ch}.hero.has3d p.lead{--mw:56ch}

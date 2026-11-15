@@ -1312,9 +1312,9 @@ def test_actualizacion_40_velocidad_e_interfaz():
          {"id": "2", "category": "fuentes", "chg": {"pct": 3}, "offers": [{"store": "A", "anom": True}]},
          {"id": "3", "category": "mouses", "chg": {"pct": 0}, "offers": [{"store": "B"}, {"store": "A"}]}]
     cf = bd.category_files(G, {})
-    assert cf["fuentes"]["t"] == cf["mouses"]["t"] == {"todos": 3, "bajaron": 1, "subieron": 1, "sc": {"A": 3, "B": 1}}
+    assert cf["fuentes"]["t"] == cf["mouses"]["t"] == {"todos": 3, "bajaron": 1, "subieron": 1, "sc": {"A": 3, "B": 1}, "cc": {"fuentes": 2, "mouses": 1}}
     pr = (site / "productos.html").read_text(encoding="utf-8")
-    assert "TOT=p.t&&typeof p.t.todos===" in pr and "if(!FULL&&(!TOT||Object.keys(FOLLOW).length))" in pr and "fuzzyQ();" in pr
+    assert "TOT=p.t&&typeof p.t.todos===" in pr and "if(!FULL&&(!TOT||Object.keys(FOLLOW).length" in pr and "fuzzyQ();" in pr
     # asistente diferido en todas las páginas que lo usan
     for f in site.glob("*.html"):
         h = f.read_text(encoding="utf-8")
@@ -1381,7 +1381,7 @@ def test_actualizacion_39_kyranohard():
     assert sorted(parts) == ["otros", "placas-de-video", "procesadores"] and len(parts["procesadores"]["g"]) == 5 and parts["procesadores"]["h"]["k1"]
     with tempfile.TemporaryDirectory() as d:
         bd.write_categories(groups, hist, d)
-        assert (Path(d) / "cat" / ".gitignore").read_text() == "*.json\n" and len(list((Path(d) / "cat").glob("*.json"))) == 3
+        assert (Path(d) / "cat" / ".gitignore").read_text() == "*.json\n" and len([f for f in (Path(d) / "cat").glob("*.json") if f.name != "_inicio.json"]) == 3
         n = bd.write_sitemap(groups, "2026-11-14T03:00", d)
         x = (Path(d) / "sitemap-productos.xml").read_text(encoding="utf-8")
         xml.dom.minidom.parseString(x)
@@ -1622,3 +1622,75 @@ def test_actualizacion_43_guias_de_precios():
     assert "sitemap-guias.xml" in open("site/sitemap.xml").read() and "site/precios-*.html" in open(".gitignore").read()
     assert "scripts/guias.py" in open(".github/workflows/actualizar.yml").read()
     print("guías de precios: OK")
+
+
+def test_actualizacion_44_celular():
+    """Act. 44: versión para celular. Primera página rápida de Productos (_inicio.json) en el mismo orden que la página,
+    números por categoría para Comparar, y lo básico de celular en todas las páginas sin cambiar la PC."""
+    import re, pathlib, tempfile
+    o = lambda s, p, **k: dict({"store": s, "price_cash": p}, **k)
+    g = lambda i, cat, offs, **k: dict({"id": f"p{i}", "name": f"P{i}", "category": cat, "offers": offs}, **k)
+    groups = [g(1, "mouses", [o("A", 500)]),
+              g(2, "placas-de-video", [o("A", 900, stock=True, k="a2"), o("B", 950)], image="x.jpg"),
+              g(3, "placas-de-video", [o("A", 800, stock=True), o("C", 990)], image="x.jpg"),           # mismo puntaje que 2 pero más barata
+              g(4, "placas-de-video", [o("A", 700, anom=True, stock=True)], image="x.jpg"),  # precio inusual: baja 30
+              g(5, "procesadores", [o("A", 100, stock=True)], chg={"pct": -5}, image="x.jpg"),
+              g(6, "mouses", [])]                                                          # sin ofertas: no cuenta
+    hist = {"a2": [[1, 2]]}
+    ini = bd.inicio_file(groups, hist, {"todos": 6})
+    assert set(ini) == {"v", "t", "n", "cc", "g", "h"} and ini["n"] == 5 and ini["t"] == {"todos": 6}
+    assert ini["cc"] == {"mouses": 1, "placas-de-video": 3, "procesadores": 1}
+    ids = [x["id"] for x in ini["g"]]
+    assert ids.index("p3") < ids.index("p2"), "con el mismo puntaje va primero el más barato"
+    assert ids.index("p2") < ids.index("p4") and "p6" not in ids, ids
+    assert ini["h"] == {"a2": [[1, 2]]}
+    assert len(bd.inicio_file([g(i, "mouses", [o("A", i + 1)]) for i in range(80)], {}, {})["g"]) == bd.INICIO_N
+    parts = bd.category_files(groups, hist)
+    assert parts["placas-de-video"]["t"]["cc"]["placas-de-video"] == 3 and parts["mouses"]["t"]["cc"]["mouses"] == 2
+    with tempfile.TemporaryDirectory() as d:
+        bd.write_categories(groups, hist, d)
+        assert (pathlib.Path(d) / "cat/_inicio.json").exists() and (pathlib.Path(d) / "cat/.gitignore").read_text() == "*.json\n"
+    # mismos pesos que la página
+    w = re.search(r"const W=\{([^}]*)\}", open("site/productos.html", encoding="utf-8").read())
+    if w:
+        js = dict((k.strip().strip('"'), int(v)) for k, v in (x.split(":") for x in w.group(1).split(",")))
+        assert js == bd.REL_W, (js, bd.REL_W)
+    # todas las páginas: viewport para celular sin bloquear el zoom, colores de la barra del celular
+    pages = list(pathlib.Path("site").glob("*.html"))
+    for p in pages:
+        s = p.read_text(encoding="utf-8")
+        if p.name.startswith("precios-"):
+            continue
+        assert "viewport-fit=cover" in s and "user-scalable" not in s and "maximum-scale" not in s, p.name
+    css = "".join(p.read_text(encoding="utf-8") for p in pathlib.Path("site/css").glob("*.css"))
+    assert "-webkit-tap-highlight-color:transparent" in css and "touch-action:manipulation" in css
+    assert re.search(r"@media \(pointer:coarse\)\{input[^}]*font-size:16px", css), "sin zoom al escribir en iPhone"
+    assert "env(safe-area-inset-bottom" in css
+    # ningún :hover suelto (en celular queda «pegado»): todos dentro de @media (hover:hover) and (pointer:fine)
+    def loose_hover(src):
+        src = re.sub(r"/\*.*?\*/", "", src, flags=re.S)
+        out, stack, pre = [], [], ""
+        for ch in src:
+            if ch == "{":
+                if pre.strip().startswith("@media"):
+                    stack.append("hover:hover" in pre.replace(" ", ""))
+                else:
+                    if ":hover" in pre and not any(stack):
+                        out.append(pre.strip()[:60])
+                    stack.append(False)
+                pre = ""
+            elif ch == "}":
+                stack and stack.pop(); pre = ""
+            else:
+                pre += ch
+        return out
+    for p in list(pathlib.Path("site/css").glob("*.css")) + pages:
+        s = p.read_text(encoding="utf-8")
+        blocks = re.findall(r"<style[^>]*>(.*?)</style>", s, re.S) if p.suffix == ".html" else [s]
+        for b in blocks:
+            assert not loose_hover(b), (p.name, loose_hover(b)[:3])
+    pr = open("site/productos.html", encoding="utf-8").read()
+    assert 'id="fdone"' in pr and 'id="fbg"' in pr and "data/cat/_inicio.json" in pr and "iniOk()" in pr
+    cm = open("site/comparar.html", encoding="utf-8").read()
+    assert "data/cat/${encodeURIComponent(cat)}.json" in cm and "loadFull()" in cm
+    print("celular: OK")

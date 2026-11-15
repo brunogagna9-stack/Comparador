@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <title>Productos · KyraNoHard</title>
 <meta name="description" content="Buscá y filtrá hardware de tiendas argentinas: precios contado y en cuotas, stock y bajas de precio de cada producto, en un solo lugar.">
 <!-- head:kyranohard -->
@@ -11,8 +11,8 @@
 <link rel="icon" href="img/logo.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0b1020" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a0f1e" media="(prefers-color-scheme: dark)">
 <link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
 <meta property="og:site_name" content="KyraNoHard">
 <meta property="og:locale" content="es_AR">
@@ -33,7 +33,7 @@ aside h4{margin:14px 0 6px;font-size:12px;text-transform:uppercase;letter-spacin
 .catlist{display:flex;flex-direction:column;gap:2px;max-height:min(60vh,520px);overflow-y:auto;overscroll-behavior:contain}
 .catlist button{display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:0;background:none;color:var(--tx);font:inherit;font-size:14px;padding:6px 8px;border-radius:8px;cursor:pointer}
 .catlist button svg{width:16px;height:16px;color:var(--acc);flex:none}.catlist button .c{margin-left:auto;color:var(--mut);font-size:12px}
-.catlist button:hover{background:var(--soft)}.catlist button.on{background:color-mix(in srgb,var(--acc) 14%,transparent);font-weight:700}
+@media (hover:hover) and (pointer:fine){.catlist button:hover{background:var(--soft)}}.catlist button.on{background:color-mix(in srgb,var(--acc) 14%,transparent);font-weight:700}
 .catsel{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--soft)}
 .catsel svg{width:16px;height:16px;color:var(--acc);flex:none}.catsel b{flex:1;min-width:0}
 .catchg{border:0;background:none;color:var(--acc);font:600 13px var(--font);cursor:pointer;text-decoration:underline;padding:2px}
@@ -46,11 +46,11 @@ select,input[type=number]{width:100%;padding:8px;border:1px solid var(--line);bo
 .sortw{margin-left:auto;display:flex;gap:8px;align-items:center}.sortw select{width:auto}
 .summary{color:var(--mut);margin:4px 0 10px;font-size:13px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .qact{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;padding:4px 6px 4px 12px;border-radius:999px;background:color-mix(in srgb,var(--acc) 12%,var(--card));border:1px solid color-mix(in srgb,var(--acc) 45%,transparent);color:var(--tx)}
-.qact button{border:0;border-radius:999px;background:var(--acc);color:#fff;font:600 12.5px var(--font);padding:5px 11px;cursor:pointer}.qact button:hover{filter:brightness(1.1)}
+.qact button{border:0;border-radius:999px;background:var(--acc);color:#fff;font:600 12.5px var(--font);padding:5px 11px;cursor:pointer}@media (hover:hover) and (pointer:fine){.qact button:hover{filter:brightness(1.1)}}
 .alert{background:var(--soft);border:1px solid var(--line);border-left:4px solid var(--up);border-radius:10px;padding:10px 14px;margin-bottom:12px}
 .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;cursor:pointer;position:relative;display:flex;flex-direction:column}
-.card:hover{border-color:var(--acc)}
+@media (hover:hover) and (pointer:fine){.card:hover{border-color:var(--acc)}}
 a.sec,a.pri{display:inline-flex;align-items:center;gap:4px}.stretch{position:absolute;inset:0;z-index:1;border-radius:inherit}.stretch:focus-visible{outline:3px solid var(--acc);outline-offset:2px}.card .star,.card .addl,.card .cmpb{z-index:2}
 .im{aspect-ratio:1;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:8px;position:relative}
 .im img{max-width:100%;max-height:100%;object-fit:contain}.im .ph{color:#b8bec9;font-size:12px}
@@ -62,7 +62,7 @@ a.sec,a.pri{display:inline-flex;align-items:center;gap:4px}.stretch{position:abs
 .pr{font-size:18px;font-weight:700;margin-top:auto}.old{font-size:12px;color:var(--mut);text-decoration:line-through;margin-left:6px;font-weight:400}
 .sub{font-size:12px;color:var(--mut)}.low{color:var(--down);font-weight:600}
 .empty{padding:40px;text-align:center;color:var(--mut)}
-.pager{display:flex;gap:6px;justify-content:center;align-items:center;flex-wrap:wrap;margin:22px 0 4px}.pager button{min-width:40px;height:40px;padding:0 12px;border-radius:10px;border:1px solid var(--line2);background:var(--card);color:var(--tx);font-weight:600}.pager button:hover:not(:disabled){background:var(--soft);border-color:var(--acc)}.pager button.on{background:var(--grad);color:#fff;border-color:transparent;cursor:default}.pager button:disabled{opacity:.55;cursor:not-allowed}.pager .gap{padding:0 4px;color:var(--mut)}
+.pager{display:flex;gap:6px;justify-content:center;align-items:center;flex-wrap:wrap;margin:22px 0 4px}.pager button{min-width:40px;height:40px;padding:0 12px;border-radius:10px;border:1px solid var(--line2);background:var(--card);color:var(--tx);font-weight:600}@media (hover:hover) and (pointer:fine){.pager button:hover:not(:disabled){background:var(--soft);border-color:var(--acc)}}.pager button.on{background:var(--grad);color:#fff;border-color:transparent;cursor:default}.pager button:disabled{opacity:.55;cursor:not-allowed}.pager .gap{padding:0 4px;color:var(--mut)}
 .pinfo{text-align:center;color:var(--mut);font-size:12.5px;margin-top:8px}
 .ptitle{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;margin:0 0 10px}.ptitle h1{margin:0;font-size:24px;letter-spacing:-.5px}
 .cmpnote{margin-top:10px;padding:8px 10px;border-radius:10px;background:color-mix(in srgb,var(--acc) 10%,var(--card));border:1px solid color-mix(in srgb,var(--acc) 40%,var(--line));font-size:13.5px}
@@ -81,13 +81,25 @@ td.n,th.n{text-align:right;white-space:nowrap}tr.best td{background:var(--best)}
 #fbtn{display:none}
 .demo{background:#fff3cd;color:#6b4e00;padding:8px 12px;text-align:center;font-size:13px}
 @media(max-width:1180px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.shd,.sft{display:none}
+/* act. 44: en el celular la tabla de la vista rápida se desplaza de costado dentro de la ventana (no se corta) */
+.qtw{overflow-x:auto;overscroll-behavior-x:contain}.qtw:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+@media(max-width:700px){.qtw table{min-width:560px}.modal{padding:10px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}}
+/* actualización 44: en el celular los filtros son un panel que sube desde abajo, con ✕ y «Ver N resultados» */
+@media(max-width:800px){aside.show{position:fixed;left:0;right:0;bottom:0;top:auto;z-index:80;max-height:min(86dvh,780px);overflow-y:auto;overscroll-behavior:contain;border-radius:18px 18px 0 0;border-bottom:0;padding:0 16px;box-shadow:0 -12px 40px rgba(0,0,0,.28)}
+  aside.show .shd{display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:2;background:var(--card);margin:0 -16px 10px;padding:12px 16px;border-bottom:1px solid var(--line);font-size:16px}
+  aside.show .shd button{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--tx);font-size:18px;cursor:pointer}
+  aside.show .sft{display:block;position:sticky;bottom:0;z-index:2;background:var(--card);margin:12px -16px 0;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line)}
+  aside.show .sft .btn{width:100%;padding:13px;font-size:16px;border-radius:12px}
+  #fbg:not([hidden]){position:fixed;inset:0;z-index:79;background:rgba(3,6,15,.5)}
+  @media(prefers-reduced-motion:no-preference){aside.show{animation:fsup .22s cubic-bezier(.2,.8,.2,1)}@keyframes fsup{from{transform:translateY(40px);opacity:.4}}}}
 @media(max-width:800px){.wrap{grid-template-columns:1fr}aside{display:none;position:static;max-height:none}aside.show{display:block}#fbtn{display:inline-block}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.mh{flex-direction:column;align-items:flex-start}}
 
 /* ---- rediseño (actualización 5) ---- */
 aside{border-radius:var(--r);box-shadow:var(--sh)}
 .fresh{font-size:12px;padding:5px 10px;border-radius:999px;background:var(--soft);color:var(--mut);white-space:nowrap}.fresh.old{text-decoration:none;margin-left:0}.fresh i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:#12a37a}.fresh.mid i{background:#e0a100}.fresh.old i{background:#d64545}
 .tab{box-shadow:var(--sh);transition:transform .08s}.tab:active{transform:translateY(1px)}.tab.on{background:var(--grad);border-color:transparent;color:#fff}
-.card{border-radius:16px;box-shadow:var(--sh);transition:transform .15s,border-color .15s,box-shadow .15s}.card:hover{transform:translateY(-3px);border-color:var(--acc);box-shadow:0 10px 28px rgba(37,99,235,.18)}
+.card{border-radius:16px;box-shadow:var(--sh);transition:transform .15s,border-color .15s,box-shadow .15s}@media (hover:hover) and (pointer:fine){.card:hover{transform:translateY(-3px);border-color:var(--acc);box-shadow:0 10px 28px rgba(37,99,235,.18)}}
 .im{border-radius:12px;background:#fff}.pr{font-size:19px;letter-spacing:-.4px}
 
 .cmpb{position:absolute;left:6px;bottom:6px;background:rgba(255,255,255,.94);border:0;border-radius:999px;padding:3px 9px;font-size:12px;font-weight:700;color:#0f172a;box-shadow:0 1px 4px rgba(0,0,0,.2);cursor:pointer}.cmpb.on{background:#1d4ed8;color:#fff}
@@ -113,17 +125,17 @@ aside details>*:not(summary){margin-top:6px}
   .wrap{padding:10px 12px 60px;gap:10px}
   .tab{white-space:nowrap;padding:6px 11px;font-size:13px}
   .sortw{margin-left:0;width:100%}.sortw select{flex:1;width:auto}
-  .grid{gap:8px}.card{padding:7px;border-radius:12px}.card:hover{transform:none}
+  .grid{gap:8px}.card{padding:7px;border-radius:12px}@media (hover:hover) and (pointer:fine){.card:hover{transform:none}}
   .im{aspect-ratio:1/.85;margin-bottom:6px}.nm{font-size:13px;min-height:2.6em;margin-bottom:4px}.pr{font-size:16px}.sub,.st{font-size:12px}
   .addl{padding:2px 9px;font-size:12px;min-height:28px}
 }
 /* ---- vistas: íconos grandes, íconos chicos y lista (actualización 41, como en ComparáSúper) ---- */
 .vmenu{position:relative}.vmenu summary{list-style:none;cursor:pointer}.vmenu summary::-webkit-details-marker{display:none}
-.vbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);color:var(--tx);padding:7px 13px;border-radius:999px;font-weight:600;font-size:14px;box-shadow:var(--sh);white-space:nowrap}.vbtn:hover{border-color:var(--acc)}
+.vbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);color:var(--tx);padding:7px 13px;border-radius:999px;font-weight:600;font-size:14px;box-shadow:var(--sh);white-space:nowrap}@media (hover:hover) and (pointer:fine){.vbtn:hover{border-color:var(--acc)}}
 .vmenu summary:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
 .vopts{position:absolute;right:0;top:calc(100% + 6px);z-index:30;background:var(--card);border:1px solid var(--line2);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.22);padding:6px;min-width:220px}
 .vopts button{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;color:var(--tx);padding:9px 10px;border-radius:8px;text-align:left;font:inherit;font-size:14.5px;cursor:pointer}
-.vopts button:hover,.vopts button.on{background:color-mix(in srgb,var(--acc) 12%,transparent)}
+.vopts button.on{background:color-mix(in srgb,var(--acc) 12%,transparent)}@media (hover:hover) and (pointer:fine){.vopts button:hover{background:color-mix(in srgb,var(--acc) 12%,transparent)}}
 .vopts .vi{font-size:20px;width:24px;text-align:center}.vopts small{display:block;color:var(--mut);font-size:12px}.vopts b{margin-left:auto;color:var(--acc)}
 .grid.v-m{grid-template-columns:repeat(3,minmax(0,1fr))}
 .grid.v-s{grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
@@ -132,7 +144,7 @@ aside details>*:not(summary){margin-top:6px}
 .grid.v-s .tx{display:none}.grid.v-s .cmpb,.grid.v-s .addl{min-width:30px;min-height:28px;padding:3px 8px;font-size:13px}
 .grid.v-l{display:flex;flex-direction:column;gap:0;background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--sh)}
 .grid.v-l .card.lrow{display:grid;grid-template-columns:72px minmax(0,1fr) auto auto;gap:14px;align-items:center;border:0;border-bottom:1px solid var(--line);border-radius:0;box-shadow:none;padding:10px 14px}
-.grid.v-l .card.lrow:last-child{border-bottom:0}.grid.v-l .card.lrow:hover{transform:none;box-shadow:none;background:var(--soft)}
+.grid.v-l .card.lrow:last-child{border-bottom:0}@media (hover:hover) and (pointer:fine){.grid.v-l .card.lrow:hover{transform:none;box-shadow:none;background:var(--soft)}}
 .lrow .im{width:72px;margin:0;border-radius:10px}.lrow .im .ph{font-size:0}.lrow .im .ph svg{width:28px;height:28px}
 .lrow .nm{min-height:0;margin:0 0 2px}.lrow .st{text-transform:none;letter-spacing:0}
 .lrow .li-p{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:3px;white-space:nowrap}.lrow .li-p .badge{position:static}.lrow .li-p .old{margin:0}
@@ -156,14 +168,16 @@ aside details>*:not(summary){margin-top:6px}
 #fxbox label.zero{opacity:.45}#fxbox .fxn{font-size:11.5px;color:var(--mut);margin:4px 0 0;line-height:1.35}
 #fxbox .fxh{font-size:12px;color:var(--mut);margin:12px 0 0;padding-top:8px;border-top:2px solid var(--line)}
 .zl{display:block;font-size:12px;color:var(--mut);margin:2px 0 3px}.zs{width:100%;min-width:0;padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--tx);margin-bottom:6px;font:inherit}
-.chips{display:flex;gap:6px;flex-wrap:wrap;margin:-2px 0 10px}.chip{border:1px solid var(--acc);background:color-mix(in srgb,var(--acc) 10%,var(--card));color:var(--tx);border-radius:999px;padding:3px 10px;font-size:12.5px;cursor:pointer}.chip:hover{text-decoration:line-through}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:-2px 0 10px}.chip{border:1px solid var(--acc);background:color-mix(in srgb,var(--acc) 10%,var(--card));color:var(--tx);border-radius:999px;padding:3px 10px;font-size:12.5px;cursor:pointer}@media (hover:hover) and (pointer:fine){.chip:hover{text-decoration:line-through}}
 </style>
 </head>
 <body data-page="productos">
 <script src="js/layout.js"></script>
 <div id="demo"></div>
 <div class="wrap">
-  <aside id="side">
+  <div id="fbg" hidden></div>
+  <aside id="side" class="sheet" aria-label="Filtros">
+    <div class="shd"><b>Filtros</b><button type="button" id="fclose" aria-label="Cerrar filtros">✕</button></div>
     <div id="catbox"></div>
     <h4>Precio (ARS)</h4><div class="rng"><input id="pmin" type="number" min="0" placeholder="Mín"><input id="pmax" type="number" min="0" placeholder="Máx"></div>
     <div id="fxbox"></div>
@@ -175,6 +189,7 @@ aside details>*:not(summary){margin-top:6px}
       <label><input type="checkbox" id="lowonly"> En mínimo histórico</label>
       <label title="Alguna tienda publica cuotas sin interés para ese producto. Pueden depender del banco o de la tarjeta: confirmalo en la tienda."><input type="checkbox" id="csi"> Con cuotas sin interés</label></div></details>
     <h4>&nbsp;</h4><button class="more" id="reset">Limpiar filtros</button>
+    <div class="sft"><button type="button" class="btn pri" id="fdone">Ver resultados</button></div>
   </aside>
   <main>
     <div class="ptitle"><h1>Productos</h1><span class="fresh" id="fresh" title="Cuándo se leyeron los precios de las tiendas"></span></div>
@@ -293,7 +308,7 @@ function counts(){if(!FULL&&TOT)return {todos:TOT.todos,bajaron:TOT.bajaron,subi
   const t={todos:DATA.length,bajaron:0,subieron:0,seguidos:0};
   DATA.forEach(g=>{if(chgOk(g))g.chg.pct<0?t.bajaron++:t.subieron++;if(FOLLOW[g.id])t.seguidos++});return t}
 function renderSide(){
-  const base=filtered("cat"),cc={};base.forEach(g=>cc[g.category]=(cc[g.category]||0)+1);
+  const base=filtered("cat");let cc={};base.forEach(g=>cc[g.category]=(cc[g.category]||0)+1);if(INI&&!FULL)cc=INI.cc;
   // Categoría: lista desplegada hasta elegir una; elegida, se contrae a «Categoría: X · Cambiar»
   const ico=k=>window.ICONS?ICONS.svg(k,16):"";
   $("#catbox").innerHTML=S.cat&&!S.catOpen
@@ -333,19 +348,26 @@ function renderChips(){
   el.innerHTML=out.join("");
 }
 function render(){
+  if(INI&&!FULL&&!iniOk()){
+    if(onlyCat()){location.assign("productos.html?cat="+encodeURIComponent(S.cat));return}
+    $("#grid").setAttribute("aria-busy","true");$("#sum").textContent="Cargando el catálogo completo…";loadFull();return}
   const t=counts(),names={todos:"Todos",bajaron:"▼ Bajaron de precio",subieron:"▲ Subieron de precio",seguidos:"★ Seguidos"};
   $("#tabs").innerHTML=Object.keys(names).map(k=>`<button class="tab ${S.tab===k?"on":""}" data-t="${k}">${names[k]}<span class="n">${t[k]}</span></button>`).join("")+`<button class="tab" id="fbtn" aria-expanded="${$("#side").classList.contains("show")}">☰ Filtros</button>`+
    `<div class="sortw"><details class="vmenu" id="vmenu"><summary class="vbtn" aria-label="Cambiar la vista (ahora: ${VISTAS[S.vista].t})"><span aria-hidden="true">${VISTAS[S.vista].i}</span> Ver ▾</summary><div class="vopts" role="group" aria-label="Vista de los productos">${Object.entries(VISTAS).map(([k,v])=>`<button type="button" data-vista="${k}" class="${S.vista===k?"on":""}" aria-pressed="${S.vista===k}"><span class="vi" aria-hidden="true">${v.i}</span><span>${v.t}<small>${v.d}</small></span>${S.vista===k?'<b aria-hidden="true">•</b>':""}</button>`).join("")}</div></details><span class="sub">Ordenar</span><select id="sort" aria-label="Ordenar productos">${[["rel","Más relevante"],["price","Menor precio"],["priceDesc","Mayor precio"],["down","Mayor baja %"],["up","Mayor suba %"],["stores","Más tiendas"],["spread","Mayor diferencia entre tiendas"]].map(([v,l])=>`<option value="${v}" ${S.sort===v?"selected":""}>${l}</option>`).join("")}</select></div>`;
   $("#sort").onchange=e=>{S.sort=e.target.value;S.page=1;render()};
   fuzzyQ();const rows=filtered().sort(sorter());
-  $("#sum").innerHTML=esc(`${rows.length.toLocaleString("es-AR")} resultados`+(S.tab==="bajaron"||S.tab==="subieron"?` · cambios de los últimos ${META.recent_days||14} días`:""))+
+  const nAll=INI&&!FULL?INI.n:rows.length;   // con la primera página sola, el total es el del catálogo entero
+  {const fd=$("#fdone");if(fd)fd.textContent=nAll?`Ver ${nAll.toLocaleString("es-AR")} resultado${nAll===1?"":"s"}`:"Sin resultados: probá con menos filtros"}
+  $("#sum").innerHTML=esc(`${nAll.toLocaleString("es-AR")} resultados`+(S.tab==="bajaron"||S.tab==="subieron"?` · cambios de los últimos ${META.recent_days||14} días`:""))+
     (S.q.trim()?` <span class="qact">${QF?"Sin coincidencias exactas; parecidos a":"Buscando:"} <b>«${esc(S.q.trim())}»</b> <button type="button" id="qclear">✕ Quitar búsqueda</button></span>`:"");   // act. 36: que se vea la búsqueda activa y se pueda quitar
   {const qc=$("#qclear");if(qc)qc.onclick=()=>{S.q="";$("#qh").value="";S.page=1;render()}}
-  const PER=perPage(),pages=Math.max(1,Math.ceil(rows.length/PER));if(S.page>pages)S.page=pages;if(S.page<1)S.page=1;
+  const PER=perPage(),pages=Math.max(1,Math.ceil(nAll/PER));if(S.page>pages)S.page=pages;if(S.page<1)S.page=1;
   const from=(S.page-1)*PER;
   $("#grid").removeAttribute("aria-busy");$("#grid").className="grid v-"+S.vista;
   $("#grid").innerHTML=rows.slice(from,from+PER).map(S.vista==="l"?lrow:card).join("")||`<div class="empty">${S.tab==="seguidos"?"Todavía no seguís productos. Tocá la ☆ de cualquier producto.":S.tab==="todos"?"Sin resultados.":"Todavía no hay cambios de precio registrados. Aparecen a medida que se actualizan los datos."}</div>`;
-  renderPager(pages,rows.length,from);syncUrl();renderChips();
+  // act. 44: las fotos de la primera fila se piden enseguida (la primera, con prioridad): son lo primero que se ve
+  [...$("#grid").querySelectorAll('img[loading="lazy"]')].slice(0,4).forEach((im,i)=>{im.loading="eager";if(!i)im.fetchPriority="high"});
+  renderPager(pages,nAll,from);syncUrl();renderChips();
   renderSide();
 }
 function renderPager(pages,total,from){
@@ -378,9 +400,9 @@ function openModal(id){
   const c=g.chg,f=!!FOLLOW[g.id];
   $("#box").innerHTML=`<button class="x" id="cx">×</button><div class="mh"><div class="im">${imgTag(g,false)}</div><div><span class="tag">${esc(CATS[g.category]||g.category)}</span>${g.img_src?`<span class="tag" title="Ninguna tienda publica foto de este producto">Foto: ${esc(g.img_src)}</span>`:""}${g.brand?`<span class="tag">${esc(g.brand)}</span>`:""}<h2 style="margin:6px 0">${esc(g.name)}</h2>
   <div class="big">${ARS(best(g))} <span class="sub">en ${esc(g.offers[0].store)}</span></div>
-  ${c?`<div class="${c.pct<0?"dn":"up"}">${c.pct<0?"▼ Bajó":"▲ Subió"} ${Math.abs(c.pct)}% (antes ${ARS(c.prev)})</div>`:""}
+  ${c?`<div class="${c.pct<0?"dn":"up"}">${c.pct<0?"▼ Bajó":"▲ Subió"} ${Math.abs(c.pct).toLocaleString("es-AR")}% (antes ${ARS(c.prev)})</div>`:""}
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="tab ${f?"on":""}" id="fb">${f?"★ Siguiendo":"☆ Seguir precio"}</button><button class="pri" id="fl">${LIST.includes(g.id)?"✓ En mi lista (quitar)":"+ Agregar a mi lista"}</button><button class="sec" id="fcmp">${CT.cmp.has(g.id,g.category)?"✓ En la comparación (quitar)":"⚖ Agregar a la comparación"}</button><a class="sec" href="${DET.url(g.id)}" target="_blank" rel="noopener">↗ Abrir en otra pestaña</a></div>${cmpNote(g)}</div></div>
-  <table><tr><th>Tienda</th><th class="n">Efectivo / transf.</th><th class="n">Lista / tarjeta</th><th>Cuotas</th><th>Stock</th><th></th></tr>${rows}</table><p class="sub" style="margin:8px 0 0">${(()=>{const rs=g.offers.map(o=>o.store).filter(x=>rep1(x));return rs.length?"La reputación es el puntaje público de cada tienda en una sola plataforma (fecha en el detalle al pasar el mouse); no se promedian fuentes. ":""})()}Los precios no incluyen envío: se calcula en cada tienda.</p>${g.offers.some(o=>o.anom)?'<div class="alert" style="margin-top:10px;border-left-color:var(--warn)">Alguna oferta cambió de precio de forma muy brusca. Puede ser un error de la tienda: confirmalo antes de comprar.</div>':""}${chart(g)}`;
+  <div class="qtw" tabindex="0" role="region" aria-label="Precios por tienda"><table><tr><th>Tienda</th><th class="n">Efectivo / transf.</th><th class="n">Lista / tarjeta</th><th>Cuotas</th><th>Stock</th><th></th></tr>${rows}</table></div><p class="sub" style="margin:8px 0 0">${(()=>{const rs=g.offers.map(o=>o.store).filter(x=>rep1(x));return rs.length?"La reputación es el puntaje público de cada tienda en una sola plataforma (fecha en el detalle al pasar el mouse); no se promedian fuentes. ":""})()}Los precios no incluyen envío: se calcula en cada tienda.</p>${g.offers.some(o=>o.anom)?'<div class="alert" style="margin-top:10px;border-left-color:var(--warn)">Alguna oferta cambió de precio de forma muy brusca. Puede ser un error de la tienda: confirmalo antes de comprar.</div>':""}${chart(g)}`;
   $("#modal").classList.add("on");
   $("#cx").onclick=()=>$("#modal").classList.remove("on");
   $("#fb").onclick=()=>{toggleF(g.id);openModal(id)};
@@ -425,7 +447,8 @@ document.addEventListener("click",e=>{
   const vb=t.closest("[data-vista]");if(vb){setVista(vb.dataset.vista);return}
   if(!t.closest("#vmenu"))closeVmenu();
   const tb=t.closest("[data-t]");if(tb){e.preventDefault();S.tab=tb.dataset.t;if(!FULL&&S.tab==="seguidos")loadFull();S.page=1;if(S.tab==="bajaron")S.sort="down";else if(S.tab==="subieron")S.sort="up";else if(S.tab==="todos"&&(S.sort==="down"||S.sort==="up"))S.sort="rel";render();return}
-  if(t.closest("#fbtn")){$("#side").classList.toggle("show");render();return}
+  if(t.closest("#fbtn")){sheet(!$("#side").classList.contains("show"));return}
+  if(t.closest("#fclose,#fdone,#fbg")){sheet(false,!!t.closest("#fdone"));return}
   const ch=t.closest("[data-chip]");if(ch){const set=S.fx[ch.dataset.chip];if(set)set.delete(ch.dataset.v);S.page=1;render();return}
   const pb=t.closest("[data-pg]");if(pb&&!pb.disabled){goPage(+pb.dataset.pg);return}
   const op=t.closest("a.stretch");if(op){if(e.ctrlKey||e.metaKey||e.shiftKey||e.altKey)return;e.preventDefault();openModal(op.dataset.open);return}
@@ -435,6 +458,7 @@ document.addEventListener("click",e=>{
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){const d=$("#vmenu");if(d&&d.open){d.open=false;d.querySelector("summary").focus();return}$("#modal").classList.remove("on")}});
 function bind(){
   const re=()=>{S.page=1;render()};
+  addEventListener("keydown",e=>{if(e.key==="Escape"&&$("#side").classList.contains("show")&&matchMedia("(max-width:800px)").matches)sheet(false)});
   $("#qh").oninput=e=>{S.q=e.target.value;if(!FULL)loadFull();re()};
   $("#catbox").onclick=e=>{const c=e.target.closest("#catchg");if(c){S.catOpen=true;if(!FULL){$("#catbox").setAttribute("aria-busy","true");loadFull().then(()=>{$("#catbox").removeAttribute("aria-busy");renderSide()})}else renderSide();return}
     const b=e.target.closest("[data-cat]");if(!b)return;const v=b.dataset.cat;if(v!==S.cat){S.cat=v;S.fx={};S.brands=new Set();S.allBrands=false;S.bq="";$("#bq").value=""}S.catOpen=false;re()};
@@ -456,10 +480,21 @@ function bind(){
 /* actualización 39: carga en dos etapas. Con una categoría en la dirección (productos.html?cat=…) primero se baja solo
    esa categoría (data/cat/<cat>.json, unos cientos de KB) y se muestra; el catálogo completo llega después, en segundo
    plano, y la página lo incorpora sola. Sin categoría (todas, búsqueda, mi lista) se espera el catálogo completo, como antes. */
-let FULL=false,FULLP=null,HWP=null,TOT=null;
+let FULL=false,FULLP=null,HWP=null,TOT=null,INI=null;
 function loadFull(){return FULLP||(FULLP=Promise.all([j("data/products.json",[]),j("data/history.json",{})]).then(([d,h])=>{
-  if(Array.isArray(d)&&d.length){DATA=d;HIST=h||{};FULL=true;setupData();if(BOUND)render()}}))}
+  if(Array.isArray(d)&&d.length){DATA=d;HIST=h||{};FULL=true;INI=null;setupData();if(BOUND)render()}}))}
+/* act. 44: con la primera página del archivo chico (INI), cualquier cosa distinta de «Todos, sin filtros, Relevancia,
+   página 1» necesita el catálogo entero. Elegir solo una categoría lleva a esa categoría (archivo de la categoría). */
+function iniOk(){return S.tab==="todos"&&!S.cat&&!S.q.trim()&&!S.brands.size&&!S.stores.size&&S.pmin==null&&S.pmax==null&&!S.stock&&!S.multi&&!S.lowonly&&!S.csi&&!S.zone&&S.sort==="rel"&&S.page===1&&perPage()<=INI.k}
+function onlyCat(){return S.cat&&S.tab==="todos"&&!S.q.trim()&&!S.brands.size&&!S.stores.size&&S.pmin==null&&S.pmax==null&&!S.stock&&!S.multi&&!S.lowonly&&!S.csi&&!S.zone}
 let BOUND=false;
+/* actualización 44: abrir/cerrar los filtros (en el celular, panel desde abajo; en PC el panel siempre está a la izquierda) */
+function sheet(on,toResults){
+  const sd=$("#side");sd.classList.toggle("show",on);$("#fbg").hidden=!on;render();
+  const mob=matchMedia("(max-width:800px)").matches;
+  if(on&&mob){sd.scrollTop=0;const x=$("#fclose");if(x)x.focus({preventScroll:true})}
+  else if(!on){const b=$("#fbtn");if(toResults){const tb=$("#tabs");if(tb)tb.scrollIntoView({block:"start"})}if(b)b.focus({preventScroll:true})}
+}
 function setupData(){
   DATA.forEach(g=>{if(g.image_fb)FB[g.id]=g.image_fb});
   let sc={};DATA.forEach(g=>g.offers.forEach(o=>sc[o.store]=(sc[o.store]||0)+1));if(!FULL&&TOT&&TOT.sc)sc=TOT.sc;   // act. 40: totales de todo el catálogo
@@ -468,17 +503,21 @@ function setupData(){
   const showStore=s=>{const m=(META.stores||{})[s];return (sc[s]||0)>0&&!(m&&(m.hidden||!m.ok))&&!((CFG.stores||{})[s]||{}).ocultar};
   // actualización 41: tiendas en orden alfabético (sin importar mayúsculas ni acentos)
   $("#stores").innerHTML=Object.keys(META.stores||sc).filter(showStore).sort((a,b)=>a.localeCompare(b,"es",{sensitivity:"base",numeric:true})).map(s=>{const m=(META.stores||{})[s];return `<label title="${esc(m&&m.error||"")}"><input type="checkbox" data-s="${esc(s)}"${S.stores.has(s)?" checked":""}> ${esc(s)}${m&&!m.ok?" ⚠️":""}<span class="c">${sc[s]||0}</span></label>`}).join("");
-  // base de hardware y fichas: completan los filtros por categoría (si no cargan, los filtros usan solo el título)
+  // base de hardware y fichas: completan los filtros por categoría (si no cargan, los filtros usan solo el título).
+  // act. 44: con la primera página sola (sin categoría) todavía no hacen falta: se bajan junto con el catálogo entero.
+  if(INI&&!FULL)return;
   HWP=HWP||Promise.all([j("data/hardware.json",null),j("data/specs.json",null)]);
   const mine=DATA;HWP.then(([hw,sp])=>{try{if(hw&&window.FX&&mine===DATA){CX=CT.create(hw,DATA,META,sp);FX.init(CX);FX.clear(DATA);if(S.cat&&BOUND)render()}}catch(e){}});
 }
 (async()=>{
   const u0=new URLSearchParams(location.search),cat0=u0.get("cat")&&CATS[u0.get("cat")]?u0.get("cat"):"";
   const fast=cat0&&!u0.get("q")&&!u0.get("lista")&&u0.get("tab")!=="seguidos";
-  const part=fast?j(`data/cat/${cat0}.json`,null):null;
+  // act. 44: sin categoría, búsqueda ni filtros en la dirección: primera página desde data/cat/_inicio.json (~35 KB)
+  const ini=!cat0&&![...u0.keys()].some(k=>k!=="p"||u0.get("p")!=="1");
+  const part=fast?j(`data/cat/${cat0}.json`,null):ini?j("data/cat/_inicio.json",null):null;
   [META,CFG,STORES]=await Promise.all([j("data/meta.json",{}),j("data/config.json",{stores:{}}),j("data/stores.json",{stores:{}})]);REP.set(STORES);
   const p=part&&await part;
-  if(p&&Array.isArray(p.g)&&p.g.length){DATA=p.g;HIST=p.h||{};TOT=p.t&&typeof p.t.todos==="number"?p.t:null;setupData()}else await loadFull();
+  if(p&&Array.isArray(p.g)&&p.g.length&&(!ini||(p.t&&typeof p.n==="number"&&p.cc))){DATA=p.g;HIST=p.h||{};TOT=p.t&&typeof p.t.todos==="number"?p.t:null;if(ini)INI={n:p.n,cc:p.cc,k:p.g.length};setupData()}else await loadFull();
   CTL.count(LIST.length);
   {const h=META.updated?(Date.now()-new Date(META.updated).getTime())/36e5:null,el=$("#fresh");
    el.className="fresh"+(h==null?" old":h>24?" old":h>12?" mid":"");
@@ -495,7 +534,8 @@ function setupData(){
   /* act. 40: el catálogo entero (~20 MB sin comprimir) trababa el celular varios segundos aunque nadie lo usara. Con los
      totales precalculados ya no hace falta: se baja recién al buscar, cambiar de categoría o abrir la lista. Solo se baja
      solo si la persona sigue productos (para avisarle cuáles bajaron en todo el catálogo) o si faltan los totales. */
-  if(!FULL&&(!TOT||Object.keys(FOLLOW).length))(window.requestIdleCallback||(f=>setTimeout(f,400)))(()=>loadFull(),{timeout:3000});
+  const pc=matchMedia("(hover:hover) and (pointer:fine)").matches&&!(navigator.connection&&navigator.connection.saveData);
+  if(!FULL&&(!TOT||Object.keys(FOLLOW).length||(INI&&pc)))(window.requestIdleCallback||(f=>setTimeout(f,400)))(()=>loadFull(),{timeout:3000});
 })();
 </script>
 <script src="js/lib.js"></script><script src="js/facets.js"></script><script src="js/icons.js"></script><script src="js/rep.js"></script><script src="js/detail.js"></script><script src="js/assistant.js" defer></script>

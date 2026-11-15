@@ -351,7 +351,8 @@
 #ctas-form input{flex:1;min-width:0;padding:10px;border:1px solid var(--line,#e3e6ea);border-radius:8px;background:var(--card,#fff);color:var(--tx,#16191f);font:inherit}
 #ctas-form button{padding:0 14px;border:0;border-radius:8px;background:var(--acc,#1f6feb);color:#fff;font-weight:600;cursor:pointer}
 .ctas-a a{display:inline-block;margin:4px 8px 0 0;font-weight:600}
-@media(max-width:560px){#ctas-p{right:0;bottom:0;width:100vw;height:min(78dvh,640px);border-radius:14px 14px 0 0}#ctas-btn{right:12px;bottom:12px}}
+@media(max-width:560px){#ctas-p{right:0;bottom:0;width:100vw;height:min(78dvh,640px);border-radius:14px 14px 0 0;padding-bottom:env(safe-area-inset-bottom,0px)}#ctas-btn{right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));width:48px;height:48px;padding:0;justify-content:center}#ctas-btn .lb{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}#ctas-btn svg{width:22px;height:22px}}
+#ctas-btn:active{transform:scale(.96)}#ctas-body{overscroll-behavior:contain}
 @media(prefers-reduced-motion:no-preference){#ctas-p.open{animation:ctasin .18s ease-out}@keyframes ctasin{from{opacity:0;transform:translateY(8px)}}}`;
 
   CT.CTAssistant = {
@@ -377,7 +378,7 @@
 
       const st = document.createElement("style"); st.textContent = CSS; document.head.appendChild(st);
       const btn = document.createElement("button"); btn.id = "ctas-btn"; btn.type = "button"; btn.setAttribute("aria-haspopup", "dialog"); btn.setAttribute("aria-expanded", "false");
-      btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Asistente';
+      btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="lb">Asistente</span>'; btn.setAttribute("aria-label", "Asistente");
       const p = document.createElement("section"); p.id = "ctas-p"; p.setAttribute("role", "dialog"); p.setAttribute("aria-label", "Asistente virtual de KyraNoHard");
       p.innerHTML = '<div id="ctas-h"><b>Asistente KyraNoHard</b><button type="button" id="ctas-min" aria-label="Minimizar">–</button><button type="button" id="ctas-x" aria-label="Cerrar asistente">×</button></div><div id="ctas-mode"></div><div id="ctas-body" role="log" aria-live="polite"></div><div id="ctas-chips"></div><form id="ctas-form"><input id="ctas-in" type="text" maxlength="500" autocomplete="off" placeholder="Preguntame lo que quieras…" aria-label="Tu pregunta"><button type="submit">Enviar</button></form>';
       document.body.append(btn, p);

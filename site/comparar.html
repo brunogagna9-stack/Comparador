@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <title>Comparar hardware · KyraNoHard</title>
 <meta name="description" content="Compará procesadores, placas de video, memorias y más, lado a lado: especificaciones de fábrica, ventajas de cada uno y precios.">
 <!-- head:kyranohard -->
@@ -11,8 +11,8 @@
 <link rel="icon" href="img/logo.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0b1020" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a0f1e" media="(prefers-color-scheme: dark)">
 <link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
 <meta property="og:site_name" content="KyraNoHard">
 <meta property="og:locale" content="es_AR">
@@ -32,7 +32,7 @@
 .sel{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .pill{display:flex;align-items:center;gap:8px;padding:6px 8px 6px 12px;border:2px solid var(--c);border-radius:99px;background:var(--card);max-width:100%}.pill span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:300px}.pill button{border:0;background:var(--soft);color:var(--tx);border-radius:50%;width:22px;height:22px;cursor:pointer;line-height:1}
 .srch{position:relative}.dd{position:absolute;z-index:20;left:0;right:0;top:100%;background:var(--card);border:1px solid var(--line);border-radius:8px;margin-top:4px;max-height:320px;overflow:auto;box-shadow:0 8px 24px rgba(0,0,0,.18)}
-.dd button{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;color:var(--tx);padding:9px 10px;cursor:pointer;font:inherit}.dd button:hover,.dd button.act{background:var(--soft)}.dd button.act{box-shadow:inset 3px 0 0 var(--acc)}.dd mark{background:color-mix(in srgb,var(--acc) 28%,transparent);color:inherit;border-radius:3px;padding:0 1px}.ddh{padding:7px 10px;font-size:12px;color:var(--mut);border-bottom:1px solid var(--line2);position:sticky;top:0;background:var(--card)}.ddm{padding:12px;color:var(--mut)}
+.dd button{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;color:var(--tx);padding:9px 10px;cursor:pointer;font:inherit}.dd button.act{background:var(--soft)}@media (hover:hover) and (pointer:fine){.dd button:hover{background:var(--soft)}}.dd button.act{box-shadow:inset 3px 0 0 var(--acc)}.dd mark{background:color-mix(in srgb,var(--acc) 28%,transparent);color:inherit;border-radius:3px;padding:0 1px}.ddh{padding:7px 10px;font-size:12px;color:var(--mut);border-bottom:1px solid var(--line2);position:sticky;top:0;background:var(--card)}.ddm{padding:12px;color:var(--mut)}
 .cov{border-left:4px solid var(--warn);background:var(--warnbg)}.cov h2{margin:0 0 6px;font-size:16px}.cov ul{margin:6px 0 0;padding-left:18px}
 details.nod{margin-top:10px;background:var(--card);border:1px solid var(--line2);border-radius:12px;padding:10px 14px}details.nod summary{cursor:pointer;font-weight:600}details.nod p{margin:8px 0 0;color:var(--mut)}.nd{color:var(--mut);font-style:italic}.dd .p{font-weight:700;white-space:nowrap}
 .verd{border-left:4px solid var(--acc)}.verd h2{margin:0 0 6px}
@@ -82,21 +82,37 @@ details.nod{margin-top:10px;background:var(--card);border:1px solid var(--line2)
 <script>
 const $=s=>document.querySelector(s),{ARS,esc,RES}=CT;
 const COL=["#4f6bff","#ff4f8b","#12a37f","#e0a100"];
-let HW,PR=[],META={},C;
+let HW,PR=[],META={},C,SP=null;
+// act. 44: Comparar baja solo la categoría que se está mirando (data/cat/<categoría>.json); el catálogo entero
+// (products.json, ~25 MB) solo cuando se tilda «Buscar en todas las categorías», o en segundo plano en la PC.
+let FULL=false,FULLP=null,CC=null;const LOADED=new Set();
+const j=async(u,d)=>{try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw 0;return await r.json()}catch{return d}};
+const rebuild=()=>{C=CT.makeCompare(CT.create(HW,PR,META,SP))};
+function loadFull(){if(FULL)return Promise.resolve(true);
+  return FULLP=FULLP||j("data/products.json",[]).then(a=>{if(a.length){PR=a;FULL=true;if(HW)rebuild()}return FULL})}
+async function need(cat){
+  if(FULL||LOADED.has(cat))return true;
+  const p=await j(`data/cat/${encodeURIComponent(cat)}.json`,null);
+  if(FULL||LOADED.has(cat))return true;
+  if(!p||!Array.isArray(p.g)||!(p.t&&p.t.cc))return loadFull();   // sin archivo por categoría: como antes
+  LOADED.add(cat);CC=p.t.cc;PR=PR.concat(p.g);if(HW)rebuild();return true}
+const wait=()=>{$("#out").innerHTML='<div class="panel note" aria-busy="true">Cargando productos…</div>'};
+async function goCat(cat,ids){S.cat=cat;if(!FULL&&!LOADED.has(cat))wait();await need(cat);if(S.cat!==cat)return;
+  S.ids=(ids||S.ids).filter(id=>byId(id));S.use=null;drawAll()}
 const S={cat:"placas-de-video",ids:[],res:1,use:null,diff:false,all:false};
 const fdate=iso=>{try{return new Date(iso).toLocaleString("es-AR",{timeZone:"America/Argentina/Buenos_Aires",day:"numeric",month:"long",hour:"2-digit",minute:"2-digit",hour12:false})}catch{return ""}};
 const tagH=(t,n)=>{const [l,h]=CT.TAGS[t]||CT.TAGS.nd;return `<span class="tag t-${t}" title="${esc(h+(n?" — "+n:""))}">${l}</span>`};
 const byId=id=>PR.find(g=>g.id===id);
 
 function drawCats(){
-  const cnt={};PR.forEach(g=>{if(CT.CATS[g.category])cnt[g.category]=(cnt[g.category]||0)+1});
+  let cnt={};if(FULL||!CC)PR.forEach(g=>{if(CT.CATS[g.category])cnt[g.category]=(cnt[g.category]||0)+1});else cnt=CC;
   const saved=CT.cmp.all();
   $("#cats").innerHTML=Object.entries(CT.CATS).filter(([k])=>cnt[k]).map(([k,l])=>{const n=(saved[k]||[]).length;return `<button data-c="${k}" class="${S.cat===k?"on":""}${n?" has":""}">${l} <span class="note" style="color:inherit;opacity:.7">${cnt[k]}</span>${n?`<span class="cmpn" title="${n} ${n===1?"producto elegido":"productos elegidos"} para comparar">${n}</span>`:""}</button>`}).join("");
-  document.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{if(S.cat!==b.dataset.c){S.cat=b.dataset.c;S.ids=S.all?S.ids:CT.cmp.list(S.cat);S.use=null}drawAll()});
+  document.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{if(S.cat!==b.dataset.c)goCat(b.dataset.c,S.all?S.ids:CT.cmp.list(b.dataset.c));else drawAll()});
   // comparaciones guardadas (una por tipo de producto): se ven todas juntas y cada una se abre por separado
   const keys=Object.keys(saved).filter(k=>CT.CATS[k]&&saved[k].length);
   $("#saved").innerHTML=keys.length>1||(keys.length===1&&keys[0]!==S.cat)?`<div class="saved"><span class="note">Tus comparaciones:</span>${keys.map(k=>`<button data-c2="${k}" class="${k===S.cat&&!S.all?"on":""}">⚖ ${esc(CT.CATS[k])} <b>${saved[k].length}</b></button>`).join("")}</div>`:"";
-  document.querySelectorAll("[data-c2]").forEach(b=>b.onclick=()=>{S.all=false;const a=$("#allc");if(a)a.checked=false;S.cat=b.dataset.c2;S.ids=CT.cmp.list(S.cat);S.use=null;drawAll()});
+  document.querySelectorAll("[data-c2]").forEach(b=>b.onclick=()=>{S.all=false;const a=$("#allc");if(a)a.checked=false;goCat(b.dataset.c2,CT.cmp.list(b.dataset.c2))});
 }
 function drawSel(){
   $("#sel").innerHTML=S.ids.map((id,i)=>{const g=byId(id);return `<div class="pill" style="--c:${COL[i]}">${ICONS.thumb(g,32)}<span title="${esc(g.name)}">${esc(g.name)}</span><button data-r="${id}" aria-label="Quitar">×</button></div>`}).join("")||'<span class="note">Todavía no elegiste productos. Buscá arriba y tocá un resultado.</span>';
@@ -212,20 +228,25 @@ function drawAll(){
   drawOut();
 }
 (async()=>{
-  const j=async(u,d)=>{try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw 0;return await r.json()}catch{return d}};
-  let m,SP;[HW,PR,m,SP]=await Promise.all([j("data/hardware.json",null),j("data/products.json",[]),j("data/meta.json",{}),j("data/specs.json",null),REP.load()]);META=m;
-  if(!HW||!PR.length){$("#out").innerHTML='<div class="panel">No se pudieron cargar los datos. Probá recargar la página.</div>';return}
-  C=CT.makeCompare(CT.create(HW,PR,META,SP));
-  $("#legend").innerHTML=["ver","bench","est","pend","nd"].map(t=>`${tagH(t)} <span>${esc(CT.TAGS[t][1])}</span>`).join("<br>");
   // Orden: enlace compartido (#cat=…&ids=…) > comparación guardada de esa categoría > la primera guardada
-  try{const p=new URLSearchParams(location.hash.slice(1)),sv=CT.cmp.all();
-    if(p.get("cat")&&CT.CATS[p.get("cat")])S.cat=p.get("cat");else{const k=Object.keys(sv).find(k=>CT.CATS[k]&&sv[k].length);if(k)S.cat=k}
-    S.ids=p.get("ids")?p.get("ids").split(",").filter(id=>byId(id)).slice(0,4):CT.cmp.list(S.cat).filter(id=>byId(id))}catch{}
+  let hp=new URLSearchParams();try{hp=new URLSearchParams(location.hash.slice(1));const sv=CT.cmp.all();
+    if(hp.get("cat")&&CT.CATS[hp.get("cat")])S.cat=hp.get("cat");else{const k=Object.keys(sv).find(k=>CT.CATS[k]&&sv[k].length);if(k)S.cat=k}}catch{}
+  let m;[HW,m,SP]=await Promise.all([j("data/hardware.json",null),j("data/meta.json",{}),j("data/specs.json",null),need(S.cat),REP.load()]);META=m;
+  if(!HW||!PR.length){$("#out").innerHTML='<div class="panel">No se pudieron cargar los datos. Probá recargar la página.</div>';return}
+  rebuild();
+  $("#legend").innerHTML=["ver","bench","est","pend","nd"].map(t=>`${tagH(t)} <span>${esc(CT.TAGS[t][1])}</span>`).join("<br>");
+  try{S.ids=hp.get("ids")?hp.get("ids").split(",").filter(id=>byId(id)).slice(0,4):CT.cmp.list(S.cat).filter(id=>byId(id))}catch{}
   $("#share").onclick=async e=>{const b=e.currentTarget;try{await navigator.clipboard.writeText(location.href);b.textContent="✓ Enlace copiado"}catch{b.textContent="Copialo desde la barra de direcciones"}setTimeout(()=>b.textContent="🔗 Copiar enlace de esta comparación",2500)};
   $("#q").oninput=search;$("#q").onfocus=search;$("#q").onkeydown=e=>{const dd=$("#dd");if(dd.hidden&&e.key!=="ArrowDown")return;if(e.key==="ArrowDown"){e.preventDefault();if(dd.hidden)search();ddMark(DD+1)}else if(e.key==="ArrowUp"){e.preventDefault();ddMark(DD-1)}else if(e.key==="Enter"){const b=document.querySelectorAll("#dd [data-a]")[DD<0?0:DD];if(b){e.preventDefault();ddAdd(b.dataset.a)}}else if(e.key==="Escape"){dd.hidden=true;$("#q").setAttribute("aria-expanded","false")}};document.addEventListener("click",e=>{if(!e.target.closest(".srch"))$("#dd").hidden=true});
-  $("#allc").onchange=e=>{S.all=e.target.checked;drawAll();search()};
+  $("#allc").onchange=async e=>{S.all=e.target.checked;
+    if(S.all&&!FULL){const dd=$("#dd");if($("#q").value.trim().length>1){dd.hidden=false;dd.innerHTML='<div class="ddm">Cargando todas las categorías…</div>'}
+      if(!await loadFull()){S.all=false;e.target.checked=false}}
+    drawAll();search()};
   document.querySelectorAll("#res button").forEach(b=>b.onclick=()=>{S.res=+b.dataset.v;document.querySelectorAll("#res button").forEach(x=>x.classList.toggle("on",x===b));drawOut()});
   drawAll();
+  // en la PC el catálogo entero se baja igual, en segundo plano: cambiar de categoría o buscar en todas es instantáneo
+  if(matchMedia("(hover:hover) and (pointer:fine)").matches&&!(navigator.connection&&navigator.connection.saveData))
+    (window.requestIdleCallback||setTimeout)(()=>loadFull(),{timeout:4000});
 })();
 </script>
 <script src="js/assistant.js" defer></script>

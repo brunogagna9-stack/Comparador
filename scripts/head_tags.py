@@ -32,8 +32,9 @@ def block(name, title, desc):
         '<link rel="icon" href="img/logo.svg" type="image/svg+xml">',
         '<link rel="apple-touch-icon" href="img/apple-touch-icon.png">',
         '<link rel="manifest" href="manifest.webmanifest">',
-        '<meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: light)">',
-        '<meta name="theme-color" content="#0b1020" media="(prefers-color-scheme: dark)">',
+        # act. 44: la barra de estado del celular toma el color del encabezado (blanco / azul noche), no el de la marca
+        '<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">',
+        '<meta name="theme-color" content="#0a0f1e" media="(prefers-color-scheme: dark)">',
         '<link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>',
         '<meta property="og:site_name" content="KyraNoHard">',
         '<meta property="og:locale" content="es_AR">',

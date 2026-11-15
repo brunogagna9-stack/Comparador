@@ -21,7 +21,7 @@
 body{margin:0;color:var(--tx);font:14px/1.5 var(--font);-webkit-font-smoothing:antialiased}
 a{color:var(--acc);text-decoration:none}
 /* actualización 39: el contenido ocupa al menos la pantalla; así el pie no aparece arriba mientras se dibuja la página y después salta */
-main{min-height:calc(100vh - 64px)}
+main{min-height:calc(100vh - 64px);min-height:calc(100svh - 64px)}
 /* actualización 39: los enlaces dentro de un texto se distinguen también con subrayado, no solo con el color (WCAG 1.4.1) */
 main :where(p,li,td,dd,span,.box,.note,.lead,.sub,small,label,figcaption)>a:not([class]),.modal :where(p,li,td,dd,.note)>a:not([class]){text-decoration:underline;text-underline-offset:2px;text-decoration-thickness:1px}button{font:inherit;cursor:pointer}
 [hidden]{display:none!important}
@@ -37,13 +37,13 @@ header.site .logo i,footer.site .flogo i{font-style:normal;font-weight:500;color
 header.site .logo span{background:var(--gradt);-webkit-background-clip:text;background-clip:text;color:transparent}
 header.site nav{display:flex;gap:2px;align-items:center}
 header.site nav a{color:var(--mut);padding:7px 11px;border-radius:999px;font-weight:600;white-space:nowrap;transition:background .15s,color .15s;margin:0;border:0}
-header.site nav a:hover{background:var(--soft);color:var(--tx)}
+@media (hover:hover) and (pointer:fine){header.site nav a:hover{background:var(--soft);color:var(--tx)}}
 header.site nav a.on{background:var(--tx);color:var(--bg)}
 header.site .hsearch{margin-left:auto;position:relative;flex:0 1 290px;min-width:150px}
 header.site .hsearch svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--mut);pointer-events:none}
 header.site #qh{width:100%;padding:9px 14px 9px 36px;border:1px solid var(--line2);border-radius:999px;background:var(--card);color:var(--tx);font:inherit;box-shadow:none}
 header.site .cart,header.site .bell,header.site .hist,header.site .acct{position:relative;display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:50%;border:1px solid var(--line2);background:var(--card);color:var(--tx);cursor:pointer;flex:none;font-size:16px;padding:0}
-header.site .cart:hover,header.site .bell:hover,header.site .hist:hover,header.site .hist[aria-current],header.site .acct:hover,header.site .acct[aria-current]{background:var(--soft)}
+header.site .hist[aria-current],header.site .acct[aria-current]{background:var(--soft)}@media (hover:hover) and (pointer:fine){header.site .cart:hover,header.site .bell:hover,header.site .hist:hover,header.site .acct:hover{background:var(--soft)}}
 header.site .cart .cn{position:absolute;top:-5px;right:-5px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:var(--acc);color:var(--bg);font-size:12px;font-weight:800;line-height:20px;text-align:center}
 header.site .cart .cn[data-n="0"]{display:none}
 @media(max-width:900px){
@@ -68,25 +68,25 @@ header.site .cart .cn[data-n="0"]{display:none}
 footer.site{margin-top:40px;background:var(--card);border-top:1px solid var(--line);color:var(--mut);font-size:13px}
 footer.site .fin{max-width:1280px;margin:auto;padding:30px 16px 20px;display:grid;grid-template-columns:1.6fr 1fr 1fr 1.3fr;gap:26px}
 footer.site h4{margin:0 0 9px;color:var(--tx);font-size:13px;text-transform:uppercase;letter-spacing:.5px}
-footer.site a{color:var(--mut)}footer.site a:hover{color:var(--tx);text-decoration:underline}
+footer.site a{color:var(--mut)}@media (hover:hover) and (pointer:fine){footer.site a:hover{color:var(--tx);text-decoration:underline}}
 footer.site ul{list-style:none;margin:0;padding:0}footer.site li{margin:5px 0}
 footer.site .flogo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:18px;letter-spacing:-.3px;color:var(--tx);margin-bottom:6px}footer.site .flogo span{color:var(--acc)}
 footer.site p{margin:0 0 8px;line-height:1.5}
 footer.site .fbot{border-top:1px solid var(--line);max-width:1248px;width:calc(100% - 32px);margin:auto;padding:14px 0 90px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-size:12px}
 footer.site .up{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;border:1px solid var(--line2);background:var(--card2);color:var(--tx);font:inherit;font-weight:700;cursor:pointer}
-footer.site .up:hover{background:var(--soft)}
+@media (hover:hover) and (pointer:fine){footer.site .up:hover{background:var(--soft)}}
 @media(max-width:800px){footer.site .fin{grid-template-columns:1fr 1fr;gap:20px}footer.site .fin>div:first-child{grid-column:1/-1}}
 #totop{position:fixed;right:16px;bottom:74px;z-index:60;display:none;align-items:center;gap:6px;padding:10px 14px;border-radius:999px;border:1px solid var(--line2);background:var(--card);color:var(--tx);font:700 13px var(--font);cursor:pointer;box-shadow:var(--sh)}
-#totop.on{display:inline-flex}#totop:hover{background:var(--soft)}
+#totop.on{display:inline-flex}@media (hover:hover) and (pointer:fine){#totop:hover{background:var(--soft)}}
 
 /* ---- botones y fichas con contraste ---- */
 .btn,.sec,.tab,.seg,.opt,select,input[type=text],input[type=number],input[type=search]{border-color:var(--line2)}
 .panel,.col,.rc,aside,.card,.box{border-color:var(--line)}
 .btn,.sec{background:var(--card2)}
-.btn:not(.pri):hover,.sec:hover{background:var(--soft);border-color:var(--acc)}
-.btn.pri,.btn.pri:hover{background:var(--grad);color:#fff;border-color:transparent}
+@media (hover:hover) and (pointer:fine){.btn:not(.pri):hover,.sec:hover{background:var(--soft);border-color:var(--acc)}}
+.btn.pri{background:var(--grad);color:#fff;border-color:transparent}@media (hover:hover) and (pointer:fine){.btn.pri:hover{background:var(--grad);color:#fff;border-color:transparent}}
 body .ex button,body .chips button{background:color-mix(in srgb,var(--acc) 14%,var(--card));border:1px solid color-mix(in srgb,var(--acc) 60%,var(--line));color:var(--tx);font-weight:600;padding:7px 14px;border-radius:999px;box-shadow:0 1px 2px rgba(0,0,0,.18);transition:background .15s,transform .08s}
-body .ex button:hover,body .chips button:hover{background:var(--acc);color:var(--bg);border-color:var(--acc)}
+@media (hover:hover) and (pointer:fine){body .ex button:hover,body .chips button:hover{background:var(--acc);color:var(--bg);border-color:var(--acc)}}
 body .ex button:active,body .chips button:active{transform:translateY(1px)}
 body .ex .note{font-weight:600}
 .tag{font-size:12px!important;padding:1px 8px!important}
@@ -110,12 +110,12 @@ footer.fine{max-width:1280px}
   header.site .cart.bump svg{animation:ct-shake .5s ease}
   @keyframes ct-shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-12deg)}60%{transform:rotate(9deg)}}
   header.site nav a{position:relative}
-  .card .im img{transition:transform .35s ease}.card:hover .im img{transform:scale(1.06)}
+  .card .im img{transition:transform .35s ease}@media (hover:hover) and (pointer:fine){.card:hover .im img{transform:scale(1.06)}}
   .card .addl{transition:transform .15s,background .2s}.card .addl:active{transform:scale(.9)}
   .card .addl.on{animation:ct-pop .3s ease}
   .tile .ic,.cat i{transition:transform .25s cubic-bezier(.3,1.6,.5,1)}
-  .tile:hover .ic{transform:rotate(-8deg) scale(1.12)}.cat:hover i{transform:scale(1.2)}
-  .tile em{transition:letter-spacing .2s}.tile:hover em{letter-spacing:.3px}
+  @media (hover:hover) and (pointer:fine){.tile:hover .ic{transform:rotate(-8deg) scale(1.12)}}@media (hover:hover) and (pointer:fine){.cat:hover i{transform:scale(1.2)}}
+  .tile em{transition:letter-spacing .2s}@media (hover:hover) and (pointer:fine){.tile:hover em{letter-spacing:.3px}}
   .hero{background-size:180% 180%;animation:ct-hero 14s ease-in-out infinite alternate}
   @keyframes ct-hero{from{background-position:0% 40%}to{background-position:100% 60%}}
   .hero:before{animation:ct-float 9s ease-in-out infinite alternate}.hero:after{animation:ct-float 12s ease-in-out infinite alternate-reverse}
@@ -155,7 +155,7 @@ header.site .acct.in::after{content:"";position:absolute;right:2px;bottom:2px;wi
 .sr-host{position:relative}
 .sr-dd{position:fixed;z-index:120;overflow-y:auto;overscroll-behavior:contain;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 36px rgba(0,0,0,.28);text-align:left}
 .sr-dd a{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:10px;align-items:center;padding:7px 12px;color:var(--tx);text-decoration:none;border-bottom:1px solid var(--line)}
-.sr-dd a:hover,.sr-dd a.act,.sr-dd .sr-all:hover,.sr-dd .sr-all.act{background:color-mix(in srgb,var(--acc) 10%,var(--card))}
+.sr-dd a.act,.sr-dd .sr-all.act{background:color-mix(in srgb,var(--acc) 10%,var(--card))}@media (hover:hover) and (pointer:fine){.sr-dd a:hover,.sr-dd .sr-all:hover{background:color-mix(in srgb,var(--acc) 10%,var(--card))}}
 .sr-dd a.act{box-shadow:inset 3px 0 0 var(--acc)}
 .sr-im{width:44px;height:44px;border-radius:8px;background:#fff;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;overflow:hidden;color:#94a3b8}
 .sr-im img{max-width:100%;max-height:100%;object-fit:contain}
@@ -172,7 +172,7 @@ header.site{view-transition-name:kyra-header}
 /* ---- guía rápida (actualización 41, js/guia.js con Driver.js) ---- */
 #kn-guia{position:fixed;left:16px;bottom:16px;z-index:9996;display:inline-flex;align-items:center;gap:7px;padding:8px 14px 8px 8px;border-radius:999px;border:1px solid var(--line2,var(--line));background:var(--card);color:var(--tx);font:700 14px var(--font);cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.18)}
 #kn-guia span{width:28px;height:28px;border-radius:50%;background:var(--grad);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:16px;font-weight:800}
-#kn-guia:hover{border-color:var(--acc)}#kn-guia:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+@media (hover:hover) and (pointer:fine){#kn-guia:hover{border-color:var(--acc)}}#kn-guia:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
 @media(max-width:800px){#kn-guia{padding:6px;left:12px;bottom:12px}#kn-guia b{display:none}}
 #kn-ginv{position:fixed;left:16px;bottom:70px;z-index:9996;width:min(330px,calc(100vw - 32px));display:flex;flex-direction:column;gap:6px;background:var(--card);color:var(--tx);border:1px solid var(--line2,var(--line));border-radius:16px;padding:14px 16px;box-shadow:0 12px 36px rgba(0,0,0,.25);animation:ct-pop .25s ease}
 #kn-ginv span{color:var(--mut);font-size:14px}#kn-ginv div{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
@@ -192,3 +192,36 @@ header.site{view-transition-name:kyra-header}
 .driver-popover.kn-tour .driver-popover-arrow-side-top.driver-popover-arrow{border-top-color:var(--card)}
 .driver-popover.kn-tour .driver-popover-arrow-side-bottom.driver-popover-arrow{border-bottom-color:var(--card)}
 @media print{#kn-guia,#kn-ginv{display:none}}
+
+/* ===== actualización 44: celular ======================================================================
+   Solo afecta a pantallas táctiles o chicas; en PC (mouse) todo queda igual. Los efectos «al pasar el mouse»
+   están dentro de @media (hover:hover) and (pointer:fine) en cada archivo: en el celular no quedan pegados. */
+html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+a,button,summary,label,select,[role=button],input[type=checkbox],input[type=radio]{touch-action:manipulation}
+button,.btn,[role=button],summary,.chip,.tab{-webkit-user-select:none;user-select:none}
+/* sin zoom automático del iPhone al tocar un campo: necesita letra de 16 px como mínimo */
+@media (pointer:coarse){input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),select,textarea{font-size:16px!important}}
+/* respuesta al toque (en PC el mouse ya tiene su efecto) */
+@media (hover:none),(pointer:coarse){.btn:active,button:active,.card:active,.ha:active,.cat:active,.tile:active{filter:brightness(.94)}}
+/* muesca y barra de abajo del iPhone (viewport-fit=cover): el contenido no queda debajo */
+body{padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+#kn-guia{bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+#kn-ginv{bottom:calc(70px + env(safe-area-inset-bottom,0px))}
+#totop{bottom:calc(74px + env(safe-area-inset-bottom,0px))}
+#ckbar{bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+#kn-gtoast{bottom:calc(18px + env(safe-area-inset-bottom,0px))}
+footer.site{padding-bottom:calc(var(--fpb,0px) + env(safe-area-inset-bottom,0px))}
+/* con una ventana o panel abierto: los botones flotantes no tapan nada y la página de atrás no se mueve */
+body:has(.modal.on,#qv-modal.on,#pick.on,#hist-dlg,#ctas-p.open) :is(#kn-guia,#totop,#kn-ginv){visibility:hidden}
+body:has(.modal.on,#qv-modal.on,#pick.on,#hist-dlg) #ctas-btn{visibility:hidden}
+html:has(.modal.on,#qv-modal.on,#pick.on,#hist-dlg){overflow:hidden}
+@media (max-width:800px){body:has(aside.show.sheet) :is(#kn-guia,#totop,#kn-ginv,#ctas-btn){visibility:hidden}html:has(aside.show.sheet){overflow:hidden}}
+@media (max-width:560px){#ctas-btn:has(+ #ctas-p.open){visibility:hidden}}
+/* al final de la página, espacio para que los botones flotantes no tapen el pie */
+@media (max-width:900px){footer.site{--fpb:64px}}
+/* objetivos táctiles: al menos 24 px de alto para el dedo (WCAG 2.2). Solo en pantallas táctiles: en PC no cambia nada */
+@media (pointer:coarse){
+  .sec-h>a,.crumb a,nav.crumb a,.rep>span>a,dl>dd>a{display:inline-block;min-height:24px;padding-block:3px;line-height:18px}
+  details.paste>summary,details.panel>summary{min-height:32px;display:flex;align-items:center}
+  label.tog input[type=checkbox],input#allc{width:20px!important;height:20px!important;flex:none}
+}

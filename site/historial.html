@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <title>Mi historial · KyraNoHard</title>
 <meta name="description" content="Tus armados de PC y comparaciones anteriores, guardados en este navegador.">
 <!-- head:kyranohard -->
@@ -12,8 +12,8 @@
 <link rel="icon" href="img/logo.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0b1020" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a0f1e" media="(prefers-color-scheme: dark)">
 <link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
 <meta property="og:site_name" content="KyraNoHard">
 <meta property="og:locale" content="es_AR">
@@ -43,7 +43,7 @@
 .he .ac a,.he .ac button{border-radius:999px;padding:7px 14px;font:700 13px var(--font);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
 .he .ac a{background:#2563eb;color:#fff;border:1px solid #2563eb}
 .he .ac button{background:var(--card);color:var(--bad);border:1px solid color-mix(in srgb,var(--bad) 45%,var(--line))}
-.he .ac button:hover{background:var(--badbg)}
+@media (hover:hover) and (pointer:fine){.he .ac button:hover{background:var(--badbg)}}
 .hbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 10px}
 .hbar .all{border:0;background:none;color:var(--bad);font:700 13.5px var(--font);cursor:pointer;text-decoration:underline;padding:4px}
 .empty{background:var(--card);border:1px dashed var(--line);border-radius:14px;padding:22px;text-align:center}

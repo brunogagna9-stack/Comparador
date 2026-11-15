@@ -500,6 +500,11 @@ def category_files(groups, hist):
     for g in groups:
         for o in g.get("offers") or []:
             tot["sc"][o.get("store")] = tot["sc"].get(o.get("store"), 0) + 1
+    # actualización 44: productos por categoría (los números de los botones de «Comparar», sin bajar todo el catálogo)
+    tot["cc"] = {}
+    for g in groups:
+        c = g.get("category") or "otros"
+        tot["cc"][c] = tot["cc"].get(c, 0) + 1
     for g in groups:
         part = out.setdefault(g.get("category") or "otros", {"v": 1, "t": tot, "g": [], "h": {}})
         part["g"].append(g)
@@ -510,15 +515,50 @@ def category_files(groups, hist):
     return out
 
 
+# actualización 44: «Productos» sin categoría muestra al instante su primera página con un archivo chico
+# (data/cat/_inicio.json) en vez de bajar el catálogo entero (~3 MB comprimido, ~20 MB al abrirse en el celular).
+# El orden es el mismo «Relevancia» de la página (productos.html → sorter). El catálogo entero se baja recién al
+# buscar, filtrar, ordenar o pasar de página. Pesos por categoría: los mismos que en la página.
+REL_W = {"placas-de-video": 40, "procesadores": 40, "motherboards": 30, "memorias-ram": 30, "almacenamiento": 25,
+         "monitores": 25, "notebooks": 25, "fuentes": 20, "pcs-armadas": 20, "gabinetes": 15, "refrigeracion": 15,
+         "mouses": 12, "teclados": 12, "auriculares": 12, "perifericos": 10, "redes": 8}
+INICIO_N = 50   # la vista que más muestra por página («Lista») muestra 50
+
+
+def _price(o):
+    return o.get("price_cash") if o.get("price_cash") is not None else o.get("price_list")
+
+
+def inicio_file(groups, hist, tot):
+    offs = lambda g: g.get("offers") or []
+    chg_ok = lambda g: bool(g.get("chg")) and not (offs(g) and offs(g)[0].get("anom"))
+    def rel(g):
+        o = offs(g)
+        return (REL_W.get(g.get("category"), 0) + min(len(o), 4) * 25 + (20 if any(x.get("stock") is True for x in o) else 0)
+                + (10 if g.get("image") else 0) + (8 if chg_ok(g) and (g["chg"].get("pct") or 0) < 0 else 0)
+                + (-30 if any(x.get("anom") for x in o) else 0))
+    vis = [g for g in groups if offs(g)]
+    top = sorted(vis, key=lambda g: (-rel(g), _price(offs(g)[0]) if _price(offs(g)[0]) is not None else float("inf")))[:INICIO_N]
+    cc = {}
+    for g in vis:
+        cc[g.get("category")] = cc.get(g.get("category"), 0) + 1
+    h = {o["k"]: hist[o["k"]] for g in top for o in offs(g) if o.get("k") in hist}
+    return {"v": 1, "t": tot, "n": len(vis), "cc": cc, "g": top, "h": h}
+
+
 def write_categories(groups, hist, data_dir=None):
     d = Path(data_dir or DATA) / "cat"
     d.mkdir(parents=True, exist_ok=True)
     (d / ".gitignore").write_text("*.json\n")       # se regeneran en cada corrida y solo se publican
     for old in d.glob("*.json"):
         old.unlink()
-    for cat, part in category_files(groups, hist).items():
+    parts = category_files(groups, hist)
+    for cat, part in parts.items():
         if re.fullmatch(r"[a-z0-9-]+", cat):
             (d / f"{cat}.json").write_text(json.dumps(part, ensure_ascii=False, separators=(",", ":")))
+    if parts:
+        tot = next(iter(parts.values()))["t"]
+        (d / "_inicio.json").write_text(json.dumps(inicio_file(groups, hist, tot), ensure_ascii=False, separators=(",", ":")))
 
 
 SITE_URL = os.environ.get("SITE_URL", "https://brunogagna9-stack.github.io/Comparador/")

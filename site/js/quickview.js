@@ -55,7 +55,7 @@
     if (document.getElementById("qv-modal")) return;
     const css = `.qv-b{display:inline-flex;gap:4px;margin-left:6px;vertical-align:middle}
 .qv-b button{border:1px solid var(--line2);background:var(--card);color:var(--tx);border-radius:999px;min-width:28px;height:26px;padding:0 8px;font:700 13px var(--font);cursor:pointer;line-height:1}
-.qv-b button:hover{border-color:var(--acc)}.qv-b button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+@media (hover:hover) and (pointer:fine){.qv-b button:hover{border-color:var(--acc)}}.qv-b button.on{background:var(--acc);border-color:var(--acc);color:#fff}
 [data-qv]{cursor:pointer}
 .qv-all{margin-top:10px;border:1px solid var(--acc);background:color-mix(in srgb,var(--acc) 12%,var(--card));color:var(--tx);border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer}
 .qv-all.on{background:var(--acc);color:#fff}

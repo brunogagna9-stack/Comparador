@@ -798,3 +798,23 @@ Búsqueda del 4/11/2026 solo en sitios de los fabricantes (informe «Fichas ofic
   `sitemap-guias.xml`. Solo se publican (no se guardan en el repositorio). Prueba: `test_actualizacion_43_guias_de_precios`.
 - **Compartir** en la ficha (menú del teléfono o copia del enlace con nombre y precio) y sección
   **«¿Tenés una tienda?»** en Contacto (enlace «Sumá tu tienda» en el pie).
+
+## Actualización 44 — Versión para celular (sin cambios en la PC)
+
+- **Primera página rápida de Productos**: `build_data.py` genera `site/data/cat/_inicio.json` (los 50 primeros en el
+  mismo orden de la página, más los totales). En el celular, Productos abre con eso (~240 KB en lugar de ~28 MB) y baja
+  el catálogo entero solo si filtrás, buscás, ordenás o pasás de página; elegir solo una categoría abre su página.
+  En la PC el catálogo entero se sigue bajando en segundo plano, como antes.
+- **Comparar** baja solo la categoría que estás mirando (`data/cat/<categoría>.json`, con los números por categoría en
+  `t.cc`); el catálogo entero solo con «Buscar en todas las categorías» o, en la PC, en segundo plano.
+- **Filtros de Productos como panel desde abajo** en pantallas chicas: ✕, tocar afuera o Esc para cerrar y botón
+  «Ver N resultados» siempre visible. La tabla de precios de la vista rápida se desliza de costado.
+- **Detalles de celular en todas las páginas**: los efectos al pasar el mouse solo existen con mouse (en el teléfono
+  quedaban «pegados»), campos de 16 px (el iPhone ya no agranda la página al escribir), sin destello gris al tocar,
+  toques sin demora, márgenes para la muesca y la barra del iPhone (`viewport-fit=cover` + `env(safe-area-inset-*)`),
+  barra del navegador del color del encabezado (claro / oscuro), botones flotantes ocultos mientras hay una ventana
+  abierta y fondo quieto detrás. El Asistente es un botón redondo en pantallas chicas. El zoom sigue permitido.
+- Las fotos de la primera fila de Productos se piden enseguida.
+- Revisado: capturas de la PC (1280 y 1440 px, 14 páginas) idénticas píxel por píxel antes y después; Lighthouse en
+  celular de Productos 45 → 92 y Comparar 90.
+- Prueba: `test_actualizacion_44_celular`.
