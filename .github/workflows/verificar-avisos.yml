@@ -1,6 +1,6 @@
 name: Verificar avisos por mail
 
-# Actualización 42: revisa que los secretos de los avisos por mail funcionen (Supabase y Brevo) SIN mandar ningún mail
+# Actualización 42 (v2): revisa que los secretos de los avisos por mail funcionen (Supabase y Brevo) SIN mandar ningún mail
 # ni cambiar nada. Corre al guardar este archivo o con el botón «Run workflow». El resultado queda en el registro.
 on:
   workflow_dispatch:
