@@ -18,12 +18,24 @@ on:
       - "scripts/**"
       - "calidad/**"
       - ".github/workflows/calidad.yml"
+  # actualización 42: también revisa las propuestas de cambio (por ejemplo las de Dependabot) ANTES de aceptarlas
+  pull_request:
+    paths:
+      - "site/*.html"
+      - "site/js/**"
+      - "site/css/**"
+      - "*.py"
+      - "requirements.txt"
+      - "scrapers/**"
+      - "scripts/**"
+      - "calidad/**"
+      - ".github/workflows/**"
 
 permissions:
   contents: read
 
 concurrency:
-  group: calidad
+  group: calidad-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
