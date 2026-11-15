@@ -270,8 +270,8 @@ def test_stores_json_reputacion_verificable():
             assert any("ficha" in n.lower() or "reputación" in n.lower() for n in s.get("notes", [])), name + ": explicar por qué no hay puntaje"
     con = {n for n, s in d.items() if s["reputation"]}
     # actualización 42: se completaron 16 tiendas más (ficha de Google Maps con el mismo sitio web que la tienda)
-    sin = {"Gaming City", "Hardloots", "ShopGamer", "WIZ TECH", "XT-PC", "IgnaTech", "Portal Tech & Gaming"}
-    assert len(con) == 34 and sin == set(d) - con, "solo estas tiendas quedan sin puntaje verificado"
+    sin = {"Gaming City", "Hardloots", "ShopGamer", "WIZ TECH", "XT-PC", "IgnaTech", "Portal Tech & Gaming", "Vertex Retail"}
+    assert len(con) == 33 and sin == set(d) - con, "solo estas tiendas quedan sin puntaje verificado"
     assert "average" not in json.dumps(d).lower()
 
 def test_logg_marcado_actual():
@@ -432,7 +432,8 @@ def test_tiendas_woocommerce_nuevas():
     """Seis tiendas WooCommerce (actualización 9): precios con y sin centavos, nombres con entidades HTML, categoría y registro."""
     from scrapers import woo, SCRAPERS
     F = json.load(open("tests/fixtures/woo_stores.json"))
-    assert set(F) == set(woo.WOO_STORES) and all(n in SCRAPERS for n in woo.WOO_STORES)
+    # act. 42: Hardloots pasó a leerse por su página «Tienda» (woohtml); su ejemplo de la API se conserva para el lector
+    assert set(F) == set(woo.WOO_STORES) | {"Hardloots"} and all(n in SCRAPERS for n in F)
     got = {n: woo.parse(F[n], n)[0] for n in F}
     assert got["Hardloots"]["price_cash"] == 44102 and got["Hardloots"]["price_list"] == 67849, "minor_unit 0: ya vienen en pesos"
     assert got["SCP Hardstore"]["price_cash"] == 912668.31, "minor_unit 2: centavos"
@@ -1405,6 +1406,55 @@ def test_actualizacion_39_kyranohard():
     wf = Path(".github/workflows/calidad.yml").read_text(encoding="utf-8")
     assert "node revisar.js" in wf and "ruff check" in wf and "schedule" not in wf
     assert subprocess.run(["node", "--check", "site/sw.js"]).returncode == 0
+
+
+def test_actualizacion_42_tiendas():
+    """Act. 42 (2): Hardloots por su página «Tienda» (la API repite siempre 20); The Gamer Shop categoría por categoría
+    (como pide la tienda), con su tope de 10 páginas por consulta y sin repetir productos; Vertex Retail ya no se lee."""
+    from scrapers import SCRAPERS, woo, woohtml, tiendanube, goldentech as gt
+    # Hardloots: tema Astra, el enlace de la foto trae carteles («3 CUOTAS SIN INTERÉS»): el nombre sale del título
+    h = open("tests/fixtures/hardloots.html", encoding="utf-8").read()
+    hl = woohtml.parse(h, "Hardloots")
+    assert [i["name"] for i in hl] == ["Altavoz Bluetooth Flotante de Levitación 360° con LED y Rotación", "AOC MONITOR LED 24 24G42E"]
+    assert (hl[0]["price_cash"], hl[0]["price_list"]) == (385528, 593120) and (hl[1]["price_cash"], hl[1]["price_list"]) == (388900, None)
+    assert hl[1]["category"] == "monitores" and hl[1]["store_sku"] == "NB_24G42E" and hl[1]["image"].startswith("https://i0.wp.com/")
+    assert hl[0]["image"].startswith("https://hardloots.com.ar/wp-content/"), "la foto real (data-src), no la de carga"
+    assert woohtml.last_page(h) == 86 and woohtml.MAX_PAGES["Hardloots"] >= 86
+    assert "Hardloots" in woohtml.HTML_STORES and "Hardloots" not in woo.WOO_STORES and "Hardloots" in SCRAPERS
+    # The Gamer Shop: categorías de las ramas elegidas (con subcategorías, sin las vacías ni las de otras ramas)
+    cats = [{"id": 16, "slug": "componentes-de-pc", "parent": 0, "count": 300}, {"id": 25, "slug": "motherboards", "parent": 16, "count": 30},
+            {"id": 27, "slug": "placas-de-video", "parent": 16, "count": 250}, {"id": 99, "slug": "vacia", "parent": 16, "count": 0},
+            {"id": 12444, "slug": "tintas-y-toners", "parent": 12431, "count": 249}, {"id": 12431, "slug": "impresion-y-oficina", "parent": 0, "count": 318}]
+    assert woo.category_ids(cats, ("componentes-de-pc",)) == [16, 25, 27]
+    item = lambda i: {"id": i, "type": "simple", "name": f"Placa de video Gigabyte RTX {i}", "permalink": f"https://t/{i}",
+                      "prices": {"currency_code": "ARS", "currency_minor_unit": 0, "price": "1000", "regular_price": "1000"},
+                      "is_in_stock": True, "images": [], "categories": []}
+    data = {16: list(range(0, 300)), 25: list(range(0, 30)), 27: list(range(100, 350))}   # se superponen como en la tienda
+    calls = []
+    def fake_get(url, as_json=False):
+        calls.append(url)
+        if "/categories" in url:
+            return cats if "page=1" in url else []
+        cid = int(url.split("category=")[1].split("&")[0]); n = int(url.rsplit("page=", 1)[1])
+        if n > 10:
+            raise RuntimeError(f"No se pudo leer {url}: HTTP 400")
+        ids = data[cid][(n - 1) * 20: n * 20]          # la tienda entrega 20 aunque se pidan 100
+        return [item(i) for i in ids]
+    og, ow = gt.get, woo.get
+    try:
+        gt.get = woo.get = fake_get
+        r = SCRAPERS["The Gamer Shop"]()
+    finally:
+        gt.get, woo.get = og, ow
+    ids = sorted(int(p["url"].rsplit("/", 1)[1]) for p in r)
+    assert ids == sorted(set(range(0, 200)) | set(range(100, 300))), "tope de 200 por categoría y sin repetidos"
+    assert not any("page=11" in u for u in calls) and not any("category=99" in u or "category=12444" in u for u in calls)
+    assert all(p["store"] == "The Gamer Shop" for p in r)
+    # Vertex Retail: su sección de computación ya no existe -> fuera del comparador (queda explicada en stores.json)
+    st = json.load(open("site/data/stores.json"))["stores"]
+    assert "Vertex Retail" not in SCRAPERS and "Vertex Retail" not in tiendanube.TN_STORES
+    assert st["Vertex Retail"]["integration"] == "no disponible" and not st["Vertex Retail"]["reputation"]
+    print("tiendas act. 42: OK")
 
 
 def test_actualizacion_42_tiendas_en_paralelo():

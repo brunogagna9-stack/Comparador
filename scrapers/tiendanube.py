@@ -20,7 +20,6 @@ TN_STORES = {
     "ShopGamer": ("https://www.shopgamer.com.ar", "/productos/"),
     "Integrados Argentinos": ("https://www.integradosargentinos.com", "/productos/"),
     "Slot One": ("https://www.slot-one.com.ar", "/productos/"),
-    "Vertex Retail": ("https://vrx.com.ar", "/computacion-y-gaming/"),   # el resto del sitio son muebles de oficina
     # actualización 37 (robots.txt revisado el 2026-11-06). Su catálogo completo son ~8.100 productos en páginas de
     # 2,3 MB, con impresoras, TV, cámaras y robots aspiradores: se leen solo sus categorías de computación.
     "Nickhard": ("https://nickhard.com.ar", (

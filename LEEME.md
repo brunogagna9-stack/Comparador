@@ -742,3 +742,12 @@ Búsqueda del 4/11/2026 solo en sitios de los fabricantes (informe «Fichas ofic
   - En **Authentication → URL Configuration**: «Site URL» = `https://brunogagna9-stack.github.io/Comparador/` y en
     «Redirect URLs» agregar `https://brunogagna9-stack.github.io/Comparador/cuenta.html` (si no, el enlace del mail
     lleva a otra página).
+- **Tiendas (actualización 42, parte 3)**:
+  - **Hardloots** se lee por su página «Tienda» (`/tienda/page/N/`, permitida por su robots.txt) con el lector HTML de
+    WooCommerce (`scrapers/woohtml.py`): su API devolvía siempre los mismos 20 productos. Pasa de 20 a unos 1.000.
+  - **The Gamer Shop** se lee categoría por categoría (`scrapers/woo.py` → `BY_CATEGORY`), como indica la propia
+    tienda cuando su API corta el listado general. Cada consulta respeta su tope de 10 páginas de 20.
+  - **Vertex Retail** sale del comparador: su sección «Computación y Gaming» ya no existe (solo vende muebles).
+  - **Try** y **HardCore** responden 403 (nos bloquean): no se fuerza; quedan con su última lectura marcada como
+    desactualizada.
+  - Prueba nueva: `test_actualizacion_42_tiendas`.

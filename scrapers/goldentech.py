@@ -54,7 +54,7 @@ def parse(items, store=STORE):
     return out
 
 
-def fetch_all(base, max_pages=80):
+def fetch_all(base, max_pages=80, query=""):
     """Recorre la API página por página (actualización 37). Sigue mientras lleguen productos nuevos:
     - si la tienda entrega menos por página de lo pedido (p. ej. 20 en vez de 100), se toma ese tamaño como página llena;
     - si una página repite productos ya vistos (tiendas cuyo servidor ignora ?page=), se corta para no pedir de más."""
@@ -62,7 +62,7 @@ def fetch_all(base, max_pages=80):
     while n < max_pages:
         n += 1
         try:
-            items = get(f"{base}/wp-json/wc/store/v1/products?per_page={per}&page={page}", as_json=True)
+            items = get(f"{base}/wp-json/wc/store/v1/products?per_page={per}{query}&page={page}", as_json=True)
         except RuntimeError as e:
             if page > 1 and "HTTP 400" in str(e):     # algunas tiendas responden 400 pasado el final del catálogo
                 break

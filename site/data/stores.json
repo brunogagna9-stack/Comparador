@@ -295,12 +295,11 @@
   "Hardloots": {
    "site": "https://hardloots.com.ar",
    "integration": "parcial",
-   "how": "API pública de catálogo de WooCommerce (la misma que usa el sitio). Su robots.txt no bloquea el catálogo ni la API y no pide pausa entre pedidos.",
+   "how": "Listado público de la tienda (/tienda/page/N/, 12 productos por página), como lo ve un visitante: su robots.txt lo permite. Su API de WooCommerce devuelve siempre los mismos 20 productos (ignora la página y la categoría), por eso no se usa.",
    "contact": {},
-   "checked": "2026-10-24",
+   "checked": "2026-11-14",
    "reputation": [],
    "notes": [
-    "Lectura parcial: su API devuelve siempre los mismos 20 productos sin importar la página pedida (revisado el 6/11/2026).",
     "Su SKU es un código interno: los productos se cruzan con otras tiendas por nombre y modelo.",
     "Buscando su sitio en Google Maps aparece la ficha de otro comercio (Mega Hard, con otro sitio web): no mostramos puntaje hasta encontrar una ficha propia de la tienda."
    ]
@@ -403,13 +402,13 @@
   "The Gamer Shop": {
    "site": "https://thegamershop.com.ar",
    "integration": "parcial",
-   "how": "API pública de catálogo de WooCommerce (la misma que usa el sitio). Su robots.txt no bloquea el catálogo ni la API y no pide pausa entre pedidos.",
+   "how": "API pública de catálogo de WooCommerce, categoría por categoría (componentes, periféricos, monitores, PCs y notebooks, redes), como indica la propia tienda («Usá la búsqueda o las categorías»). Su robots.txt no bloquea el catálogo ni la API.",
    "contact": {
     "address": "Av. Lisandro de la Torre 373 (Liniers) y Carhué 1409 (Mataderos), CABA",
     "phone": "011 4870-4101",
     "email": "ventas@thegamershop.com.ar"
    },
-   "checked": "2026-10-24",
+   "checked": "2026-11-14",
    "reputation": [
     {
      "source": "Google Maps",
@@ -421,7 +420,7 @@
     }
    ],
    "notes": [
-    "Lectura parcial: su API entrega solo las primeras 10 páginas (200 productos de unos 2.700) y después responde «Usá la búsqueda o las categorías de la tienda». (revisado el 6/11/2026). Respetamos ese límite: no se lo esquiva.",
+    "Lectura casi completa: su API entrega como mucho 10 páginas de 20 productos por consulta. Se lee por categorías, como indica la tienda; las que tienen más de 200 productos (mouse, teclados, auriculares) quedan en 200. No usamos trucos para pasar ese límite. (revisado el 14/11/2026)",
     "Su SKU es un código interno: los productos se cruzan con otras tiendas por nombre y modelo.",
     "Su robots.txt bloquea el entrenamiento de IA (GPTBot, ClaudeBot…); este proyecto no entrena modelos: solo lee precios para compararlos.",
     "Pie del sitio: «Garantía oficial en todos los productos», botón de arrepentimiento, Ley 27.743 de defensa del consumidor; no muestra razón social ni CUIT en la página principal."
@@ -629,26 +628,13 @@
   },
   "Vertex Retail": {
    "site": "https://vrx.com.ar",
-   "integration": "completa",
-   "how": "Listado público de productos de Tiendanube (?page=N), como lo ve un visitante: nombre, precio, stock e imagen salen de los datos estructurados de cada producto. Su robots.txt permite el listado.",
+   "integration": "no disponible",
+   "how": "Ya no se lee: el 2026-11-14 su sitio (VRX / Flexispot) no tenía más la sección «Computación y Gaming» (la dirección responde 404) y solo vende muebles de oficina, escritorios y sillas.",
    "contact": {},
-   "checked": "2026-10-26",
-   "reputation": [
-    {
-     "source": "Google Maps",
-     "listing": "VRX - VERTEX RETAIL - FLEXISPOT ARGENTINA",
-     "score": 5.0,
-     "count": 95,
-     "url": "https://www.google.com/maps/search/VRX+VERTEX+RETAIL+FLEXISPOT+ARGENTINA",
-     "date": "2026-11-14"
-    }
-   ],
+   "checked": "2026-11-14",
+   "reputation": [],
    "notes": [
-    "El precio contado es el que la tienda publica «con Transferencia» (o el medio con descuento que indique); el de lista es el precio general del producto.",
-    "El sitio (VRX / Flexispot) vende sobre todo muebles de oficina: se lee solo la categoría «Computación y Gaming». El correo del pie de página es de Vertex Retail SAS.",
-    "Su código de producto es interno: los productos se cruzan con otras tiendas por nombre y modelo.",
-    "Pocas opiniones (menos de 100): el puntaje es poco representativo.",
-    "La ficha de Google es la de toda la tienda (también vende muebles de oficina), no solo la sección de computación."
+    "Sin reputación cargada: no la leemos porque la tienda no está integrada."
    ]
   },
   "Rocket Hard": {
