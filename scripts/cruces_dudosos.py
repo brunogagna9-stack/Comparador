@@ -41,15 +41,15 @@ def pares(groups, cutoff=CUTOFF, limit=MAX_POR_CAT):
         names = [norm(g["name"]) for g in gs]
         nums = [numeros(n) for n in names]
         stores = [{o["store"] for o in g["offers"]} for g in gs]
-        sc = process.cdist(names, names, scorer=fuzz.token_sort_ratio, score_cutoff=cutoff, workers=-1)
         for i in range(len(gs)):
-            for j in sc[i].nonzero()[0]:
+            # sin numpy: process.extract compara contra todos y devuelve (texto, puntaje, posición)
+            for _, score, j in process.extract(names[i], names, scorer=fuzz.token_sort_ratio, score_cutoff=cutoff, limit=None):
                 if j <= i or stores[i] & stores[j] or not nums[i] or nums[i] != nums[j]:
                     continue    # misma tienda en ambos, o números distintos (RTX 4060 ≠ 4060 Ti 16GB…): no es el mismo
                 bi, bj = (gs[i].get("brand") or "").lower(), (gs[j].get("brand") or "").lower()
                 if bi and bj and bi != bj:
                     continue
-                out.append((int(sc[i][j]), cat, gs[i], gs[j]))
+                out.append((int(round(score)), cat, gs[i], gs[j]))
     return sorted(out, key=lambda x: (-x[0], x[1]))
 
 
