@@ -42,7 +42,7 @@
 <script src="js/layout.js"></script>
 <main class="doc">
 <h1>Política de privacidad</h1>
-<p class="upd">Última actualización: 2 de noviembre de 2026.</p>
+<p class="upd">Última actualización: 14 de noviembre de 2026.</p>
 <p class="lead">KyraNoHard es un comparador de precios de hardware. <b>No tenés que registrarte ni darnos ningún dato personal para usarlo.</b> Crear una cuenta es opcional. Esta página explica qué información interviene cuando lo usás y qué podés hacer con ella.</p>
 
 <h2>1. Quién es responsable</h2>
@@ -89,6 +89,8 @@
 <p>Si está activado, tu pregunta y un resumen de lo que estás viendo en la página se envían, a través de un intermediario (Cloudflare Workers), a un proveedor de inteligencia artificial para generar la respuesta. <b>No escribas datos personales en el asistente.</b> Si está desactivado, el asistente responde solo con los datos del sitio, dentro de tu navegador.</p>
 <h3>Avisos de bajas de precio por correo o WhatsApp <span data-st="brevo"></span></h3>
 <p>Si está activado y te suscribís, tu correo lo administra Brevo (el servicio de envío de correos), solo para mandarte esos avisos. Podés darte de baja desde cualquier correo. El canal de WhatsApp <span data-st="wa"></span>, si existe, lo administra WhatsApp (Meta).</p>
+<h3>Medición de visitas sin cookies (GoatCounter) <span data-st="gc"></span></h3>
+<p>Si está activado, el sitio cuenta las visitas con <a href="https://www.goatcounter.com" target="_blank" rel="noopener">GoatCounter</a>, un servicio de código abierto que <b>no usa cookies ni guarda tu dirección IP</b>. Registra solo datos agregados: qué página se visitó, desde qué sitio se llegó, el tipo de navegador, el tamaño de la pantalla y el país. Sirve para saber qué partes de KyraNoHard se usan más; no permite identificarte. Ver su <a href="https://www.goatcounter.com/help/privacy" target="_blank" rel="noopener">política de privacidad</a>.</p>
 <h3>Publicidad (Google AdSense) <span data-st="ads"></span> y medición de visitas (Google Analytics) <span data-st="ga"></span></h3>
 <p>Si se activan, Google y sus socios pueden usar cookies para mostrar anuncios basados en tus visitas a este y otros sitios, y para medir el uso del sitio de forma agregada. Podés administrar la publicidad personalizada en la <a href="https://adssettings.google.com" target="_blank" rel="noopener">configuración de anuncios de Google</a> y leer <a href="https://policies.google.com/technologies/partner-sites?hl=es" target="_blank" rel="noopener">cómo usa Google la información de los sitios que usan sus servicios</a>. Cuando estén activados, el sitio te lo va a avisar con un cartel la primera vez.</p>
 <p><b>Los anuncios nunca cambian el orden de los resultados, los precios ni las recomendaciones.</b></p>
@@ -111,7 +113,7 @@
 // Estado actual de los servicios opcionales (se lee de data/config.json: lo que dice esta página coincide con lo que hace el sitio)
 (async()=>{let c={};try{const r=await fetch("data/config.json",{cache:"no-cache"});if(r.ok)c=await r.json()}catch(e){}
 const ok=u=>typeof u==="string"&&/^https:\/\//.test(u),A=c.alerts||{},ads=c.ads||{};
-const st={ia:ok((c.assistant||{}).endpoint),brevo:ok(A.email_form_url),wa:ok(A.whatsapp_channel_url),ads:typeof ads.client==="string"&&/^ca-pub-\d{10,20}$/.test(ads.client),ga:typeof ads.analytics_id==="string"&&/^G-[A-Z0-9]{4,}$/.test(ads.analytics_id),acc:(()=>{const a=c.accounts||{};return typeof a.supabase_url==="string"&&/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(a.supabase_url.trim())&&typeof a.supabase_publishable_key==="string"&&/^(sb_publishable_|eyJ)/.test(a.supabase_publishable_key.trim())})()};
+const st={ia:ok((c.assistant||{}).endpoint),brevo:ok(A.email_form_url),wa:ok(A.whatsapp_channel_url),ads:typeof ads.client==="string"&&/^ca-pub-\d{10,20}$/.test(ads.client),ga:typeof ads.analytics_id==="string"&&/^G-[A-Z0-9]{4,}$/.test(ads.analytics_id),gc:typeof (c.stats||{}).goatcounter==="string"&&/^[a-z0-9][a-z0-9-]{1,48}$/.test(c.stats.goatcounter),acc:(()=>{const a=c.accounts||{};return typeof a.supabase_url==="string"&&/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(a.supabase_url.trim())&&typeof a.supabase_publishable_key==="string"&&/^(sb_publishable_|eyJ)/.test(a.supabase_publishable_key.trim())})()};
 document.querySelectorAll("[data-st]").forEach(e=>{const on=st[e.dataset.st];e.className="st "+(on?"on":"off");e.textContent=on?"Activado":"Hoy desactivado"});
 const em=c.contact_email,okm=typeof em==="string"&&/^[^\s@<>"]+@[^\s@<>"]+\.[a-z]{2,}$/i.test(em);
 document.querySelectorAll("[data-mail]").forEach(e=>{e.innerHTML=okm?`<a href="mailto:${em.replace(/[<>"&]/g,"")}">${em.replace(/[<>"&]/g,"")}</a>`:e.dataset.mail});

@@ -38,6 +38,14 @@ jobs:
           ICECAT_USER: ${{ secrets.ICECAT_USER }}
       - name: Verificar que los datos sean válidos (si no, no se publica)
         run: python scripts/check_data.py
+      - name: Informe de posibles productos repetidos entre tiendas (solo informa; nunca frena la publicación)
+        continue-on-error: true
+        timeout-minutes: 5
+        run: python scripts/cruces_dudosos.py > /dev/null
+      - name: Cotización del dólar (DolarApi.com; si falla queda la anterior, nunca frena la publicación)
+        continue-on-error: true
+        timeout-minutes: 2
+        run: python scripts/dolar.py
       - name: Avisos por mail a cuentas (se saltea solo si faltan los secretos; nunca frena la publicación)
         if: github.event_name != 'push'
         continue-on-error: true

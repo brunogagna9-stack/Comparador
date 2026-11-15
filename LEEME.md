@@ -751,3 +751,21 @@ Búsqueda del 4/11/2026 solo en sitios de los fabricantes (informe «Fichas ofic
   - **Try** y **HardCore** responden 403 (nos bloquean): no se fuerza; quedan con su última lectura marcada como
     desactualizada.
   - Prueba nueva: `test_actualizacion_42_tiendas`.
+
+## Actualización 42 (parte 4) — Herramientas nuevas
+
+- **Precio en dólares** (`scripts/dolar.py`): en cada actualización se guarda la cotización de DolarApi.com
+  (código abierto; sus condiciones piden citarlo y no consultar más de una vez cada 3 horas) en `site/data/dolar.json`.
+  La ficha de producto muestra «≈ US$» al dólar oficial, blue y tarjeta, con la fuente y la fecha. Si la consulta
+  falla queda la anterior; con más de 7 días la web deja de mostrarla. Nunca frena la publicación.
+- **Informe de posibles repetidos entre tiendas** (`scripts/cruces_dudosos.py`, con RapidFuzz, licencia MIT): en cada
+  actualización deja en el resumen de Actions los pares de productos de distintas tiendas con nombres casi iguales y
+  los mismos números que quedaron separados. **Solo informa: no une nada.**
+- **Dependabot** (`.github/dependabot.yml`): los lunes GitHub propone (como «pull request») actualizar herramientas del
+  proyecto. No cambia nada solo: no aceptes esas propuestas sin revisarlas (en especial Playwright, fijado en 1.56).
+- **Revisión de enlaces** (`.github/workflows/enlaces.yml`, con lychee): los lunes revisa los enlaces de las páginas;
+  el resultado queda en el resumen de la corrida. Solo avisa.
+- **Medición de visitas sin cookies (GoatCounter), APAGADA hasta configurarla**:
+  1. Creá una cuenta gratis en https://www.goatcounter.com/signup y elegí un código (por ejemplo `kyranohard`).
+  2. En `site/data/config.json` agregá `"stats": {"goatcounter": "kyranohard"}` (con tu código).
+  3. La política de privacidad muestra sola «Activado». No usa cookies ni guarda la IP: no hace falta cartel.

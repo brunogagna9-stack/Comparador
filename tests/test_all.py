@@ -1511,3 +1511,30 @@ def test_actualizacion_42_tiendas_en_paralelo():
     t = threading.Thread(target=lambda: s2.append(common.session())); t.start(); t.join()
     assert s2[0] is not common._session and s2[0].headers["User-Agent"].startswith("ComparadorARBot")
     print("tiendas en paralelo: OK")
+
+
+def test_actualizacion_42_dolar_y_cruces():
+    """Act. 42 (4): cotización del dólar (DolarApi.com) validada antes de guardarse; informe de posibles repetidos
+    entre tiendas que no confunde modelos con números distintos ni junta productos de la misma tienda."""
+    import datetime as dt
+    from scripts import dolar
+    ok = [{"moneda": "USD", "casa": "oficial", "nombre": "Oficial", "venta": 1565, "fechaActualizacion": "2026-11-14T18:00:00.000Z"},
+          {"moneda": "USD", "casa": "blue", "nombre": "Blue", "venta": 1585}, {"moneda": "USD", "casa": "tarjeta", "venta": 2034.5},
+          {"moneda": "USD", "casa": "cripto", "venta": 1600}, {"moneda": "EUR", "casa": "oficial", "venta": 1}]
+    o = dolar.build(ok, now=dt.datetime(2026, 11, 14, 21, 0, tzinfo=dt.timezone.utc))
+    assert o["fuente"] == "DolarApi.com" and o["leido"] == "2026-11-14T21:00Z" and set(o["casas"]) == {"oficial", "blue", "tarjeta"}
+    assert o["casas"]["oficial"]["venta"] == 1565.0
+    assert dolar.build([{"moneda": "USD", "casa": "blue", "venta": 1585}]) is None, "sin el oficial no se guarda"
+    assert dolar.build([{"moneda": "USD", "casa": "oficial", "venta": 0}]) is None and dolar.build({"error": 1}) is None
+    from scripts import cruces_dudosos as C
+    g = lambda i, n, cat, *stores: {"id": i, "name": n, "category": cat, "brand": None, "offers": [{"store": s} for s in stores]}
+    P = C.pares([g("a", "Disco SSD M.2 NVMe 1TB Kingston NV3 Gen4", "almacenamiento", "NET Gaming"),
+                 g("b", "Disco SSD Kingston NV3 1TB M.2 NVMe Gen4", "almacenamiento", "Click Gaming"),
+                 g("c", "Disco SSD Kingston NV3 2TB M.2 NVMe Gen4", "almacenamiento", "Venex"),          # otro número
+                 g("d", "Disco SSD Kingston NV3 1 TB M.2 NVMe Gen4", "almacenamiento", "NET Gaming"),    # misma tienda que «a»
+                 g("e", "Placa de video RTX 4060", "placas-de-video", "MEXX"), g("f", "Placa de video RTX 4060 Ti", "placas-de-video", "Venex")])
+    got = {(a["id"], b["id"]): s for s, _, a, b in P}
+    assert got.get(("a", "b")) == 100 and not any("c" in p for p in got) and ("a", "d") not in got, got
+    assert got.get(("e", "f"), 0) < 100, "«4060» y «4060 Ti» pueden aparecer como dudosos, nunca como iguales"
+    assert C.norm("Memoria 16 GB Gamer") == "memoria 16gb"
+    print("dólar y cruces: OK")

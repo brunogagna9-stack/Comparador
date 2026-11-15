@@ -90,6 +90,7 @@ const HIST_ICO = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" st
       if (typeof c === "string" && /^[^\s@<>"]+@[^\s@<>"]+\.[a-z]{2,}$/i.test(c)) { const li = document.getElementById("fcontact"); li.hidden = false; li.innerHTML = `<a href="mailto:${esc(c)}">${esc(c)}</a>`; }
       const A = cfg.alerts || {}, ok = u => typeof u === "string" && /^https:\/\//.test(u);
       setupAds(cfg.ads || {});
+      setupStats(cfg.stats || {});
       // Cuentas (actualización 32): solo si config.json tiene los datos de Supabase; si no, no se carga nada.
       const ac = cfg.accounts || {};
       if (typeof ac.supabase_url === "string" && ac.supabase_url) document.getElementById("facct").hidden = false;
@@ -106,6 +107,16 @@ const HIST_ICO = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" st
     fetch("data/meta.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).catch(() => null).then(m => {
       if (m && m.updated) { const d = new Date(m.updated); if (!isNaN(d)) document.getElementById("fupd").textContent = "Última lectura de precios: " + d.toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" }); }
     });
+  }
+
+  /* actualización 42: medición de visitas SIN cookies con GoatCounter (https://www.goatcounter.com, código abierto).
+     APAGADA mientras data/config.json no tenga "stats": {"goatcounter": "<código>"} (el nombre elegido al crear la cuenta).
+     No usa cookies ni guarda la IP: cuenta visitas por página, de qué sitio vino la persona, navegador, pantalla y país. */
+  function setupStats(st) {
+    const code = typeof st.goatcounter === "string" && /^[a-z0-9][a-z0-9-]{1,48}$/.test(st.goatcounter) ? st.goatcounter : null;
+    if (!code || navigator.webdriver || document.querySelector("script[data-goatcounter]")) return;
+    const sc = document.createElement("script"); sc.async = true; sc.src = "https://gc.zgo.at/count.js";
+    sc.dataset.goatcounter = "https://" + code + ".goatcounter.com/count"; document.head.appendChild(sc);
   }
 
   /* Publicidad y medición: APAGADAS mientras data/config.json no tenga los identificadores (ads.client / ads.analytics_id).
