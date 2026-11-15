@@ -31,7 +31,7 @@
 .im{aspect-ratio:1;background:#fff;border:1px solid var(--line);border-radius:16px;display:flex;align-items:center;justify-content:center;overflow:hidden}.im img{max-width:100%;max-height:100%;object-fit:contain}
 .im .ph{display:flex;flex-direction:column;align-items:center;gap:4px;color:#6b7482;font-size:13px}.im .ph i{font-style:normal;font-size:64px;opacity:.75}
 .pd h1{margin:6px 0 8px;font-size:26px;line-height:1.2}
-.usd{margin:2px 0 4px;font-weight:600;font-size:15px}.big{font-size:34px;font-weight:800;letter-spacing:-.8px}.big .sub{font-weight:500;letter-spacing:0}.sub{font-size:13px;color:var(--mut)}.dn{color:var(--down);font-weight:700}.up{color:var(--up);font-weight:700}
+.vd{margin:4px 0;font-weight:600;font-size:14px}.vd.sub{font-weight:400}.usd{margin:2px 0 4px;font-weight:600;font-size:15px}.big{font-size:34px;font-weight:800;letter-spacing:-.8px}.big .sub{font-weight:500;letter-spacing:0}.sub{font-size:13px;color:var(--mut)}.dn{color:var(--down);font-weight:700}.up{color:var(--up);font-weight:700}
 .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
 .tg{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:color-mix(in srgb,var(--acc) 6%,var(--card))}.tg label{font-weight:600}.tg .tgi{display:inline-flex;align-items:center;gap:4px;font-weight:700}.tg input{width:9.5em;padding:8px;border:1px solid var(--line2,var(--line));border-radius:8px;background:var(--card);color:var(--tx);font:inherit}.tg .sub{flex-basis:100%;margin:0}
 .acts .btn{border-radius:999px;display:inline-flex;align-items:center;gap:6px}.acts .btn.pri{color:#fff}
@@ -148,6 +148,7 @@ function specs(g,HW,PR,META,SP){
     <h1>${esc(g.name)}</h1>
     <div class="big">${ARS(best)} <span class="sub">en ${esc(g.offers[0].store)}${g.offers.length>1?` · comparado en ${g.offers.length} tiendas`:" · 1 tienda"}</span></div>
     ${usdLine(best,DOL)}
+    ${DET.verdict(g,ctx)}
     ${c?`<div class="${c.pct<0?"dn":"up"}">${c.pct<0?"▼ Bajó":"▲ Subió"} ${Math.abs(c.pct)}% (antes ${ARS(c.prev)})</div>`:""}${g.low?'<div class="dn">Está en su mínimo histórico</div>':""}
     <div class="acts"><a class="btn pri" href="${esc(g.offers[0].url)}" target="_blank" rel="noopener nofollow">Ir a la tienda más barata ↗</a><button class="btn" id="fl">${inList()?"✓ En mi lista (quitar)":"+ Agregar a mi lista"}</button><button class="btn" id="fb">${fol()?"★ Siguiendo":"☆ Seguir precio"}</button><button class="btn" id="fcmp">${CT.cmp.has(g.id,g.category)?"✓ En la comparación (quitar)":"⚖ Agregar a la comparación"}</button></div>
     ${targetBox()}

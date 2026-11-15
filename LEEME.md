@@ -785,3 +785,11 @@ Búsqueda del 4/11/2026 solo en sitios de los fabricantes (informe «Fichas ofic
   (producto, dirección, tiendas y tipo de error); sin él, lleva a la página de contacto.
 - **Filtro «Con cuotas sin interés»** en Productos (mismo criterio que la ficha y los avisos).
 - Pruebas: `test_actualizacion_43_precio_objetivo` y dos nuevas en `tests/test_account.js`.
+- **Ubicación de las tiendas** (`site/data/stores.json` → `contact.address` y `zone`): 13 direcciones nuevas, tomadas de
+  la misma ficha de Google Maps verificada. La ficha muestra «📍 Local: …» junto a cada oferta y Productos tiene el
+  filtro «Con local en» (CABA, Gran Buenos Aires, Córdoba, Santa Fe, Santiago del Estero). Tener local no garantiza
+  retiro: la web lo aclara. Compragamer no entra (su dirección verificada es un centro de postventa).
+- **¿Todo en una misma tienda?** (`js/builder.js` → `E.oneStore`, en «Armalo vos»): qué tiendas tienen todas las piezas
+  elegidas con stock, cuánto sale y cuánto más que repartido.
+- **¿La baja es real?** (`js/detail.js` → `DET.usual` / `DET.verdict`, en la ficha): compara el precio de hoy con la
+  mediana del mejor precio diario de los últimos 30 días (mínimo 14 días de historial; si no, no opina).

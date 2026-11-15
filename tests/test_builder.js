@@ -229,4 +229,19 @@ t("procesadores cuyo título menciona el cooler siguen teniendo ficha; los disip
     assert.ok(E2.candidates("ram2", {}, PR2).ok.some(r => r.g.id === "r1"));
   });
 }
+// actualización 43: ¿todo en una misma tienda?
+{
+  const o = (store, p, extra) => Object.assign({ store, price_cash: p, stock: true }, extra || {});
+  const cat = { c: { id: "c", offers: [o("A", 100), o("B", 90), o("C", 95, { stock: false })] }, r: { id: "r", offers: [o("A", 50), o("B", 70), o("A", 45)] },
+    s: { id: "s", offers: [o("A", 30), o("D", 10, { anom: true })] } };
+  const by = id => cat[id];
+  const r = E.oneStore({ cpu: { id: "c" }, ram: { id: "r" }, ssd: { id: "s" } }, by);
+  assert.deepStrictEqual(r.full, [{ store: "A", total: 175, n: 3 }], "solo A tiene las 3 (toma su oferta más barata; sin stock y precios inusuales no cuentan)");
+  assert.deepStrictEqual(r.best, { store: "B", total: 160, n: 2 });
+  const r2 = E.oneStore({ cpu: { id: "c" }, ram: { id: "r", own: true }, ssd: { id: "s" } }, by);
+  assert.strictEqual(r2.pieces, 2, "lo que ya tenés no cuenta"); assert.strictEqual(r2.full[0].store, "A");
+  assert.strictEqual(E.oneStore({ cpu: { id: "c" } }, by), null, "con una sola pieza no aplica");
+  const r3 = E.oneStore({ cpu: { id: "c" }, ssd: { id: "s" } }, id => id === "s" ? { id: "s", offers: [o("Z", 5)] } : cat[id]);
+  assert(r3.full.length === 0 && r3.best && r3.best.n === 1, "ninguna tiene todo: se informa la que más tiene");
+}
 console.log(`armado pieza por pieza: ${n} pruebas OK`);
