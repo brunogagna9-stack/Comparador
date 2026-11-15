@@ -77,6 +77,13 @@ def evaluate(rows, products, stores_cfg):
                     changes.append({"type": "suba", "pct": d * 100})
         else:
             new_last = price
+        # actualización 43: precio objetivo. Se avisa una vez cuando el precio llega al objetivo (o lo pasa) y la última
+        # referencia estaba por encima; la referencia se mueve al precio actual para no repetir el aviso en cada corrida.
+        # Es un pedido explícito de la persona: se manda aunque tenga apagado el aviso general de bajas.
+        tgt = r.get("target_price")
+        if isinstance(tgt, (int, float)) and tgt > 0 and price <= tgt and (ref is None or ref > tgt):
+            changes = [c for c in changes if c["type"] != "baja"] + [{"type": "objetivo", "target": float(tgt)}]
+            new_last = price
         has_csi = csi_offer is not None
         if has_csi and r.get("last_cuotas") is False and r.get("notify_cuotas"):
             changes.append({"type": "cuotas", "store": csi_offer.get("store"), "text": csi_offer.get("cuotas") or "cuotas sin interés"})
@@ -91,13 +98,17 @@ def evaluate(rows, products, stores_cfg):
 
 def render(items, site):
     downs = sum(1 for i in items for c in i["changes"] if c["type"] == "baja")
-    subject = (f"Bajó de precio: {items[0]['name'][:60]}" if len(items) == 1 and downs
+    hits = sum(1 for i in items for c in i["changes"] if c["type"] == "objetivo")
+    subject = (f"Llegó a tu precio objetivo: {items[0]['name'][:55]}" if len(items) == 1 and hits
+               else f"Bajó de precio: {items[0]['name'][:60]}" if len(items) == 1 and downs
                else f"KyraNoHard: novedades en {len(items)} producto{'s' if len(items) != 1 else ''} que seguís")
     li = []
     for i in items:
         bits = []
         for c in i["changes"]:
-            if c["type"] == "baja":
+            if c["type"] == "objetivo":
+                bits.append(f"<span style='color:#0b6b4a'>🎯 llegó a tu precio objetivo</span> (pediste aviso por debajo de {ars(c['target'])})")
+            elif c["type"] == "baja":
                 bits.append(f"<span style='color:#0b6b4a'>▼ bajó {abs(c['pct']):.0f}%</span> (antes {ars(i['ref'])})")
             elif c["type"] == "suba":
                 bits.append(f"<span style='color:#b42318'>▲ subió {c['pct']:.0f}%</span> (antes {ars(i['ref'])})")

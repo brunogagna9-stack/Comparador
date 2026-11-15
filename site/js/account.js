@@ -48,9 +48,28 @@
   // historial: gana la entrada más reciente; si la local es más nueva se vuelve a subir
   A.newerHist = (l, r) => { const tl = Date.parse(l.t) || 0, tr = Date.parse(r.t) || 0; return tr > tl ? "remote" : tl > tr ? "local-up" : "local"; };
 
-  A.followToRow = (uid, id, f) => ({ user_id: uid, product_id: String(id).slice(0, 200), name: f && f.name ? String(f.name).slice(0, 300) : null,
-    price_ref: f && isFinite(f.price) ? +f.price : null, last_price: f && isFinite(f.price) ? +f.price : null });
-  A.rowToFollow = r => ({ price: r.price_ref != null ? +r.price_ref : null, name: r.name || "" });
+  // actualización 43: precio objetivo («avisarme cuando baje de $X»). `withTarget` = la cuenta ya tiene la columna target_price.
+  A.target = f => { const t = f && +f.target; return isFinite(t) && t > 0 && t < 1e12 ? Math.round(t) : null; };
+  A.followToRow = (uid, id, f, withTarget) => Object.assign({ user_id: uid, product_id: String(id).slice(0, 200), name: f && f.name ? String(f.name).slice(0, 300) : null,
+    price_ref: f && isFinite(f.price) ? +f.price : null, last_price: f && isFinite(f.price) ? +f.price : null }, withTarget ? { target_price: A.target(f) } : {});
+  A.rowToFollow = r => Object.assign({ price: r.price_ref != null ? +r.price_ref : null, name: r.name || "" }, r.target_price != null && A.target({ target: r.target_price }) ? { target: A.target({ target: r.target_price }) } : {});
+  /* mergeTargets(baseT, out, local, remote) → ids cuyo objetivo hay que actualizar en la cuenta. Modifica `out`.
+     baseT: {id: objetivo|null} de la última sincronización (o null). Regla por producto: si cambió acá desde la base,
+     gana lo de acá (se sube); si no cambió acá pero sí en la cuenta, se toma lo de la cuenta. Sin base: gana lo de acá si hay. */
+  A.mergeTargets = (baseT, out, local, remote) => {
+    const upd = [];
+    for (const id of Object.keys(out)) {
+      const l = id in local ? A.target(local[id]) : null, r = id in remote ? A.target(remote[id]) : null;
+      const hasB = !!baseT && Object.prototype.hasOwnProperty.call(baseT, id), b = hasB ? baseT[id] : undefined;
+      let v;
+      if (!(id in remote)) v = l;                                   // producto nuevo: sube con su objetivo
+      else if (!(id in local)) v = r;                               // llegó de la cuenta
+      else if (hasB ? l !== b : l != null) { v = l; if (l !== r) upd.push(id); }
+      else v = r;
+      out[id] = Object.assign({}, out[id]); if (v != null) out[id].target = v; else delete out[id].target;
+    }
+    return upd;
+  };
   A.histToRow = (uid, kind, e) => ({ user_id: uid, id: String(e.id).slice(0, 60), kind, title: String(e.title || "").slice(0, 300), sub: e.sub ? String(e.sub).slice(0, 300) : null,
     url: String(e.url).slice(0, 2000), cat: e.cat ? String(e.cat).slice(0, 60) : null, t: e.t || new Date().toISOString() });
   A.rowToHist = r => { const e = { id: r.id, t: r.t, title: r.title || "", url: r.url }; if (r.sub) e.sub = r.sub; if (r.cat) e.cat = r.cat; return e; };
@@ -110,17 +129,26 @@
     busy = true; fire("acc:sync", { state: "start" });
     const uid = user.id, BK = "acc-base:" + uid;
     try {
-      const [rf, rh] = await Promise.all([sb.from("follows").select("product_id,name,price_ref"), sb.from("history").select("id,kind,title,sub,url,cat,t")]);
+      let [rf, rh] = await Promise.all([sb.from("follows").select("product_id,name,price_ref,target_price"), sb.from("history").select("id,kind,title,sub,url,cat,t")]);
+      // Si la cuenta todavía no tiene la columna del precio objetivo (falta correr el SQL de la actualización 43),
+      // se sincroniza como antes y los objetivos quedan solo en este navegador.
+      let withT = true;
+      if (rf.error && /target_price|42703|PGRST204/.test(String(rf.error.code || "") + " " + String(rf.error.message || ""))) {
+        withT = false; rf = await sb.from("follows").select("product_id,name,price_ref"); }
       if (rf.error) throw rf.error; if (rh.error) throw rh.error;
+      A.targets = withT;   // la ficha lo usa para decir (o no) que el precio objetivo también llega por mail
       const base = get(BK, null), nb = { seg: [], hist: {} };
       // seguimientos
       const locF = get("seg", {}) || {}, remF = {};
       rf.data.forEach(r => { remF[r.product_id] = A.rowToFollow(r); });
       const mf = A.merge3(base && base.seg, locF, remF);
-      if (mf.up.length) { const r = await sb.from("follows").upsert(mf.up.map(id => A.followToRow(uid, id, mf.out[id])), { onConflict: "user_id,product_id", ignoreDuplicates: true }); if (r.error) throw r.error; }
+      const updT = withT ? A.mergeTargets(base && base.segT, mf.out, locF, remF) : [];
+      if (mf.up.length) { const r = await sb.from("follows").upsert(mf.up.map(id => A.followToRow(uid, id, mf.out[id], withT)), { onConflict: "user_id,product_id", ignoreDuplicates: true }); if (r.error) throw r.error; }
+      for (const id of updT) { const r = await sb.from("follows").update({ target_price: A.target(mf.out[id]) }).eq("user_id", uid).eq("product_id", id); if (r.error) throw r.error; }
       if (mf.del.length) { const r = await sb.from("follows").delete().eq("user_id", uid).in("product_id", mf.del); if (r.error) throw r.error; }
       if (JSON.stringify(mf.out) !== JSON.stringify(locF)) put("seg", mf.out);
       nb.seg = Object.keys(mf.out);
+      if (withT) { nb.segT = {}; nb.seg.forEach(id => { nb.segT[id] = A.target(mf.out[id]); }); } else if (base && base.segT) nb.segT = base.segT;
       // historial
       const locAll = get("historial", {}) || {}, outAll = {};
       for (const k of KINDS) {

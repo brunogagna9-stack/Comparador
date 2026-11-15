@@ -51,4 +51,25 @@ t("solo se aceptan direcciones del propio sitio en el historial de la cuenta", (
   assert(A.safeUrl("comparar.html#cat=procesadores&ids=a,b")); assert(A.safeUrl("armar.html?b=cpu%3Dc1"));
   assert(!A.safeUrl("https://evil.example.com/")); assert(!A.safeUrl("javascript:alert(1)")); assert(!A.safeUrl("//evil.com/x.html"));
 });
+t("precio objetivo: filas con y sin la columna, y valores inválidos", () => {
+  assert.strictEqual(A.followToRow("u", "p", { price: 10, name: "x", target: 9000.4 }, true).target_price, 9000);
+  assert(!("target_price" in A.followToRow("u", "p", { price: 10, name: "x", target: 9000 }, false)), "sin la columna no se manda");
+  assert.strictEqual(A.followToRow("u", "p", { price: 10, name: "x" }, true).target_price, null);
+  assert.deepStrictEqual(A.rowToFollow({ price_ref: 10, name: "x", target_price: 8000 }), { price: 10, name: "x", target: 8000 });
+  assert.deepStrictEqual(A.rowToFollow({ price_ref: 10, name: "x", target_price: null }), { price: 10, name: "x" });
+  for (const bad of [0, -5, "abc", NaN, 1e13]) assert.strictEqual(A.target({ target: bad }), null);
+});
+t("precio objetivo: se sincroniza en tres partes (gana el cambio más reciente respecto de la base)", () => {
+  const F = t => Object.assign({ price: 100, name: "x" }, t != null ? { target: t } : {});
+  const run = (base, loc, rem) => { const out = {}; Object.keys(Object.assign({}, loc, rem)).forEach(id => { out[id] = loc[id] || rem[id]; });
+    const upd = A.mergeTargets(base, out, loc, rem); return [Object.fromEntries(Object.keys(out).map(id => [id, out[id].target ?? null])), upd]; };
+  assert.deepStrictEqual(run({ a: null }, { a: F(500) }, { a: F() }), [{ a: 500 }, ["a"]], "lo puse acá → se sube");
+  assert.deepStrictEqual(run({ a: 500 }, { a: F(500) }, { a: F(400) }), [{ a: 400 }, []], "lo cambié en otro dispositivo → se baja");
+  assert.deepStrictEqual(run({ a: 500 }, { a: F() }, { a: F(500) }), [{ a: null }, ["a"]], "lo quité acá → se quita de la cuenta");
+  assert.deepStrictEqual(run({ a: 500 }, { a: F(500) }, { a: F() }), [{ a: null }, []], "lo quité en otro dispositivo → se quita acá");
+  assert.deepStrictEqual(run(null, { a: F(300) }, { a: F(900) }), [{ a: 300 }, ["a"]], "sin base: gana lo de acá si hay");
+  assert.deepStrictEqual(run(null, { a: F() }, { a: F(900) }), [{ a: 900 }, []], "sin base y sin objetivo acá: el de la cuenta");
+  assert.deepStrictEqual(run({}, { n: F(700) }, {}), [{ n: 700 }, []], "producto nuevo: sube con su objetivo en la misma fila");
+  assert.deepStrictEqual(run({ a: 500 }, { a: F(500) }, { a: F(500) }), [{ a: 500 }, []], "sin cambios: no se toca nada");
+});
 console.log(`cuentas: ${n} pruebas OK`);

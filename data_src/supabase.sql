@@ -20,6 +20,7 @@ create table if not exists public.follows (
   price_ref   numeric,                 -- precio cuando lo empezó a seguir
   last_price  numeric,                 -- último precio con el que se comparó (lo actualiza el envío de avisos)
   last_cuotas boolean,                 -- si la última vez tenía cuotas sin interés
+  target_price numeric check (target_price is null or (target_price > 0 and target_price < 1e12)),   -- act. 43: «avisarme cuando baje de $X»
   created_at  timestamptz not null default now(),
   primary key (user_id, product_id)
 );
@@ -94,12 +95,14 @@ revoke all on function public.delete_my_account() from public, anon;
 grant execute on function public.delete_my_account() to authenticated;
 
 -- Para el envío de avisos (solo con la clave secret): seguimientos + preferencias + mail confirmado
-create or replace function public.notify_targets() returns table (
+-- (si ya tenías las cuentas armadas de antes, corré data_src/supabase_43_precio_objetivo.sql en vez de este archivo)
+drop function if exists public.notify_targets();
+create function public.notify_targets() returns table (
   user_id uuid, email text, notify_down boolean, notify_up boolean, notify_cuotas boolean,
-  product_id text, name text, price_ref numeric, last_price numeric, last_cuotas boolean)
+  product_id text, name text, price_ref numeric, last_price numeric, last_cuotas boolean, target_price numeric)
 language sql security definer set search_path = '' as $$
   select f.user_id, u.email::text, coalesce(p.notify_down, true), coalesce(p.notify_up, false), coalesce(p.notify_cuotas, true),
-         f.product_id, f.name, f.price_ref, f.last_price, f.last_cuotas
+         f.product_id, f.name, f.price_ref, f.last_price, f.last_cuotas, f.target_price
   from public.follows f
   join auth.users u on u.id = f.user_id
   left join public.profiles p on p.user_id = f.user_id

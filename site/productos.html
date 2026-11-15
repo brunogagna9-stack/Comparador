@@ -171,7 +171,8 @@ aside details>*:not(summary){margin-top:6px}
     <details open><summary>Opciones</summary><div class="fl">
       <label><input type="checkbox" id="stock"> Solo con stock</label>
       <label><input type="checkbox" id="multi"> En 2 o más tiendas</label>
-      <label><input type="checkbox" id="lowonly"> En mínimo histórico</label></div></details>
+      <label><input type="checkbox" id="lowonly"> En mínimo histórico</label>
+      <label title="Alguna tienda publica cuotas sin interés para ese producto. Pueden depender del banco o de la tarjeta: confirmalo en la tienda."><input type="checkbox" id="csi"> Con cuotas sin interés</label></div></details>
     <h4>&nbsp;</h4><button class="more" id="reset">Limpiar filtros</button>
   </aside>
   <main>
@@ -195,7 +196,7 @@ function imgFail(el){const id=el.dataset.id,fb=FB[id];
 const imgTag=(g,lazy)=>g.image?`<img ${lazy?'loading="lazy" ':""}data-id="${esc(g.id)}" src="${esc(g.image)}" alt="" onerror="imgFail(this)">`:`<span class="ph">${ICONS.svg(g.category||"otros",38)}Sin foto</span>`;
 const COLORS=["#1f6feb","#e0763a","#12a37a","#b04ad6","#d6a31f","#d64a6a","#4a9ed6"];
 let DATA=[],HIST={},META={},CFG={stores:{}};
-const S={tab:"todos",cat:"",brands:new Set(),stores:new Set(),pmin:null,pmax:null,stock:false,multi:false,lowonly:false,sort:"rel",q:"",page:1,allBrands:false,bq:"",fx:{}};
+const S={tab:"todos",cat:"",brands:new Set(),stores:new Set(),pmin:null,pmax:null,stock:false,multi:false,lowonly:false,csi:false,sort:"rel",q:"",page:1,allBrands:false,bq:"",fx:{}};
 let CX=null;   // contexto con la base de hardware y las fichas (para los filtros por categoría)
 /* actualización 41: tres formas de ver los productos (como en ComparáSúper). Se recuerda en el navegador (clave kn_vista). */
 const VISTAS={m:{t:"Íconos grandes",d:"3 columnas",i:"▦",per:15},s:{t:"Íconos chicos",d:"5 columnas",i:"▪",per:35},l:{t:"Lista",d:"50 por página",i:"☰",per:50}};
@@ -205,6 +206,11 @@ function setVista(v){if(!VISTAS[v]||v===S.vista){closeVmenu();return}const first
 function closeVmenu(){const d=$("#vmenu");if(d)d.open=false}
 const chgOk=g=>!!(g.chg&&!(g.offers[0]&&g.offers[0].anom));   // un salto sospechoso no cuenta como "bajó/subió"
 const price=o=>o.price_cash??o.price_list,best=g=>price(g.offers[0]);
+// actualización 43: la oferta tiene cuotas sin interés (lo dice la tienda en el texto de cuotas o está anotado en
+// config.json para esa tienda). Mismo criterio que la ficha y que los avisos por mail.
+const hasCsi=o=>{if(o.cuotas&&/sin\s+inter[eé]s/i.test(String(o.cuotas)))return true;const c=((CFG.stores||{})[o.store]||{}).cuotas;return !!(c&&c.sin_interes&&c.n>1&&o.price_list)};
+// actualización 43: el producto seguido llegó al precio objetivo que eligió la persona en su ficha
+const tgHit=g=>{const f=FOLLOW[g.id],t=f&&+f.target;return !!(t>0&&best(g)<=t)};
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 let FOLLOW={};try{FOLLOW=JSON.parse(localStorage.getItem("seg")||"{}")}catch{}
 let LIST=[];try{LIST=JSON.parse(localStorage.getItem("lista")||"[]")}catch{}
@@ -250,6 +256,7 @@ function filtered(skip){
     const p=price(v[0]);if(S.pmin!=null&&p<S.pmin)return false;if(S.pmax!=null&&p>S.pmax)return false;
     if(S.multi&&g.offers.length<2)return false;
     if(S.lowonly&&!g.low)return false;
+    if(S.csi&&!v.some(hasCsi))return false;
     if(S.tab==="bajaron"&&!(chgOk(g)&&g.chg.pct<0))return false;
     if(S.tab==="subieron"&&!(chgOk(g)&&g.chg.pct>0))return false;
     if(S.tab==="seguidos"&&!FOLLOW[g.id])return false;
@@ -271,13 +278,13 @@ function card(g){
   return `<div class="card" data-id="${esc(g.id)}"><a class="stretch" href="${DET.url(g.id)}" data-open="${esc(g.id)}" aria-label="${esc("Ver "+g.name)}"></a><div class="im">${imgTag(g,true)}${badge}<button class="star${f}" data-f="${esc(g.id)}" title="Seguir este producto" aria-label="Seguir precio">${f?"★":"☆"}</button><button class="cmpb${CT.cmp.has(g.id,g.category)?" on":""}" data-cmp="${esc(g.id)}" title="${CT.cmp.has(g.id,g.category)?"Quitar de la comparación":"Agregar a la comparación"}" aria-label="${CT.cmp.has(g.id,g.category)?"Quitar de la comparación":"Agregar a la comparación"}">${CT.cmp.has(g.id,g.category)?'✓<span class="tx"> Comparar</span>':'⚖<span class="tx"> Comparar</span>'}</button><button class="addl${LIST.includes(g.id)?" on":""}" data-l="${esc(g.id)}" aria-label="${LIST.includes(g.id)?"Quitar de mi lista":"Agregar a mi lista"}">${LIST.includes(g.id)?'✓<span class="tx"> En lista</span>':'+<span class="tx"> Lista</span>'}</button></div>
   <div class="st">${esc(o.store)}${REP.badge(o.store)}${stale(o.store)?'<span class="warnpill" title="La tienda no respondió en la última lectura: este precio puede estar desactualizado">dato viejo</span>':""}${o.anom?'<span class="warnpill" title="El precio cambió de forma muy brusca: confirmalo en la tienda">precio inusual</span>':""}${g.dif?'<span class="warnpill" title="Los precios de las tiendas difieren 3 veces o más: confirmá que sea exactamente el mismo modelo">precios muy distintos</span>':""}</div><div class="nm">${esc(g.name)}</div>
   <div class="pr">${ARS(price(o))}${c&&c.pct<0?`<span class="old">${ARS(c.prev)}</span>`:""}</div>
-  <div class="sub">${g.offers.length>1?`Comparado en ${g.offers.length} tiendas`:"1 tienda"}${g.low?' · <span class="low">mínimo histórico</span>':""}</div></div>`;
+  <div class="sub">${g.offers.length>1?`Comparado en ${g.offers.length} tiendas`:"1 tienda"}${g.low?' · <span class="low">mínimo histórico</span>':""}${tgHit(g)?' · <span class="low">🎯 en tu precio objetivo</span>':""}</div></div>`;
 }
 /* vista Lista: una fila por producto (foto chica, nombre, tienda más barata, precio y botones) */
 function lrow(g){
   const o=visible(g)[0]||g.offers[0],c=chgOk(g)?g.chg:null,f=FOLLOW[g.id]?" on":"",inC=CT.cmp.has(g.id,g.category),inL=LIST.includes(g.id);
   return `<div class="card lrow" data-id="${esc(g.id)}"><a class="stretch" href="${DET.url(g.id)}" data-open="${esc(g.id)}" aria-label="${esc("Ver "+g.name)}"></a><div class="im">${imgTag(g,true)}</div>
-  <div class="li-i"><div class="nm">${esc(g.name)}</div><div class="st">${esc(o.store)}${REP.badge(o.store)}${stale(o.store)?'<span class="warnpill" title="La tienda no respondió en la última lectura: este precio puede estar desactualizado">dato viejo</span>':""}${o.anom?'<span class="warnpill" title="El precio cambió de forma muy brusca: confirmalo en la tienda">precio inusual</span>':""}${g.dif?'<span class="warnpill" title="Los precios de las tiendas difieren 3 veces o más: confirmá que sea exactamente el mismo modelo">precios muy distintos</span>':""}</div><div class="sub">${g.offers.length>1?`Comparado en ${g.offers.length} tiendas`:"1 tienda"}${g.low?' · <span class="low">mínimo histórico</span>':""}</div></div>
+  <div class="li-i"><div class="nm">${esc(g.name)}</div><div class="st">${esc(o.store)}${REP.badge(o.store)}${stale(o.store)?'<span class="warnpill" title="La tienda no respondió en la última lectura: este precio puede estar desactualizado">dato viejo</span>':""}${o.anom?'<span class="warnpill" title="El precio cambió de forma muy brusca: confirmalo en la tienda">precio inusual</span>':""}${g.dif?'<span class="warnpill" title="Los precios de las tiendas difieren 3 veces o más: confirmá que sea exactamente el mismo modelo">precios muy distintos</span>':""}</div><div class="sub">${g.offers.length>1?`Comparado en ${g.offers.length} tiendas`:"1 tienda"}${g.low?' · <span class="low">mínimo histórico</span>':""}${tgHit(g)?' · <span class="low">🎯 en tu precio objetivo</span>':""}</div></div>
   <div class="li-p"><div class="pr">${ARS(price(o))}</div>${c?`<span class="badge ${c.pct<0?"d":"u"}">${c.pct<0?"▼":"▲"} ${Math.abs(c.pct).toLocaleString("es-AR")}%</span>`:""}${c&&c.pct<0?`<span class="old">${ARS(c.prev)}</span>`:""}</div>
   <div class="li-a"><button class="star${f}" data-f="${esc(g.id)}" title="Seguir este producto" aria-label="Seguir precio">${f?"★":"☆"}</button><button class="cmpb${inC?" on":""}" data-cmp="${esc(g.id)}" title="${inC?"Quitar de la comparación":"Agregar a la comparación"}" aria-label="${inC?"Quitar de la comparación":"Agregar a la comparación"}">${inC?'✓<span class="tx"> Comparar</span>':'⚖<span class="tx"> Comparar</span>'}</button><button class="addl${inL?" on":""}" data-l="${esc(g.id)}" aria-label="${inL?"Quitar de mi lista":"Agregar a mi lista"}">${inL?'✓<span class="tx"> En lista</span>':'+<span class="tx"> Lista</span>'}</button></div></div>`;
 }
@@ -357,6 +364,8 @@ function alertBox(){
   const ch=Object.entries(FOLLOW).map(([id,f])=>{const g=DATA.find(x=>x.id===id);return g&&{g,f,d:best(g)-f.price}}).filter(x=>x&&Math.abs(x.d)>0);
   const up=ch.filter(x=>x.d>0),dn=ch.filter(x=>x.d<0),ds=DATA.filter(g=>chgOk(g)&&g.chg.pct>0).length;
   let h="";
+  const hit=Object.keys(FOLLOW).map(id=>DATA.find(x=>x.id===id)).filter(g=>g&&tgHit(g));
+  if(hit.length)h+=`<div class="alert"><b>🎯 ${hit.length===1?"Un producto que seguís llegó":hit.length+" productos que seguís llegaron"} a tu precio objetivo.</b> <a href="#" data-t="seguidos">Ver${hit.length===1?"lo":"los"}</a></div>`;
   if(ch.length)h+=`<div class="alert"><b>Tus productos seguidos:</b> ${up.length?`<span class="up">${up.length} subieron</span>`:""} ${dn.length?`<span class="dn">${dn.length} bajaron</span>`:""} desde que los seguiste. <a href="#" data-t="seguidos">Verlos</a></div>`;
   $("#alert").innerHTML=h;
 }
@@ -431,15 +440,15 @@ function bind(){
   $("#fxbox").onchange=e=>{const k=e.target.dataset.fx;if(!k)return;const set=S.fx[k]||(S.fx[k]=new Set());e.target.checked?set.add(e.target.value):set.delete(e.target.value);re()};
   const num=v=>v===""?null:Number(v);
   $("#pmin").oninput=e=>{S.pmin=num(e.target.value);re()};$("#pmax").oninput=e=>{S.pmax=num(e.target.value);re()};
-  ["stock","multi","lowonly"].forEach(k=>$("#"+k).onchange=e=>{S[k]=e.target.checked;re()});
+  ["stock","multi","lowonly","csi"].forEach(k=>$("#"+k).onchange=e=>{S[k]=e.target.checked;re()});
   $("#brands").onchange=e=>{const b=e.target.dataset.b;e.target.checked?S.brands.add(b):S.brands.delete(b);re()};
   $("#stores").onchange=e=>{const b=e.target.dataset.s;e.target.checked?S.stores.add(b):S.stores.delete(b);re()};
   $("#bq").oninput=e=>{S.bq=e.target.value.toLowerCase();renderSide()};
   $("#bmore").onclick=()=>{S.allBrands=!S.allBrands;renderSide()};
   $("#lbtn").onclick=()=>FULL?openList():loadFull().then(openList);
   {const A=CFG.alerts||{},ok=u=>typeof u==="string"&&/^https:\/\//.test(u);if(ok(A.email_form_url)||ok(A.whatsapp_channel_url)){$("#abtn").hidden=false;$("#abtn").onclick=openAlerts}}
-  $("#reset").onclick=()=>{Object.assign(S,{cat:"",brands:new Set(),stores:new Set(),pmin:null,pmax:null,stock:false,multi:false,lowonly:false,q:"",bq:"",fx:{}});
-    ["qh","pmin","pmax","bq"].forEach(i=>$("#"+i).value="");["stock","multi","lowonly"].forEach(i=>$("#"+i).checked=false);re()};
+  $("#reset").onclick=()=>{Object.assign(S,{cat:"",brands:new Set(),stores:new Set(),pmin:null,pmax:null,stock:false,multi:false,lowonly:false,csi:false,q:"",bq:"",fx:{}});
+    ["qh","pmin","pmax","bq"].forEach(i=>$("#"+i).value="");["stock","multi","lowonly","csi"].forEach(i=>$("#"+i).checked=false);re()};
 }
 /* actualización 39: carga en dos etapas. Con una categoría en la dirección (productos.html?cat=…) primero se baja solo
    esa categoría (data/cat/<cat>.json, unos cientos de KB) y se muestra; el catálogo completo llega después, en segundo

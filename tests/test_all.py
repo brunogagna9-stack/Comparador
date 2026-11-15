@@ -1558,3 +1558,32 @@ def test_actualizacion_42_mismas_palabras():
     assert not same(it("Fuente 550W Thermaltake Litepower Usado", "A"), it("FUENTE THERMALTAKE LITEPOWER 550W", "B")), "usado nunca con nuevo"
     assert B.words_key("Memoria 16 GB DDR4 de Kingston") == B.words_key("Kingston DDR4 16GB memoria")
     print("mismas palabras: OK")
+
+
+def test_actualizacion_43_precio_objetivo():
+    """Act. 43: aviso por precio objetivo. Se avisa una vez al llegar al objetivo (aunque los avisos de baja estén
+    apagados), no se repite en la corrida siguiente y no se avisa si todavía está por encima."""
+    from scripts import notify
+    prod = lambda p: [{"id": "p1", "name": "Placa X", "category": "placas-de-video", "offers": [{"store": "S", "price_cash": p, "url": "https://s/x"}]}]
+    row = lambda last, tgt, down=False: {"user_id": "u", "email": "a@b.com", "product_id": "p1", "name": "Placa X", "price_ref": 1000,
+                                         "last_price": last, "last_cuotas": False, "notify_down": down, "notify_up": False, "notify_cuotas": False, "target_price": tgt}
+    m, u = notify.evaluate([row(1000, 900)], prod(890), {})
+    ch = m["a@b.com"]["items"][0]["changes"]
+    assert [c["type"] for c in ch] == ["objetivo"] and ch[0]["target"] == 900.0 and u == [("u", "p1", 890, False)]
+    subj, body = notify.render(m["a@b.com"]["items"], "https://x/")
+    assert subj.startswith("Llegó a tu precio objetivo") and "pediste aviso por debajo de $900" in body
+    m, u = notify.evaluate([row(890, 900)], prod(890), {})
+    assert not m, "ya avisado: no se repite"
+    m, u = notify.evaluate([row(1000, 900)], prod(950), {})
+    assert not m, "todavía por encima del objetivo (y sin aviso general de bajas)"
+    m, u = notify.evaluate([row(1000, 900, down=True)], prod(880), {})
+    assert [c["type"] for c in m["a@b.com"]["items"][0]["changes"]] == ["objetivo"], "no se duplica con el aviso de baja"
+    m, u = notify.evaluate([row(1000, None, down=True)], prod(880), {})
+    assert [c["type"] for c in m["a@b.com"]["items"][0]["changes"]] == ["baja"], "sin objetivo: como siempre"
+    r = row(1000, 900); del r["target_price"]
+    assert not notify.evaluate([r], prod(890), {})[0], "cuenta sin la columna nueva: no rompe"
+    sql = open("data_src/supabase_43_precio_objetivo.sql", encoding="utf-8").read()
+    assert "add column if not exists target_price" in sql and "f.target_price" in sql and "to service_role" in sql
+    p = open("site/productos.html", encoding="utf-8").read(); f = open("site/producto.html", encoding="utf-8").read()
+    assert 'id="csi"' in p and "hasCsi" in p and "tgHit" in p and 'id="tg"' in f and "reportLink" in f
+    print("precio objetivo: OK")

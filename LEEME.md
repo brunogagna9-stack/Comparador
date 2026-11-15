@@ -773,3 +773,15 @@ Búsqueda del 4/11/2026 solo en sitios de los fabricantes (informe «Fichas ofic
   otro orden (misma categoría, 4+ palabras, algún número; «gamer», «de», «con»… no cuentan; «sin» sí). Con los datos
   del 2026-11-14: 885 uniones nuevas; productos comparados en 2 o más tiendas pasan de 5.287 a 5.494.
   Prueba: `test_actualizacion_42_mismas_palabras`.
+
+## Actualización 43 — Precio objetivo, reportar error y filtro de cuotas
+
+- **Precio objetivo**: en la ficha de un producto seguido, «Avisarme cuando baje de $…». Se guarda en el navegador
+  (`seg[id].target`), se marca en Productos → Seguidos («🎯 en tu precio objetivo») y, con cuenta, se sincroniza y
+  sale por mail (asunto «Llegó a tu precio objetivo»), aunque los avisos generales de baja estén apagados.
+  - **Paso único en Supabase para el mail**: SQL Editor → pegar todo `data_src/supabase_43_precio_objetivo.sql` → Run.
+    Hasta hacerlo, todo sigue funcionando como antes y el objetivo queda solo en el navegador.
+- **Reportar un error**: enlace al pie de cada ficha. Con `contact_email` en `config.json` abre un mail ya armado
+  (producto, dirección, tiendas y tipo de error); sin él, lleva a la página de contacto.
+- **Filtro «Con cuotas sin interés»** en Productos (mismo criterio que la ficha y los avisos).
+- Pruebas: `test_actualizacion_43_precio_objetivo` y dos nuevas en `tests/test_account.js`.
