@@ -1,0 +1,35 @@
+name: Revisar enlaces
+
+# Actualización 42: una vez por semana (y con el botón «Run workflow») revisa que los enlaces de las páginas del sitio
+# funcionen, con lychee (https://github.com/lycheeverse/lychee, código abierto). Los internos (entre páginas del
+# sitio) se revisan como archivos; los externos se piden una vez cada uno. El resultado queda en el resumen de la
+# corrida. No frena nada: es solo un aviso. Las fichas de producto se arman en el navegador y no entran en esta revisión.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "41 11 * * 1"   # lunes 8:41 de Argentina
+
+permissions:
+  contents: read
+
+jobs:
+  enlaces:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Revisar enlaces con lychee
+        uses: lycheeverse/lychee-action@v2
+        with:
+          fail: false
+          jobSummary: true
+          # 403/429: muchas tiendas y redes rechazan pedidos automáticos aunque la página exista; no son enlaces rotos
+          args: >-
+            --no-progress --max-concurrency 4 --timeout 20 --max-retries 2
+            --accept 200,204,206,301,302,403,429
+            --root-dir ${{ github.workspace }}/site
+            --exclude-path site/data
+            --exclude "^https://(www\.)?google\.com/maps"
+            --exclude "localhost|127\.0\.0\.1"
+            'site/*.html'

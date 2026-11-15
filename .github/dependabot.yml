@@ -1,0 +1,22 @@
+# Actualización 42: GitHub revisa una vez por semana si hay versiones nuevas de las herramientas del proyecto y, si
+# las hay, propone el cambio (un «pull request») para revisarlo antes de aceptarlo. No cambia nada solo.
+# Las librerías guardadas dentro del sitio (site/js/vendor: Driver.js, Supabase, three.js, uFuzzy) van con versión fija
+# en el nombre del archivo y se actualizan a mano.
+version: 2
+updates:
+  - package-ecosystem: "pip"          # recolector de precios (requirements.txt)
+    directory: "/"
+    schedule: { interval: "weekly", day: "monday" }
+    open-pull-requests-limit: 3
+  - package-ecosystem: "npm"          # control de calidad (calidad/package.json)
+    directory: "/calidad"
+    schedule: { interval: "weekly", day: "monday" }
+    open-pull-requests-limit: 3
+    groups:
+      calidad: { patterns: ["*"] }
+  - package-ecosystem: "github-actions"   # acciones usadas en .github/workflows
+    directory: "/"
+    schedule: { interval: "weekly", day: "monday" }
+    open-pull-requests-limit: 3
+    groups:
+      acciones: { patterns: ["*"] }
