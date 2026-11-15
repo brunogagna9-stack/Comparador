@@ -117,6 +117,25 @@ def same_product(a, b):
     return not u or len(a["alpha"] & b["alpha"]) / len(u) >= 0.7
 
 
+# Actualización 42: mismas palabras en otro orden. «Fuente 550W Thermaltake Litepower» = «FUENTE THERMALTAKE LITEPOWER
+# 550W». Se normaliza (acentos, mayúsculas, «16 GB» = «16GB») y se ignoran palabras de relleno que no cambian el
+# producto («gamer», «de», «con»…; NUNCA «sin», que sí lo cambia). Para unir hace falta el MISMO conjunto de palabras
+# (ni una más ni una menos), al menos 4 palabras y algún número (modelo, capacidad, potencia), en la misma categoría.
+# Revisado con el informe de posibles repetidos: en una muestra de 30 pares, 30 eran el mismo producto.
+_FILL = re.compile(r"\b(de|del|con|para|el|la|los|las|y|en|gamer|gaming|nuevo|oferta|garantia|oficial|envio|gratis|cuotas|interes)\b")
+
+
+def words_key(name):
+    import unicodedata
+    s = unicodedata.normalize("NFKD", str(name or "")).encode("ascii", "ignore").decode().lower()
+    s = re.sub(r"(\d)\s+(gb|tb|mhz|w|hz|mm|cm|pulgadas|\")(?![a-z0-9])", r"\1\2", s)
+    s = _FILL.sub(" ", s)
+    toks = [t for t in re.split(r"[^a-z0-9]+", s) if t]
+    if len(toks) < 4 or not any(re.search(r"\d", t) for t in toks):
+        return None
+    return " ".join(sorted(toks))
+
+
 def group(items):
     """Agrupa ofertas del mismo producto (número de parte, título exacto o coincidencia estricta de modelo)."""
     parent = list(range(len(items)))
@@ -135,6 +154,9 @@ def group(items):
         norm = re.sub(r"[^a-z0-9]", "", it["name"].lower())
         if len(norm) >= 12:
             keys.append(("name", it["category"], norm))   # mismo título exacto = mismo producto
+        wk = words_key(it["name"])
+        if wk:
+            keys.append(("words", it["category"], used, wk))   # act. 42: mismas palabras en otro orden
         for k in keys:
             if k in seen:
                 parent[find(i)] = find(seen[k])

@@ -1538,3 +1538,23 @@ def test_actualizacion_42_dolar_y_cruces():
     assert got.get(("e", "f"), 0) < 100, "«4060» y «4060 Ti» pueden aparecer como dudosos, nunca como iguales"
     assert C.norm("Memoria 16 GB Gamer") == "memoria 16gb"
     print("dólar y cruces: OK")
+
+
+def test_actualizacion_42_mismas_palabras():
+    """Act. 42 (5): se unen las ofertas con exactamente las mismas palabras en otro orden (misma categoría, con algún
+    número, 4+ palabras). No se unen si cambia una palabra («sin», «Ti», color), si falta un número o si es usado."""
+    import build_data as B
+    it = lambda n, s, cat="fuentes", p=1000: {"name": n, "store": s, "category": cat, "url": f"https://{s}/{n}", "price_cash": p}
+    def same(a, b):
+        return len(B.group([a, b])) == 1
+    assert same(it("Fuente 550W Thermaltake Litepower", "A"), it("FUENTE THERMALTAKE LITEPOWER 550W", "B"))
+    assert same(it("Memoria Ddr5 Sodimm 32 Gb 5600mhz Adata", "A", "memorias-ram"), it("Memoria Adata DDR5 32GB 5600MHz SODIMM", "B", "memorias-ram"))
+    assert same(it("Mouse Gamer Trust Qudos RGB GXT900", "A", "mouses"), it("MOUSE TRUST QUDOS RGB GXT900", "B", "mouses")), "«gamer» no cambia el producto"
+    assert not same(it("Cooler Raptor 120 sin RGB", "A", "refrigeracion"), it("Cooler Raptor 120 RGB", "B", "refrigeracion")), "«sin» sí cambia"
+    assert not same(it("Placa de video Zotac RTX 4060 Ti 8GB", "A", "placas-de-video"), it("Placa de video Zotac RTX 4060 8GB", "B", "placas-de-video"))
+    assert not same(it("Mouse Logitech G Pro Superlight Blanco", "A", "mouses"), it("Mouse Logitech G Pro Superlight Black", "B", "mouses"))
+    assert not same(it("Teclado Redragon Kumara Rojo", "A", "teclados"), it("Kumara Teclado Redragon Rojo", "B", "teclados")), "sin números no alcanza"
+    assert not same(it("Fuente 550W Thermaltake Litepower", "A"), it("FUENTE THERMALTAKE LITEPOWER 550W", "B", "otros")), "otra categoría"
+    assert not same(it("Fuente 550W Thermaltake Litepower Usado", "A"), it("FUENTE THERMALTAKE LITEPOWER 550W", "B")), "usado nunca con nuevo"
+    assert B.words_key("Memoria 16 GB DDR4 de Kingston") == B.words_key("Kingston DDR4 16GB memoria")
+    print("mismas palabras: OK")

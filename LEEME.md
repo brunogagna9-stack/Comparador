@@ -769,3 +769,7 @@ Búsqueda del 4/11/2026 solo en sitios de los fabricantes (informe «Fichas ofic
   1. Creá una cuenta gratis en https://www.goatcounter.com/signup y elegí un código (por ejemplo `kyranohard`).
   2. En `site/data/config.json` agregá `"stats": {"goatcounter": "kyranohard"}` (con tu código).
   3. La política de privacidad muestra sola «Activado». No usa cookies ni guarda la IP: no hace falta cartel.
+- **Cruce por mismas palabras** (`build_data.py` → `words_key`): se unen ofertas con exactamente las mismas palabras en
+  otro orden (misma categoría, 4+ palabras, algún número; «gamer», «de», «con»… no cuentan; «sin» sí). Con los datos
+  del 2026-11-14: 885 uniones nuevas; productos comparados en 2 o más tiendas pasan de 5.287 a 5.494.
+  Prueba: `test_actualizacion_42_mismas_palabras`.
