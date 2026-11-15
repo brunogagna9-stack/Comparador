@@ -1,0 +1,29 @@
+name: Verificar avisos por mail
+
+# Actualización 42: revisa que los secretos de los avisos por mail funcionen (Supabase y Brevo) SIN mandar ningún mail
+# ni cambiar nada. Corre al guardar este archivo o con el botón «Run workflow». El resultado queda en el registro.
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/verificar-avisos.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verificar Supabase y Brevo (no envía nada)
+        run: python scripts/notify.py --verificar
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          NOTIFY_FROM: ${{ secrets.NOTIFY_FROM }}

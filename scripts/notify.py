@@ -125,7 +125,60 @@ def http(method, url, headers, payload=None, timeout=40):
         return json.loads(raw) if raw else None
 
 
+def verify(env=os.environ, call=http):
+    """Actualización 42: revisa la configuración SIN mandar ningún mail ni cambiar nada.
+    1) que estén los 4 secretos; 2) que Supabase responda (cuántos seguimientos hay);
+    3) que Brevo acepte la clave desde esta conexión (consulta la cuenta, no envía nada). Nunca muestra claves."""
+    url = (env.get("SUPABASE_URL") or "").rstrip("/")
+    key, brevo, sender = env.get("SUPABASE_SECRET_KEY"), env.get("BREVO_API_KEY"), env.get("NOTIFY_FROM")
+    ok = True
+    for n, v in (("SUPABASE_URL", url), ("SUPABASE_SECRET_KEY", key), ("BREVO_API_KEY", brevo), ("NOTIFY_FROM", sender)):
+        print(f"  {n}: {'cargado' if v else 'FALTA'}")
+        ok = ok and bool(v)
+    if brevo:
+        kind = "clave API (correcto)" if brevo.startswith("xkeysib-") else "clave SMTP (INCORRECTO: va la clave API, empieza con xkeysib-)" if brevo.startswith("xsmtpsib-") else "formato desconocido"
+        print(f"  BREVO_API_KEY parece una {kind}")
+    if url and key:
+        try:
+            rows = call("POST", url + "/rest/v1/rpc/notify_targets", {"apikey": key, "Authorization": "Bearer " + key,
+                        "content-type": "application/json", "accept": "application/json"}, {}) or []
+            print(f"  Supabase: responde bien ({len(rows)} seguimientos)")
+        except urllib.error.HTTPError as e:
+            ok = False
+            print(f"  Supabase: rechazó la consulta (HTTP {e.code}). Revisá SUPABASE_URL y SUPABASE_SECRET_KEY (la sb_secret_).")
+        except Exception as e:
+            ok = False
+            print("  Supabase: no responde (" + str(e)[:120] + ")")
+    if brevo:
+        try:
+            acc = call("GET", "https://api.brevo.com/v3/account", {"api-key": brevo, "accept": "application/json"}) or {}
+            print("  Brevo: acepta la clave desde GitHub" + (" (plan: " + str((acc.get("plan") or [{}])[0].get("type", ""))[:20] + ")" if isinstance(acc.get("plan"), list) and acc.get("plan") else ""))
+            if sender:
+                try:
+                    snd = call("GET", "https://api.brevo.com/v3/senders", {"api-key": brevo, "accept": "application/json"}) or {}
+                    act = {str(x.get("email", "")).lower() for x in snd.get("senders", []) if x.get("active")}
+                    print("  Brevo: el remitente " + ("está verificado y activo" if sender.lower() in act else "NO figura como remitente activo"))
+                    ok = ok and sender.lower() in act
+                except Exception:
+                    pass
+        except urllib.error.HTTPError as e:
+            ok = False
+            why = ""
+            try:
+                why = str(json.loads(e.read().decode("utf-8", "replace")).get("message") or "")[:200]
+            except Exception:
+                pass
+            print(f"  Brevo: rechazó la clave (HTTP {e.code})" + (f": {why}" if why else ""))
+        except Exception as e:
+            ok = False
+            print("  Brevo: no responde (" + str(e)[:120] + ")")
+    print("Verificación de avisos: " + ("TODO BIEN" if ok else "HAY QUE CORREGIR LO MARCADO"))
+    return 0
+
+
 def main(argv=sys.argv[1:], env=os.environ, call=http, products=None, cfg=None):
+    if "--verificar" in argv:
+        return verify(env, call)
     dry = "--prueba" in argv
     url = (env.get("SUPABASE_URL") or "").rstrip("/")
     key, brevo, sender = env.get("SUPABASE_SECRET_KEY"), env.get("BREVO_API_KEY"), env.get("NOTIFY_FROM")
