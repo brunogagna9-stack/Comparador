@@ -17,7 +17,7 @@ jobs:
   limpiar:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Borrar copias sueltas de la raíz
         run: |
           borrar_si() {   # borrar_si <copia suelta> <ubicación correcta>
