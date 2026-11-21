@@ -386,9 +386,11 @@
       return first ? [first, ...shop.filter(x => x !== first && (x.bios !== "bios" || first.bios === "bios"))].slice(0, 3) : [];
     };
     // Gabinete según el tamaño de la placa madre elegida
+    // act. 45: la lista de gabinetes ordenada por precio solo depende del tamaño de placa (ATX o no): se arma una vez
+    const caseBase = memo(atx => C.cheapest(inCat("gabinetes").filter(p => /^(gabinete|gab)\b/i.test(p.name) && !/kit|combo|fuente|\b\d{3,4}\s?w\b|teclado|mouse|tec\+|slim|\bitx\b|sin vidrio/i.test(p.name)
+        && (!atx || !/m-?atx|micro|mini[- ]?tower|matx/i.test(p.name))), 100000));
     C.findCase = (moboName, gpuName, gpuChip) => { const f = moboName ? moboSpec(moboName).form : null, atx = f !== "Micro-ATX" && f !== "Mini-ITX";   // tamaño desconocido: se asume ATX
-      const list = C.cheapest(inCat("gabinetes").filter(p => /^(gabinete|gab)\b/i.test(p.name) && !/kit|combo|fuente|\b\d{3,4}\s?w\b|teclado|mouse|tec\+|slim|\bitx\b|sin vidrio/i.test(p.name)
-        && (!atx || !/m-?atx|micro|mini[- ]?tower|matx/i.test(p.name))), 100000);   // todo el catálogo: los verificados no siempre están entre los más baratos
+      const list = caseBase(atx).map(x => Object.assign({}, x));   // todo el catálogo: los verificados no siempre están entre los más baratos
       if (!VCA.length) return list.slice(0, 3);
       const need = f || "ATX", gv = gpuName ? C.verGpu(gpuName, gpuChip) : null, any = VER && VER.rules && VER.rules.gpu_any ? VER.rules.gpu_any.len : 381;
       const rows = list.map(x => { const v = C.verCase(x.g.name); if (!v) return Object.assign(x, { ver: null, note: "Sin ficha verificada: confirmá en la tienda que acepte placas " + need + " y medí el largo de la placa de video." });
