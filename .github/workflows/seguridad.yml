@@ -1,0 +1,30 @@
+name: Seguridad de las librerías
+
+# Actualización 45: OSV-Scanner de Google (https://github.com/google/osv-scanner, código abierto y gratis) revisa si
+# alguna librería que usa el proyecto (requirements.txt y calidad/package-lock.json) tiene una falla de seguridad
+# conocida en la base pública OSV.dev. Corre una vez por semana y cuando cambian esas listas. El detalle queda en la
+# pestaña «Security» → «Code scanning». No frena la publicación de precios: si encuentra algo, avisa con una cruz roja.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "37 13 * * 2"   # martes 10:37 de Argentina
+  push:
+    branches: [main]
+    paths:
+      - "requirements.txt"
+      - "calidad/package-lock.json"
+      - ".github/workflows/seguridad.yml"
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
+jobs:
+  osv:
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@v2.7.1
+    with:
+      scan-args: |-
+        --lockfile=requirements.txt
+        --lockfile=calidad/package-lock.json

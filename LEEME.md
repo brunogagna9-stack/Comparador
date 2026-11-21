@@ -818,3 +818,28 @@ Búsqueda del 4/11/2026 solo en sitios de los fabricantes (informe «Fichas ofic
 - Revisado: capturas de la PC (1280 y 1440 px, 14 páginas) idénticas píxel por píxel antes y después; Lighthouse en
   celular de Productos 45 → 92 y Comparar 90.
 - Prueba: `test_actualizacion_44_celular`.
+
+## Actualización 45 — Auditoría: precios viejos, fotos rotas, Armado más rápido y funciones de SuperBarato
+
+- **Precios de tiendas que no responden** (`build_data.py` → `staleness`, `demote_stale`): `meta.json` guarda la última
+  lectura buena de cada tienda (`last_ok`). La web muestra «precio de hace N días». Con más de 3 días sin responder, ese
+  precio deja de contar como «mejor precio» si el producto está en otra tienda al día (va a `old_offers`, al final de la
+  ficha); con más de 7 días, la tienda no se publica (sus datos quedan en `raw/` y vuelven solos). La fecha inicial de
+  Venex, The Gamer Shop y Try sale de `data_src/ultima_lectura.json` (último cambio de su `raw/` en el repositorio).
+- **Fotos rotas de Venex**: 840 direcciones sin extensión («…_ddr5_1png») que la tienda no sirve; se usa la foto de otra
+  tienda o el ícono. (Las demás fotos de Venex funcionan.)
+- **Categorías**: cámaras web → periféricos, placas profesionales (Quadro / RTX A / RTX PRO) → placas de video,
+  pendrives «Usb 64g…» → almacenamiento; «Asesoramiento técnico» no es un producto.
+- **Armado más rápido**: las búsquedas de piezas se recuerdan (`memoK` en `js/lib.js`) y los precios usan un solo
+  formateador. Mismo resultado en 33 combinaciones probadas; Lighthouse celular 75 → 97.
+- **Mi lista** (ideas de SuperBarato): compartir por WhatsApp, correo o enlace (`productos.html?compartida=id1,id2`, quien
+  la recibe la guarda con un toque) y «Repartida en dos tiendas» (la mejor combinación de dos tiendas con todo en stock).
+- **Botón de modo claro / oscuro** en el encabezado (en pantallas de menos de 400 px, en el pie). Se guarda en el
+  navegador (`tema`). `scripts/head_tags.py` lo aplica antes de dibujar; los bloques oscuros del CSS se convirtieron con
+  la marca `/*tema*/` para que valgan con el sistema o con el botón.
+- **Clics hacia cada tienda** (`salida-<sitio>`) y listas compartidas, en GoatCounter cuando esté activado.
+- **Vigilancia diaria** (`.github/workflows/vigilancia.yml` + `calidad/vigilar.js`): abre la web publicada en
+  computadora y celular y abre un aviso en «Issues» si hay errores, fotos que fallan, precios sin actualizar o tiendas
+  caídas hace 2 días o más; lo cierra solo cuando todo vuelve a estar bien.
+- **Seguridad de las librerías** (`.github/workflows/seguridad.yml`): OSV-Scanner de Google, semanal.
+- Prueba: `test_actualizacion_45_auditoria` y pruebas nuevas en `tests/test_js.js`.

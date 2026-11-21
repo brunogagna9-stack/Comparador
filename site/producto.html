@@ -12,6 +12,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0a0f1e" media="(prefers-color-scheme: dark)">
+<script>try{var t=localStorage.getItem("tema");if(t==="light"||t==="dark"){document.documentElement.dataset.theme=t;document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){m.content=t==="dark"?"#0a0f1e":"#ffffff"})}}catch(e){}</script>
 <link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
 <meta property="og:site_name" content="KyraNoHard">
 <meta property="og:locale" content="es_AR">
@@ -128,7 +129,7 @@ function specs(g,HW,PR,META,SP){
   if(!g||!g.offers||!g.offers.length){$("#pd").innerHTML=`<div class="empty"><h2>No encontramos este producto</h2><p>Puede que la tienda ya no lo publique o que el enlace esté incompleto.</p><p><a class="btn pri" href="productos.html" style="display:inline-block">Ver todos los productos</a></p></div>`;document.title="Producto no encontrado · KyraNoHard";return}
   window.CURID=g.id;document.title=g.name+" · KyraNoHard";seo(g);
   $("#bc").innerHTML=` · <a href="productos.html?cat=${encodeURIComponent(g.category)}">${esc(CATS[g.category]||g.category)}</a>`;
-  const stale=s=>{const m=(META.stores||{})[s];return !!(m&&!m.ok)},ctx={HIST,META,CFG,REP,stale};
+  const stale=s=>DET.staleTxt(META,s),ctx={HIST,META,CFG,REP,stale};
   const best=price(g.offers[0]),c=(g.chg&&!(g.offers[0]&&g.offers[0].anom))?g.chg:null;
   const img=g.image?`<img data-cat="${esc(g.category)}" data-fb="${esc(g.image_fb||"")}" src="${esc(g.image)}" alt="${esc(g.name)}" onerror="imgFail(this)">`:`<span class="ph">${ICONS.svg(g.category||"otros",44)}Sin foto</span>`;
   const inList=()=>LIST.includes(g.id),fol=()=>!!FOLLOW[g.id];

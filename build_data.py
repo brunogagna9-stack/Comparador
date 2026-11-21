@@ -201,8 +201,15 @@ PLACEHOLDER_RE = re.compile(r"es-default-|no[-_]?image|sin[-_]?imagen|placeholde
 IMG_RANK = ["Compragamer", "Logg", "MEXX", "Venex", "Gaming City", "NET Gaming", "Katech", "Hardloots", "Click Gaming", "SCP Hardstore", "The Gamer Shop", "Try", "BitHard", "GoldenTech", "Maximus", "Armytech"]   # de más a menos nítidas
 
 
+# actualización 45: Venex publica algunas fotos con la dirección rota (sin el punto de la extensión:
+# «…_ddr5_1png»); el servidor responde con error y el navegador la bloquea. Esas se descartan y se usa la foto de otra
+# tienda que venda el mismo producto, o el ícono de la categoría.
+BROKEN_IMG_RE = re.compile(r"^https?://(www\.)?venex\.com\.ar/(?!.*\.(jpe?g|png|webp|gif|avif)(\?|$))", re.I)
+
+
 def good_image(url):
-    return url if url and isinstance(url, str) and url.startswith("http") and not PLACEHOLDER_RE.search(url) else None
+    return (url if url and isinstance(url, str) and url.startswith("http") and not PLACEHOLDER_RE.search(url)
+            and not BROKEN_IMG_RE.search(url) else None)
 
 
 def hq_image(url):
@@ -682,6 +689,74 @@ def read_one(store, fn, t0):
     return items, st
 
 
+# actualización 45: precios de tiendas que no responden. Pasados STALE_DEMOTE_DAYS sin una lectura buena, ese precio
+# deja de contar como «mejor precio» (va a «old_offers», se ve en la ficha con su antigüedad) cuando el producto tiene
+# otra tienda al día; pasados STALE_HIDE_DAYS, la tienda no se publica (sus datos siguen en raw/ y vuelven solos).
+STALE_DEMOTE_DAYS = 3
+STALE_HIDE_DAYS = 7
+
+
+def load_last_ok(meta_path=None, seed_path=None):
+    """Última lectura buena de cada tienda: la guardada en meta.json o, si todavía no está, la de data_src/ultima_lectura.json
+    (fechas tomadas del último cambio de raw/<tienda>.json en el repositorio)."""
+    out = {}
+    for path, key in ((seed_path or Path(__file__).parent / "data_src" / "ultima_lectura.json", None), (meta_path or DATA / "meta.json", "stores")):
+        try:
+            d = json.loads(Path(path).read_text(encoding="utf-8"))
+            d = d.get(key, {}) if key else d
+            for s, v in d.items():
+                if s.startswith("_"):
+                    continue
+                v = v.get("last_ok") if isinstance(v, dict) else v
+                if isinstance(v, str) and v:
+                    out[s] = v
+        except Exception:
+            pass
+    return out
+
+
+def stale_days(last_ok, now):
+    try:
+        t = dt.datetime.fromisoformat(last_ok.replace("Z", "+00:00"))
+        if t.tzinfo is None:
+            t = t.replace(tzinfo=dt.timezone.utc)
+        return max(0.0, (now - t).total_seconds() / 86400)
+    except Exception:
+        return None
+
+
+def staleness(st, last, now):
+    """Anota en el estado de la tienda su última lectura buena y devuelve None (al día), "vieja" (más de
+    STALE_DEMOTE_DAYS sin responder) u "ocultar" (más de STALE_HIDE_DAYS)."""
+    if st.get("ok"):
+        st["last_ok"] = now.isoformat(timespec="minutes")
+        return None
+    if not last:
+        return None
+    st["last_ok"] = last
+    age = stale_days(last, now)
+    if age is None:
+        return None
+    st["dias"] = round(age, 1)
+    if age > STALE_HIDE_DAYS:
+        if st.get("count"):
+            st["oculta_por_antiguedad"] = True
+        return "ocultar"
+    return "vieja" if age > STALE_DEMOTE_DAYS else None
+
+
+def demote_stale(groups, old_stores):
+    """Saca de «offers» los precios de tiendas sin responder hace días cuando el producto tiene otra tienda al día."""
+    n = 0
+    for g in groups:
+        old = [o for o in g["offers"] if o["store"] in old_stores]
+        if old and len(old) < len(g["offers"]):
+            g["offers"] = [o for o in g["offers"] if o["store"] not in old_stores]
+            g["old_offers"] = old
+            n += len(old)
+    return n
+
+
 def read_stores(stores, scrapers, t0, workers=None):
     """Lee las tiendas en paralelo (de a STORE_WORKERS carriles a la vez) y devuelve {tienda: (productos, estado)}."""
     from concurrent.futures import ThreadPoolExecutor
@@ -717,6 +792,9 @@ def main(only):
     order = store_order(SCRAPERS, DATA / "meta.json")
     todo = [s for s in order if not only or s in only]
     res = read_stores(todo, SCRAPERS, t0)   # actualización 42: varias tiendas a la vez (ver read_stores)
+    now = dt.datetime.now(dt.timezone.utc)
+    last_ok = load_last_ok()
+    old_stores = set()
     # se arma todo en el mismo orden de siempre, así el resultado es idéntico al de leer de a una
     for store in order:
         raw = RAW / f"{store}.json"
@@ -725,12 +803,21 @@ def main(only):
                 all_items += read_raw(raw)
             continue
         items, status[store] = res[store]
+        st = status[store]
+        verdict = staleness(st, last_ok.get(store), now)
+        if verdict == "ocultar" and items:
+            continue
+        if verdict == "vieja":
+            old_stores.add(store)
         if store in hidden:
-            status[store]["hidden"] = True
+            st["hidden"] = True
             continue
         all_items += items
     today = dt.date.today().isoformat()
     groups = build(all_items, load_extra_images())
+    if old_stores:
+        print(f"[aviso] precios de {', '.join(sorted(old_stores))} sin actualizar hace más de {STALE_DEMOTE_DAYS} días: "
+              f"{demote_stale(groups, old_stores)} dejan de contar como mejor precio", flush=True)
     from scrapers import specs
     try:
         spec_items, spec_status = specs.refresh(all_items, RAW, only or None)

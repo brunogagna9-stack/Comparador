@@ -19,6 +19,22 @@
 
 const USER_ICO = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>';
 const HIST_ICO = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg>';
+  // act. 45: botón de modo claro / oscuro (la elección queda en este navegador; sin elegir, sigue al teléfono o la PC)
+  const THEME_ICO = '<svg class="moon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><svg class="sun" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+  const isDark = () => { const t = document.documentElement.dataset.theme; return t ? t === "dark" : !!(window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches); };
+  // en pantallas muy angostas el botón del encabezado no entra: el mismo cambio está en el pie de página (#thbtn2)
+  function themeBtn() {
+    const bs = ["thbtn", "thbtn2"].map(id => document.getElementById(id)).filter(Boolean); if (!bs.length) return;
+    const paint = () => { const d = isDark(), l = d ? "Cambiar a modo claro" : "Cambiar a modo oscuro";
+      bs.forEach(b => { if (b.id === "thbtn") { b.setAttribute("aria-label", l); b.title = l; b.dataset.dark = d ? "1" : "0"; } else b.textContent = l; }); };
+    const flip = () => { const t = isDark() ? "light" : "dark"; document.documentElement.dataset.theme = t;
+      try { localStorage.setItem("tema", t); } catch (e) { }
+      document.querySelectorAll('meta[name="theme-color"]').forEach(m => { m.content = t === "dark" ? "#0a0f1e" : "#ffffff"; });
+      paint(); document.dispatchEvent(new CustomEvent("kn-tema", { detail: t })); };
+    bs.forEach(b => { b.onclick = flip; });
+    if (window.matchMedia) { const mq = matchMedia("(prefers-color-scheme: dark)"); if (mq.addEventListener) mq.addEventListener("change", paint); }
+    paint();
+  }
   function listCount() { try { const l = JSON.parse(localStorage.getItem("lista") || "[]"); return Array.isArray(l) ? l.length : 0; } catch { return 0; } }
 
   const header = `<header class="site"><div class="hin">
@@ -26,6 +42,7 @@ const HIST_ICO = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" st
     <nav aria-label="Secciones">${NAV.map(([h, t, id]) => `<a href="${h}"${id === page ? ' class="on" aria-current="page"' : ""}>${t}</a>`).join("")}</nav>
     <div class="hsearch">${LENS}<input id="qh" type="search" placeholder="Buscar productos: ryzen 5 5500, rtx 4060…" aria-label="Buscar productos" autocomplete="off"></div>
     <button class="bell" id="abtn" hidden aria-haspopup="dialog" aria-label="Avisos de bajas de precio" title="Avisos de bajas de precio">🔔</button>
+    <button class="thm" id="thbtn" type="button" aria-label="Cambiar a modo oscuro" title="Cambiar a modo oscuro">${THEME_ICO}</button>
     <a class="hist" href="historial.html" aria-label="Mi historial de armados y comparaciones" title="Mi historial de armados y comparaciones"${page === "historial" ? ' aria-current="page"' : ""}>${HIST_ICO}</a>
     <a class="acct" id="accbtn" href="cuenta.html" hidden aria-label="Ingresar o crear cuenta" title="Ingresar o crear cuenta"${page === "cuenta" ? ' aria-current="page"' : ""}>${USER_ICO}</a>
     <button class="cart" id="lbtn" aria-haspopup="dialog" aria-label="Mi lista de compra" title="Mi lista de compra">${CART}<span class="cn" id="lcount" data-n="0">0</span></button>
@@ -37,6 +54,7 @@ const HIST_ICO = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" st
       <p><b>No vendemos productos.</b> Cada botón «Ir a la tienda» te lleva al sitio del vendedor, donde se hace la compra.</p></div>
     <div><h4>Secciones</h4><ul>${[["index.html", "Inicio"]].concat(NAV.map(n => [n[0], n[1]])).map(([h, t]) => `<li><a href="${h}">${t}</a></li>`).join("")}</ul></div>
     <div><h4>Información</h4><ul>
+      <li><button type="button" class="thm2" id="thbtn2">Cambiar a modo oscuro</button></li>
       <li><a href="index.html#como">Cómo funciona</a></li>
       <li><a href="tiendas.html">Tiendas</a></li>
       <li><a href="contacto.html#tiendas">Sumá tu tienda</a></li>
@@ -62,6 +80,7 @@ const HIST_ICO = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" st
     if (document.querySelector("header.site")) return;
     const old = document.querySelector("body > header"); if (old) old.remove();
     document.body.insertAdjacentHTML("afterbegin", header);
+    themeBtn();
     CTL.count(listCount());
     // Fuera de «Productos», el buscador y el carrito llevan a Productos.
     if (!isProducts) {
@@ -78,6 +97,7 @@ const HIST_ICO = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" st
   function mountFooter() {
     if (document.querySelector("footer.site")) return;
     document.body.insertAdjacentHTML("beforeend", footer);
+    themeBtn();
     const top = () => window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion:reduce)").matches ? "auto" : "smooth" });
     document.getElementById("fup").onclick = top; document.getElementById("totop").onclick = top;
     // actualización 41: guía rápida (botón ❓ abajo a la izquierda; Driver.js se baja recién al abrirla)
@@ -118,6 +138,14 @@ const HIST_ICO = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" st
     if (!code || navigator.webdriver || document.querySelector("script[data-goatcounter]")) return;
     const sc = document.createElement("script"); sc.async = true; sc.src = "https://gc.zgo.at/count.js";
     sc.dataset.goatcounter = "https://" + code + ".goatcounter.com/count"; document.head.appendChild(sc);
+    /* act. 45 (idea de SuperBarato): cuántas veces se toca un enlace hacia cada tienda («salida-<sitio>»). Sirve para
+       mostrarle a una tienda cuánta gente le mandamos. No guarda quién fue ni qué más hizo. */
+    document.addEventListener("click", e => {
+      const a = e.target.closest && e.target.closest("a[href^='http']"); if (!a) return;
+      let h; try { h = new URL(a.href).hostname.replace(/^www\./, ""); } catch (x) { return; }
+      if (!h || h === location.hostname || /goatcounter|github\.(io|com)|wa\.me|whatsapp/.test(h)) return;
+      try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: "salida-" + h, title: "Ir a " + h, event: true }); } catch (x) { }
+    }, true);
   }
 
   /* Publicidad y medición: APAGADAS mientras data/config.json no tenga los identificadores (ads.client / ads.analytics_id).

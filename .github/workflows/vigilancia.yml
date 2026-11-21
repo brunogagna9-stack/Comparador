@@ -1,0 +1,52 @@
+name: Vigilancia diaria
+
+# Actualización 45 (idea tomada de SuperBarato): una vez por día abre la web PUBLICADA en computadora y en celular y
+# revisa errores en las páginas, fotos o archivos que fallan, si los precios se actualizaron y qué tiendas no responden
+# hace días (calidad/vigilar.js). Si encuentra algo, abre (o actualiza) un aviso en la pestaña «Issues» de GitHub;
+# cuando todo vuelve a estar bien, lo cierra solo. No cambia nada de la web.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 12 * * *"   # 9:23 de Argentina
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: vigilancia
+  cancel-in-progress: true
+
+jobs:
+  vigilar:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: calidad/package-lock.json
+      - name: Instalar herramientas
+        working-directory: calidad
+        run: |
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Revisar la web publicada
+        working-directory: calidad
+        run: node vigilar.js >> "$GITHUB_STEP_SUMMARY"
+      - name: Abrir, actualizar o cerrar el aviso
+        working-directory: calidad
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TITULO: "Vigilancia diaria: hay algo para revisar en la web"
+        run: |
+          n=$(gh issue list --state open --search "in:title \"$TITULO\"" --json number --jq '.[0].number // empty')
+          if [ -f problemas.txt ]; then
+            if [ -n "$n" ]; then gh issue comment "$n" --body-file problemas.txt
+            else gh issue create --title "$TITULO" --body-file problemas.txt; fi
+          elif [ -n "$n" ]; then
+            gh issue close "$n" --comment "La vigilancia de hoy no encontró problemas: se cierra solo."
+          fi

@@ -617,3 +617,27 @@ console.log(n + " pruebas de JavaScript OK");
   for (const [n, s] of Object.entries(STO.stores)) if (s.zone) assert(s.contact && s.contact.address, n + ": zona sin dirección");
   console.log("act. 43 (baja real y ubicación): OK");
 }
+
+/* ---------- actualización 45 ---------- */
+{
+  const DET45 = require("../site/js/detail.js");
+  const now = Date.parse("2026-11-22T12:00:00Z");
+  const META = { stores: { A: { ok: true }, B: { ok: false, last_ok: "2026-11-18T19:36+00:00" }, C: { ok: false }, D: { ok: false, last_ok: "2026-11-22T06:00+00:00" } } };
+  assert.strictEqual(DET45.staleTxt(META, "A", now), "");
+  assert.strictEqual(DET45.staleTxt(META, "B", now), "precio de hace 3 días");
+  assert.strictEqual(DET45.staleTxt(META, "C", now), "dato viejo", "sin fecha: el aviso de siempre");
+  assert.strictEqual(DET45.staleTxt(META, "D", now), "dato viejo", "menos de un día");
+  assert.strictEqual(DET45.staleTxt(META, "Z", now), "");
+  // los precios viejos se muestran al final de la ficha y no como el mejor precio
+  const g = { offers: [{ store: "A", price_cash: 100, url: "u" }], old_offers: [{ store: "B", price_cash: 50, url: "v" }] };
+  const html = DET45.offerRows(g, { CFG: { stores: {} }, REP: { badge: () => "" }, stale: s => DET45.staleTxt(META, s, now) });
+  assert(/class="best"/.test(html.split("</tr>")[0]) && /\bold\b/.test(html.split("</tr>")[1]) && /No cuenta como mejor precio/.test(html) && /precio de hace 3 días/.test(html));
+  // formato de precios: igual que antes, más rápido
+  for (const v of [0, 999, 1000, 1234567.6, -2500]) assert.strictEqual(CT.ARS(v), "$" + Math.round(v).toLocaleString("es-AR"));
+  // las búsquedas de piezas se recuerdan, pero cada llamada recibe su copia (las notas de una no pasan a otra)
+  const a = C.findPsu(650), b = C.findPsu(650);
+  assert.deepStrictEqual(a, b); if (a[0]) { a[0].note = "x"; assert.notStrictEqual(C.findPsu(650)[0].note, "x"); }
+  const g16 = HW.gpus.find(x => CT.uses16pin(x));
+  if (g16) { const p1 = C.findPsuFor(650, g16), p2 = C.findPsu(650); if (p1[0] && p2[0] && p1[0].note && /adaptador/.test(p1[0].note)) assert.strictEqual(p2[0].note, undefined); }
+  console.log("act. 45 (precios viejos, formato y piezas recordadas): OK");
+}

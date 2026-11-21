@@ -6,7 +6,7 @@
   const ARS = n => n == null ? "—" : "$" + Math.round(n).toLocaleString("es-AR");
   const price = o => o.price_cash ?? o.price_list;
   const COLORS = ["#1f6feb", "#e0763a", "#12a37a", "#b04ad6", "#d6a31f", "#d64a6a", "#4a9ed6"];
-  /* ctx = { HIST, META, CFG, REP, stale(store) } */
+  /* ctx = { HIST, META, CFG, REP, stale(store) } — stale devuelve el texto de antigüedad (o "") */
   DET.chart = function (g, ctx) {
     const { HIST, META } = ctx, best = x => price(x.offers[0]);
 
@@ -63,14 +63,25 @@
     else return "";
     return `<div class="vd ${cls}" title="Se compara el mejor precio de hoy con la mediana del mejor precio de cada día, con el historial que guardamos.">${esc(txt)}</div>`;
   };
+  /* act. 45: cuánto hace que la tienda no responde («precio de hace 3 días»); "" si está al día */
+  DET.staleTxt = function (META, s, now) {
+    const m = ((META && META.stores) || {})[s];
+    if (!m || m.ok) return "";
+    const d = m.last_ok ? ((now || Date.now()) - Date.parse(m.last_ok)) / 864e5 : NaN;
+    if (!(d >= 1)) return "dato viejo";
+    const n = Math.floor(d);
+    return `precio de hace ${n} ${n === 1 ? "día" : "días"}`;
+  };
   DET.offerRows = function (g, ctx) {
     const { CFG, REP, stale } = ctx;
-  return g.offers.map((o,k)=>{
+  const list = g.offers.concat((g.old_offers || []).map(o => Object.assign({}, o, { _old: true })));
+  return list.map((o,k)=>{
     const st=o.stock===true?'<span class="in">● Con stock</span>':o.stock===false?'<span class="out">● Sin stock</span>':'<span class="sub">a confirmar</span>';
     const rt=o.rating?` ⭐${o.rating.score}${o.rating.count?` (${o.rating.count})`:""}`:"";
     const ch=o.chg?` <span class="${o.chg.pct<0?"dn":"up"}">${o.chg.pct<0?"▼":"▲"}${Math.abs(o.chg.pct)}%</span>`:"";
     const cu=o.cuotas?esc(o.cuotas):(CFG.stores[o.store]?.cuotas&&o.price_list?`${CFG.stores[o.store].cuotas.n} cuotas${CFG.stores[o.store].cuotas.sin_interes?" sin interés":""} de ${ARS(o.price_list/CFG.stores[o.store].cuotas.n)}`:'<span class="sub">consultar</span>');
-    return `<tr class="${k===0?"best":""}"><td><b>${esc(o.store)}</b>${rt}${REP.badge(o.store)}${stale(o.store)?'<span class="warnpill">dato viejo</span>':""}${o.anom?'<span class="warnpill">precio inusual</span>':""}${REP.placeLine?REP.placeLine(o.store):""}</td><td class="n">${ARS(o.price_cash)}${ch}</td><td class="n">${ARS(o.price_list)}</td><td>${cu}</td><td>${st}</td><td><a target="_blank" rel="noopener nofollow" href="${esc(o.url)}">Ir a la tienda ↗</a></td></tr>`}).join("");
+    const sv=stale(o.store),stx=typeof sv==="string"&&sv?sv:sv?"dato viejo":"";
+    return `<tr class="${k===0?"best":""}${o._old?" old":""}"><td><b>${esc(o.store)}</b>${rt}${REP.badge(o.store)}${stx?`<span class="warnpill" title="La tienda no responde a nuestras lecturas: el precio puede haber cambiado">${esc(stx)}</span>`:""}${o._old?'<span class="sub old-n">No cuenta como mejor precio: la tienda no se pudo leer en los últimos días</span>':""}${o.anom?'<span class="warnpill">precio inusual</span>':""}${REP.placeLine?REP.placeLine(o.store):""}</td><td class="n">${ARS(o.price_cash)}${ch}</td><td class="n">${ARS(o.price_list)}</td><td>${cu}</td><td>${st}</td><td><a target="_blank" rel="noopener nofollow" href="${esc(o.url)}">Ir a la tienda ↗</a></td></tr>`}).join("");
   };
   DET.offersTable = (g, ctx) => `<div class="tw2" tabindex="0" role="region" aria-label="Precios por tienda"><table><tr><th>Tienda</th><th class="n">Efectivo / transf.</th><th class="n">Lista / tarjeta</th><th>Cuotas</th><th>Stock</th><th></th></tr>${DET.offerRows(g, ctx)}</table></div>`;
   DET.url = id => "producto.html?id=" + encodeURIComponent(id);

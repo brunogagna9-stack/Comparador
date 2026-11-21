@@ -35,6 +35,9 @@ def block(name, title, desc):
         # act. 44: la barra de estado del celular toma el color del encabezado (blanco / azul noche), no el de la marca
         '<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">',
         '<meta name="theme-color" content="#0a0f1e" media="(prefers-color-scheme: dark)">',
+        # act. 45: el tema elegido con el botón (claro / oscuro) se aplica antes de dibujar la página, sin parpadeo
+        '<script>try{var t=localStorage.getItem("tema");if(t==="light"||t==="dark"){document.documentElement.dataset.theme=t;'
+        'document.querySelectorAll(\'meta[name="theme-color"]\').forEach(function(m){m.content=t==="dark"?"#0a0f1e":"#ffffff"})}}catch(e){}</script>',
         '<link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>',
         '<meta property="og:site_name" content="KyraNoHard">',
         '<meta property="og:locale" content="es_AR">',

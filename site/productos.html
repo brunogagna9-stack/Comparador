@@ -13,6 +13,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0a0f1e" media="(prefers-color-scheme: dark)">
+<script>try{var t=localStorage.getItem("tema");if(t==="light"||t==="dark"){document.documentElement.dataset.theme=t;document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){m.content=t==="dark"?"#0a0f1e":"#ffffff"})}}catch(e){}</script>
 <link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
 <meta property="og:site_name" content="KyraNoHard">
 <meta property="og:locale" content="es_AR">
@@ -232,7 +233,7 @@ let FOLLOW={};try{FOLLOW=JSON.parse(localStorage.getItem("seg")||"{}")}catch{}
 let LIST=[];try{LIST=JSON.parse(localStorage.getItem("lista")||"[]")}catch{}
 const saveL=()=>{try{localStorage.setItem("lista",JSON.stringify(LIST))}catch{}};
 let STORES={stores:{}};
-const stale=s=>{const m=(META.stores||{})[s];return !!(m&&!m.ok)};   // la tienda no respondió en la última lectura: se muestran datos anteriores
+const stale=s=>DET.staleTxt(META,s);   // la tienda no respondió en la última lectura: se muestran datos anteriores
 const rep1=s=>REP.get(s);
 const saveF=()=>{try{localStorage.setItem("seg",JSON.stringify(FOLLOW))}catch{}};
 addEventListener("acc:synced",e=>{if(!e.detail||!e.detail.changed||!DATA.length)return;try{FOLLOW=JSON.parse(localStorage.getItem("seg")||"{}")}catch{}alertBox();render()});
@@ -292,7 +293,7 @@ function card(g){
   const badge=c?`<span class="badge ${c.pct<0?"d":"u"}">${c.pct<0?"▼":"▲"} ${Math.abs(c.pct).toLocaleString("es-AR")}%</span>`:"";
   const f=FOLLOW[g.id]?" on":"";
   return `<div class="card" data-id="${esc(g.id)}"><a class="stretch" href="${DET.url(g.id)}" data-open="${esc(g.id)}" aria-label="${esc("Ver "+g.name)}"></a><div class="im">${imgTag(g,true)}${badge}<button class="star${f}" data-f="${esc(g.id)}" title="Seguir este producto" aria-label="Seguir precio">${f?"★":"☆"}</button><button class="cmpb${CT.cmp.has(g.id,g.category)?" on":""}" data-cmp="${esc(g.id)}" title="${CT.cmp.has(g.id,g.category)?"Quitar de la comparación":"Agregar a la comparación"}" aria-label="${CT.cmp.has(g.id,g.category)?"Quitar de la comparación":"Agregar a la comparación"}">${CT.cmp.has(g.id,g.category)?'✓<span class="tx"> Comparar</span>':'⚖<span class="tx"> Comparar</span>'}</button><button class="addl${LIST.includes(g.id)?" on":""}" data-l="${esc(g.id)}" aria-label="${LIST.includes(g.id)?"Quitar de mi lista":"Agregar a mi lista"}">${LIST.includes(g.id)?'✓<span class="tx"> En lista</span>':'+<span class="tx"> Lista</span>'}</button></div>
-  <div class="st">${esc(o.store)}${REP.badge(o.store)}${stale(o.store)?'<span class="warnpill" title="La tienda no respondió en la última lectura: este precio puede estar desactualizado">dato viejo</span>':""}${o.anom?'<span class="warnpill" title="El precio cambió de forma muy brusca: confirmalo en la tienda">precio inusual</span>':""}${g.dif?'<span class="warnpill" title="Los precios de las tiendas difieren 3 veces o más: confirmá que sea exactamente el mismo modelo">precios muy distintos</span>':""}</div><div class="nm">${esc(g.name)}</div>
+  <div class="st">${esc(o.store)}${REP.badge(o.store)}${stale(o.store)?'<span class="warnpill" title="La tienda no respondió en la última lectura: este precio puede estar desactualizado">'+esc(stale(o.store))+'</span>':""}${o.anom?'<span class="warnpill" title="El precio cambió de forma muy brusca: confirmalo en la tienda">precio inusual</span>':""}${g.dif?'<span class="warnpill" title="Los precios de las tiendas difieren 3 veces o más: confirmá que sea exactamente el mismo modelo">precios muy distintos</span>':""}</div><div class="nm">${esc(g.name)}</div>
   <div class="pr">${ARS(price(o))}${c&&c.pct<0?`<span class="old">${ARS(c.prev)}</span>`:""}</div>
   <div class="sub">${g.offers.length>1?`Comparado en ${g.offers.length} tiendas`:"1 tienda"}${g.low?' · <span class="low">mínimo histórico</span>':""}${tgHit(g)?' · <span class="low">🎯 en tu precio objetivo</span>':""}</div></div>`;
 }
@@ -300,7 +301,7 @@ function card(g){
 function lrow(g){
   const o=visible(g)[0]||g.offers[0],c=chgOk(g)?g.chg:null,f=FOLLOW[g.id]?" on":"",inC=CT.cmp.has(g.id,g.category),inL=LIST.includes(g.id);
   return `<div class="card lrow" data-id="${esc(g.id)}"><a class="stretch" href="${DET.url(g.id)}" data-open="${esc(g.id)}" aria-label="${esc("Ver "+g.name)}"></a><div class="im">${imgTag(g,true)}</div>
-  <div class="li-i"><div class="nm">${esc(g.name)}</div><div class="st">${esc(o.store)}${REP.badge(o.store)}${stale(o.store)?'<span class="warnpill" title="La tienda no respondió en la última lectura: este precio puede estar desactualizado">dato viejo</span>':""}${o.anom?'<span class="warnpill" title="El precio cambió de forma muy brusca: confirmalo en la tienda">precio inusual</span>':""}${g.dif?'<span class="warnpill" title="Los precios de las tiendas difieren 3 veces o más: confirmá que sea exactamente el mismo modelo">precios muy distintos</span>':""}</div><div class="sub">${g.offers.length>1?`Comparado en ${g.offers.length} tiendas`:"1 tienda"}${g.low?' · <span class="low">mínimo histórico</span>':""}${tgHit(g)?' · <span class="low">🎯 en tu precio objetivo</span>':""}</div></div>
+  <div class="li-i"><div class="nm">${esc(g.name)}</div><div class="st">${esc(o.store)}${REP.badge(o.store)}${stale(o.store)?'<span class="warnpill" title="La tienda no respondió en la última lectura: este precio puede estar desactualizado">'+esc(stale(o.store))+'</span>':""}${o.anom?'<span class="warnpill" title="El precio cambió de forma muy brusca: confirmalo en la tienda">precio inusual</span>':""}${g.dif?'<span class="warnpill" title="Los precios de las tiendas difieren 3 veces o más: confirmá que sea exactamente el mismo modelo">precios muy distintos</span>':""}</div><div class="sub">${g.offers.length>1?`Comparado en ${g.offers.length} tiendas`:"1 tienda"}${g.low?' · <span class="low">mínimo histórico</span>':""}${tgHit(g)?' · <span class="low">🎯 en tu precio objetivo</span>':""}</div></div>
   <div class="li-p"><div class="pr">${ARS(price(o))}</div>${c?`<span class="badge ${c.pct<0?"d":"u"}">${c.pct<0?"▼":"▲"} ${Math.abs(c.pct).toLocaleString("es-AR")}%</span>`:""}${c&&c.pct<0?`<span class="old">${ARS(c.prev)}</span>`:""}</div>
   <div class="li-a"><button class="star${f}" data-f="${esc(g.id)}" title="Seguir este producto" aria-label="Seguir precio">${f?"★":"☆"}</button><button class="cmpb${inC?" on":""}" data-cmp="${esc(g.id)}" title="${inC?"Quitar de la comparación":"Agregar a la comparación"}" aria-label="${inC?"Quitar de la comparación":"Agregar a la comparación"}">${inC?'✓<span class="tx"> Comparar</span>':'⚖<span class="tx"> Comparar</span>'}</button><button class="addl${inL?" on":""}" data-l="${esc(g.id)}" aria-label="${inL?"Quitar de mi lista":"Agregar a mi lista"}">${inL?'✓<span class="tx"> En lista</span>':'+<span class="tx"> Lista</span>'}</button></div></div>`;
 }
@@ -421,23 +422,55 @@ function toggleC(id,inModal){const g=DATA.find(x=>x.id===id);if(!g)return;const 
 function toast(t,cat){let el=document.getElementById("cmptoast");if(!el){el=document.createElement("div");el.id="cmptoast";el.setAttribute("role","status");document.body.appendChild(el)}
   el.innerHTML=`${esc(t)} <a href="comparar.html#cat=${encodeURIComponent(cat)}">Ver comparación →</a>`;el.classList.add("on");clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove("on"),4500)}
 function toggleL(id){const i=LIST.indexOf(id);i>=0?LIST.splice(i,1):LIST.push(id);saveL();CTL.count(LIST.length);$("#live").textContent=i>=0?"Quitado de tu lista":"Agregado a tu lista";render()}
-function openList(){
-  const gs=LIST.map(id=>DATA.find(g=>g.id===id)).filter(Boolean);
+function openList(shared){
+  // act. 45: shared = productos de una lista que te compartieron (productos.html?compartida=id1,id2…)
+  const ids=shared||LIST;
+  const gs=ids.map(id=>DATA.find(g=>g.id===id)).filter(Boolean);
   const rows=gs.map(g=>{const o=g.offers.filter(x=>x.stock!==false)[0];return {g,o}});
   const sum=rows.filter(r=>r.o).reduce((a,r)=>a+price(r.o),0);
   const common=[...new Set(gs.flatMap(g=>g.offers.map(o=>o.store)))].filter(st=>gs.every(g=>g.offers.some(o=>o.store===st&&o.stock!==false)));
   const per=common.map(st=>({st,t:gs.reduce((a,g)=>a+price(g.offers.find(o=>o.store===st)),0)})).sort((a,b)=>a.t-b.t);
   const nst=new Set(rows.filter(r=>r.o).map(r=>r.o.store)).size;
-  $("#box").innerHTML=`<button class="x" id="cx" aria-label="Cerrar">×</button><h2 style="margin:0 0 4px">Mi lista de compra</h2><p class="sub" style="margin:0 0 8px">Se guarda solo en este navegador. Precios con stock confirmado o a confirmar; sin envío.</p>`+
-   (gs.length?rows.map(({g,o})=>`<div class="li"><div><div class="nm">${esc(g.name)}</div><div class="sub">${o?`${esc(o.store)}${REP.badge(o.store)}${o.stock===true?"":" · stock a confirmar"}`:"Sin stock en este momento"}</div></div><b>${o?ARS(price(o)):"—"}</b><button class="sec" data-lr="${esc(g.id)}" aria-label="Quitar de la lista">Quitar</button></div>`).join("")+
+  const pair=bestPair(gs),showPair=pair&&nst>2&&(!per.length||pair.t<per[0].t);
+  const tit=shared?`Lista compartida (${gs.length} ${gs.length===1?"producto":"productos"})`:"Mi lista de compra";
+  const sub=shared?"Te la compartieron con un enlace. Los precios son los de hoy, no los del momento en que la armaron.":"Se guarda solo en este navegador. Precios con stock confirmado o a confirmar; sin envío.";
+  $("#box").innerHTML=`<button class="x" id="cx" aria-label="Cerrar">×</button><h2 style="margin:0 0 4px">${tit}</h2><p class="sub" style="margin:0 0 8px">${sub}</p>`+
+   (gs.length?rows.map(({g,o})=>`<div class="li"><div><div class="nm">${esc(g.name)}</div><div class="sub">${o?`${esc(o.store)}${REP.badge(o.store)}${o.stock===true?"":" · stock a confirmar"}`:"Sin stock en este momento"}</div></div><b>${o?ARS(price(o)):"—"}</b>${shared?"":`<button class="sec" data-lr="${esc(g.id)}" aria-label="Quitar de la lista">Quitar</button>`}</div>`).join("")+
    `<div class="tot2"><div>Comprando lo más barato de cada producto: <b>${ARS(sum)}</b> <span class="sub">(${nst} ${nst===1?"tienda":"tiendas"}${rows.some(r=>!r.o)?"; faltan productos sin stock":""})</span></div>
-   <div style="margin-top:6px">${per.length?`En una sola tienda: <b>${ARS(per[0].t)}</b> en ${esc(per[0].st)}${per.length>1?` <span class="sub">(luego ${esc(per[1].st)}: ${ARS(per[1].t)})</span>`:""}`:`<span class="sub">Ninguna tienda tiene todos los productos con stock.</span>`}</div></div>
-   <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="pri" id="lcopy">Copiar lista</button><button class="sec" id="lclear">Vaciar</button></div>`:`<div class="empty">Tu lista está vacía. Tocá «+ Lista» en cualquier producto.</div>`);
+   <div style="margin-top:6px">${per.length?`En una sola tienda: <b>${ARS(per[0].t)}</b> en ${esc(per[0].st)}${per.length>1?` <span class="sub">(luego ${esc(per[1].st)}: ${ARS(per[1].t)})</span>`:""}`:`<span class="sub">Ninguna tienda tiene todos los productos con stock.</span>`}</div>
+   ${showPair?`<div style="margin-top:6px" id="lpair">Repartida en dos tiendas: <b>${ARS(pair.t)}</b> en ${esc(pair.a)} + ${esc(pair.b)}${per.length?` <span class="sub">(${ARS(per[0].t-pair.t)} menos que en una sola)</span>`:""}</div>`:""}</div>
+   <div class="lsh" style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">${shared?`<button class="pri" id="lsave">Guardar en mi lista</button>`:`<button class="pri" id="lshare">Compartir</button><a class="btn sec" id="lwa" target="_blank" rel="noopener" href="#">WhatsApp</a><a class="btn sec" id="lmail" href="#">Correo</a><button class="sec" id="lcopy">Copiar lista</button><button class="sec" id="lclear">Vaciar</button>`}</div>`
+   :`<div class="empty">${shared?"No encontramos los productos de esta lista: puede que ya no estén a la venta.":"Tu lista está vacía. Tocá «+ Lista» en cualquier producto."}</div>`);
   $("#modal").classList.add("on");$("#cx").onclick=()=>$("#modal").classList.remove("on");
+  const text=()=>rows.map(({g,o})=>`- ${g.name}: ${o?ARS(price(o))+" ("+o.store+")":"sin stock"}`).join("\n")+`\nTotal: ${ARS(sum)} (sin envío) · ${new Date().toLocaleDateString("es-AR")}`;
+  const link=()=>new URL("productos.html?compartida="+gs.map(g=>encodeURIComponent(g.id)).join(","),location.href).href;
+  if(shared){const sv=$("#lsave");if(sv)sv.onclick=()=>{let n=0;gs.forEach(g=>{if(!LIST.includes(g.id)){LIST.push(g.id);n++}});saveL();CTL.count(LIST.length);render();
+      sv.textContent=n?`✓ ${n} ${n===1?"producto agregado":"productos agregados"} a tu lista`:"✓ Ya estaban en tu lista";sv.disabled=true;
+      try{history.replaceState(null,"","productos.html")}catch{}};return}
   document.querySelectorAll("[data-lr]").forEach(b=>b.onclick=()=>{toggleL(b.dataset.lr);openList()});
   const cl=$("#lclear");if(cl)cl.onclick=()=>{LIST=[];saveL();CTL.count(0);render();openList()};
-  const cp=$("#lcopy");if(cp)cp.onclick=async()=>{const t=rows.map(({g,o})=>`- ${g.name}: ${o?ARS(price(o))+" ("+o.store+")":"sin stock"}`).join("\n")+`\nTotal: ${ARS(sum)} (sin envío) · ${new Date().toLocaleDateString("es-AR")}`;try{await navigator.clipboard.writeText(t);cp.textContent="¡Copiada!"}catch{cp.textContent="No se pudo copiar"}};
+  const cp=$("#lcopy");if(cp)cp.onclick=async()=>{try{await navigator.clipboard.writeText(text()+"\n"+link());cp.textContent="¡Copiada!"}catch{cp.textContent="No se pudo copiar"}};
+  const msg=()=>"Mi lista de KyraNoHard:\n"+text()+"\nAbrila acá: "+link();
+  const wa=$("#lwa");if(wa){wa.href="https://wa.me/?text="+encodeURIComponent(msg());wa.onclick=()=>track("lista-whatsapp")}
+  const ml=$("#lmail");if(ml){ml.href="mailto:?subject="+encodeURIComponent("Mi lista de KyraNoHard")+"&body="+encodeURIComponent(msg());ml.onclick=()=>track("lista-correo")}
+  const sh=$("#lshare");if(sh)sh.onclick=async()=>{track("lista-compartir");
+    if(navigator.share){try{await navigator.share({title:"Mi lista de KyraNoHard",text:"Mi lista de KyraNoHard:\n"+text(),url:link()});return}catch(e){if(e&&e.name==="AbortError")return}}
+    try{await navigator.clipboard.writeText(link());sh.textContent="¡Enlace copiado!"}catch{sh.textContent="Copiá el enlace desde WhatsApp o Correo"}};
 }
+/* act. 45 (idea de SuperBarato): la combinación de DOS tiendas más barata que tenga todos los productos con stock */
+function bestPair(gs){
+  if(gs.length<2)return null;
+  const ok=o=>o.stock!==false&&price(o);
+  const sts=[...new Set(gs.flatMap(g=>g.offers.filter(ok).map(o=>o.store)))];
+  if(sts.length<2||sts.length>60)return null;
+  const P=gs.map(g=>{const m={};g.offers.filter(ok).forEach(o=>{const p=price(o);if(m[o.store]==null||p<m[o.store])m[o.store]=p});return m});
+  let best=null;
+  for(let i=0;i<sts.length;i++)for(let j=i+1;j<sts.length;j++){const a=sts[i],b=sts[j];let t=0;
+    for(const m of P){const x=m[a],y=m[b];if(x==null&&y==null){t=-1;break}t+=x==null?y:y==null?x:Math.min(x,y)}
+    if(t>=0&&(!best||t<best.t))best={a,b,t}}
+  return best;
+}
+const track=n=>{try{if(window.goatcounter&&window.goatcounter.count)window.goatcounter.count({path:n,title:n,event:true})}catch{}};
 function toggleF(id){const g=DATA.find(x=>x.id===id);if(FOLLOW[id])delete FOLLOW[id];else FOLLOW[id]={price:best(g),name:g.name};saveF();alertBox();render()}
 document.addEventListener("click",e=>{
   const t=e.target,bt=t.closest&&t.closest("[data-f],[data-l],[data-cmp]");
@@ -530,7 +563,7 @@ function setupData(){
    if(["bajaron","subieron","seguidos"].includes(u.get("tab"))){S.tab=u.get("tab");if(S.tab==="bajaron")S.sort="down";if(S.tab==="subieron")S.sort="up"}
    const p=parseInt(u.get("p"),10);if(p>0)S.page=p;
    bind();BOUND=true;alertBox();render();
-   if(u.get("lista"))openList();else if(u.get("avisos")&&!$("#abtn").hidden)openAlerts();}
+   if(u.get("lista"))openList();else if(u.get("compartida"))openList(u.get("compartida").split(",").map(x=>x.trim()).filter(Boolean).slice(0,40));else if(u.get("avisos")&&!$("#abtn").hidden)openAlerts();}
   /* act. 40: el catálogo entero (~20 MB sin comprimir) trababa el celular varios segundos aunque nadie lo usara. Con los
      totales precalculados ya no hace falta: se baja recién al buscar, cambiar de categoría o abrir la lista. Solo se baja
      solo si la persona sigue productos (para avisarle cuáles bajaron en todo el catálogo) o si faltan los totales. */

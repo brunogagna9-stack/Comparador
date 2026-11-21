@@ -1694,3 +1694,58 @@ def test_actualizacion_44_celular():
     cm = open("site/comparar.html", encoding="utf-8").read()
     assert "data/cat/${encodeURIComponent(cat)}.json" in cm and "loadFull()" in cm
     print("celular: OK")
+
+
+def test_actualizacion_45_auditoria():
+    """Act. 45: fotos rotas de Venex, precios de tiendas que no responden, categorías, tema claro/oscuro, lista
+    compartida, vigilancia diaria y escáner de seguridad."""
+    import datetime as dt, re, pathlib
+    from scrapers.common import fix_category, is_service
+    # fotos: las de Venex sin extensión (rotas en la tienda) se descartan; las demás siguen
+    assert bd.good_image("https://www.venex.com.ar/products_images/thumb/1787685744_motherboard_asus_prime_b840m-r_am5_ddr5_1png") is None
+    assert bd.good_image("https://www.venex.com.ar/products_images/thumb/1646325485_asas.jpg")
+    assert bd.good_image("https://s3-sa-east-1.amazonaws.com/saasargentina/uKWkiykuobcr4dpGDfh9/miniatura"), "otras tiendas sin extensión sí andan"
+    offs = [{"store": "Venex", "image": "https://www.venex.com.ar/x/abcpng"}, {"store": "Maximus", "image": "https://www.maximus.com.ar/a.jpg"}]
+    assert bd.pick_image(offs)[0] == "https://www.maximus.com.ar/a.jpg"
+    # categorías
+    assert fix_category("Cámara Web Logitech C920s Pro Full HD", "otros") == "perifericos"
+    assert fix_category("Video Pny Quadro RTX A1000 8GB", "otros") == "placas-de-video"
+    assert fix_category("VGA PNY QUADRO RTX PRO 4000 Blackwell 24Gb GDDR7", "otros") == "placas-de-video"
+    assert fix_category("Usb 128g Ki Dt Exodia 3.0 Red", "otros") == "almacenamiento"
+    assert fix_category("Usb Hub 4 puertos", "otros") != "almacenamiento"
+    assert is_service("ASESORAMIENTO TECNICO") and not is_service("Asus Prime B840M")
+    # antigüedad de las tiendas que no responden
+    now = dt.datetime(2026, 11, 22, 12, tzinfo=dt.timezone.utc)
+    st = {"ok": True}; assert bd.staleness(st, None, now) is None and st["last_ok"].startswith("2026-11-22T12:00")
+    st = {"ok": False, "count": 5}; assert bd.staleness(st, "2026-11-21T12:00+00:00", now) is None and st["dias"] == 1.0
+    st = {"ok": False, "count": 5}; assert bd.staleness(st, "2026-11-18T19:36+00:00", now) == "vieja" and st["last_ok"] == "2026-11-18T19:36+00:00"
+    st = {"ok": False, "count": 5}; assert bd.staleness(st, "2026-11-10T00:00+00:00", now) == "ocultar" and st["oculta_por_antiguedad"]
+    st = {"ok": False, "count": 0}; assert bd.staleness(st, None, now) is None and "last_ok" not in st
+    G = [{"offers": [{"store": "A", "price_cash": 50}, {"store": "B", "price_cash": 60}]},
+         {"offers": [{"store": "A", "price_cash": 70}]}]
+    assert bd.demote_stale(G, {"A"}) == 1
+    assert [o["store"] for o in G[0]["offers"]] == ["B"] and G[0]["old_offers"][0]["store"] == "A"
+    assert G[1]["offers"][0]["store"] == "A" and "old_offers" not in G[1], "si es la única tienda, se mantiene (con su antigüedad)"
+    seed = json.loads(open("data_src/ultima_lectura.json", encoding="utf-8").read())
+    assert all(re.match(r"\d{4}-\d\d-\d\dT", v) for k, v in seed.items() if not k.startswith("_"))
+    lo = bd.load_last_ok(meta_path="/no/existe", seed_path="data_src/ultima_lectura.json")
+    assert "_nota" not in lo and "Venex" in lo
+    # tema claro / oscuro: cada bloque oscuro vale también con el botón
+    for f in ["site/css/layout.css", "site/css/shared.css", "site/tiendas.html", "site/armar.html"]:
+        s = open(f, encoding="utf-8").read()
+        for m in re.finditer(r"@media\s*\(prefers-color-scheme:\s*dark\)\s*\{", s):
+            assert s[m.end():m.end() + 8] == "/*tema*/", f
+        assert ":root[data-theme=dark]" in s, f
+    pages = [p for p in pathlib.Path("site").glob("*.html")]
+    for p in pages:
+        assert 'localStorage.getItem("tema")' in p.read_text(encoding="utf-8"), p.name
+    lay = open("site/js/layout.js", encoding="utf-8").read()
+    assert 'id="thbtn"' in lay and 'localStorage.setItem("tema"' in lay and '"salida-" + h' in lay
+    pr = open("site/productos.html", encoding="utf-8").read()
+    assert "function bestPair(" in pr and 'u.get("compartida")' in pr and "https://wa.me/?text=" in pr
+    # procesos de GitHub
+    vg = open(".github/workflows/vigilancia.yml", encoding="utf-8").read()
+    assert "node vigilar.js" in vg and "issues: write" in vg and pathlib.Path("calidad/vigilar.js").exists()
+    sg = open(".github/workflows/seguridad.yml", encoding="utf-8").read()
+    assert "google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@v2.7.1" in sg and "security-events: write" in sg
+    print("auditoría 45: OK")

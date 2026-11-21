@@ -161,7 +161,8 @@ def is_service(name):
     n = (name or "").lower().strip()
     return bool(re.match(r"^(armado|servic(io|e)|instalaci[oó]n|mano de obra)\b", n)
                 or re.search(r"armado (de|express|item|ítem)|armado item|\bitem \d{3,4}\b.*armado", n)
-                or re.search(r"actualizaci[oó]n de bios|extensi[oó]n de garant[ií]a|^garant[ií]a\b", n))
+                or re.search(r"actualizaci[oó]n de bios|extensi[oó]n de garant[ií]a|^garant[ií]a\b", n)
+                or re.match(r"^asesoramiento\b", n))
 
 
 _NON_HW = re.compile(r"\brobot\b|transformers|\bfunda\b|\bcelular\b|\btoner\b|cartucho|\btinta\b|\bjuguete|"
@@ -183,6 +184,10 @@ _FIX = [
     (re.compile(r"^(combo|kit)\b.*\b(gabinete|placa de video|rtx|radeon|rx ?\d{4}|5060|teclado|mouse)\b.*\bfuente\b|"
                 r"^(combo|kit)\b.*\bfuente\b.*\b(gabinete|placa de video|teclado|mouse)\b|^kit (gabinete|asus)\b|^combo (gabinete|placa)\b", re.I), "otros"),
     (re.compile(r"^(gabinete|gab)\b", re.I), "gabinetes"),
+    # actualización 45: casos claros que quedaban en «otros»
+    (re.compile(r"^(c[aá]mara web|web ?cam)\b", re.I), "perifericos"),
+    (re.compile(r"^(vga|video|placa de video)\b.*\b(quadro|rtx a\d{3,4}|rtx pro \d{4})\b", re.I), "placas-de-video"),
+    (re.compile(r"^usb \d{1,4} ?gb?\b", re.I), "almacenamiento"),
     (re.compile(r"^(conectores|kit herramientas|vertical graphics|hub\b|trafo\b|cargador\b|spliter|splitter|google chromecast|kit hpe)|"
                 r"para olt\b|\bsin fuente\b", re.I), "accesorios"),
     # Producto que EMPIEZA con su tipo: manda sobre la categoría de la tienda y sobre palabras sueltas del título

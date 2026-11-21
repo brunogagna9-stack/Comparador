@@ -26,7 +26,9 @@
       l.push(id); this.set(cat, l); return { on: true, n: l.length, full: false }; },
     count() { return Object.values(this.all()).reduce((a, l) => a + (Array.isArray(l) ? l.length : 0), 0); },
   };
-  CT.ARS = n => "$" + Math.round(n).toLocaleString("es-AR");
+  // act. 45: un solo formateador (toLocaleString arma uno nuevo en cada llamada: ~37 veces más lento en el celular)
+  const NF = typeof Intl !== "undefined" ? new Intl.NumberFormat("es-AR") : null;
+  CT.ARS = n => "$" + (NF ? NF.format(Math.round(n)) : Math.round(n).toLocaleString("es-AR"));
   CT.price = o => o.price_cash ?? o.price_list;
   /* Números de página para el paginador: siempre la primera y la última, la actual con sus vecinas, y "…" en los saltos. */
   CT.pageList = (cur, total) => {
@@ -403,6 +405,21 @@
       const a3 = inCat("fuentes").filter(p => { const s = psuSpec(p.name); return s.w && s.w >= w && s.w <= w + 250 && s.cert && /atx\s?3|12vhpwr|12v-?2x6|pcie\s?5/i.test(p.name) && !/combo|gabinete/i.test(p.name); });
       const best3 = C.cheapest(a3, 3);
       return best3.length && best3[0].p <= base[0].p * 1.2 ? best3.map(x => Object.assign(x, { note: "ATX 3.x: trae el conector de 16 pines" })) : base.map(x => Object.assign(x, { note: "usá el adaptador de 16 pines que viene con la placa de video" })); };
+
+    /* act. 45: el catálogo no cambia mientras la página está abierta, así que cada búsqueda de pieza se calcula una sola vez
+       por combinación de datos (antes Armado repetía las mismas búsquedas entre miles de productos decenas de veces).
+       Se devuelve una copia de cada resultado porque quien la usa le agrega notas. */
+    const memoK = (f, key) => { const m = new Map(); return (...a) => { const k = key(...a); let v = m.get(k);
+      if (v === undefined) { v = f(...a); m.set(k, v); } return Array.isArray(v) ? v.map(x => Object.assign({}, x)) : v; }; };
+    const cpuKey = c => [c.id, c.name, c.socket, c.maxp, c.tdp, c.mem].join("|");
+    C.findPsu = memoK(C.findPsu, w => w);
+    C.findMobo = memoK(C.findMobo, c => c.socket);
+    C.findRam = memoK(C.findRam, (c, gb) => c.mem + "|" + gb);
+    C.findSsd = memoK(C.findSsd, gb => gb);
+    C.findCooler = memoK(C.findCooler, cpuKey);
+    C.findMoboFor = memoK(C.findMoboFor, cpuKey);
+    C.findCase = memoK(C.findCase, (m, gn, gc) => [m, gn, gc].join("|"));
+    C.findPsuFor = memoK(C.findPsuFor, (w, g) => [w, g && g.vendor, g && g.name, g && g.tgp].join("|"));
 
     /* ---------- lógica de armado (la misma que usaba armado.html) ---------- */
     C.cpuFps = c => c.s ? HW.ref.gpu_fps_ref * c.s / HW.ref.cpu_score_ref : null;
