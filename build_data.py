@@ -805,13 +805,14 @@ def main(only):
         items, status[store] = res[store]
         st = status[store]
         verdict = staleness(st, last_ok.get(store), now)
+        if store in hidden:                 # oculta a mano (config.json): manda sobre la antigüedad
+            st["hidden"] = True
+            st.pop("oculta_por_antiguedad", None)
+            continue
         if verdict == "ocultar" and items:
             continue
         if verdict == "vieja":
             old_stores.add(store)
-        if store in hidden:
-            st["hidden"] = True
-            continue
         all_items += items
     today = dt.date.today().isoformat()
     groups = build(all_items, load_extra_images())
