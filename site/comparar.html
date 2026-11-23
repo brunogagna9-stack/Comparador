@@ -38,6 +38,21 @@
 details.nod{margin-top:10px;background:var(--card);border:1px solid var(--line2);border-radius:12px;padding:10px 14px}details.nod summary{cursor:pointer;font-weight:600}details.nod p{margin:8px 0 0;color:var(--mut)}.nd{color:var(--mut);font-style:italic}.dd .p{font-weight:700;white-space:nowrap}
 .verd{border-left:4px solid var(--acc)}.verd h2{margin:0 0 6px}
 .tw{overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.ctm{display:none}
+@media (max-width:640px){
+  .tw{display:none}.ctm{display:block}
+  .ctm-leg{list-style:none;margin:0 0 10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);display:grid;gap:4px;font-size:13px}
+  .ctm .dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--c);flex:none;margin-right:6px;vertical-align:middle}
+  .ctm-leg li{display:flex;align-items:center}
+  .cr{border:1px solid var(--line);border-radius:12px;background:var(--card);padding:10px 12px;margin:0 0 10px}
+  .cr h3{margin:0 0 6px;font-size:14.5px}
+  .cr ul{list-style:none;margin:0;padding:0}
+  .cr li{display:grid;grid-template-columns:auto 1fr;gap:0 6px;padding:7px 0;border-top:1px solid var(--line)}
+  .cr li:first-child{border-top:0}
+  .cr li .dot{grid-row:1/3;margin-top:5px}.cr .pn{font-size:12px;color:var(--mut)}.cr .v{font-size:14.5px;overflow-wrap:anywhere}
+  .cr li.win .v b{color:var(--ok)}.cr .wt{font-size:11px;font-weight:700;color:var(--ok);border:1px solid currentColor;border-radius:999px;padding:0 6px;margin-left:4px}
+  .crh summary{font-size:12.5px;color:var(--mut);cursor:pointer;min-height:28px;display:flex;align-items:center}.crh p{margin:2px 0 6px;font-size:13px}
+}
 .ct{min-width:560px}.ct th,.ct td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
 .ct thead th{position:sticky;top:0;background:var(--card);z-index:1;font-size:13px;color:var(--tx);border-bottom:2px solid var(--line)}
 .ct td.l{width:210px;min-width:150px;font-weight:600;color:var(--tx)}.ct td.l .i{cursor:help;color:var(--mut);border:1px solid var(--mut);border-radius:50%;display:inline-block;width:16px;height:16px;font-size:11px;text-align:center;line-height:14px;margin-left:4px;font-weight:700;background:none}
@@ -185,6 +200,15 @@ function verdict(cmp){
 }
 
 /* ---------- tabla ---------- */
+function cellH(r,c){return `${(r.id==="store"||r.id==="official")&&c.url?`<a href="${esc(c.url)}" target="_blank" rel="noopener nofollow">${esc(c.disp)}</a>${r.id==="store"?REP.badge(c.disp):""}`:c.tag==="nd"?`<span class="nd">Sin datos</span>`:c.win?`<b>${esc(c.disp)}</b>`:esc(c.disp)}${c.tag&&c.tag!=="nd"&&r.id!=="name"?tagH(c.tag,c.note):""}`}
+/* act. 46 · celular: la misma comparación en tarjetas, una por característica, con los productos uno debajo del otro
+   (mismos datos y mismo orden que la tabla; la tabla se sigue usando en pantallas anchas) */
+function cards(cmp,rows){
+  // nombre corto: sin la palabra de la categoría («Placa de video», «Procesador»…), que es la misma para todos
+  const nm=i=>{const g=byId(S.ids[i]);return esc(((g&&g.name)||cmp.items[i].name||"").replace(/^(placa de video|placa de v[ií]deo|vga|video|procesador|micro(procesador)?|memoria( ram)?|mother(board)?|placa madre|fuente( de poder| de alimentaci[oó]n)?|gabinete|monitor|notebook|disco( s[oó]lido)?( ssd)?|ssd|auriculares?|mouse|teclado|cooler|refrigeraci[oó]n)\s+(de\s+)?/i,"").slice(0,44))};
+  return `<div class="ctm"><ol class="ctm-leg">${cmp.items.map((it,i)=>`<li style="--c:${COL[i]}"><span class="dot"></span>${nm(i)}</li>`).join("")}</ol>`+
+   rows.filter(r=>r.id!=="name").map(r=>`<section class="cr"><h3>${esc(r.label)}${r.derived?" "+tagH("est"):""}</h3>${r.help?`<details class="crh"><summary>Qué significa</summary><p>${esc(r.help)}</p></details>`:""}<ul>${r.cells.map((c,i)=>`<li class="${c.win?"win":""}" style="--c:${COL[i]}"><span class="dot" aria-hidden="true"></span><span class="pn">${nm(i)}</span><span class="v">${cellH(r,c)}${c.win?' <span class="wt">mejor</span>':""}</span></li>`).join("")}</ul></section>`).join("")+`</div>`;
+}
 function table(cmp){
   const items=cmp.items,two=items.length===2;
   let rows=cmp.rows;if(S.diff)rows=rows.filter(r=>r.differs||["name","price"].includes(r.id));
@@ -192,10 +216,10 @@ function table(cmp){
   let h=`<div class="row" style="margin:14px 0 8px;justify-content:space-between"><h2 style="margin:0">Tabla comparativa</h2><label class="tog"><input type="checkbox" id="diff" ${S.diff?"checked":""}> Mostrar solo las diferencias</label></div><div class="tw"><table class="ct"><thead><tr><th>Característica</th>${items.map((it,i)=>`<th class="hd" style="--c:${COL[i]}"><div class="hph">${ICONS.thumb(byId(S.ids[i])||{category:cmp.cat},96)}${it.o?`<a href="${esc(it.o.url)}" target="_blank" rel="noopener nofollow">${esc(it.name.slice(0,70))}</a>`:esc(it.name)}</div></th>`).join("")}${two?"<th>Ventaja</th>":""}</tr></thead><tbody>`;
   rows.forEach(r=>{
     h+=`<tr><td class="l">${esc(r.label)}<button class="i" data-h="${r.id}" aria-label="Qué significa" title="${esc(r.help)}">i</button>${r.derived?" "+tagH("est"):""}<div class="help" id="h_${r.id}">${esc(r.help)}</div></td>`;
-    r.cells.forEach(c=>{h+=`<td class="${c.win?"win":""}">${(r.id==="store"||r.id==="official")&&c.url?`<a href="${esc(c.url)}" target="_blank" rel="noopener nofollow">${esc(c.disp)}</a>${r.id==="store"?REP.badge(c.disp):""}`:c.tag==="nd"?`<span class="nd">Sin datos</span>`:c.win?`<b>${esc(c.disp)}</b>`:esc(c.disp)}${c.tag&&c.tag!=="nd"&&r.id!=="name"?tagH(c.tag,c.note):""}</td>`});
+    r.cells.forEach(c=>{h+=`<td class="${c.win?"win":""}">${cellH(r,c)}</td>`});
     if(two){const [a,b]=r.cells;let t="";if(r.numeric&&r.dir&&a.v!==b.v){const w=(r.dir==="max"?a.v>b.v:a.v<b.v)?0:1,hi=Math.max(a.v,b.v),lo=Math.min(a.v,b.v),d=lo>0?Math.round((hi-lo)/lo*100):null;t=`<span class="adv" style="color:${COL[w]}">${w===0?"◀":"▶"} ${d!=null&&d>0?d+" %":""}</span>`}h+=`<td>${t}</td>`}
     h+="</tr>"});
-  return h+`</tbody></table></div>${empty.length?`<details class="nod"><summary>${empty.length} ${empty.length===1?"característica sin datos":"características sin datos"} para estos productos</summary><p>${empty.map(r=>esc(r.label)).join(" · ")}. No tenemos el dato (o no está verificado) y no lo inferimos.</p></details>`:""}<p class="note">Precios en pesos argentinos${META.updated?`, actualizados el ${esc(fdate(META.updated))} h`:""}. Verde = mejor valor de esa fila. “Sin datos” significa que no tenemos el dato y no lo inferimos.</p>`;
+  return h+`</tbody></table></div>${cards(cmp,rows)}${empty.length?`<details class="nod"><summary>${empty.length} ${empty.length===1?"característica sin datos":"características sin datos"} para estos productos</summary><p>${empty.map(r=>esc(r.label)).join(" · ")}. No tenemos el dato (o no está verificado) y no lo inferimos.</p></details>`:""}<p class="note">Precios en pesos argentinos${META.updated?`, actualizados el ${esc(fdate(META.updated))} h`:""}. Verde = mejor valor de esa fila. “Sin datos” significa que no tenemos el dato y no lo inferimos.</p>`;
 }
 
 const PERI=["mouses","teclados","auriculares"];

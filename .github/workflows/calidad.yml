@@ -65,3 +65,6 @@ jobs:
       - name: Revisar el sitio
         working-directory: calidad
         run: node revisar.js
+      - name: Paridad celular / computadora (mismas acciones en 7 tamaños de pantalla)
+        working-directory: calidad
+        run: node paridad.js >> "$GITHUB_STEP_SUMMARY"

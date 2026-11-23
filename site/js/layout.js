@@ -19,6 +19,14 @@
 
 const USER_ICO = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>';
 const HIST_ICO = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg>';
+  // act. 46 · celular: botones «Ver más» (.mmore-btn) que muestran el contenido plegado de su tarjeta (.mcol)
+  document.addEventListener("click", e => {
+    const b = e.target.closest && e.target.closest("[data-mmore]"); if (!b) return;
+    const box = b.closest(".mcol"); if (!box) return;
+    const open = box.classList.toggle("open");
+    b.setAttribute("aria-expanded", open ? "true" : "false");
+    b.textContent = open ? "Ver menos" : b.dataset.mmore;
+  });
   // act. 45: botón de modo claro / oscuro (la elección queda en este navegador; sin elegir, sigue al teléfono o la PC)
   const THEME_ICO = '<svg class="moon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><svg class="sun" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
   const isDark = () => { const t = document.documentElement.dataset.theme; return t ? t === "dark" : !!(window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches); };
