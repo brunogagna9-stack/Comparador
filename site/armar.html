@@ -152,6 +152,11 @@ function loadPer(){if(PERLOAD)return PERLOAD;const j=async u=>{const r=await fet
 /* al quitar una memoria o un disco del medio, los que siguen suben un lugar */
 function compact(){for(const s of BLD.SLOTS.filter(x=>x.multi)){const keys=BLD.SLOTS.filter(x=>base(x.k)===s.k).map(x=>x.k),vals=keys.map(k=>BUILD[k]).filter(Boolean);keys.forEach((k,i)=>{if(vals[i])BUILD[k]=vals[i];else delete BUILD[k]})}}
 const SRC={fab:"ficha del fabricante",regla:"regla de la norma",tienda:"título de la tienda",usuario:"dato que cargaste"};
+function showPrev(){const n=document.createElement("div");n.className="warn";n.id="prevbox";n.style.margin="0 0 12px";
+  n.innerHTML='Cargamos el armado del enlace. El que tenías antes quedó guardado. <button type="button" class="btn" id="prevbtn">↩ Volver a mi armado anterior</button>';
+  const at=document.querySelector("#slots");at.parentNode.insertBefore(n,at);
+  n.querySelector("#prevbtn").onclick=()=>{try{BUILD=JSON.parse(localStorage.getItem("armar_anterior")||"{}")||{};localStorage.removeItem("armar_anterior")}catch(e){BUILD={}}
+    for(const k of Object.keys(BUILD)){const e=BUILD[k];if(e&&e.id&&!byId(e.id))delete BUILD[k]}compact();n.remove();render()}}
 const save=()=>{try{localStorage.setItem("armar",JSON.stringify(BUILD))}catch(e){};try{const s=E.encode(BUILD);history.replaceState(null,"",location.pathname+(s?"?b="+encodeURIComponent(s):""))}catch(e){}};
 const attrCache=new Map();
 const A=(k,g)=>{const key=k+"|"+g.id;if(!attrCache.has(key))attrCache.set(key,E.attrs(k,g));return attrCache.get(key)};
@@ -318,7 +323,10 @@ $("#pick").addEventListener("click",e=>{if(e.target.id==="pick")closePick()});
   if(!HW||!PR.length){$("#slots").innerHTML='<div class="sl"><div class="note">No se pudieron cargar los datos.</div></div>';return}
   C=CT.create(HW,PR,meta,specs,VER);E=BLD.create(C,VER);byIdM=new Map(PR.map(g=>[g.id,g]));QV.setData(PR);
   const u=new URLSearchParams(location.search).get("b");
-  if(u)BUILD=E.decode(u);else{try{BUILD=JSON.parse(localStorage.getItem("armar")||"{}")||{}}catch(e){BUILD={}}}
+  // act. 46: si llegás con un armado compartido o recomendado, el tuyo anterior queda guardado para recuperarlo
+  let prev=null;try{prev=localStorage.getItem("armar")}catch(e){}
+  if(u){BUILD=E.decode(u);try{if(prev&&prev!=="{}"&&E.encode(JSON.parse(prev))!==E.encode(BUILD)){localStorage.setItem("armar_anterior",prev);showPrev()}}catch(e){}}
+  else{try{BUILD=JSON.parse(prev||"{}")||{}}catch(e){BUILD={}}}
   if(BLD.SLOTS.some(s=>PERCATS.includes(s.cat)&&BUILD[s.k]&&BUILD[s.k].id))await loadPer();   // el armado trae mouse, teclado o auriculares
   for(const k of Object.keys(BUILD)){const e=BUILD[k];if(e&&e.id&&!byId(e.id))delete BUILD[k]}   // productos que ya no están en el catálogo
   compact();

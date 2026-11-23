@@ -30,6 +30,13 @@
 <link rel="stylesheet" href="css/layout.css">
 <style>
 .hm{max-width:1280px;margin:auto;padding:0 16px}
+.qpc{margin:22px 0 0;border:1px solid var(--line);border-radius:18px;padding:18px 20px;background:var(--card)}
+.qpc h2{margin:0 0 4px;font-size:22px}.qpc fieldset{border:0;margin:12px 0 0;padding:0}.qpc legend{font-weight:700;margin-bottom:6px;padding:0}
+.qopts{display:flex;flex-wrap:wrap;gap:8px}.qopts label{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:999px;padding:8px 14px;min-height:40px;cursor:pointer;font-size:14px;color:var(--tx);text-transform:none;letter-spacing:0;font-weight:500}
+.qopts label:has(input:checked){border-color:var(--pri,#2563eb);box-shadow:0 0 0 1px var(--pri,#2563eb) inset;font-weight:700}
+.qopts input{accent-color:var(--pri,#2563eb);width:18px;height:18px;margin:0}
+.qbud{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-top:14px}.qbud label{flex-basis:100%}.qbud input{flex:1 1 200px;max-width:280px;min-height:44px}
+.qbud .btn{min-height:44px}
 .hero{margin:18px auto 0;border-radius:22px;background:var(--grad);color:#fff;padding:44px 34px 34px;box-shadow:var(--sh);position:relative;overflow:hidden}
 .hero:before{content:"";position:absolute;right:-90px;top:-90px;width:340px;height:340px;border-radius:50%;background:rgba(255,255,255,.10)}
 .hero:after{content:"";position:absolute;right:120px;bottom:-130px;width:260px;height:260px;border-radius:50%;background:rgba(255,255,255,.07)}
@@ -128,6 +135,34 @@
       if(gl){var x=gl.getExtension("WEBGL_debug_renderer_info"),r=String(x?gl.getParameter(x.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER));
         ok=!/swiftshader|llvmpipe|softpipe|software|basic render/i.test(r);var lose=gl.getExtension("WEBGL_lose_context");if(lose)lose.loseContext();}}}catch(e){ok=false}
       window.__pc3dOk=ok;if(ok)document.querySelector(".hero").classList.add("has3d");else{var h=document.getElementById("pc3d");if(h)h.remove();}})();
+    </script>
+  </section>
+
+  <!-- actualización 46: «¿No sabés qué comprar?» — tres respuestas y vas directo a una PC completa con precios reales -->
+  <section class="qpc" aria-labelledby="qpc-t">
+    <h2 id="qpc-t">¿No sabés qué comprar? Te armamos la PC</h2>
+    <p class="note">Tres respuestas y te mostramos equipos completos y compatibles, con precios de hoy en las tiendas.</p>
+    <form action="encontra.html" method="get" id="qpcf">
+      <fieldset><legend>¿Para qué la querés?</legend><div class="qopts">
+        <label><input type="radio" name="uso" value="gaming_pesado" checked> Jugar (juegos exigentes)</label>
+        <label><input type="radio" name="uso" value="gaming_comp"> Jugar competitivo (muchos FPS)</label>
+        <label><input type="radio" name="uso" value="oficina,estudio"> Oficina y estudio</label>
+        <label><input type="radio" name="uso" value="diseno,video"> Diseño y edición de video</label>
+      </div></fieldset>
+      <fieldset id="qpc-res"><legend>¿Qué monitor tenés o vas a comprar?</legend><div class="qopts">
+        <label><input type="radio" name="res" value="1080" checked> 1080p (Full HD)</label>
+        <label><input type="radio" name="res" value="1440"> 1440p (2K)</label>
+        <label><input type="radio" name="res" value="4k"> 4K</label>
+      </div></fieldset>
+      <div class="qbud"><label for="qpc-b">Presupuesto máximo (pesos)</label><input id="qpc-b" name="b" type="text" inputmode="numeric" autocomplete="off" placeholder="Ej: 1.500.000">
+        <input type="hidden" name="ver" value="1"><button class="btn pri" type="submit">Ver mi PC →</button></div>
+    </form>
+    <script>
+    (function(){var f=document.getElementById("qpcf");if(!f)return;var rs=document.getElementById("qpc-res"),b=document.getElementById("qpc-b");
+      var upd=function(){var u=(f.querySelector("input[name=uso]:checked")||{}).value||"";rs.disabled=!/gaming|video/.test(u);rs.hidden=rs.disabled};
+      f.addEventListener("change",upd);upd();
+      b.addEventListener("input",function(){var n=b.value.replace(/\D/g,"");b.value=n?(+n).toLocaleString("es-AR"):""});
+      f.addEventListener("submit",function(){b.value=b.value.replace(/\D/g,"");if(!b.value)b.disabled=true});})();
     </script>
   </section>
 

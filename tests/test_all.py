@@ -1763,3 +1763,16 @@ def test_actualizacion_46_confiabilidad():
     for f in ["site/encontra.html", "site/armado.html"]:
         assert 'id="usedc"' in open(f, encoding="utf-8").read(), f
     print("confiabilidad 46: OK")
+
+
+def test_actualizacion_46_conectadas():
+    """Act. 46, etapa 1: pregunta rápida del inicio, recomendaciones por enlace, armados conectados."""
+    idx = open("site/index.html", encoding="utf-8").read()
+    assert 'action="encontra.html"' in idx and 'name="uso"' in idx and 'name="res"' in idx and 'name="b"' in idx and 'name="ver" value="1"' in idx
+    en = open("site/encontra.html", encoding="utf-8").read()
+    assert 'q.get("uso")' in en and "function shareUrl()" in en and "BT.actionsH(c.parts" in en and "BT.cmpH(pt)" in en and "js/buildtools.js" in en
+    ar = open("site/armado.html", encoding="utf-8").read()
+    assert "BT.actionsH([...A.shared,...own]" in ar and "BT.cmpH(p)" in ar and "js/buildtools.js" in ar
+    am = open("site/armar.html", encoding="utf-8").read()
+    assert 'localStorage.setItem("armar_anterior"' in am and "Volver a mi armado anterior" in am
+    print("herramientas conectadas 46: OK")

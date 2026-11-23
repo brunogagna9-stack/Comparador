@@ -76,7 +76,7 @@
 <h2>De dónde salen los datos</h2>
 <div class="panel note" id="src"></div>
 </main>
-<script src="js/lib.js"></script><script src="js/icons.js"></script><script src="js/rep.js"></script><script src="js/quickview.js"></script><script src="js/history.js"></script>
+<script src="js/lib.js"></script><script src="js/buildtools.js"></script><script src="js/icons.js"></script><script src="js/rep.js"></script><script src="js/quickview.js"></script><script src="js/history.js"></script>
 <script>
 const $=s=>document.querySelector(s),{ARS,esc,RES}=CT;
 let HW,PR=[],META={},C,S={mode:"gpu",res:0,id:null,ven:"",gid:null};
@@ -91,7 +91,7 @@ function shopHtml(items,extra){
 // miniatura del producto (si la foto no carga, el ícono de su categoría)
 const thumb=g=>g.image?`<img loading="lazy" decoding="async" width="52" height="52" src="${esc(g.image)}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{innerHTML:ICONS.svg('${esc(g.category)}',24)}))">`:ICONS.svg(g.category||"otros",24);
 const SLOTICO={cpu:"procesadores",gpu:"placas-de-video",ram:"memorias-ram",ssd:"almacenamiento",psu:"fuentes",mobo:"motherboards",cooler:"refrigeracion",case:"gabinetes"};
-const partHtml=p=>`<div class="part"><b class="pt">${SLOTICO[p.slot]?ICONS.svg(SLOTICO[p.slot],18):""}${esc(p.title)}</b><div class="why">${esc(p.why)}</div>${shopHtml(p.shop,p.slot==="psu"?x=>{const m=x.g.name.match(/(\d{3,4})\s?w/i);return m?" · "+m[1]+" W":""}:null)}</div>`;
+const partHtml=p=>`<div class="part"><b class="pt">${SLOTICO[p.slot]?ICONS.svg(SLOTICO[p.slot],18):""}${esc(p.title)}</b><div class="why">${esc(p.why)}</div>${shopHtml(p.shop,p.slot==="psu"?x=>{const m=x.g.name.match(/(\d{3,4})\s?w/i);return m?" · "+m[1]+" W":""}:null)}${BT.cmpH(p)}</div>`;
 function totalHtml(t){
   if(!PR.length)return"";
   const faltan=t.missing.length?`<small>Sin precio en el comparador: ${t.missing.map(esc).join(", ")}. El total es parcial.</small>`:`<small>Suma la primera opción de cada parte: la más barata con stock y, en gabinete y disipador, la más barata con compatibilidad verificada (${t.priced} de ${t.count}).</small>`;
@@ -103,7 +103,7 @@ function build(g,A){
   const col=(title,tag,own,tot,cpu)=>{const all=ids([...A.shared,...own]);return `<div class="col"><h3>${title}</h3><div class="tg">${tag}</div>
     ${own.length?own.map(partHtml).join(""):'<div class="note">No hay diferencias: esta configuración usa solo los componentes compartidos.</div>'}
     ${A.shared.length?`<div class="note up">+ los ${A.shared.length} componentes compartidos (arriba), ya incluidos en el total.</div>`:""}
-    ${totalHtml(tot)}${all.length?`<button type="button" class="qv-all" data-qall="${all.join(",")}"></button><div class="note">Agrega la primera opción de cada pieza (incluidas las compartidas) a tu lista del carrito.</div>`:""}</div>`};
+    ${totalHtml(tot)}${all.length?`<button type="button" class="qv-all" data-qall="${all.join(",")}"></button><div class="note">Agrega la primera opción de cada pieza (incluidas las compartidas) a tu lista del carrito.</div>`:""}${BT.actionsH([...A.shared,...own],{title:title+" · KyraNoHard"})}</div>`};
   let h="";
   if(A.shared.length)h+=`<div class="col shared" style="margin-bottom:14px"><h3>Componentes compartidos por ambas configuraciones</h3><div class="tg">Son idénticos en el mínimo y en el sugerido: aparecen una sola vez. Cada configuración los cuenta en su propio total.</div>${A.shared.map(partHtml).join("")}</div>`;
   h+=`<div class="cols">${col("Hardware mínimo","Sin cuello de botella importante a "+RES[r],A.onlyMin,A.totalMin)}${col("Hardware sugerido","Equilibrado y con margen a "+RES[r],A.onlySug,A.totalSug)}</div>`;
