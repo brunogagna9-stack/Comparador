@@ -24,8 +24,8 @@ jobs:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
@@ -80,8 +80,8 @@ jobs:
           git fetch origin main || true
           git merge -X ours --no-edit origin/main || git merge --abort || true
           git push || true
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: ${{ runner.temp }}/site_publicar
       # act. 46: el 22 y el 23/11 GitHub Pages falló al publicar («No artifacts named github-pages» / «Fetching artifact
@@ -89,10 +89,10 @@ jobs:
       # Si falla, se espera un poco y se reintenta una vez; si vuelve a fallar, la corrida queda en rojo.
       - id: deploy
         continue-on-error: true
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
       - name: Esperar antes de reintentar la publicación
         if: steps.deploy.outcome == 'failure'
         run: sleep 90
       - id: deploy2
         if: steps.deploy.outcome == 'failure'
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
