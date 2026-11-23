@@ -60,6 +60,7 @@
   <div class="f" style="max-width:300px"><label>Resolución de tu monitor</label><div class="seg" id="res"><button data-v="0" class="on">1080p</button><button data-v="1">1440p</button><button data-v="2">4K</button></div></div>
 </div></div>
 
+<label class="tog" style="margin:4px 0 8px"><input type="checkbox" id="usedc"> Incluir piezas de outlet y reacondicionadas <span class="note">(más baratas, pueden tener menos garantía)</span></label>
 <div id="out"></div>
 
 <h2>Antes de comprar: checklist anti-errores</h2>
@@ -191,6 +192,7 @@ function setMode(){
   let m,ver;[HW,PR,m,ver]=await Promise.all([j("data/hardware.json",null),j("data/armar.json",null).then(d=>d&&d.length?d:j("data/products.json",[])),j("data/meta.json",{}),j("data/verified.json",null),REP.load()]);META=m;
   if(!HW){$("#out").textContent="No se pudieron cargar los datos de hardware.";return}
   C=CT.create(HW,PR,META,null,ver);S.id="rtx-5070";QV.setData(PR);
+  {const uc=$("#usedc");uc.checked=CT.allowUsed();uc.onchange=()=>{CT.setAllowUsed(uc.checked);C=CT.create(HW,PR,META,null,ver);render()}}
   {const u=new URLSearchParams(location.search);if(["gpu","cpu"].includes(u.get("modo")))S.mode=u.get("modo");if(u.get("id"))S.id=u.get("id");if(u.get("placa"))S.gid=u.get("placa");
    const r=+u.get("res");if([0,1,2].includes(r)&&u.get("res")!==null){S.res=r;document.querySelectorAll("#res button").forEach(x=>x.classList.toggle("on",+x.dataset.v===r))}
    if(["AMD","Intel"].includes(u.get("marca"))){S.ven=u.get("marca");document.querySelectorAll("#ven button").forEach(b=>b.classList.toggle("on",b.dataset.v===S.ven))}}

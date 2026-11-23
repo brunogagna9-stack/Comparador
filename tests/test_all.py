@@ -1749,3 +1749,17 @@ def test_actualizacion_45_auditoria():
     sg = open(".github/workflows/seguridad.yml", encoding="utf-8").read()
     assert "google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@v2.7.1" in sg and "security-events: write" in sg
     print("auditoría 45: OK")
+
+
+def test_actualizacion_46_confiabilidad():
+    """Act. 46, etapa 0: placa madre publicada como RAM, despertador de la actualización."""
+    from scrapers.common import fix_category
+    assert fix_category("Board Asus Prime A520m-k / Am4 / DDR4 64 GB 90mb0tvq-mcaayo Negro", "memorias-ram") == "motherboards"
+    assert fix_category("Memoria Kingston Fury 16GB DDR4", "memorias-ram") == "memorias-ram"
+    d = open(".github/workflows/despertador.yml", encoding="utf-8").read()
+    assert "gh workflow run actualizar.yml" in d and "actions: write" in d and ">6" in d
+    a = open(".github/workflows/actualizar.yml", encoding="utf-8").read()
+    assert "workflow_dispatch" in a, "el despertador necesita poder arrancar la actualización"
+    for f in ["site/encontra.html", "site/armado.html"]:
+        assert 'id="usedc"' in open(f, encoding="utf-8").read(), f
+    print("confiabilidad 46: OK")

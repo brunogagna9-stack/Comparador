@@ -237,3 +237,6 @@ header.site .thm .sun,header.site .thm[data-dark="1"] .moon{display:none}header.
 :root[data-theme=dark]{color-scheme:dark}:root[data-theme=light]{color-scheme:light}
 footer.site .thm2{background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
 @media (max-width:400px){header.site .thm{display:none}}
+/* ===== actualización 46 ===== */
+label.tog{text-transform:none;letter-spacing:0;font-weight:inherit;font-size:14px;color:inherit;display:inline-flex;align-items:center;gap:8px;cursor:pointer;line-height:1.35;min-height:32px}
+label.tog .note{font-size:12.5px}

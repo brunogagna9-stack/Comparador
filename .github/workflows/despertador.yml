@@ -1,0 +1,43 @@
+name: Despertador de la actualización
+
+# Actualización 46: GitHub no garantiza los horarios programados. Desde el 19/11/2026 la actualización «cada 6 horas»
+# corría solo 2 o 3 veces por día y los precios llegaron a tener 13 horas. Este proceso liviano (no lee tiendas) revisa
+# una vez por hora la fecha de los precios publicados y, SOLO si tienen más de 6 horas y no hay otra actualización en
+# curso, arranca «Actualizar precios y publicar». Así las tiendas no reciben más pedidos que antes.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "41 * * * *"
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: despertador
+  cancel-in-progress: true
+
+jobs:
+  revisar:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: ¿Hace falta actualizar?
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          URL: https://brunogagna9-stack.github.io/Comparador/data/meta.json
+        run: |
+          upd=$(curl -sfL "$URL?v=$(date +%s)" | python3 -c "import json,sys;print(json.load(sys.stdin)['updated'])" || echo "")
+          if [ -z "$upd" ]; then echo "No se pudo leer la fecha de los precios publicados: no se hace nada."; exit 0; fi
+          horas=$(python3 -c "import datetime as d,sys;t=d.datetime.fromisoformat(sys.argv[1].replace('Z','+00:00'));print(round((d.datetime.now(d.timezone.utc)-t).total_seconds()/3600,1))" "$upd")
+          echo "Precios publicados: $upd (hace $horas h)"
+          en_curso=$(gh run list -R "$REPO" -w actualizar.yml --json status --jq '[.[]|select(.status!="completed")]|length')
+          if [ "$en_curso" != "0" ]; then echo "Ya hay una actualización en curso."; exit 0; fi
+          if python3 -c "import sys;sys.exit(0 if float(sys.argv[1])>6 else 1)" "$horas"; then
+            echo "Tienen más de 6 horas: arranca la actualización."
+            gh workflow run actualizar.yml -R "$REPO" --ref main
+          else
+            echo "Están al día: no hace falta."
+          fi

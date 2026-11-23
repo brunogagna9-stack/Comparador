@@ -232,6 +232,25 @@
     return null;
   };
 
+  /* act. 46: controles para RECOMENDAR piezas (armados y «Encontrá tu equipo»).
+     - WRONG_TYPE: productos que una tienda publicó en una categoría pero son otra cosa (una placa madre cargada como
+       memoria RAM, un combo de procesador + placa, una carcasa externa de disco). Nunca se recomiendan en ese lugar.
+     - USED_RE: outlet, usado, reacondicionado u «open box». No se recomiendan salvo que la persona lo pida
+       (casilla «Incluir outlet y reacondicionados», guardada en este navegador). Siguen visibles en el catálogo. */
+  CT.WRONG_TYPE = {
+    "memorias-ram": /\b(mother|motherboard|board|placa madre|mainboard)\b/i,
+    "motherboards": /\bcombo\b|\bkit\b.*\b(procesador|micro|ryzen|core i\d)\b/i,
+    "procesadores": /\b(mother|motherboard|placa madre)\b|\bcombo\b/i,
+    "almacenamiento": /\b(carry|cofre|enclosure|caddy|docking)\b/i,
+    "placas-de-video": /\b(soporte|riser|bracket|backplate)\b/i,
+    "fuentes": /\b(extensor|adaptador)\b/i,
+  };
+  CT.USED_RE = /\b(outlet|usad[oa]s?|reacondicionad[oa]s?|refurb(ished)?|open ?box|segunda mano|semi ?nuev[oa]s?)\b/i;
+  CT.allowUsed = () => { try { return localStorage.getItem("incluirOutlet") === "1"; } catch (e) { return false; } };
+  CT.setAllowUsed = v => { try { v ? localStorage.setItem("incluirOutlet", "1") : localStorage.removeItem("incluirOutlet"); } catch (e) { } };
+  CT.isUsed = g => CT.USED_RE.test((g && g.name) || "");
+  CT.okToRecommend = g => !!g && !(CT.WRONG_TYPE[g.category] && CT.WRONG_TYPE[g.category].test(g.name)) && (CT.allowUsed() || !CT.isUsed(g));
+
   /* ---------- contexto con el catálogo y la base de hardware ---------- */
   CT.create = function (HW, PR, meta, SPECS, VER) {
     const C = { HW, PR, meta: meta || {}, SPECS: SPECS && SPECS.items ? SPECS : null, VER: VER || null };
@@ -267,10 +286,19 @@
       const ok = l.filter(o => CT.price(o) >= med * 0.45 && CT.price(o) <= med * 2.2);
       return ok.length ? ok.sort((a, b) => CT.price(a) - CT.price(b))[0] : null;
     };
+    /* act. 46: una tienda «vieja» es la que no responde a las lecturas hace más de un día: su precio puede haber cambiado */
+    C.staleStore = s => { const m = ((C.meta && C.meta.stores) || {})[s]; if (!m || m.ok) return false;
+      const d = m.last_ok ? (Date.now() - Date.parse(m.last_ok)) / 864e5 : NaN; return !(d < 1); };
+    /* para recomendar: la oferta de una tienda al día si el producto la tiene; si no, la de la tienda vieja (marcada) */
+    const recFresh = g => { const o = C.recOffer(g); if (!o || !C.staleStore(o.store)) return o;
+      const f = g.offers.filter(x => x.stock !== false && CT.price(x) && !C.staleStore(x.store)).sort((a, b) => CT.price(a) - CT.price(b))[0];
+      return f && (!g.dif || CT.price(f) <= CT.price(o) * 2.2) ? f : o; };
     C.cheapest = (list, n = 3) => {
       const seen = new Set(), out = [];
-      list.map(g => { const o = C.recOffer(g); return o ? { g, o, p: CT.price(o) } : null; }).filter(Boolean)
-        .sort((a, b) => a.p - b.p).forEach(x => { const k = x.g.id + "|" + x.o.url; if (!seen.has(k) && seen.size < n) { seen.add(k); out.push(x); } });
+      // act. 46: nunca una pieza de otro tipo, ni outlet / usada (salvo que se pida); las de tiendas que no responden van
+      // después de las que están al día (su precio puede no ser el real)
+      list.filter(CT.okToRecommend).map(g => { const o = recFresh(g); return o ? { g, o, p: CT.price(o), st: C.staleStore(o.store) ? 1 : 0 } : null; }).filter(Boolean)
+        .sort((a, b) => a.st - b.st || a.p - b.p).forEach(x => { const k = x.g.id + "|" + x.o.url; if (!seen.has(k) && seen.size < n) { seen.add(k); delete x.st; out.push(x); } });
       return out;
     };
 

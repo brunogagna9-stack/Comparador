@@ -184,6 +184,8 @@ _FIX = [
     (re.compile(r"^(combo|kit)\b.*\b(gabinete|placa de video|rtx|radeon|rx ?\d{4}|5060|teclado|mouse)\b.*\bfuente\b|"
                 r"^(combo|kit)\b.*\bfuente\b.*\b(gabinete|placa de video|teclado|mouse)\b|^kit (gabinete|asus)\b|^combo (gabinete|placa)\b", re.I), "otros"),
     (re.compile(r"^(gabinete|gab)\b", re.I), "gabinetes"),
+    # actualización 46: «Board Asus Prime A520M-K…» es una placa madre (una tienda la publicó como memoria RAM)
+    (re.compile(r"^(board|mainboard)\b", re.I), "motherboards"),
     # actualización 45: casos claros que quedaban en «otros»
     (re.compile(r"^(c[aá]mara web|web ?cam)\b", re.I), "perifericos"),
     (re.compile(r"^(vga|video|placa de video)\b.*\b(quadro|rtx a\d{3,4}|rtx pro \d{4})\b", re.I), "placas-de-video"),

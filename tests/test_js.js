@@ -641,3 +641,29 @@ console.log(n + " pruebas de JavaScript OK");
   if (g16) { const p1 = C.findPsuFor(650, g16), p2 = C.findPsu(650); if (p1[0] && p2[0] && p1[0].note && /adaptador/.test(p1[0].note)) assert.strictEqual(p2[0].note, undefined); }
   console.log("act. 45 (precios viejos, formato y piezas recordadas): OK");
 }
+
+/* ---------- actualización 46: confiabilidad de las recomendaciones ---------- */
+{
+  const mk = (id, category, name, offers) => ({ id, category, name, offers });
+  const ram = [mk("b", "memorias-ram", "Board Asus Prime A520m-k / Am4 / DDR4 64 GB", [{ store: "X", price_cash: 10, url: "1" }]),
+    mk("r", "memorias-ram", "Memoria Kingston Fury 16GB DDR4 3200", [{ store: "Y", price_cash: 50, url: "2" }]),
+    mk("o", "memorias-ram", "Memoria Kingston Fury 32GB DDR4 3200 - OUTLET", [{ store: "Y", price_cash: 20, url: "3" }]),
+    mk("v", "memorias-ram", "Memoria Patriot 16GB DDR4 3200", [{ store: "Vieja", price_cash: 30, url: "4" }])];
+  const meta = { stores: { X: { ok: true }, Y: { ok: true }, Vieja: { ok: false, last_ok: new Date(Date.now() - 4 * 864e5).toISOString() } } };
+  const C46 = CT.create(HW, ram, meta);
+  const ids = C46.cheapest(C46.inCat("memorias-ram"), 5).map(x => x.g.id);
+  assert.deepStrictEqual(ids, ["r", "v"], "nunca la placa madre ni el outlet; la tienda vieja va después aunque sea más barata: " + ids);
+  assert(CT.okToRecommend(ram[1]) && !CT.okToRecommend(ram[0]) && !CT.okToRecommend(ram[2]));
+  assert(!CT.okToRecommend(mk("c", "almacenamiento", "CARRY DISK P/ SSD M.2 HIKSEMI", [])) && CT.okToRecommend(mk("d", "almacenamiento", "SSD Kingston NV3 1TB", [])));
+  assert(CT.okToRecommend(mk("m", "motherboards", "Gigabyte B650i Ax Motherboard - Soporta Cpu Amd Am5, 5+2+1", [])), "no confundir con un combo");
+  assert(C46.staleStore("Vieja") && !C46.staleStore("X") && !C46.staleStore("Z"));
+  // con «Incluir outlet» tildado, el outlet entra
+  global.localStorage = { _s: { incluirOutlet: "1" }, getItem(k) { return this._s[k] ?? null; }, setItem(k, v) { this._s[k] = String(v); }, removeItem(k) { delete this._s[k]; } };
+  assert.deepStrictEqual(CT.create(HW, ram, meta).cheapest(ram, 5).map(x => x.g.id), ["o", "r", "v"]);
+  CT.setAllowUsed(false); assert(!CT.allowUsed());
+  delete global.localStorage;
+  // la oferta de una tienda al día gana dentro del mismo producto
+  const two = [mk("t", "memorias-ram", "Memoria Patriot 16GB DDR4", [{ store: "Vieja", price_cash: 30, url: "a" }, { store: "Y", price_cash: 35, url: "b" }])];
+  assert.strictEqual(CT.create(HW, two, meta).cheapest(two, 1)[0].o.store, "Y");
+  console.log("act. 46 (tipo de pieza, outlet y tiendas viejas): OK");
+}

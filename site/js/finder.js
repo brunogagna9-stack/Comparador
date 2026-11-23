@@ -80,6 +80,7 @@
     C.recNotebooks = (a, n) => {
       const all = C.inCat("notebooks"), cands = [], excl = { datos: 0, ram: 0, ssd: 0, gpu: 0, stock: 0 };
       all.forEach(g => {
+        if (!CT.okToRecommend(g)) { excl.usado = (excl.usado || 0) + 1; return; }   // act. 46: outlet / usados, salvo que se pidan
         const o = C.bestOffer(g); if (!o) { excl.stock++; return; }
         const s = CT.parse(g.name, "notebooks");
         if (!s.ram || !s.ssd) { excl.datos++; return; }
@@ -99,6 +100,7 @@
       const cands = [], excl = { datos: 0, ram: 0, ssd: 0, gpu: 0, stock: 0 }, res = n.res;
       C.inCat("pcs-armadas").forEach(g => {
         if (/combo|service|servicio|instalaci/i.test(g.name)) return;
+        if (!CT.okToRecommend(g)) { excl.usado = (excl.usado || 0) + 1; return; }   // act. 46: outlet / usados, salvo que se pidan
         const o = C.bestOffer(g); if (!o) { excl.stock++; return; }
         const s = CT.parse(g.name, "pcs-armadas"), hg = C.hwGpu(g.name, s.vram ?? null), hc = C.hwCpu(g.name);
         if (!s.ram || !s.ssd) { excl.datos++; return; }
