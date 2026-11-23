@@ -238,5 +238,32 @@ header.site .thm .sun,header.site .thm[data-dark="1"] .moon{display:none}header.
 footer.site .thm2{background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
 @media (max-width:400px){header.site .thm{display:none}}
 /* ===== actualización 46 ===== */
-label.tog{text-transform:none;letter-spacing:0;font-weight:inherit;font-size:14px;color:inherit;display:inline-flex;align-items:center;gap:8px;cursor:pointer;line-height:1.35;min-height:32px}
-label.tog .note{font-size:12.5px}
+label.tog2{text-transform:none;letter-spacing:0;font-weight:inherit;font-size:14px;color:inherit;display:inline-flex;align-items:center;gap:8px;cursor:pointer;line-height:1.35;min-height:32px}
+label.tog2 .note{font-size:12.5px}
+.bt-act{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 4px}
+.bt-act .btn{min-height:40px;display:inline-flex;align-items:center}
+.bt-plan{margin:6px 0 2px;border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:var(--card,transparent)}
+.bt-plan summary{cursor:pointer;font-weight:600;min-height:28px;display:flex;align-items:center}
+.bt-plan ul{margin:6px 0 4px;padding-left:18px}.bt-plan li{margin:3px 0}
+.bt-cmp{font-size:13px;display:inline-block;margin:2px 0 2px 6px;padding:3px 0}
+/* act. 46 · celular: la tabla de precios por tienda pasa a tarjetas (una por tienda), sin desplazarse de costado */
+@media (max-width:640px){
+  .offt{overflow:visible;border:0;background:none}
+  .offt table{min-width:0!important;width:100%;border-collapse:separate;border-spacing:0}
+  .offt tr:first-child{display:none}
+  .offt tr{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;padding:12px;margin:0 0 10px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+  .offt tr.best{border-color:var(--ok,#16a34a);box-shadow:0 0 0 1px var(--ok,#16a34a) inset;background:var(--okbg,var(--card))}
+  .offt tr.best td{background:none!important}
+  .offt td{display:block;padding:0!important;border:0!important;text-align:left!important;min-width:0}
+  .offt td:first-child,.offt td.go{grid-column:1/-1}
+  .offt td[data-l]::before{content:attr(data-l);display:block;font-size:11.5px;color:var(--mut);font-weight:600;margin-bottom:1px}
+  .offt td.go a{display:flex;align-items:center;justify-content:center;min-height:42px;border:1px solid var(--line);border-radius:10px;font-weight:600;text-decoration:none;margin-top:4px}
+  .tw2:not(.offt) table.spec{min-width:0!important}
+}
+/* act. 46 · celular: «Ver más» en listas largas (Armado: opciones extra de cada pieza; Tiendas: datos de cada tienda).
+   En la computadora todo queda a la vista, como antes. */
+.mmore-btn{display:none}
+@media (max-width:640px){
+  .mcol:not(.open)>.mhide{display:none!important}
+  .mmore-btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:40px;margin:8px 0 0;border:1px solid var(--line);border-radius:10px;background:none;color:var(--acc,#2563eb);font:inherit;font-weight:600;cursor:pointer}
+}

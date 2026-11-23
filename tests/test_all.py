@@ -1763,3 +1763,38 @@ def test_actualizacion_46_confiabilidad():
     for f in ["site/encontra.html", "site/armado.html"]:
         assert 'id="usedc"' in open(f, encoding="utf-8").read(), f
     print("confiabilidad 46: OK")
+
+
+def test_actualizacion_46_conectadas():
+    """Act. 46, etapa 1: pregunta rápida del inicio, recomendaciones por enlace, armados conectados."""
+    idx = open("site/index.html", encoding="utf-8").read()
+    assert 'action="encontra.html"' in idx and 'name="uso"' in idx and 'name="res"' in idx and 'name="b"' in idx and 'name="ver" value="1"' in idx
+    en = open("site/encontra.html", encoding="utf-8").read()
+    assert 'q.get("uso")' in en and "function shareUrl()" in en and "BT.actionsH(c.parts" in en and "BT.cmpH(pt)" in en and "js/buildtools.js" in en
+    ar = open("site/armado.html", encoding="utf-8").read()
+    assert "BT.actionsH([...A.shared,...own]" in ar and "BT.cmpH(p)" in ar and "js/buildtools.js" in ar
+    am = open("site/armar.html", encoding="utf-8").read()
+    assert 'localStorage.setItem("armar_anterior"' in am and "Volver a mi armado anterior" in am
+    print("herramientas conectadas 46: OK")
+
+
+def test_actualizacion_46_celular():
+    """Act. 46, etapa 2: celular a la par (tarjetas en Comparar y en precios, «Ver más»), paridad, reintento de publicación."""
+    cm = open("site/comparar.html", encoding="utf-8").read()
+    assert "function cards(cmp,rows)" in cm and "${cards(cmp,rows)}" in cm and ".tw{display:none}.ctm{display:block}" in cm
+    det = open("site/js/detail.js", encoding="utf-8").read()
+    assert 'class="tw2 offt"' in det and 'data-l="Efectivo / transf."' in det and 'class="go"' in det
+    css = open("site/css/layout.css", encoding="utf-8").read()
+    assert ".offt tr{display:grid" in css and ".mcol:not(.open)>.mhide{display:none!important}" in css and ".mmore-btn{display:none}" in css
+    assert 'class="qtw offt"' in open("site/productos.html", encoding="utf-8").read()
+    ar = open("site/armado.html", encoding="utf-8").read()
+    assert 'class="shop shopi mcol"' in ar and ".shopi>div:not(.mhide),.shopi>.mhide>div{" in ar
+    assert 'class="st mcol"' in open("site/tiendas.html", encoding="utf-8").read()
+    assert "[data-mmore]" in open("site/js/layout.js", encoding="utf-8").read()
+    par = open("calidad/paridad.js", encoding="utf-8").read()
+    for s in ["[360, 800", "[390, 844", "[430, 932", "[768, 1024", "[1366, 768", "[1920, 1080", "[2560, 1440"]:
+        assert s in par, s
+    assert "node paridad.js" in open(".github/workflows/calidad.yml", encoding="utf-8").read()
+    act = open(".github/workflows/actualizar.yml", encoding="utf-8").read()
+    assert "id: deploy2" in act and "steps.deploy.outcome == 'failure'" in act
+    print("celular 46: OK")

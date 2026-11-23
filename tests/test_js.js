@@ -667,3 +667,28 @@ console.log(n + " pruebas de JavaScript OK");
   assert.strictEqual(CT.create(HW, two, meta).cheapest(two, 1)[0].o.store, "Y");
   console.log("act. 46 (tipo de pieza, outlet y tiendas viejas): OK");
 }
+
+/* ---------- actualización 46 · etapa 1: herramientas conectadas ---------- */
+{
+  const BT = require("../site/js/buildtools.js");
+  const off = (store, p, stock) => ({ store, price_cash: p, url: store + p, stock });
+  const g = (id, category, offers) => ({ id, category, name: id, offers });
+  const cpu = g("cpu1", "procesadores", [off("A", 100), off("B", 120), off("C", 90)]);
+  const gpu = g("gpu1", "placas-de-video", [off("B", 500), off("A", 520)]);
+  const ram = g("ram1", "memorias-ram", [off("C", 50), off("A", 70), off("B", 40, false)]);
+  const alt = g("gpu2", "placas-de-video", [off("A", 600)]);
+  const parts = [{ slot: "cpu", shop: [{ g: cpu, o: cpu.offers[2], p: 90 }] }, { slot: "gpu", shop: [{ g: gpu, o: gpu.offers[0], p: 500 }, { g: alt, o: alt.offers[0], p: 600 }] },
+    { slot: "ram", shop: [{ g: ram, o: ram.offers[0], p: 50 }] }, { slot: "case", shop: [] }];
+  assert.strictEqual(BT.param(parts), "cpu=cpu1;gpu=gpu1;ram=ram1", "mismo formato que «Armalo vos»; sin piezas vacías");
+  assert.strictEqual(BT.armarUrl(parts), "armar.html?b=" + encodeURIComponent("cpu=cpu1;gpu=gpu1;ram=ram1"));
+  const p = BT.plan(parts);
+  assert.strictEqual(p.sum, 640); assert.strictEqual(p.stores, 2, "C y B");
+  assert.deepStrictEqual(p.one, { s: "A", t: 690 }, "solo A tiene las tres con stock (B no tiene RAM con stock)");
+  assert.deepStrictEqual(p.pair, { a: "B", b: "C", t: 640 }, "B + C: placa en B, procesador y RAM en C");
+  assert(/Todo en una sola tienda: <b>\$690<\/b> en A/.test(BT.planH(parts)) && !/Repartido/.test(BT.planH(parts)), "pieza por pieza ya usa solo 2 tiendas");
+  assert.strictEqual(BT.cmpHref(parts[1]), "comparar.html#cat=placas-de-video&ids=gpu1,gpu2");
+  assert.strictEqual(BT.cmpHref(parts[0]), "", "sin alternativas no hay nada que comparar");
+  assert(/Cambiar piezas en «Armalo vos»/.test(BT.actionsH(parts)) && /data-bshare="armar\.html\?b=/.test(BT.actionsH(parts)));
+  assert.strictEqual(BT.actionsH([{ slot: "cpu", shop: [] }]), "");
+  console.log("act. 46 (armados conectados con Armalo vos, Comparar y dónde comprar): OK");
+}

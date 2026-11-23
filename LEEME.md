@@ -843,3 +843,20 @@ Búsqueda del 4/11/2026 solo en sitios de los fabricantes (informe «Fichas ofic
   caídas hace 2 días o más; lo cierra solo cuando todo vuelve a estar bien.
 - **Seguridad de las librerías** (`.github/workflows/seguridad.yml`): OSV-Scanner de Google, semanal.
 - Prueba: `test_actualizacion_45_auditoria` y pruebas nuevas en `tests/test_js.js`.
+
+## Actualización 46 — Comprar sin saber de hardware y el celular a la par de la PC
+
+Trabajo en tres etapas, cada una con auditoría antes y después (informes en `docs/auditorias/46-*.md`).
+Respaldo previo: rama `respaldo-antes-46`.
+
+- **Etapa 0 · confiabilidad:** los armados nunca recomiendan una pieza de otro tipo (`CT.WRONG_TYPE`), ni outlet /
+  reacondicionados salvo que se tilde la casilla (`CT.okToRecommend`), y prefieren tiendas al día (`C.staleStore`).
+  `despertador.yml` arranca la actualización si los precios publicados tienen más de 6 h (GitHub saltea horarios), y
+  `actualizar.yml` reintenta una vez la subida a GitHub Pages si falla.
+- **Etapa 1 · herramientas conectadas:** pregunta rápida en el inicio → `encontra.html?uso=…&res=…&b=…&ver=1`;
+  en cada armado, «Cambiar piezas en Armalo vos», «Compartir este armado», «Dónde comprar todo» y «Comparar opciones»
+  (`js/buildtools.js`). «Armalo vos» guarda el armado anterior al abrir uno por enlace.
+- **Etapa 2 · celular:** Comparar y los precios por tienda en tarjetas; «Ver más» en Armado y Tiendas; prueba
+  `calidad/paridad.js` (6 acciones × 7 tamaños de pantalla) dentro del control de calidad.
+- Pruebas: `test_actualizacion_46_confiabilidad`, `test_actualizacion_46_conectadas`, `test_actualizacion_46_celular`
+  y los bloques «act. 46» de `tests/test_js.js`.

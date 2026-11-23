@@ -72,7 +72,7 @@ function card(name,s,meta,count){
   if(s.payments)rows.push(["Pagos",esc(s.payments)]);
   if(s.about)rows.push(["Sobre la tienda",esc(s.about)]);
   const rep=(s.reputation&&s.reputation.length)?s.reputation.map(r=>`<div class="rep"><b>${fmt(r.score)} / 5</b><span>${fmt(r.count)} opiniones en <a href="${esc(r.url)}" target="_blank" rel="noopener nofollow">${esc(r.source)}</a> · ficha «${esc(r.listing)}» · consultado el ${esc(r.date)}</span></div>`).join(""):`<span class="note">Sin reputación pública verificada. No la inventamos.</span>`;
-  return `<div class="st"><h3>${esc(name)} <span class="chip ${cls}">${esc(s.integration)}</span></h3><div class="meta">Verificado el ${esc(s.checked||"—")}</div><div>${rep}</div><dl>${rows.map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl>${(s.notes||[]).map(n=>`<p class="note">${esc(n)}</p>`).join("")}</div>`;
+  return `<div class="st mcol"><h3>${esc(name)} <span class="chip ${cls}">${esc(s.integration)}</span></h3><div class="meta">Verificado el ${esc(s.checked||"—")}</div><div>${rep}</div><div class="mhide"><dl>${rows.map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl>${(s.notes||[]).map(n=>`<p class="note">${esc(n)}</p>`).join("")}</div><button type="button" class="mmore-btn" data-mmore="Ver los datos de la tienda" aria-expanded="false">Ver los datos de la tienda</button></div>`;
 }
 (async()=>{
   [PR,META,STORES]=await Promise.all([j("data/products.json",[]),j("data/meta.json",{}),j("data/stores.json",null)]);

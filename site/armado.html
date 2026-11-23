@@ -34,8 +34,8 @@
 @media(max-width:640px){table.gt,table.gt tbody,table.gt tr,table.gt td{display:block;width:100%}table.gt tr:first-child{display:none}table.gt tr{padding:12px 14px;border-bottom:1px solid var(--line2)}table.gt td{border:0;padding:3px 0}table.gt td:nth-child(2){padding:6px 0}}
 
 /* sugerencias con foto (actualización 30) */
-.shopi>div{display:grid!important;grid-template-columns:52px minmax(0,1fr) auto;align-items:center;gap:10px!important;padding:6px 0!important;border-top:1px solid var(--line)}
-.shopi>div:first-child{border-top:0}
+.shopi>div:not(.mhide),.shopi>.mhide>div{display:grid!important;grid-template-columns:52px minmax(0,1fr) auto;align-items:center;gap:10px!important;padding:6px 0!important;border-top:1px solid var(--line)}
+.shopi>div:first-child{border-top:0}.shopi>.mhide{display:block!important;padding:0!important;border:0!important}
 .gpk{display:grid;grid-template-columns:52px minmax(0,1fr);gap:10px;align-items:center;width:100%;text-align:left;padding:7px 8px;margin:6px 0 0;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--tx);font:inherit;cursor:pointer}
 @media (hover:hover) and (pointer:fine){.gpk:hover{border-color:var(--acc)}}.gpk.on{border-color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc);background:color-mix(in srgb,var(--acc) 9%,var(--card))}
 .gpk b{display:block;font-size:14px}.gpk .note{display:block}
@@ -43,7 +43,7 @@
 .shopi .th{width:52px;height:52px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none}
 .shopi .th img{max-width:100%;max-height:100%;object-fit:contain}.shopi .th svg{width:24px;height:24px;color:#94a3b8}
 .part .pt{display:flex;align-items:center;gap:8px}.part .pt svg{width:18px;height:18px;color:var(--acc);flex:none}
-@media(max-width:520px){.shopi>div{grid-template-columns:44px minmax(0,1fr)}.shopi>div>span:last-child{grid-column:2}.shopi .th{width:44px;height:44px}}
+@media(max-width:520px){.shopi>div:not(.mhide),.shopi>.mhide>div{grid-template-columns:44px minmax(0,1fr)}.shopi>div:not(.mhide)>span:last-child,.shopi>.mhide>div>span:last-child{grid-column:2}.shopi .th{width:44px;height:44px}}
 </style>
 </head>
 <body data-page="armado">
@@ -60,7 +60,7 @@
   <div class="f" style="max-width:300px"><label>Resolución de tu monitor</label><div class="seg" id="res"><button data-v="0" class="on">1080p</button><button data-v="1">1440p</button><button data-v="2">4K</button></div></div>
 </div></div>
 
-<label class="tog" style="margin:4px 0 8px"><input type="checkbox" id="usedc"> Incluir piezas de outlet y reacondicionadas <span class="note">(más baratas, pueden tener menos garantía)</span></label>
+<label class="tog tog2" style="margin:4px 0 8px"><input type="checkbox" id="usedc"> Incluir piezas de outlet y reacondicionadas <span class="note">(más baratas, pueden tener menos garantía)</span></label>
 <div id="out"></div>
 
 <h2>Antes de comprar: checklist anti-errores</h2>
@@ -76,7 +76,7 @@
 <h2>De dónde salen los datos</h2>
 <div class="panel note" id="src"></div>
 </main>
-<script src="js/lib.js"></script><script src="js/icons.js"></script><script src="js/rep.js"></script><script src="js/quickview.js"></script><script src="js/history.js"></script>
+<script src="js/lib.js"></script><script src="js/buildtools.js"></script><script src="js/icons.js"></script><script src="js/rep.js"></script><script src="js/quickview.js"></script><script src="js/history.js"></script>
 <script>
 const $=s=>document.querySelector(s),{ARS,esc,RES}=CT;
 let HW,PR=[],META={},C,S={mode:"gpu",res:0,id:null,ven:"",gid:null};
@@ -86,12 +86,15 @@ function shopHtml(items,extra){
   if(!PR.length)return '<div class="note">Sin datos de precios cargados.</div>';
   if(!items.length)return '<div class="note">No encontré opciones con stock ahora mismo en el comparador.</div>';
   // el nombre abre la vista rápida (Seguir precio / Agregar a mi lista); ☆ y + lo hacen directo desde la fila
-  return '<div class="shop shopi">'+items.map(x=>`<div><span class="th" aria-hidden="true">${thumb(x.g)}</span><span>${QV.link(x.g,x.g.name.slice(0,70))} <span class="note">· <a href="${esc(x.o.url)}" target="_blank" rel="noopener nofollow">${esc(x.o.store)} ↗</a>${REP.badge(x.o.store)}${x.o.stock===true?"":" · stock sin confirmar"}${extra?extra(x):""}</span>${x.note?`<div class="note" style="color:${x.bios==="bios"?"var(--warn)":"inherit"}">${esc(x.note)}</div>`:""}</span><span style="white-space:nowrap"><b>${ARS(x.p)}</b>${QV.btns(x.g.id)}</span></div>`).join("")+'</div>';
+  const row=x=>`<div><span class="th" aria-hidden="true">${thumb(x.g)}</span><span>${QV.link(x.g,x.g.name.slice(0,70))} <span class="note">· <a href="${esc(x.o.url)}" target="_blank" rel="noopener nofollow">${esc(x.o.store)} ↗</a>${REP.badge(x.o.store)}${x.o.stock===true?"":" · stock sin confirmar"}${extra?extra(x):""}</span>${x.note?`<div class="note" style="color:${x.bios==="bios"?"var(--warn)":"inherit"}">${esc(x.note)}</div>`:""}</span><span style="white-space:nowrap"><b>${ARS(x.p)}</b>${QV.btns(x.g.id)}</span></div>`;
+  // act. 46 · celular: la primera opción a la vista y las demás con «Ver N opciones más» (en la computadora, igual que antes)
+  const rest=items.slice(1);
+  return '<div class="shop shopi mcol">'+row(items[0])+(rest.length?`<div class="mhide">${rest.map(row).join("")}</div><button type="button" class="mmore-btn" data-mmore="Ver ${rest.length} ${rest.length===1?"opción más":"opciones más"}" aria-expanded="false">Ver ${rest.length} ${rest.length===1?"opción más":"opciones más"}</button>`:"")+'</div>';
 }
 // miniatura del producto (si la foto no carga, el ícono de su categoría)
 const thumb=g=>g.image?`<img loading="lazy" decoding="async" width="52" height="52" src="${esc(g.image)}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{innerHTML:ICONS.svg('${esc(g.category)}',24)}))">`:ICONS.svg(g.category||"otros",24);
 const SLOTICO={cpu:"procesadores",gpu:"placas-de-video",ram:"memorias-ram",ssd:"almacenamiento",psu:"fuentes",mobo:"motherboards",cooler:"refrigeracion",case:"gabinetes"};
-const partHtml=p=>`<div class="part"><b class="pt">${SLOTICO[p.slot]?ICONS.svg(SLOTICO[p.slot],18):""}${esc(p.title)}</b><div class="why">${esc(p.why)}</div>${shopHtml(p.shop,p.slot==="psu"?x=>{const m=x.g.name.match(/(\d{3,4})\s?w/i);return m?" · "+m[1]+" W":""}:null)}</div>`;
+const partHtml=p=>`<div class="part"><b class="pt">${SLOTICO[p.slot]?ICONS.svg(SLOTICO[p.slot],18):""}${esc(p.title)}</b><div class="why">${esc(p.why)}</div>${shopHtml(p.shop,p.slot==="psu"?x=>{const m=x.g.name.match(/(\d{3,4})\s?w/i);return m?" · "+m[1]+" W":""}:null)}${BT.cmpH(p)}</div>`;
 function totalHtml(t){
   if(!PR.length)return"";
   const faltan=t.missing.length?`<small>Sin precio en el comparador: ${t.missing.map(esc).join(", ")}. El total es parcial.</small>`:`<small>Suma la primera opción de cada parte: la más barata con stock y, en gabinete y disipador, la más barata con compatibilidad verificada (${t.priced} de ${t.count}).</small>`;
@@ -103,7 +106,7 @@ function build(g,A){
   const col=(title,tag,own,tot,cpu)=>{const all=ids([...A.shared,...own]);return `<div class="col"><h3>${title}</h3><div class="tg">${tag}</div>
     ${own.length?own.map(partHtml).join(""):'<div class="note">No hay diferencias: esta configuración usa solo los componentes compartidos.</div>'}
     ${A.shared.length?`<div class="note up">+ los ${A.shared.length} componentes compartidos (arriba), ya incluidos en el total.</div>`:""}
-    ${totalHtml(tot)}${all.length?`<button type="button" class="qv-all" data-qall="${all.join(",")}"></button><div class="note">Agrega la primera opción de cada pieza (incluidas las compartidas) a tu lista del carrito.</div>`:""}</div>`};
+    ${totalHtml(tot)}${all.length?`<button type="button" class="qv-all" data-qall="${all.join(",")}"></button><div class="note">Agrega la primera opción de cada pieza (incluidas las compartidas) a tu lista del carrito.</div>`:""}${BT.actionsH([...A.shared,...own],{title:title+" · KyraNoHard"})}</div>`};
   let h="";
   if(A.shared.length)h+=`<div class="col shared" style="margin-bottom:14px"><h3>Componentes compartidos por ambas configuraciones</h3><div class="tg">Son idénticos en el mínimo y en el sugerido: aparecen una sola vez. Cada configuración los cuenta en su propio total.</div>${A.shared.map(partHtml).join("")}</div>`;
   h+=`<div class="cols">${col("Hardware mínimo","Sin cuello de botella importante a "+RES[r],A.onlyMin,A.totalMin)}${col("Hardware sugerido","Equilibrado y con margen a "+RES[r],A.onlySug,A.totalSug)}</div>`;

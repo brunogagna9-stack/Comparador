@@ -84,5 +84,15 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ${{ runner.temp }}/site_publicar
+      # act. 46: el 22 y el 23/11 GitHub Pages falló al publicar («No artifacts named github-pages» / «Fetching artifact
+      # metadata failed… re-run later»): los datos se guardaban pero la web quedaba con los precios anteriores.
+      # Si falla, se espera un poco y se reintenta una vez; si vuelve a fallar, la corrida queda en rojo.
       - id: deploy
+        continue-on-error: true
+        uses: actions/deploy-pages@v4
+      - name: Esperar antes de reintentar la publicación
+        if: steps.deploy.outcome == 'failure'
+        run: sleep 90
+      - id: deploy2
+        if: steps.deploy.outcome == 'failure'
         uses: actions/deploy-pages@v4
