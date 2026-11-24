@@ -1,0 +1,28 @@
+name: Diagnóstico de tiendas (solo rama de prueba)
+
+# Actualización 47 · etapa 3. Lee tiendas candidatas con el mismo lector del comparador, respetando robots.txt, y
+# deja un informe. NO publica nada y NO toca los datos del comparador.
+on:
+  push:
+    branches: [prueba-tiendas]
+
+permissions:
+  contents: read
+
+jobs:
+  diagnostico:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Diagnóstico
+        run: python scripts/diagnostico_tiendas.py >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: diagnostico-tiendas
+          path: diagnostico_tiendas.json
