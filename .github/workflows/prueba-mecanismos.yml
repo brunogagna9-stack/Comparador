@@ -24,13 +24,16 @@ jobs:
     steps:
       - id: deploy
         continue-on-error: true
-        run: echo "Primer intento de publicación (simulado): falla a propósito"; exit 1
+        run: |
+          echo "Primer intento de publicación (simulado) — falla a propósito"
+          exit 1
       - name: Esperar antes de reintentar la publicación
         if: steps.deploy.outcome == 'failure'
         run: sleep 5
       - id: deploy2
         if: steps.deploy.outcome == 'failure'
-        run: echo "REINTENTO EJECUTADO"
+        run: |
+          echo "REINTENTO EJECUTADO"
   reintento-sin-falla:
     runs-on: ubuntu-24.04
     outputs:
@@ -39,13 +42,15 @@ jobs:
     steps:
       - id: deploy
         continue-on-error: true
-        run: echo "Primer intento de publicación (simulado): sale bien"
+        run: |
+          echo "Primer intento de publicación (simulado) — sale bien"
       - name: Esperar antes de reintentar la publicación
         if: steps.deploy.outcome == 'failure'
         run: sleep 5
       - id: deploy2
         if: steps.deploy.outcome == 'failure'
-        run: echo "REINTENTO EJECUTADO (no debería)"
+        run: |
+          echo "REINTENTO EJECUTADO (no debería)"
   comprobar-reintento:
     needs: [reintento-con-falla, reintento-sin-falla]
     runs-on: ubuntu-24.04
