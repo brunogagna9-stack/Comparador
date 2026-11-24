@@ -141,6 +141,10 @@ CATEGORIES = [  # el orden importa: la primera regla que coincide gana
     ("almacenamiento", r"\bssd\b|nvme|m\.2|\bhdd\b|disco"),
     ("perifericos", r"teclado|mouse|auricular|headset|joystick|gamepad|webcam|parlante|micr[oó]fono|\bpad\b|silla|volante"),
     ("redes", r"router|placa de red|wifi|wi-fi|access point|\bswitch\b|repetidor"),
+    # act. 47: títulos sin la palabra «fuente» ni «memoria» (Quantum: «Gigabyte | P650B 650W 80 Plus Bronze»,
+    # «Kingston 4GB 2666Mhz KVR»). Van al final: solo si ninguna regla anterior coincidió.
+    ("fuentes", r"\b\d{3,4} ?w\b.{0,40}\b80 ?(\+|plus)|\b80 ?(\+|plus).{0,40}\b\d{3,4} ?w\b"),
+    ("memorias-ram", r"\b\d{1,3} ?gb\b.{0,12}\b\d{4} ?mhz\b"),
 ]
 
 # Subcategorías de Compragamer -> categoría propia (ver scrapers/compragamer.py)

@@ -40,7 +40,7 @@ const t = async (name, fn) => { try { await fn(); n++; } catch (e) { console.err
   });
   await t("notebook con ficha: peso con fuente y SKU; batería declarada como no publicada", async () => {
     const s = txt(await A.ask("¿cuánto pesa y qué batería tiene la notebook Lenovo Yoga 7?", {}));
-    assert(/1,61 kg/.test(s) && /Compragamer, SKU 83DK006HAR/.test(s) && /ninguna de las tiendas conectadas publica la capacidad/.test(s) && /317 × 222 × 17 mm/.test(s));
+    assert(/1,61 kg/.test(s) && /Compragamer, SKU 83DK006HAR/.test(s) && /ninguna tienda conectada la informa/.test(s) && /317 × 222 × 17 mm/.test(s));
     assert(!/\bWh\b.*\d+ ?Wh/.test(s), "no inventa una capacidad");
   });
   await t("notebook con contradicción de CPU: lo avisa; sin ficha: explica por qué falta", async () => {

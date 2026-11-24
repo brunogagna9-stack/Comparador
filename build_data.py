@@ -844,9 +844,9 @@ def main(only):
         spec_status["icecat"] = ic_status
     except Exception as e:
         spec_status["icecat"] = {"ok": False, "error": str(e)[:300]}
-    try:   # mouses/teclados/auriculares sin ficha de Compragamer: datos de la descripción de la propia tienda (marcados «según la tienda»)
+    try:   # mouses/teclados/auriculares/notebooks: datos de la descripción de la propia tienda (marcados «según la tienda»); en notebooks con ficha solo completa peso y batería que falten
         from scrapers import descspecs
-        ds_items, ds_status = descspecs.refresh(groups, all_items)
+        ds_items, ds_status = descspecs.refresh(groups, all_items, specs_by_key=spec_items)
         spec_items.update(ds_items)
         spec_status["descripciones_tienda"] = ds_status
     except Exception as e:

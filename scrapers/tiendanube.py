@@ -26,6 +26,10 @@ TN_STORES = {
         "/componentes-de-pc/", "/almacenamiento/discos-ssd-11sx5/", "/almacenamiento/discos-rigidos-n5ijp/",
         "/pc-y-notebooks/", "/audio-y-video/monitores-28l43/", "/perifericos-y-gaming/",
         "/redes-y-seguridad/routers-y-wi-fi-1mrp9/")),
+    # actualización 47 (robots.txt revisado el 2026-11-23 desde GitHub con el agente ComparadorARBot: permite estos
+    # listados). Se leen solo sus categorías de computación; las unidades «OUTLET» quedan separadas como usadas.
+    "Quantum Hardstore": ("https://quantumhardstore.com", (
+        "/componentes/", "/perifericos/", "/monitor/", "/notebook/", "/pcs-gamers2/")),
 }
 
 _LD = re.compile(r'<script type="application/ld\+json"[^>]*>(.*?)</script>', re.S)
@@ -88,7 +92,7 @@ def parse(html, store):
                     category=canon_category(name))
         p["store_sku"] = ld.get("sku") or None
         p["cuotas"] = cuotas_of(chunk)
-        if p["category"] in ("perifericos", "mouses", "teclados", "auriculares") and ld.get("description"):
+        if p["category"] in ("perifericos", "mouses", "teclados", "auriculares", "notebooks") and ld.get("description"):
             p["desc"] = _plain(str(ld["description"]))        # texto de la propia tienda (ver descspecs.py)
         out.append(p)
     return out

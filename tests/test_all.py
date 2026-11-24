@@ -270,7 +270,8 @@ def test_stores_json_reputacion_verificable():
             assert any("ficha" in n.lower() or "reputación" in n.lower() for n in s.get("notes", [])), name + ": explicar por qué no hay puntaje"
     con = {n for n, s in d.items() if s["reputation"]}
     # actualización 42: se completaron 16 tiendas más (ficha de Google Maps con el mismo sitio web que la tienda)
-    sin = {"Gaming City", "Hardloots", "ShopGamer", "WIZ TECH", "XT-PC", "IgnaTech", "Portal Tech & Gaming", "Vertex Retail"}
+    sin = {"Gaming City", "Hardloots", "ShopGamer", "WIZ TECH", "XT-PC", "IgnaTech", "Portal Tech & Gaming", "Vertex Retail",
+           "Quantum Hardstore"}   # act. 47: alta nueva, ficha de reputación todavía sin verificar
     assert len(con) == 33 and sin == set(d) - con, "solo estas tiendas quedan sin puntaje verificado"
     assert "average" not in json.dumps(d).lower()
 
@@ -1757,7 +1758,10 @@ def test_actualizacion_46_confiabilidad():
     assert fix_category("Board Asus Prime A520m-k / Am4 / DDR4 64 GB 90mb0tvq-mcaayo Negro", "memorias-ram") == "motherboards"
     assert fix_category("Memoria Kingston Fury 16GB DDR4", "memorias-ram") == "memorias-ram"
     d = open(".github/workflows/despertador.yml", encoding="utf-8").read()
-    assert "gh workflow run actualizar.yml" in d and "actions: write" in d and ">6" in d
+    # act. 47: la lógica pasó a scripts/despertador.sh (umbral configurable, 6 h por defecto, y modo simulación)
+    sh = open("scripts/despertador.sh", encoding="utf-8").read()
+    assert "actions: write" in d and "scripts/despertador.sh" in d
+    assert "gh workflow run actualizar.yml" in sh and "UMBRAL_HORAS:-6" in sh and "SIMULAR" in sh
     a = open(".github/workflows/actualizar.yml", encoding="utf-8").read()
     assert "workflow_dispatch" in a, "el despertador necesita poder arrancar la actualización"
     for f in ["site/encontra.html", "site/armado.html"]:
@@ -1798,3 +1802,98 @@ def test_actualizacion_46_celular():
     act = open(".github/workflows/actualizar.yml", encoding="utf-8").read()
     assert "id: deploy2" in act and "steps.deploy.outcome == 'failure'" in act
     print("celular 46: OK")
+
+
+def test_actualizacion_47_quantum():
+    """Quantum Hardstore (Tiendanube): solo listados que su robots.txt permite, ficha cargada y OUTLET separado."""
+    import build_data
+    from scrapers import tiendanube as tn
+    base, paths = tn.TN_STORES["Quantum Hardstore"]
+    assert base == "https://quantumhardstore.com" and isinstance(paths, tuple) and "/componentes/" in paths
+    prohibidos = ("/admin/", "/account/", "/checkout/", "/comprar/", "/search/", "/envio/")
+    assert not any(p.startswith(x) for p in paths for x in prohibidos)
+    st = json.load(open("site/data/stores.json"))["stores"]["Quantum Hardstore"]
+    assert st["site"] == base and st["integration"] == "completa" and st["reputation"] == []
+    chunk = ('<div><span data-priceraw-without-shipping="7500000"></span><script type="application/ld+json">' +
+             json.dumps({"@type": "Product", "name": "MSI | RTX 3070 VENTUS 3X 8GB (OUTLET)", "sku": "Q1",
+                         "offers": {"price": "100000", "priceCurrency": "ARS", "availability": "https://schema.org/InStock",
+                                    "url": base + "/productos/msi-rtx-3070/"}}) + "</script></div>")
+    p = tn.parse(chunk, "Quantum Hardstore")[0]
+    assert p["price_cash"] == 75000 and p["price_list"] == 100000 and p["stock"] is True
+    assert build_data._USED.search(p["name"])
+    from scrapers.common import canon_category as cc
+    assert cc("Gigabyte | P650B 650W 80 Plus Bronze (OUTLET)") == cc("EVGA | 1000W GQ 80+ GOLD") == "fuentes"
+    assert cc("Kingston 4GB 2666Mhz KVR 4 (OUTLET)") == "memorias-ram"
+    assert cc("Gabinete Kolink con fuente 600W 80 Plus") in ("fuentes", "gabinetes")      # sin cambios: reglas previas
+    assert cc("Monitor 27 165Hz") == "monitores" and cc("Soporte GPU estándar (72mm-120mm)") == "otros"
+
+
+def test_actualizacion_47_mercadolibre_sin_secretos():
+    """Mercado Libre (etapa 4): sin secretos no hace ningún pedido; con secretos usa la API oficial y no lo publica aún."""
+    from scrapers import mercadolibre as ml, SCRAPERS
+    assert "Mercado Libre" not in SCRAPERS, "no se conecta al comparador hasta que el dueño lo autorice"
+    class NoRed:
+        def __getattr__(self, k):
+            raise AssertionError("sin secretos no debe haber red")
+    r = ml.leer(["Ryzen 5 7600"], env={}, http=NoRed())
+    assert r["productos"] == [] and "ML_CLIENT_ID" in r["motivo"] and "ML_REFRESH_TOKEN" in r["motivo"]
+    class Resp:
+        def __init__(self, code, d): self.status_code, self._d = code, d
+        def json(self): return self._d
+    pedidos = []
+    class Falso:
+        def post(self, url, data, timeout):
+            pedidos.append(url); assert data["grant_type"] == "refresh_token"
+            return Resp(200, {"access_token": "A", "refresh_token": "R2"})
+        def get(self, url, params=None, headers=None, timeout=None):
+            pedidos.append(url); assert headers == {"Authorization": "Bearer A"}
+            if url.endswith("/products/search"):
+                return Resp(200, {"results": [{"id": "MLA123", "name": "Procesador AMD Ryzen 5 7600"}]})
+            return Resp(200, {"results": [{"item_id": "MLA9", "price": 300000, "currency_id": "ARS", "condition": "new"},
+                                          {"item_id": "MLA8", "price": 250000, "currency_id": "ARS", "condition": "used"},
+                                          {"item_id": "MLA7", "price": 280000, "currency_id": "ARS", "condition": "new"}]})
+    env = {"ML_CLIENT_ID": "1", "ML_CLIENT_SECRET": "s", "ML_REFRESH_TOKEN": "R1"}
+    r = ml.leer(["Ryzen 5 7600"], env=env, http=Falso(), dormir=lambda s: None)
+    p = r["productos"][0]
+    assert p["item_id"] == "MLA7" and p["price_list"] == 280000 and r["nuevo_refresh"] == "R2" and r["motivo"] is None
+    assert p["url"] == "https://www.mercadolibre.com.ar/p/MLA123" and len(pedidos) == 3
+    # ninguna clave en archivos del repositorio ni de la web
+    import pathlib, re
+    for f in list(pathlib.Path("site").rglob("*.js")) + list(pathlib.Path("site").rglob("*.html")) + [pathlib.Path("scrapers/mercadolibre.py")]:
+        assert not re.search(r"APP_USR-\d|TG-[0-9a-f]{20}", f.read_text(encoding="utf-8", errors="ignore")), f
+
+
+def test_actualizacion_47_notebooks_peso_y_bateria():
+    """Etapa 5: peso y batería de notebooks desde la descripción de la tienda, marcados como dato de la tienda."""
+    from scrapers import descspecs as ds
+    t = "Procesador Ryzen 7\nPeso: 1,65 kg\nPeso del cargador: 0,4 kg\nBatería: 3 celdas, 54 Wh\nAutonomía: hasta 10 horas"
+    f = ds.parse_desc(t, "notebooks")
+    assert f["peso"] == {"v": 1.65, "u": "kg"} and f["bateria_wh"] == {"v": 54, "u": "Wh"} and f["bateria_celdas"] == {"v": 3}
+    assert "autonomia_h" not in f                                         # la autonomía de marketing no se toma
+    assert ds.parse_desc("Peso aproximado 1800 g\nBateria 4 cell 70Whr", "notebooks")["peso"]["v"] == 1.8
+    assert ds.parse_desc("Peso con embalaje: 3 kg", "notebooks") == {}    # peso de la caja, no de la notebook
+    assert ds.parse_desc("Batería 5000 mAh", "notebooks") == {}           # mAh no es comparable: no se convierte
+    assert ds.parse_desc("Peso: 25 kg", "notebooks") == {}                # fuera de rango
+    # 1) notebook SIN ficha: se arma una con lo que dice la tienda (aunque sea un solo dato)
+    g1 = {"id": "nb1", "name": "Notebook X", "category": "notebooks", "offers": [{"store": "Dinobyte", "url": "u1"}]}
+    # 2) notebook CON ficha de Compragamer: solo se completa lo que falta, sin pisar el peso de la ficha
+    g2 = {"id": "nb2", "name": "Notebook Y", "category": "notebooks", "spec": "PN2",
+          "offers": [{"store": "Compragamer", "url": "c2"}, {"store": "Max Tecno", "url": "u2"}]}
+    base = {"PN2": {"n": "Notebook Y", "s": "Compragamer", "f": {"peso": {"v": 1.7, "u": "kg"}}, "miss": ["bateria_wh", "autonomia_h"]}}
+    items = [{"url": "u1", "desc": "Peso: 2,1 kg"}, {"url": "u2", "desc": "Peso: 1,9 kg\nBatería 60 Wh"}]
+    out, st = ds.refresh([g1, g2], items, today="2026-11-23", specs_by_key=base)
+    assert g1["spec"] == "ds:nb1" and out["ds:nb1"]["f"]["peso"]["v"] == 2.1 and out["ds:nb1"]["f"]["peso"]["l"] == "pend"
+    assert out["ds:nb1"]["miss"] == ["bateria_wh"]
+    f2 = base["PN2"]["f"]
+    assert f2["peso"] == {"v": 1.7, "u": "kg"}, "nunca se pisa la ficha de Compragamer"
+    assert f2["bateria_wh"]["v"] == 60 and f2["bateria_wh"]["s"] == "Max Tecno" and "no es del fabricante" in f2["bateria_wh"]["n"]
+    assert base["PN2"]["miss"] == ["autonomia_h"] and st["notebooks_completadas"] == 1 and st["vinculadas"] == 1
+    # las tiendas guardan la descripción de notebooks (antes solo de periféricos)
+    from scrapers import goldentech
+    it = {"type": "simple", "name": "Notebook Lenovo IdeaPad 15", "permalink": "https://x/nb", "is_in_stock": True,
+          "prices": {"price": "100000000", "regular_price": "100000000", "currency_minor_unit": 2},
+          "categories": [{"name": "Notebooks"}], "description": "<ul><li>Peso: 1,6 kg</li></ul>"}
+    p = goldentech.parse([it], "Max Tecno")[0]
+    assert p["category"] == "notebooks" and "Peso: 1,6 kg" in p["desc"]
+    js = open("site/js/compare.js", encoding="utf-8").read()
+    assert 'C.sf(it.g, "bateria_wh")' in js and "get: () => ND }," not in js.split('id: "bat"')[1][:400]
