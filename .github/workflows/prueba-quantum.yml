@@ -32,6 +32,26 @@ jobs:
           print(f"- categorías: {dict(cat.most_common())}")
           json.dump(it, open("quantum.json", "w"), ensure_ascii=False)
           PY
+      - name: Cobertura por categoría (lo que la tienda dice vs. lo leído)
+        run: |
+          python3 - <<'PY' | tee -a "$GITHUB_STEP_SUMMARY"
+          import re
+          from scrapers.common import get
+          from scrapers import tiendanube as tn
+          base, paths = tn.TN_STORES["Quantum Hardstore"]
+          for p in paths:
+              tot, pages = 0, 0
+              for page in range(1, 40):
+                  h = get(base + p + (f"?page={page}" if page > 1 else ""))
+                  n = len(tn.parse(h, "Quantum Hardstore"))
+                  if page == 1:
+                      dice = re.findall(r"(\d[\d.]*)\s+productos?\b", h, re.I)[:3]
+                      sig = re.findall(r'(?:rel="next"|js-load-more|data-next-page|page=2)[^>]{0,80}', h)[:2]
+                  if not n:
+                      break
+                  tot += n; pages += 1
+              print(f"- {p}: {tot} productos en {pages} páginas; la página dice: {dice}; señales de más páginas: {sig}")
+          PY
       - uses: actions/upload-artifact@v7
         with:
           name: quantum
