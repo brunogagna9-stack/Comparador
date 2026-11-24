@@ -1,4 +1,4 @@
 requests
 beautifulsoup4
 lxml
-rapidfuzz==3.14.3
+rapidfuzz==3.14.6
