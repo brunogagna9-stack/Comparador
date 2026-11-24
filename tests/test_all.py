@@ -1821,3 +1821,38 @@ def test_actualizacion_47_quantum():
     p = tn.parse(chunk, "Quantum Hardstore")[0]
     assert p["price_cash"] == 75000 and p["price_list"] == 100000 and p["stock"] is True
     assert build_data._USED.search(p["name"])
+
+
+def test_actualizacion_47_mercadolibre_sin_secretos():
+    """Mercado Libre (etapa 4): sin secretos no hace ningún pedido; con secretos usa la API oficial y no lo publica aún."""
+    from scrapers import mercadolibre as ml, SCRAPERS
+    assert "Mercado Libre" not in SCRAPERS, "no se conecta al comparador hasta que el dueño lo autorice"
+    class NoRed:
+        def __getattr__(self, k):
+            raise AssertionError("sin secretos no debe haber red")
+    r = ml.leer(["Ryzen 5 7600"], env={}, http=NoRed())
+    assert r["productos"] == [] and "ML_CLIENT_ID" in r["motivo"] and "ML_REFRESH_TOKEN" in r["motivo"]
+    class Resp:
+        def __init__(self, code, d): self.status_code, self._d = code, d
+        def json(self): return self._d
+    pedidos = []
+    class Falso:
+        def post(self, url, data, timeout):
+            pedidos.append(url); assert data["grant_type"] == "refresh_token"
+            return Resp(200, {"access_token": "A", "refresh_token": "R2"})
+        def get(self, url, params=None, headers=None, timeout=None):
+            pedidos.append(url); assert headers == {"Authorization": "Bearer A"}
+            if url.endswith("/products/search"):
+                return Resp(200, {"results": [{"id": "MLA123", "name": "Procesador AMD Ryzen 5 7600"}]})
+            return Resp(200, {"results": [{"item_id": "MLA9", "price": 300000, "currency_id": "ARS", "condition": "new"},
+                                          {"item_id": "MLA8", "price": 250000, "currency_id": "ARS", "condition": "used"},
+                                          {"item_id": "MLA7", "price": 280000, "currency_id": "ARS", "condition": "new"}]})
+    env = {"ML_CLIENT_ID": "1", "ML_CLIENT_SECRET": "s", "ML_REFRESH_TOKEN": "R1"}
+    r = ml.leer(["Ryzen 5 7600"], env=env, http=Falso(), dormir=lambda s: None)
+    p = r["productos"][0]
+    assert p["item_id"] == "MLA7" and p["price_list"] == 280000 and r["nuevo_refresh"] == "R2" and r["motivo"] is None
+    assert p["url"] == "https://www.mercadolibre.com.ar/p/MLA123" and len(pedidos) == 3
+    # ninguna clave en archivos del repositorio ni de la web
+    import pathlib, re
+    for f in list(pathlib.Path("site").rglob("*.js")) + list(pathlib.Path("site").rglob("*.html")) + [pathlib.Path("scrapers/mercadolibre.py")]:
+        assert not re.search(r"APP_USR-\d|TG-[0-9a-f]{20}", f.read_text(encoding="utf-8", errors="ignore")), f
