@@ -895,6 +895,19 @@
     "La ficha de Google Maps «NickHard» tiene el mismo sitio web y teléfono que la tienda (revisada el 6/11/2026)."
    ],
    "zone": "Gran Buenos Aires"
+  },
+  "Quantum Hardstore": {
+   "site": "https://quantumhardstore.com",
+   "integration": "completa",
+   "how": "Listado público de productos de Tiendanube (?page=N), como lo ve un visitante, solo en sus categorías de computación (componentes, periféricos, monitores, notebooks y PC armadas): nombre, precio, stock e imagen salen de los datos estructurados de cada producto. Su robots.txt permite el listado.",
+   "checked": "2026-11-23",
+   "notes": [
+    "El precio contado es el que la tienda publica con descuento por transferencia (al 23/11/2026, 25% menos que el de lista); el de lista es el precio general del producto.",
+    "Vende unidades «OUTLET» (usadas o de exhibición): el comparador las muestra aparte y nunca las mezcla con el producto nuevo.",
+    "Su código de producto es interno: los productos se cruzan con otras tiendas por nombre y modelo.",
+    "Todavía no se cargaron dirección, teléfono ni reputación verificados de la tienda."
+   ],
+   "reputation": []
   }
  },
  "_ayuda_zone": "zone: provincia o zona del local que figura en contact.address (para el filtro «Zona de la tienda»). Solo se carga si hay una dirección verificada; sin dirección, la tienda no entra en ninguna zona. Tener local no garantiza retiro en el local: se aclara en la web."

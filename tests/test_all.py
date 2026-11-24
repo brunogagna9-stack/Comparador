@@ -270,7 +270,8 @@ def test_stores_json_reputacion_verificable():
             assert any("ficha" in n.lower() or "reputación" in n.lower() for n in s.get("notes", [])), name + ": explicar por qué no hay puntaje"
     con = {n for n, s in d.items() if s["reputation"]}
     # actualización 42: se completaron 16 tiendas más (ficha de Google Maps con el mismo sitio web que la tienda)
-    sin = {"Gaming City", "Hardloots", "ShopGamer", "WIZ TECH", "XT-PC", "IgnaTech", "Portal Tech & Gaming", "Vertex Retail"}
+    sin = {"Gaming City", "Hardloots", "ShopGamer", "WIZ TECH", "XT-PC", "IgnaTech", "Portal Tech & Gaming", "Vertex Retail",
+           "Quantum Hardstore"}   # act. 47: alta nueva, ficha de reputación todavía sin verificar
     assert len(con) == 33 and sin == set(d) - con, "solo estas tiendas quedan sin puntaje verificado"
     assert "average" not in json.dumps(d).lower()
 
@@ -1757,7 +1758,10 @@ def test_actualizacion_46_confiabilidad():
     assert fix_category("Board Asus Prime A520m-k / Am4 / DDR4 64 GB 90mb0tvq-mcaayo Negro", "memorias-ram") == "motherboards"
     assert fix_category("Memoria Kingston Fury 16GB DDR4", "memorias-ram") == "memorias-ram"
     d = open(".github/workflows/despertador.yml", encoding="utf-8").read()
-    assert "gh workflow run actualizar.yml" in d and "actions: write" in d and ">6" in d
+    # act. 47: la lógica pasó a scripts/despertador.sh (umbral configurable, 6 h por defecto, y modo simulación)
+    sh = open("scripts/despertador.sh", encoding="utf-8").read()
+    assert "actions: write" in d and "scripts/despertador.sh" in d
+    assert "gh workflow run actualizar.yml" in sh and "UMBRAL_HORAS:-6" in sh and "SIMULAR" in sh
     a = open(".github/workflows/actualizar.yml", encoding="utf-8").read()
     assert "workflow_dispatch" in a, "el despertador necesita poder arrancar la actualización"
     for f in ["site/encontra.html", "site/armado.html"]:
@@ -1798,3 +1802,22 @@ def test_actualizacion_46_celular():
     act = open(".github/workflows/actualizar.yml", encoding="utf-8").read()
     assert "id: deploy2" in act and "steps.deploy.outcome == 'failure'" in act
     print("celular 46: OK")
+
+
+def test_actualizacion_47_quantum():
+    """Quantum Hardstore (Tiendanube): solo listados que su robots.txt permite, ficha cargada y OUTLET separado."""
+    import build_data
+    from scrapers import tiendanube as tn
+    base, paths = tn.TN_STORES["Quantum Hardstore"]
+    assert base == "https://quantumhardstore.com" and isinstance(paths, tuple) and "/componentes/" in paths
+    prohibidos = ("/admin/", "/account/", "/checkout/", "/comprar/", "/search/", "/envio/")
+    assert not any(p.startswith(x) for p in paths for x in prohibidos)
+    st = json.load(open("site/data/stores.json"))["stores"]["Quantum Hardstore"]
+    assert st["site"] == base and st["integration"] == "completa" and st["reputation"] == []
+    chunk = ('<div><span data-priceraw-without-shipping="7500000"></span><script type="application/ld+json">' +
+             json.dumps({"@type": "Product", "name": "MSI | RTX 3070 VENTUS 3X 8GB (OUTLET)", "sku": "Q1",
+                         "offers": {"price": "100000", "priceCurrency": "ARS", "availability": "https://schema.org/InStock",
+                                    "url": base + "/productos/msi-rtx-3070/"}}) + "</script></div>")
+    p = tn.parse(chunk, "Quantum Hardstore")[0]
+    assert p["price_cash"] == 75000 and p["price_list"] == 100000 and p["stock"] is True
+    assert build_data._USED.search(p["name"])
