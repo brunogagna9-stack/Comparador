@@ -1,0 +1,77 @@
+name: Prueba de mecanismos (solo rama de prueba)
+
+# Actualización 47 · prueba controlada. NO publica nada y NO lee tiendas.
+# 1) Reintento de publicación: mismas condiciones que actualizar.yml (copiadas tal cual), con la publicación
+#    reemplazada por un paso que falla a propósito. Se comprueba que el reintento corre y que el trabajo termina bien;
+#    y, en el caso sin falla, que el reintento NO corre.
+# 2) Despertador: scripts/despertador.sh en modo simulación con un umbral muy bajo (debe decir que arrancaría) y con el
+#    umbral real de 6 h (no debe arrancar nada).
+
+on:
+  push:
+    branches: [prueba-mecanismos]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  reintento-con-falla:
+    runs-on: ubuntu-24.04
+    outputs:
+      d1: ${{ steps.deploy.outcome }}
+      d2: ${{ steps.deploy2.outcome }}
+    steps:
+      - id: deploy
+        continue-on-error: true
+        run: echo "Primer intento de publicación (simulado): falla a propósito"; exit 1
+      - name: Esperar antes de reintentar la publicación
+        if: steps.deploy.outcome == 'failure'
+        run: sleep 5
+      - id: deploy2
+        if: steps.deploy.outcome == 'failure'
+        run: echo "REINTENTO EJECUTADO"
+  reintento-sin-falla:
+    runs-on: ubuntu-24.04
+    outputs:
+      d1: ${{ steps.deploy.outcome }}
+      d2: ${{ steps.deploy2.outcome }}
+    steps:
+      - id: deploy
+        continue-on-error: true
+        run: echo "Primer intento de publicación (simulado): sale bien"
+      - name: Esperar antes de reintentar la publicación
+        if: steps.deploy.outcome == 'failure'
+        run: sleep 5
+      - id: deploy2
+        if: steps.deploy.outcome == 'failure'
+        run: echo "REINTENTO EJECUTADO (no debería)"
+  comprobar-reintento:
+    needs: [reintento-con-falla, reintento-sin-falla]
+    runs-on: ubuntu-24.04
+    steps:
+      - run: |
+          echo "Con falla:   primer intento=${{ needs.reintento-con-falla.outputs.d1 }} reintento=${{ needs.reintento-con-falla.outputs.d2 }}"
+          echo "Sin falla:   primer intento=${{ needs.reintento-sin-falla.outputs.d1 }} reintento=${{ needs.reintento-sin-falla.outputs.d2 }}"
+          test "${{ needs.reintento-con-falla.outputs.d1 }}" = failure
+          test "${{ needs.reintento-con-falla.outputs.d2 }}" = success
+          test "${{ needs.reintento-sin-falla.outputs.d1 }}" = success
+          test "${{ needs.reintento-sin-falla.outputs.d2 }}" = skipped
+          echo "VERIFICADO: el reintento corre solo cuando falla el primer intento, y la corrida termina bien."
+  despertador:
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      URL: https://brunogagna9-stack.github.io/Comparador/data/meta.json
+    steps:
+      - uses: actions/checkout@v7
+      - name: Umbral muy bajo (simulación) → debe decir que arrancaría o que ya hay una en curso
+        run: |
+          out=$(UMBRAL_HORAS=0.01 SIMULAR=1 bash scripts/despertador.sh); echo "$out"
+          echo "$out" | grep -E "RESULTADO: (arrancaria|en-curso)"
+      - name: Umbral real (6 h) → no debe arrancar nada con precios recientes
+        run: |
+          out=$(SIMULAR=1 bash scripts/despertador.sh); echo "$out"
+          echo "$out" | grep -E "RESULTADO: (al-dia|en-curso|arrancaria)"
+          ! echo "$out" | grep -q "RESULTADO: arranca ·"
