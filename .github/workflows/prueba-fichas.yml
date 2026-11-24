@@ -1,0 +1,40 @@
+name: Prueba fichas de notebooks (no publica)
+on:
+  push:
+    branches: [prueba-fichas]
+permissions:
+  contents: read
+jobs:
+  fichas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - name: Peso y batería de notebooks en tiendas reales
+        run: |
+          python3 - <<'PY' | tee -a "$GITHUB_STEP_SUMMARY"
+          import json, random
+          from scrapers import SCRAPERS, descspecs as ds
+          ejemplos = []
+          print("| tienda | notebooks | con descripción | con peso | con batería (Wh) |\n|---|---|---|---|---|")
+          for s in ("Dinobyte", "Max Tecno", "GoldenTech", "Nickhard", "ShopGamer", "Click Gaming", "SCP Hardstore"):
+              try:
+                  it = [p for p in SCRAPERS[s]() if p["category"] == "notebooks"]
+              except Exception as e:
+                  print(f"| {s} | error: {str(e)[:80]} | | | |"); continue
+              d = [p for p in it if p.get("desc")]
+              f = [(p, ds.parse_desc(p["desc"], "notebooks")) for p in d]
+              print(f"| {s} | {len(it)} | {len(d)} | {sum(1 for _, x in f if 'peso' in x)} | {sum(1 for _, x in f if 'bateria_wh' in x)} |")
+              ejemplos += [{"tienda": s, "nombre": p["name"], "url": p["url"], "datos": x,
+                            "lineas": [l for l in p["desc"].split("\n") if "peso" in l.lower() or "bater" in l.lower()][:4]} for p, x in f]
+          random.seed(1)
+          json.dump(ejemplos, open("fichas.json", "w"), ensure_ascii=False, indent=1)
+          PY
+      - uses: actions/upload-artifact@v7
+        with:
+          name: fichas
+          path: fichas.json
