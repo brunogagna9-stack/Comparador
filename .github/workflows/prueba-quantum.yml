@@ -1,0 +1,38 @@
+name: Prueba Quantum (no publica)
+on:
+  push:
+    branches: [prueba-quantum]
+permissions:
+  contents: read
+jobs:
+  leer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - name: Leer Quantum con el lector real
+        run: |
+          python3 - <<'PY' | tee -a "$GITHUB_STEP_SUMMARY"
+          import time, collections, json, re
+          import build_data
+          from scrapers import SCRAPERS
+          t = time.time(); it = SCRAPERS["Quantum Hardstore"](); dt = time.time() - t
+          cat = collections.Counter(p["category"] for p in it)
+          used = [p for p in it if build_data._USED.search(p["name"])]
+          cash = [p for p in it if p["price_list"] and p["price_cash"]]
+          ratios = sorted(round(p["price_cash"] / p["price_list"], 3) for p in cash)
+          print(f"- productos: {len(it)} en {dt:.0f} s")
+          print(f"- con precio contado y de lista: {len(cash)}; relación contado/lista (mín/mediana/máx): {ratios[0] if ratios else '-'} / {ratios[len(ratios)//2] if ratios else '-'} / {ratios[-1] if ratios else '-'}")
+          print(f"- en stock: {sum(1 for p in it if p['stock'])}; sin stock: {sum(1 for p in it if p['stock'] is False)}; con cuotas: {sum(1 for p in it if p.get('cuotas'))}")
+          print(f"- OUTLET/usados: {len(used)}; con foto: {sum(1 for p in it if p.get('image'))}; URLs repetidas: {len(it) - len({p['url'] for p in it})}")
+          print(f"- categorías: {dict(cat.most_common())}")
+          json.dump(it, open("quantum.json", "w"), ensure_ascii=False)
+          PY
+      - uses: actions/upload-artifact@v7
+        with:
+          name: quantum
+          path: quantum.json
