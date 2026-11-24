@@ -12,7 +12,7 @@ import re
 import unicodedata
 import datetime as dt
 
-CATS = ("mouses", "teclados", "auriculares")
+CATS = ("mouses", "teclados", "auriculares", "notebooks")
 
 
 def _t(s):
@@ -122,9 +122,36 @@ def _aur(t):
     return f
 
 
-_PARSERS = {"mouses": _mouse, "teclados": _teclado, "auriculares": _aur}
+# Notebooks (actualización 47): solo peso y batería, que la ficha de Compragamer no trae o que faltaban en notebooks de
+# otras tiendas aunque la página de la tienda los decía. Procesador, memoria y disco ya salen del título.
+_NB_NO = re.compile(r"cargador|embalaje|caja|paquete|bruto|envio|con bateria extra|adaptador")
+
+
+def _notebook(t):
+    f = {}
+    for line in t.split("\n"):
+        if "peso" in line and "peso" not in f and not _NB_NO.search(line):
+            m = re.search(r"peso[^\d\n]{0,30}(\d+(?:[.,]\d+)?)\s*(kg|kgs|kilos?|g|gr|grs|gramos)\b", line)
+            if m:
+                v = _num(m.group(1))
+                v = v / 1000 if v and m.group(2).startswith("g") else v
+                if v and 0.5 <= v <= 6:
+                    f["peso"] = {"v": round(v, 2), "u": "kg"}
+        if "bater" in line:
+            m = re.search(r"(\d{2,3}(?:[.,]\d)?)\s*(?:wh|whr|w/h|w-h|vatios[ -]hora)\b", line)
+            if m and "bateria_wh" not in f:
+                v = _num(m.group(1))
+                if v and 20 <= v <= 110:
+                    f["bateria_wh"] = {"v": round(v, 1) if v != int(v) else int(v), "u": "Wh"}
+            m = re.search(r"\b([2-9])\s*(?:celdas|cell|cells)\b", line)
+            if m and "bateria_celdas" not in f:
+                f["bateria_celdas"] = {"v": int(m.group(1))}
+    return f
+
+
+_PARSERS = {"mouses": _mouse, "teclados": _teclado, "auriculares": _aur, "notebooks": _notebook}
 WANTED = {"mouses": ("dpi_max", "botones", "sensor", "peso_g", "polling"), "teclados": ("mecanismo", "switch", "formato", "rgb"),
-          "auriculares": ("impedancia", "f_min", "f_max", "driver_mm", "mic")}
+          "auriculares": ("impedancia", "f_min", "f_max", "driver_mm", "mic"), "notebooks": ("peso", "bateria_wh")}
 
 
 def parse_desc(text, cat):
@@ -132,17 +159,19 @@ def parse_desc(text, cat):
     if cat not in _PARSERS or not text:
         return {}
     f = _PARSERS[cat](_t(text))
+    if cat == "notebooks":
+        return f
     from .specs import _check_peri
     return _check_peri(f, cat)
 
 
-def refresh(groups, all_items, today=None):
+def refresh(groups, all_items, today=None, specs_by_key=None):
     """Para cada grupo de mouse/teclado/auriculares SIN ficha, arma una a partir de las descripciones de sus ofertas."""
     today = today or dt.date.today().isoformat()
     by_url = {i.get("url"): i for i in all_items if i.get("desc")}
-    items, n = {}, 0
+    items, n, completadas = {}, 0, 0
     for g in groups:
-        if g.get("category") not in CATS or g.get("spec"):
+        if g.get("category") not in CATS or (g.get("spec") and g.get("category") != "notebooks"):
             continue
         cands = []
         for o in g.get("offers", ()):
@@ -163,7 +192,24 @@ def refresh(groups, all_items, today=None):
                     continue
                 merged[k], origin[k] = dict(rec), o
         merged = {k: v for k, v in merged.items() if v}
-        if len(merged) < 2:
+        nb = g["category"] == "notebooks"
+        if nb and g.get("spec"):
+            # ya tiene ficha (Compragamer): solo se completa lo que esa ficha no trae, sin pisar nada
+            base = (specs_by_key or {}).get(g["spec"])
+            if not base:
+                continue
+            nuevos = 0
+            for k, v in merged.items():
+                if k in base["f"]:
+                    continue
+                v.update({"l": "pend", "s": origin[k]["store"], "url": origin[k].get("url"),
+                          "n": f"Según la descripción de {origin[k]['store']}; no es del fabricante."})
+                base["f"][k] = v
+                base["miss"] = [m for m in base.get("miss", []) if m != k]
+                nuevos += 1
+            completadas += bool(nuevos)
+            continue
+        if len(merged) < (1 if nb else 2):
             continue
         store = origin[next(iter(merged))]["store"]
         for k, v in merged.items():
@@ -175,4 +221,4 @@ def refresh(groups, all_items, today=None):
                       "f": merged, "miss": [k for k in WANTED[g["category"]] if k not in merged], "sheet": False}
         g["spec"] = key
         n += 1
-    return items, {"ok": True, "vinculadas": n}
+    return items, {"ok": True, "vinculadas": n, "notebooks_completadas": completadas}

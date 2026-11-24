@@ -46,7 +46,7 @@ def parse(items, store=STORE):
                     image=(imgs[0].get("thumbnail") or imgs[0].get("src")) if imgs else None,
                     category=canon_category(name, cats))
         p["store_sku"] = it.get("sku") or None
-        if p["category"] in ("perifericos", "mouses", "teclados", "auriculares"):
+        if p["category"] in ("perifericos", "mouses", "teclados", "auriculares", "notebooks"):
             d = _plain(it.get("description") or it.get("short_description") or "")
             if d:
                 p["desc"] = d

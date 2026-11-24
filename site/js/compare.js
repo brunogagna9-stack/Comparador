@@ -158,7 +158,8 @@
           get: it => { const r = C.sf(it.g, "ram_ampliable"); return r ? { v: null, text: r.v ? "Sí (" + r.note + ")" : "No (" + r.note + ")", disp: r.v ? "Sí (" + r.note + ")" : "No (" + r.note + ")", tag: r.tag, note: spNote(r) } : ND; } },
         { id: "panel", label: "Panel de pantalla", help: "IPS: buenos colores y ángulos. TN/VA: más básicos. OLED: máximo contraste.", get: it => { const r = C.sf(it.g, "panel"); return r ? Object.assign(txt(r.v, r.tag), { note: spNote(r) }) : ND; } },
         { id: "gar", label: "Garantía de la tienda", help: "Meses informados por la tienda. Confirmá si es garantía oficial del fabricante.", dir: "max", chart: " meses", get: it => { const r = C.sf(it.g, "garantia"); return r ? Object.assign(mk(r.v, r.v + " meses", r.tag), { note: spNote(r) }) : ND; } },
-        { id: "bat", label: "Batería y autonomía", help: "Ni Compragamer ni las otras tiendas conectadas publican la capacidad (Wh) en su ficha. No usamos la autonomía de marketing como si fuera real: confirmala en la hoja técnica del fabricante.", get: () => ND },
+        { id: "bat", label: "Batería", help: "Capacidad en Wh cuando la descripción de alguna tienda la indica (dato de la tienda, no del fabricante: confirmalo en la hoja técnica). No usamos la autonomía de marketing como si fuera real.", dir: "max", chart: " Wh",
+          get: it => { const r = C.sf(it.g, "bateria_wh"), c = C.sf(it.g, "bateria_celdas"); return r ? Object.assign(mk(r.v, fmt(r.v, 1) + " Wh" + (c ? " · " + c.v + " celdas" : ""), r.tag), { note: spNote(r) }) : ND; } },
       ],
       mouses: () => [
         P("dpi", "Sensibilidad máxima (DPI)", "Puntos por pulgada. Más DPI no es mejor por sí solo: la mayoría juega entre 400 y 3200. Sirve en monitores grandes o 4K.", "dpi_max", it => it.sp.dpi, v => fmt(v) + " DPI", "max"),
@@ -358,7 +359,7 @@
         const fp = r("fps"); if (fp && fp.cells.some(c => typeof c.v === "number")) out.push("Los FPS son un promedio de 11 juegos con un procesador de gama alta: en tu juego favorito la diferencia puede ser mayor o menor, y con DLSS/FSR cambia.");
       }
       if (cat === "procesadores") out.push("El puntaje de juegos se midió con una RTX 5090 a 1080p para destacar al procesador; con una placa de video más modesta, la diferencia entre procesadores se achica o desaparece.");
-      if (cat === "notebooks") out.push("Procesador, memoria y almacenamiento se leen del título de la tienda; peso, medidas, panel y garantía, de la ficha técnica de la tienda para ese SKU cuando existe. La capacidad de batería no la publica ninguna tienda conectada. El rendimiento real depende de la refrigeración y de los vatios que el fabricante le dé a cada chip.");
+      if (cat === "notebooks") out.push("Procesador, memoria y almacenamiento se leen del título de la tienda; peso, medidas, panel y garantía, de la ficha técnica de la tienda para ese SKU cuando existe. La capacidad de batería (Wh) se muestra solo cuando la descripción de una tienda la indica, marcada como dato de la tienda. El rendimiento real depende de la refrigeración y de los vatios que el fabricante le dé a cada chip.");
       if (cat === "pcs-armadas") out.push("El rendimiento es una estimación a partir de la placa y el procesador del título; confirmá con la tienda la versión exacta y la fuente incluida.");
       if (cat === "almacenamiento" || cat === "memorias-ram") out.push("Las velocidades son las anunciadas por la tienda o el fabricante (picos teóricos); en el uso diario una diferencia grande de cifras suele sentirse poco.");
       if (cat === "mouses") out.push("Más DPI no significa mejor puntería: lo que más se nota en juegos es el sensor, el peso y la forma que le quede cómoda a tu mano.");

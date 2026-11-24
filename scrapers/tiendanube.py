@@ -92,7 +92,7 @@ def parse(html, store):
                     category=canon_category(name))
         p["store_sku"] = ld.get("sku") or None
         p["cuotas"] = cuotas_of(chunk)
-        if p["category"] in ("perifericos", "mouses", "teclados", "auriculares") and ld.get("description"):
+        if p["category"] in ("perifericos", "mouses", "teclados", "auriculares", "notebooks") and ld.get("description"):
             p["desc"] = _plain(str(ld["description"]))        # texto de la propia tienda (ver descspecs.py)
         out.append(p)
     return out

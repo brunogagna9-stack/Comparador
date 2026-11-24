@@ -1856,3 +1856,39 @@ def test_actualizacion_47_mercadolibre_sin_secretos():
     import pathlib, re
     for f in list(pathlib.Path("site").rglob("*.js")) + list(pathlib.Path("site").rglob("*.html")) + [pathlib.Path("scrapers/mercadolibre.py")]:
         assert not re.search(r"APP_USR-\d|TG-[0-9a-f]{20}", f.read_text(encoding="utf-8", errors="ignore")), f
+
+
+def test_actualizacion_47_notebooks_peso_y_bateria():
+    """Etapa 5: peso y batería de notebooks desde la descripción de la tienda, marcados como dato de la tienda."""
+    from scrapers import descspecs as ds
+    t = "Procesador Ryzen 7\nPeso: 1,65 kg\nPeso del cargador: 0,4 kg\nBatería: 3 celdas, 54 Wh\nAutonomía: hasta 10 horas"
+    f = ds.parse_desc(t, "notebooks")
+    assert f["peso"] == {"v": 1.65, "u": "kg"} and f["bateria_wh"] == {"v": 54, "u": "Wh"} and f["bateria_celdas"] == {"v": 3}
+    assert "autonomia_h" not in f                                         # la autonomía de marketing no se toma
+    assert ds.parse_desc("Peso aproximado 1800 g\nBateria 4 cell 70Whr", "notebooks")["peso"]["v"] == 1.8
+    assert ds.parse_desc("Peso con embalaje: 3 kg", "notebooks") == {}    # peso de la caja, no de la notebook
+    assert ds.parse_desc("Batería 5000 mAh", "notebooks") == {}           # mAh no es comparable: no se convierte
+    assert ds.parse_desc("Peso: 25 kg", "notebooks") == {}                # fuera de rango
+    # 1) notebook SIN ficha: se arma una con lo que dice la tienda (aunque sea un solo dato)
+    g1 = {"id": "nb1", "name": "Notebook X", "category": "notebooks", "offers": [{"store": "Dinobyte", "url": "u1"}]}
+    # 2) notebook CON ficha de Compragamer: solo se completa lo que falta, sin pisar el peso de la ficha
+    g2 = {"id": "nb2", "name": "Notebook Y", "category": "notebooks", "spec": "PN2",
+          "offers": [{"store": "Compragamer", "url": "c2"}, {"store": "Max Tecno", "url": "u2"}]}
+    base = {"PN2": {"n": "Notebook Y", "s": "Compragamer", "f": {"peso": {"v": 1.7, "u": "kg"}}, "miss": ["bateria_wh", "autonomia_h"]}}
+    items = [{"url": "u1", "desc": "Peso: 2,1 kg"}, {"url": "u2", "desc": "Peso: 1,9 kg\nBatería 60 Wh"}]
+    out, st = ds.refresh([g1, g2], items, today="2026-11-23", specs_by_key=base)
+    assert g1["spec"] == "ds:nb1" and out["ds:nb1"]["f"]["peso"]["v"] == 2.1 and out["ds:nb1"]["f"]["peso"]["l"] == "pend"
+    assert out["ds:nb1"]["miss"] == ["bateria_wh"]
+    f2 = base["PN2"]["f"]
+    assert f2["peso"] == {"v": 1.7, "u": "kg"}, "nunca se pisa la ficha de Compragamer"
+    assert f2["bateria_wh"]["v"] == 60 and f2["bateria_wh"]["s"] == "Max Tecno" and "no es del fabricante" in f2["bateria_wh"]["n"]
+    assert base["PN2"]["miss"] == ["autonomia_h"] and st["notebooks_completadas"] == 1 and st["vinculadas"] == 1
+    # las tiendas guardan la descripción de notebooks (antes solo de periféricos)
+    from scrapers import goldentech
+    it = {"type": "simple", "name": "Notebook Lenovo IdeaPad 15", "permalink": "https://x/nb", "is_in_stock": True,
+          "prices": {"price": "100000000", "regular_price": "100000000", "currency_minor_unit": 2},
+          "categories": [{"name": "Notebooks"}], "description": "<ul><li>Peso: 1,6 kg</li></ul>"}
+    p = goldentech.parse([it], "Max Tecno")[0]
+    assert p["category"] == "notebooks" and "Peso: 1,6 kg" in p["desc"]
+    js = open("site/js/compare.js", encoding="utf-8").read()
+    assert 'C.sf(it.g, "bateria_wh")' in js and "get: () => ND }," not in js.split('id: "bat"')[1][:400]

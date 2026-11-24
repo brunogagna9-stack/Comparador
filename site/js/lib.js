@@ -258,7 +258,7 @@
     C.spec = g => (g && g.spec && C.SPECS && C.SPECS.items[g.spec]) || null;
     C.sf = (g, field) => {
       const it = C.spec(g), r = it && it.f[field]; if (!r) return null;
-      return { v: r.v, u: r.u || "", tag: r.l || "ver", note: r.n || "", src: it.s, url: it.url, date: it.d, sku: it.sku };
+      return { v: r.v, u: r.u || "", tag: r.l || "ver", note: r.n || "", src: r.s || it.s, url: r.url || it.url, date: it.d, sku: it.sku };   // act. 47: un dato puede venir de otra tienda
     };
     C.specMissing = (g, field) => { const it = C.spec(g); return !it ? "sin ficha" : (it.miss || []).includes(field) ? "no publicado" : null; };
     /* actualización 40: el catálogo no cambia mientras la página está abierta, así que se agrupa UNA vez por categoría y

@@ -177,12 +177,14 @@
     function notebookFacts(g) {
       const sp = CT.parse(g.name, "notebooks"), lines = [], o = C.bestOffer(g);
       const sf = f => C.sf(g, f);
-      const src = r => `${r.src}, SKU ${r.sku}, ${r.date}`;
+      const src = r => [r.src, r.sku ? "SKU " + r.sku : "", r.date].filter(Boolean).join(", ");
       const peso = sf("peso");
       lines.push(peso ? `Peso: ${fmtN(peso.v, 2)} kg (${src(peso)}${peso.tag === "pend" ? "; a confirmar" : ""}).` : `Peso: no pude obtenerlo — ${C.specMissing(g, "peso") === "sin ficha" ? "la tienda no publicó una ficha técnica de este modelo" : "la ficha de la tienda no lo informa"}.`);
       const a = sf("ancho"), b = sf("prof"), c = sf("alto");
       if (a && b) lines.push(`Medidas: ${a.v} × ${b.v}${c ? " × " + c.v : ""} mm (${src(a)}).`);
-      lines.push("Batería y autonomía: ninguna de las tiendas conectadas publica la capacidad (Wh) ni una autonomía medida. Buscala en la hoja técnica del fabricante; no usamos la autonomía de marketing como dato real.");
+      const bat = sf("bateria_wh"), cel = sf("bateria_celdas");
+      lines.push(bat ? `Batería: ${fmtN(bat.v, 1)} Wh${cel ? ", " + cel.v + " celdas" : ""} (${src(bat)}; dato de la descripción de la tienda, a confirmar en la hoja técnica del fabricante). La autonomía depende del uso: no la estimamos.`
+        : "Batería: no tengo la capacidad (Wh) de este modelo: ninguna tienda conectada la informa. Buscala en la hoja técnica del fabricante; no usamos la autonomía de marketing como dato real.");
       const am = sf("ram_ampliable"); if (am) lines.push(`RAM ampliable: ${am.v ? "sí" : "no"} (${am.note}).`);
       const pn = sf("panel"); if (pn) lines.push(`Panel: ${pn.v}.`);
       const gr = sf("garantia"); if (gr) lines.push(`Garantía informada por la tienda: ${gr.v} meses.`);
