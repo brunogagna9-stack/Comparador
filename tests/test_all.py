@@ -1821,6 +1821,11 @@ def test_actualizacion_47_quantum():
     p = tn.parse(chunk, "Quantum Hardstore")[0]
     assert p["price_cash"] == 75000 and p["price_list"] == 100000 and p["stock"] is True
     assert build_data._USED.search(p["name"])
+    from scrapers.common import canon_category as cc
+    assert cc("Gigabyte | P650B 650W 80 Plus Bronze (OUTLET)") == cc("EVGA | 1000W GQ 80+ GOLD") == "fuentes"
+    assert cc("Kingston 4GB 2666Mhz KVR 4 (OUTLET)") == "memorias-ram"
+    assert cc("Gabinete Kolink con fuente 600W 80 Plus") in ("fuentes", "gabinetes")      # sin cambios: reglas previas
+    assert cc("Monitor 27 165Hz") == "monitores" and cc("Soporte GPU estándar (72mm-120mm)") == "otros"
 
 
 def test_actualizacion_47_mercadolibre_sin_secretos():

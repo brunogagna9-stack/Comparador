@@ -1,0 +1,43 @@
+# Mercado Libre (etapa 4, actualización 47): canjea UNA vez el código de autorización por el refresh_token y lo guarda
+# como secreto del repositorio. Nada se imprime en el registro: los valores se enmascaran.
+# Requisitos (ver docs/auditorias/47-2-mercadolibre.md): secretos ML_CLIENT_ID, ML_CLIENT_SECRET, ML_REDIRECT_URI y
+# SECRETOS_PAT (token personal de GitHub con permiso «Secrets: read and write» solo sobre este repositorio).
+name: Mercado Libre · autorizar (manual)
+on:
+  workflow_dispatch:
+    inputs:
+      code:
+        description: "Código que aparece en la dirección después de autorizar (TG-...). Vale pocos minutos."
+        required: true
+permissions:
+  contents: read
+jobs:
+  canjear:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Canjear el código y guardar el refresh_token
+        env:
+          CODE: ${{ inputs.code }}
+          CID: ${{ secrets.ML_CLIENT_ID }}
+          CSEC: ${{ secrets.ML_CLIENT_SECRET }}
+          RURI: ${{ secrets.ML_REDIRECT_URI }}
+          GH_TOKEN: ${{ secrets.SECRETOS_PAT }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          echo "::add-mask::$CODE"
+          for v in CID CSEC RURI GH_TOKEN; do [ -n "${!v}" ] || { echo "Falta el secreto para $v"; exit 1; }; done
+          r=$(curl -sS -X POST https://api.mercadolibre.com/oauth/token \
+                -H "accept: application/json" -H "content-type: application/x-www-form-urlencoded" \
+                --data-urlencode grant_type=authorization_code --data-urlencode "client_id=$CID" \
+                --data-urlencode "client_secret=$CSEC" --data-urlencode "code=$CODE" --data-urlencode "redirect_uri=$RURI")
+          rt=$(printf '%s' "$r" | jq -r '.refresh_token // empty')
+          if [ -z "$rt" ]; then
+            echo "Mercado Libre no entregó refresh_token. Motivo: $(printf '%s' "$r" | jq -r '.error // "desconocido"') / $(printf '%s' "$r" | jq -r '.message // ""')"
+            echo "Si no aparece refresh_token, revisá que la app tenga el permiso offline_access y que el código no haya vencido."
+            exit 1
+          fi
+          echo "::add-mask::$rt"
+          printf '%s' "$rt" | gh secret set ML_REFRESH_TOKEN -R "$REPO"
+          echo "Listo: ML_REFRESH_TOKEN guardado como secreto (no se muestra)."
