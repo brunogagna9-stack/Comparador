@@ -101,7 +101,7 @@
   "Armytech": {
    "site": "https://www.armytech.com.ar",
    "integration": "parcial",
-   "how": "Listados de categoría paginados (?page=N). Su robots.txt prohíbe los filtros (?q=), el orden y ?n=: no se usan. El listado no informa stock: queda como «stock sin confirmar».",
+   "how": "Listado de la categoría raíz «Productos» paginado (?page=N), que incluye todo el catálogo: al 24/11/2026, 527 productos (antes se leían 264 por categorías sueltas). Su robots.txt prohíbe los filtros (?q=), el orden y ?n=: no se usan. El listado no informa stock: queda como «stock sin confirmar».",
    "contact": {
     "address": "Av. de los Constituyentes 2985, CABA",
     "phone": "(011) 6040-2020",
@@ -112,7 +112,7 @@
    "about": "Según la propia tienda («Quiénes somos»), Army Technologies SA fue creada en marzo de 2006. Es un dato declarado por la tienda, no verificado por KyraNoHard.",
    "shipping": "La tienda informa «Envíos a todo el país». El costo se calcula en su carrito: no está incluido en el precio que mostramos.",
    "payments": "Muestra cuotas sin interés en muchos productos (cantidad y valor de cuota según el listado).",
-   "checked": "2026-10-23",
+   "checked": "2026-11-24",
    "reputation": [
     {
      "source": "Google Maps",
@@ -125,7 +125,7 @@
    ],
    "notes": [
     "Trustpilot: no se pudo consultar.",
-    "Sin notebooks publicadas en el catálogo al momento de la verificación (la categoría figura vacía)."
+    "Las notebooks no aparecen en su categoría propia (figura vacía), pero sí en el listado general: ahora se leen."
    ],
    "zone": "CABA"
   },

@@ -1897,3 +1897,100 @@ def test_actualizacion_47_notebooks_peso_y_bateria():
     assert p["category"] == "notebooks" and "Peso: 1,6 kg" in p["desc"]
     js = open("site/js/compare.js", encoding="utf-8").read()
     assert 'C.sf(it.g, "bateria_wh")' in js and "get: () => ND }," not in js.split('id: "bat"')[1][:400]
+
+
+def test_actualizacion_47_cuotas_tiendanube_datos():
+    """Tiendanube sin cuotas dibujadas en la tarjeta (Quantum): se leen de installments_data; gana sin interés."""
+    from scrapers import tiendanube as tn
+    inst = {"Pagos Personalizados": {"1": {"installment_value": 1000, "interest": 0, "without_interests": True}},
+            "Mercado Pago": {"3": {"installment_value": 333.33, "interest": 0, "without_interests": True},
+                             "12": {"installment_value": 83.33, "interest": 0, "without_interests": True},
+                             "18": {"installment_value": 100.5, "interest": 0.8, "without_interests": False}}}
+    esc = json.dumps(inst).replace('"', '\\"')                       # así viene: JSON dentro de un texto JSON
+    chunk = '<div data-variants="[{&quot;installments_data&quot;:&quot;' + esc.replace('"', "&quot;") + '&quot;}]">'
+    assert tn.cuotas_of(chunk) == "12 cuotas sin interés de $ 83"
+    solo_con_interes = {"MP": {"6": {"installment_value": 200, "interest": 0.3, "without_interests": False}}}
+    esc = json.dumps(solo_con_interes).replace('"', '\\"').replace('"', "&quot;")
+    assert tn.cuotas_of('installments_data&quot;:&quot;' + esc + '&quot;') == "6 cuotas de $ 200"
+    assert tn.cuotas_of("<div>sin datos</div>") is None
+
+
+def test_actualizacion_47_armytech_raiz():
+    """Armytech: se lee la categoría raíz (todo el catálogo); si da poco, se vuelve a los listados por categoría."""
+    from scrapers import armytech as at
+    pedidos = []
+    def falso(n_raiz):
+        def get(url):
+            pedidos.append(url)
+            return url
+        def parse(url):
+            if "/2-productos" in url:
+                pg = int(url.split("page=")[1]) if "page=" in url else 1
+                return [{"store_id": f"r{pg}-{i}"} for i in range(n_raiz)] if pg <= 2 else []
+            return [{"store_id": url}] if "page=" not in url else []
+        return get, parse
+    g0, p0 = at.get, at.parse
+    try:
+        at.get, at.parse = falso(60)
+        out = at.scrape()
+        assert len(out) == 120 and all("/2-productos" in u for u in pedidos), "con la raíz alcanza"
+        pedidos.clear(); at.get, at.parse = falso(5)
+        out = at.scrape()
+        assert len(out) == 10 + len(at.LISTINGS) and any("/405-hardware" in u for u in pedidos), "respaldo por categoría"
+    finally:
+        at.get, at.parse = g0, p0
+
+
+def test_actualizacion_47_icecat_notebooks():
+    """Icecat también para notebooks: peso (kg) y batería (Wh) del fabricante; categoría de Icecat obligatoria."""
+    from scrapers import icecat as ic
+    def resp(cat, peso, peso_u, wh):
+        return {"data": {"GeneralInfo": {"Category": {"Name": {"Value": cat}}, "Title": "Lenovo ThinkPad E14 Gen 7",
+                                         "IcecatId": 1, "BrandPartCode": "21SY002UAC", "Brand": "Lenovo"},
+                         "FeaturesGroups": [{"Features": [
+                             {"Feature": {"ID": "94", "Measure": {"Signs": {"_": peso_u}}}, "Value": peso},
+                             {"Feature": {"ID": "8519", "Measure": {"Signs": {"_": "Wh"}}}, "Value": wh}]}]}}
+    f, info = ic.parse(resp("Ordenadores portátiles", "1.34", "kg", "48"), "notebooks")
+    assert f == {"peso": {"v": 1.34, "u": "kg"}, "bateria_wh": {"v": 48, "u": "Wh"}} and info["pn"] == "21SY002UAC"
+    f, _ = ic.parse(resp("Ordenadores portátiles", "1630", "g", "48"), "notebooks")
+    assert f["peso"] == {"v": 1.63, "u": "kg"}
+    f, _ = ic.parse(resp("Ordenadores portátiles", "40", "kg", "999"), "notebooks")
+    assert f == {}                                                    # fuera de rango: no se usa
+    assert ic.parse(resp("Monitores", "1.3", "kg", "48"), "notebooks")[0] is None   # otra categoría en Icecat
+    assert "21SY002UAC" in ic.codes("Notebook Lenovo Thinkpad E14 Gen 7 21SY002UAC 16 GB")
+    assert ic.WANTED["notebooks"] == ("peso", "bateria_wh")
+
+
+def test_actualizacion_47_icecat_corte_de_red():
+    """Un corte de red en Icecat termina la corrida de Icecat sin perder lo ya vinculado (antes rompía toda la etapa)."""
+    import tempfile
+    from scrapers import icecat as ic, common
+    class S:
+        def get(self, url, timeout):
+            raise TimeoutError("read timed out")
+    s0 = common._session
+    try:
+        common._session = S()
+        f = ic._http_fetch("u")
+        ic.DELAY, d0 = 0, ic.DELAY
+        try:
+            f("Lenovo", "21SY002UAC")
+            assert False, "debía cortar"
+        except ic._Stop as e:
+            assert "no respondió" in str(e)
+        finally:
+            ic.DELAY = d0
+    finally:
+        common._session = s0
+    calls = []
+    def fetch(brand, code):
+        calls.append(code)
+        if len(calls) == 1:
+            return "ok", {"data": {"GeneralInfo": {"Category": {"Name": {"Value": "Ordenadores portátiles"}}, "IcecatId": 7},
+                                   "FeaturesGroups": [{"Features": [{"Feature": {"ID": "94", "Measure": {"Signs": {"_": "kg"}}}, "Value": "1.5"}]}]}}
+        raise ic._Stop("Icecat no respondió: ReadTimeout")
+    gs = [{"name": "Notebook Lenovo 21SY002UAC", "category": "notebooks", "offers": [1, 2]},
+          {"name": "Notebook HP 9X8Y7Z6A", "category": "notebooks", "offers": [1]}]
+    with tempfile.TemporaryDirectory() as d:
+        items, st = ic.refresh(gs, d, fetch=fetch, today="2026-11-24")
+    assert gs[0]["spec"] == "ic:7" and items["ic:7"]["f"]["peso"]["v"] == 1.5 and st["ok"] is False

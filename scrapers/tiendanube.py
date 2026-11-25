@@ -40,11 +40,41 @@ _CUO = re.compile(r"js-max-installments product-installments([^\"']*)[\"'][^>]*>
                   r".{0,300}?js-installment-price[^>]*>\s*([^<]+?)\s*</span>(.{0,120})", re.S)
 
 
+# act. 47: temas que no dibujan las cuotas en la tarjeta (Quantum) pero las traen en los datos de la variante:
+# installments_data = {"<medio>": {"<n>": {"installment_value": ..., "without_interests": true, ...}}}
+_INST = re.compile(r'installments_data(?:&quot;|")\s*:\s*(?:&quot;|")(\{.*?\}\}\})')
+
+
+def _cuotas_datos(chunk):
+    m = _INST.search(chunk)
+    if not m:
+        return None
+    raw = _html.unescape(m.group(1)).replace('\\"', '"').replace("\\/", "/")
+    try:
+        d = json.loads(raw)
+    except ValueError:
+        return None
+    best = None                                  # (sin interés, n, valor): gana sin interés y después más cuotas
+    for plan in (d.values() if isinstance(d, dict) else []):
+        for k, v in (plan.items() if isinstance(plan, dict) else []):
+            try:
+                n, val = int(k), float(v.get("installment_value"))
+            except (TypeError, ValueError, AttributeError):
+                continue
+            sin = bool(v.get("without_interests")) or v.get("interest") in (0, 0.0)
+            if n >= 2 and val > 0 and (best is None or (sin, n) > best[:2]):
+                best = (sin, n, val)
+    if not best:
+        return None
+    sin, n, val = best
+    return f"{n} cuotas{' sin interés' if sin else ''} de $ {round(val):,}".replace(",", ".")
+
+
 def cuotas_of(chunk):
     """«18 cuotas sin interés de $ 19.556» (mismo formato que las otras tiendas) o None."""
     m = _CUO.search(chunk)
     if not m:
-        return None
+        return _cuotas_datos(chunk)
     n, val = int(m.group(2)), parse_ars(_html.unescape(m.group(3)))
     if n < 2 or not val:
         return None
