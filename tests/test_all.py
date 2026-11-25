@@ -271,7 +271,7 @@ def test_stores_json_reputacion_verificable():
     con = {n for n, s in d.items() if s["reputation"]}
     # actualización 42: se completaron 16 tiendas más (ficha de Google Maps con el mismo sitio web que la tienda)
     sin = {"Gaming City", "Hardloots", "ShopGamer", "WIZ TECH", "XT-PC", "IgnaTech", "Portal Tech & Gaming", "Vertex Retail",
-           "Quantum Hardstore"}   # act. 47: alta nueva, ficha de reputación todavía sin verificar
+           "Quantum Hardstore", "MyM Computación"}   # act. 47/49: alta nueva, ficha de reputación todavía sin verificar
     assert len(con) == 33 and sin == set(d) - con, "solo estas tiendas quedan sin puntaje verificado"
     assert "average" not in json.dumps(d).lower()
 
@@ -1994,3 +1994,23 @@ def test_actualizacion_47_icecat_corte_de_red():
     with tempfile.TemporaryDirectory() as d:
         items, st = ic.refresh(gs, d, fetch=fetch, today="2026-11-24")
     assert gs[0]["spec"] == "ic:7" and items["ic:7"]["f"]["peso"]["v"] == 1.5 and st["ok"] is False
+
+
+def test_actualizacion_49_mym():
+    """MyM Computación: ItemList JSON-LD del listado (precio contado, stock, código de barras) y categoría de la tienda."""
+    from scrapers import mym, SCRAPERS
+    h = open("tests/fixtures/mym.html", encoding="utf-8").read()
+    it = mym.parse(h, "almacenamiento")
+    assert len(it) == 2 and mym.total_of(h) == 12
+    a, b = it
+    assert a["store"] == "MyM Computación" and a["price_cash"] == 54650 and a["price_list"] is None and a["stock"] is True
+    assert a["store_sku"] == "6974202725693" and a["category"] == "almacenamiento" and a["url"].startswith("https://mymcomputacion.com/")
+    assert b["stock"] is False
+    assert mym.parse(h.replace("54650.00", "x"), "almacenamiento")[0]["name"] != a["name"], "sin precio válido no entra"
+    cpu = h.replace("Almacenamiento Disco Solido SSD NVMe Hiksemi 128GB", "Procesador Amd Ryzen 5 3500X Sin Video - Sin Cooler")
+    assert mym.parse(cpu, "procesador")[0]["category"] == "procesadores", "«Sin Cooler» no lo manda a refrigeración"
+    assert "MyM Computación" in SCRAPERS
+    st = json.load(open("site/data/stores.json"))["stores"]["MyM Computación"]
+    assert st["site"] == "https://mymcomputacion.com" and st["integration"] == "completa"
+    prohib = ("?filter=", "?search=", "?orden=")
+    assert not any(x in c for c in mym.CATS for x in prohib)
