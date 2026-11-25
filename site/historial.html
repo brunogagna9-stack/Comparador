@@ -92,5 +92,7 @@ addEventListener("storage",e=>{if(e.key==="historial")draw()});
 addEventListener("acc:synced",e=>{if(e.detail&&e.detail.changed)draw()});   // la cuenta trajo armados o comparaciones de otro dispositivo   // otra pestaña guardó algo
 draw();
 </script>
+<script src="js/assistant.js" defer></script>
+<script>addEventListener("DOMContentLoaded",()=>{CT.CTAssistant&&CT.CTAssistant.mount({section:"info",context:()=>({})})});</script>
 </body>
 </html>

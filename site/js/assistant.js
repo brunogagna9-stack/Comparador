@@ -65,7 +65,7 @@
     if (/^\d{1,3}([.,]\d{3})+$/.test(s)) n = parseFloat(s.replace(/[.,]/g, ""));
     else n = parseFloat(s.replace(",", "."));
     const u = m[2];
-    if (u && /^mill?(on|ones)?$|^millon/.test(u)) n *= 1e6; else if (u === "mil" || u === "k") n *= 1e3;
+    if (u && /^(millon|millones|mill)$/.test(u)) n *= 1e6; else if (u === "mil" || u === "k") n *= 1e3;   // act. 49: «300 mil» se tomaba como 300 millones
     return n >= 100000 ? Math.round(n) : null;
   }
 
@@ -107,7 +107,8 @@
     const stale = () => { const f = A.freshness(); return f.old ? "Ojo: pasó más de un día desde la última actualización, así que precios y stock pueden haber cambiado." : "Los precios y el stock pueden cambiar en cualquier momento: confirmalos en la tienda antes de comprar."; };
 
     /* ---- búsqueda de productos en el catálogo ---- */
-    const STOP = new Set(["el", "la", "los", "las", "de", "del", "un", "una", "que", "es", "cuanto", "sale", "cuesta", "precio", "stock", "tiene", "tienen", "hay", "en", "para", "con", "y", "o", "me", "mi", "quiero", "busco", "donde", "comprar", "mas", "barato", "barata", "mejor", "por", "favor", "peso", "pesa", "bateria", "notebook", "este", "esta", "ese", "esa"]);
+    const STOP = new Set(["el", "la", "los", "las", "de", "del", "un", "una", "que", "es", "cuanto", "sale", "cuesta", "precio", "stock", "tiene", "tienen", "hay", "en", "para", "con", "y", "o", "me", "mi", "quiero", "busco", "donde", "comprar", "mas", "barato", "barata", "mejor", "por", "favor", "peso", "pesa", "bateria", "notebook", "este", "esta", "ese", "esa",
+      "cuotas", "cuota", "sin", "interes", "bajo", "subio", "historial", "conviene", "ahora", "esperar", "vs", "contra", "versus", "se", "lo", "al"]);
     A.findProducts = (q, n = 3) => {
       const toks = norm(q).split(/[^a-z0-9.]+/).filter(t => t && !STOP.has(t) && t.length > 1);
       if (!toks.length) return [];
@@ -268,6 +269,93 @@
       return reply([P("Para que dos piezas sean compatibles hay que revisar:"), UL(["Procesador y placa madre: mismo socket (AM4, AM5, LGA1700, LGA1851…) y a veces versión de BIOS.", "Memoria: la placa define si usa DDR4 o DDR5.", "Placa de video: espacio en el gabinete y fuente con vatios y conectores suficientes.", "Gabinete y placa: formato (ATX, Micro-ATX, Mini-ITX)."]), P("En «Armado de PC» elegís una placa de video y te mostramos una configuración sin cuello de botella con los componentes del catálogo."), P("Esto es una guía general: confirmá la compatibilidad exacta de tus modelos en la ficha del fabricante.")], { basis: "gen", links: [{ label: "Armado de PC", href: "armado.html" }] });
     }
 
+    /* ---- actualización 49: más preguntas resueltas con datos reales (sin IA generativa) ---- */
+    const CAT_WORDS = [["placas-de-video", /placas? de video|grafica|\bgpu\b|\brtx\b|\bgtx\b|\brx ?\d{3,4}/], ["procesadores", /procesador|\bcpu\b|\bmicro\b|ryzen|core i\d|core ultra/],
+      ["motherboards", /mother|placa madre|motherboard/], ["memorias-ram", /memorias?( ram)?\b|\bram\b/], ["almacenamiento", /\bssd\b|disco|nvme|almacenamiento|pendrive/],
+      ["fuentes", /\bfuentes?\b/], ["gabinetes", /gabinete/], ["monitores", /monitor/], ["notebooks", /notebook|laptop/], ["mouses", /\bmouse/], ["teclados", /teclado/],
+      ["auriculares", /auricular/], ["refrigeracion", /cooler|refrigeracion|disipador|water ?cooling/], ["pcs-armadas", /pc armada|pcs armadas|computadora armada/]];
+    A.catOf = q => { const m = CAT_WORDS.find(([, re]) => re.test(q)); return m ? m[0] : null; };
+    const priceOf = g => { const o = C.bestOffer(g); return o ? CT.price(o) : null; };
+    const cmpLink = gs => gs.length > 1 && gs.every(g => g.category === gs[0].category) ? { label: "Compararlos en detalle", href: "comparar.html#cat=" + encodeURIComponent(gs[0].category) + "&ids=" + gs.map(g => encodeURIComponent(g.id)).join(",") } : null;
+    const prodLink = g => ({ label: "Ver " + g.name.slice(0, 32) + (g.name.length > 32 ? "…" : ""), href: "producto.html?id=" + encodeURIComponent(g.id) });
+
+    function cheapest(q, raw) {
+      const cat = A.catOf(q); if (!cat) return null;
+      const mm = q.match(/\b(?:hasta|menos de|maximo|max|no mas de|tope( de)?)\s*\$?\s*(\d{1,3}(?:[.,]\d{3})+|\d+(?:[.,]\d+)?)\s*(millones|millon|mill|mil|k)?\b/);
+      let max = null;
+      if (mm) { const t = mm[2]; max = /^\d{1,3}([.,]\d{3})+$/.test(t) ? parseFloat(t.replace(/[.,]/g, "")) : parseFloat(t.replace(",", "."));
+        max *= /^(millon|millones|mill)$/.test(mm[3] || "") ? 1e6 : /^(mil|k)$/.test(mm[3] || "") ? 1e3 : 1; max = Math.round(max) || null; }
+      const used = has(q, /outlet|usad|reacondicion/);
+      const extra = norm(raw).split(/[^a-z0-9.]+/).filter(t => /\d/.test(t) && /[a-z]/.test(t) && !/^\d+(mil|k)$/.test(t));   // «165hz», «16gb», «b650»
+      const ACC = /grasa|pasta termica|contact frame|soporte|maletin|mochila|funda|protector|\bcable|adaptador|cargador|bolso|base (refrigerante|para)|limpieza|bracket|sticker|repuesto|bateria para|teclado para|pantalla para/;
+      const list = PR.filter(g => g.category === cat && (used || !CT.isUsed(g)) && !ACC.test(norm(g.name)) && (cat !== "notebooks" || (() => { const sp = CT.parse(g.name, "notebooks"); return sp.cpu && sp.ram; })()) && extra.every(t => norm(g.name).includes(t)))
+        .map(g => ({ g, o: C.bestOffer(g) })).filter(x => x.o && CT.price(x.o) && x.o.stock !== false && (!max || CT.price(x.o) <= max))
+        .sort((a, b) => CT.price(a.o) - CT.price(b.o)).slice(0, 5);
+      const what = CT.catName(cat).toLowerCase() + (extra.length ? " con " + extra.join(", ") : "") + (max ? " hasta " + CT.ARS(max) : "");
+      if (!list.length) return reply([P(`No encontré ${what} con stock en el catálogo.`), P(max ? "Probá subir el tope o sacar algún filtro." : "Probá con menos filtros.")], { basis: "cat", links: [{ label: "Ver " + CT.catName(cat), href: "productos.html?cat=" + cat }] });
+      return reply([P(`Lo más barato en ${what}, con stock y nuevo${used ? " o usado (lo pediste)" : ""}:`),
+        UL(list.map(x => `${x.g.name} — ${CT.ARS(CT.price(x.o))} en ${x.o.store}${x.o.stock === true ? "" : " (stock sin confirmar)"}`)),
+        P("«Más barato» no es lo mismo que «mejor»: si me contás para qué lo querés, te digo cuál conviene. " + stale())],
+        { basis: "cat", links: [prodLink(list[0].g), { label: "Ver todo en " + CT.catName(cat), href: "productos.html?cat=" + cat }] });
+    }
+
+    function pickProducts(q, raw, ctx, n) {
+      let gs = A.findProducts(raw, n);
+      if (!gs.length) gs = A.ctxGroups(ctx).slice(0, n);
+      return gs;
+    }
+
+    function installments(q, raw, ctx) {
+      const gs = pickProducts(q, raw, ctx, 2);
+      if (!gs.length) return reply([P("¿De qué producto? Abrí uno o escribí el modelo y te digo qué tiendas lo ofrecen en cuotas.")], { basis: "none" });
+      const blocks = [];
+      gs.forEach(g => {
+        const os = g.offers.filter(o => o.cuotas && CT.price(o)).sort((a, b) => (/sin inter/.test(b.cuotas) - /sin inter/.test(a.cuotas)) || CT.price(a) - CT.price(b));
+        blocks.push(P(g.name), os.length ? UL(os.slice(0, 5).map(o => `${o.store}: ${o.cuotas} (contado ${CT.ARS(CT.price(o))})`)) : P("Ninguna tienda informa cuotas para este producto en nuestros datos (puede que igual las tenga: confirmalo en la tienda)."));
+      });
+      blocks.push(P("Las cuotas son las que publica cada tienda; el banco o la tarjeta pueden cambiar las condiciones. " + stale()));
+      return reply(blocks, { basis: "cat", links: gs.slice(0, 1).map(prodLink) });
+    }
+
+    A.priceHistory = (g, H) => {
+      // el historial se guarda por oferta (o.k): se toma el mejor precio de cada día entre las tiendas
+      const day = {};
+      g.offers.filter(o => o.k && !o.anom).forEach(o => ((H || {})[o.k] || []).forEach(p => { if (Array.isArray(p) && p[0] && p[1] > 0 && (!day[p[0]] || p[1] < day[p[0]])) day[p[0]] = p[1]; }));
+      const fd = d => d.split("-").reverse().join("/");
+      const pts = Object.keys(day).sort().map(d => [fd(d), day[d]]);
+      if (pts.length < 2) return null;
+      const vals = pts.map(p => p[1]), lo = Math.min(...vals), hi = Math.max(...vals), first = pts[0], last = pts[pts.length - 1];
+      const atLo = pts.find(p => p[1] === lo)[0], d = (last[1] - first[1]) / first[1];
+      return { first, last, lo, hi, atLo, d, n: pts.length };
+    };
+    function history(q, raw, ctx) {
+      const gs = pickProducts(q, raw, ctx, 1);
+      if (!gs.length) return reply([P("¿De qué producto querés ver el historial de precio? Abrí uno o escribí el modelo.")], { basis: "none" });
+      const g = gs[0], h = A.priceHistory(g, A.HIST);
+      if (!A.HIST) return reply([P("No pude cargar el historial de precios en este momento.")], { basis: "none", links: [prodLink(g)] });
+      if (!h) return reply([P(`${g.name}: todavía no tengo suficientes registros de precio para mostrar una evolución.`)], { basis: "cat", links: [prodLink(g)] });
+      const pct = Math.round(Math.abs(h.d) * 100), trend = Math.abs(h.d) < 0.02 ? "se mantuvo casi igual" : h.d < 0 ? `bajó un ${pct}%` : `subió un ${pct}%`;
+      const nowVsLo = h.last[1] <= h.lo * 1.01 ? "Hoy está en el precio más bajo que registramos." : `Hoy está un ${Math.round((h.last[1] / h.lo - 1) * 100)}% arriba del mínimo que registramos (${CT.ARS(h.lo)}, el ${h.atLo}).`;
+      return reply([P(g.name), UL([`Desde el ${h.first[0]} (${CT.ARS(h.first[1])}) hasta el ${h.last[0]} (${CT.ARS(h.last[1])}) ${trend}.`, `Mínimo registrado: ${CT.ARS(h.lo)} · máximo: ${CT.ARS(h.hi)}.`, nowVsLo]),
+        P("Es el mejor precio de contado entre las tiendas conectadas, día por día. No predecimos si va a bajar: si querés esperar, activá un aviso de «precio objetivo» en la ficha del producto.")],
+        { basis: "cat", links: [prodLink(g)] });
+    }
+
+    function versus(raw) {
+      const parts = norm(raw).replace(/^(compar\w*|diferencias? entre|que conviene( mas)?|cual es mejor)\s*/, "").split(/\s+(?:vs\.?|versus|contra|o el|o la|con el|con la|y el|y la)\s+/);
+      if (parts.length !== 2) return null;
+      const pick = t => { const r = A.findProducts(t, 6); return r.find(g => !CT.isUsed(g)) || r[0]; };
+      const a = pick(parts[0]), b = pick(parts[1]);
+      if (!a || !b || a.id === b.id) return null;
+      const lines = [a, b].map(g => { const o = C.bestOffer(g); return `${g.name}: ${o ? CT.ARS(CT.price(o)) + " en " + o.store : "sin stock con precio"}`; });
+      const pa = priceOf(a), pb = priceOf(b);
+      if (pa && pb) { const pc = Math.abs(pa - pb) / Math.min(pa, pb) * 100;
+        lines.push(pc < 1 ? "Cuestan prácticamente lo mismo." : `Diferencia de precio: ${CT.ARS(Math.abs(pa - pb))} (el ${pa > pb ? "primero" : "segundo"} cuesta ${Math.round(pc)}% más).`); }
+      const link = cmpLink([a, b]);
+      return reply([P("Esto es lo que encontré de cada uno:"), UL(lines), P(link ? "En el comparador ves la tabla técnica completa y cuál conviene según el uso." : "Son de categorías distintas, así que solo puedo comparar precio y tienda.")],
+        { basis: "cat", links: [link, prodLink(a), prodLink(b)].filter(Boolean) });
+    }
+
     /* ---- punto de entrada local ---- */
     A.local = (question, ctx) => {
       ctx = ctx || {};
@@ -290,6 +378,10 @@
       if (ctx.section === "encontra" && has(q, /por que|como funciona|que respond|mis respuestas|que me falta/)) {
         const an = ctx.answers || {}; return reply([P("Las recomendaciones salen de lo que respondiste:"), UL([`Usos: ${(an.usos || []).join(", ") || "sin elegir"}`, `Tipo: ${an.tipo || "sin definir"}`, `Presupuesto: ${an.budget ? CT.ARS(an.budget) : "sin definir"}`]), P("Cuanto más completes, más ajustadas son las opciones. Cada una indica qué datos faltan.")], { basis: "app" });
       }
+      if (has(q, /\bcuotas?\b|sin interes|financ/)) return installments(q, question, ctx);
+      if (has(q, /bajo (de )?precio|subio|historial|evolucion|minimo historico|conviene (comprar|esperar)|esperar (a|que)|va a bajar|precio (anterior|historico)/)) return history(q, question, ctx);
+      if (has(q, /\bvs\.?\b|versus|\bcontra\b/) || has(q, /^(compar\w*|diferencias? entre|cual es mejor|que conviene)\b.+\b(con|y|o)\b/)) { const v = versus(question); if (v) return v; }
+      if (has(q, /mas barat|mas economic|menor precio|lo barato|economic[oa]s?\b/) && !has(q, /tienda/)) { const ch = cheapest(q, question); if (ch) return ch; }
       if (has(q, /compatib|va con|funciona con|entra en|sirve con/)) return compat();
       if (has(q, /recomend|que (compro|me conviene|notebook|pc|placa|procesador)|quiero (una|un|jugar|armar|comprar) |quiero jugar|busco jugar|\bjugar\b|busco (una|un) |necesito (una|un) |armame|presupuesto|para (jugar|estudiar|trabajar|programar|editar)/)) return recommend(question, ctx);
       const pr = aboutPrice(question, ctx); if (pr) return pr;
@@ -301,7 +393,11 @@
     A.suggestions = ctx => {
       const s = ctx && ctx.section, nb = A.ctxGroups(ctx || {}).some(g => g.category === "notebooks");
       const base = { precios: ["¿Es confiable GoldenTech?", "¿Qué tiendas están conectadas?", "¿Cuándo se actualizaron los precios?"], armado: ["¿Qué es la VRAM?", "¿DDR4 o DDR5?", "¿Qué fuente necesito para esta placa?"],
-        encontra: ["Quiero una notebook para estudiar", "¿Qué conviene para jugar en 1440p?", "¿Qué significa «Pendiente de verificar»?"], comparar: ["Resumime las diferencias", "¿Cuál conviene y por qué?", "¿Qué datos faltan?"], }[s] || ["¿Qué tiendas están conectadas?", "Quiero una notebook para estudiar"];
+        encontra: ["Quiero una notebook para estudiar", "¿Qué conviene para jugar en 1440p?", "¿Qué significa «Pendiente de verificar»?"], comparar: ["Resumime las diferencias", "¿Cuál conviene y por qué?", "¿Qué datos faltan?"],
+        tiendas: ["¿Es confiable GoldenTech?", "¿Qué tiendas están conectadas?", "¿Cuándo se actualizaron los precios?"],
+        inicio: ["Placa de video más barata", "Ryzen 5 7600 vs Core i5 14400F", "Quiero una notebook para estudiar"],
+        info: ["¿Cómo se usa la web?", "¿Qué tiendas están conectadas?", "Quiero una notebook para estudiar"] }[s] || ["Placa de video más barata", "¿Qué tiendas están conectadas?", "Quiero una notebook para estudiar"];
+      if (s === "precios" && A.ctxGroups(ctx || {}).length === 1) return (nb ? ["¿Cuánto pesa y qué batería tiene?"] : []).concat(["¿Bajó de precio?", "¿Tiene cuotas sin interés?", "¿Dónde está más barato?"]).slice(0, 4);
       return nb ? ["¿Cuánto pesa y qué batería tiene?"].concat(base).slice(0, 4) : base;
     };
 
@@ -321,7 +417,11 @@
       } finally { if (to) clearTimeout(to); }
     };
 
+    A.HIST = data.HIST || null;
     A.ask = async (question, ctx, history) => {
+      if (!A.HIST && opts.loadHistory && /bajo (de )?precio|subio|historial|evolucion|minimo historico|conviene (comprar|esperar)|esperar (a|que)|va a bajar|precio (anterior|historico)/.test(norm(question))) {
+        try { A.HIST = await opts.loadHistory(); } catch { A.HIST = null; }
+      }
       const l = A.local(question, ctx);
       if (l) return l;
       const r = await A.remote(question, ctx, history);
@@ -373,7 +473,7 @@
           : await Promise.all([j("data/hardware.json", null), j("data/products.json", []), j("data/meta.json", {}), j("data/specs.json", null), j("data/stores.json", null), j("data/config.json", {})]);
         if (!HW) throw new Error("no se pudo cargar la base de hardware");
         let st = {}; try { st = JSON.parse(sessionStorage.getItem("ctas-state") || "{}"); } catch { }
-        eng = CT.makeAssistant({ HW, PR, META, SPECS, STORES, CFG }, { state: st });
+        eng = CT.makeAssistant({ HW, PR, META, SPECS, STORES, CFG }, { state: st, loadHistory: () => j("data/history.json", null) });   // act. 49: historial solo si se pregunta
         return eng;
       })());
       const ctx = () => { try { return Object.assign({ section }, cfg.context ? cfg.context() : {}); } catch { return { section }; } };

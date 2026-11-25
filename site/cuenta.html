@@ -147,5 +147,7 @@ ACC.ready.then(A=>{if(!A.enabled)return off(A.status);const H0=ACC.initialHash||
   if(H0.includes("error_description")){const d=new URLSearchParams(H0.slice(1)).get("error_description");MSG={t:"El enlace no es válido o ya venció"+(d?" ("+d+")":"")+". Pedí uno nuevo.",k:"bad"}}
   if(A.user()){if(H0.includes("type=signup"))MSG={t:"¡Mail confirmado! Tu cuenta está lista.",k:"ok"};loggedIn()}else loggedOut()});
 </script>
+<script src="js/assistant.js" defer></script>
+<script>addEventListener("DOMContentLoaded",()=>{CT.CTAssistant&&CT.CTAssistant.mount({section:"info",context:()=>({})})});</script>
 </body>
 </html>

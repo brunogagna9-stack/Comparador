@@ -101,5 +101,51 @@ const t = async (name, fn) => { try { await fn(); n++; } catch (e) { console.err
     assert(/más de un día/.test(txt(await old.ask("¿están actualizados los precios?", {}))));
     assert(/hace 3 h/.test(txt(await A.ask("¿cuándo se actualizaron los precios?", {}))));
   });
+  /* ---- actualización 49: más preguntas con datos reales ---- */
+  await t("act. 49: lo más barato por categoría, con tope, sin usados ni accesorios", async () => {
+    const P2 = JSON.parse(JSON.stringify(PR));
+    const cpu = P2.find(g => g.category === "procesadores");
+    P2.push({ id: "acc1", name: "Grasa Siliconada Pastermax Para CPU", category: "procesadores", offers: [{ store: "Nickhard", price_cash: 1000, stock: true, url: "u", k: "acc1" }] });
+    P2.push({ id: "out1", name: "Procesador AMD Ryzen 5 5500 AM4 (OUTLET)", category: "procesadores", offers: [{ store: "Quantum Hardstore", price_cash: 2000, stock: true, url: "u", k: "out1" }] });
+    const X = CT.makeAssistant({ HW, PR: P2, META, SPECS, STORES, CFG: {} }, {});
+    const r = await X.ask("procesador más barato", {}), s = txt(r);
+    assert(/Lo más barato en procesadores/.test(s) && !/Grasa/.test(s) && !/OUTLET/.test(s) && r.basis === "cat", s);
+    const precios = P2.filter(g => g.category === "procesadores" && !/grasa|outlet/i.test(g.name)).map(g => X.C.bestOffer(g)).filter(o => o && CT.price(o) && o.stock !== false).map(CT.price).sort((a, b) => a - b);
+    assert(s.includes(CT.ARS(precios[0])), "el primero es el más barato real");
+    const tope = txt(await X.ask("procesador más barato hasta 50 mil", {}));
+    assert(/hasta \$50\.000/.test(tope), "«50 mil» son 50.000, no 50 millones: " + tope);
+    assert(/OUTLET/.test(txt(await X.ask("procesador outlet más barato", {}))), "si pide usados, se incluyen");
+    assert(/No encontré/.test(txt(await X.ask("monitor más barato hasta 1000 pesos", {}))));
+  });
+  await t("act. 49: «A vs B» busca los dos, da la diferencia y enlaza al comparador", async () => {
+    const r = await A.ask("Ryzen 5 7600 vs Core i5 14400F", {}), s = txt(r);
+    assert(/Ryzen 5 7600/.test(s) && /14400F/.test(s) && /comparar\.html#cat=procesadores&ids=/.test(r.links[0].href), s);
+    assert(!(await A.ask("Ryzen 5 7600 vs RTX 9999 Quantum", {})).links.some(l => /comparar/.test(l.href || "")), "si no encuentra uno, no inventa la comparación");
+  });
+  await t("act. 49: cuotas por producto, primero las sin interés", async () => {
+    const P2 = JSON.parse(JSON.stringify(PR)), g = P2.find(x => /RTX 5060 Ti 16GB/i.test(x.name));
+    g.offers[0].cuotas = "6 cuotas de $ 200.000"; if (g.offers[1]) g.offers[1].cuotas = "12 cuotas sin interés de $ 90.000"; else g.offers.push(Object.assign({}, g.offers[0], { store: "Otra", cuotas: "12 cuotas sin interés de $ 90.000" }));
+    const X = CT.makeAssistant({ HW, PR: P2, META, SPECS, STORES, CFG: {} }, {});
+    const s = txt(await X.ask("¿tiene cuotas sin interés la RTX 5060 Ti 16GB?", {}));
+    assert(s.indexOf("12 cuotas sin interés") >= 0 && s.indexOf("12 cuotas sin interés") < s.indexOf("6 cuotas"), s);
+    assert(/no informa cuotas|Ninguna tienda/.test(txt(await A.ask("cuotas del Ryzen 5 7600", {}))));
+  });
+  await t("act. 49: historial de precio (mejor precio por día), sin predicciones; se carga solo si se pregunta", async () => {
+    const g = PR.find(x => /Ryzen 5 7600/.test(x.name)), k = g.offers[0].k, k2 = (g.offers[1] || {}).k;
+    const H = { [k]: [["2026-11-01", 300000], ["2026-11-10", 280000], ["2026-11-20", 290000]] };
+    if (k2) H[k2] = [["2026-11-10", 999999]];
+    let cargado = 0;
+    const X = CT.makeAssistant({ HW, PR, META, SPECS, STORES, CFG: {} }, { loadHistory: async () => { cargado++; return H; } });
+    await X.ask("placa de video más barata", {}); assert.strictEqual(cargado, 0, "no baja el historial si no hace falta");
+    const s = txt(await X.ask("¿bajó de precio?", { section: "precios", ids: [g.id] }));
+    assert.strictEqual(cargado, 1);
+    assert(/01\/11\/2026/.test(s) && /bajó un 3%/.test(s) && /Mínimo registrado: \$280\.000/.test(s) && /No predecimos/.test(s), s);
+    assert(/no tengo suficientes registros/.test(txt(await X.ask("historial de precio del Ryzen 5 5500", {}))));
+  });
+  await t("act. 49: sugerencias según la página", async () => {
+    const g = PR.find(x => x.category === "procesadores");
+    assert(A.suggestions({ section: "precios", ids: [g.id] }).includes("¿Bajó de precio?"));
+    assert(A.suggestions({ section: "inicio" }).some(x => /más barata/.test(x)));
+  });
   console.log(n + " pruebas del asistente OK");
 })();
