@@ -1897,3 +1897,19 @@ def test_actualizacion_47_notebooks_peso_y_bateria():
     assert p["category"] == "notebooks" and "Peso: 1,6 kg" in p["desc"]
     js = open("site/js/compare.js", encoding="utf-8").read()
     assert 'C.sf(it.g, "bateria_wh")' in js and "get: () => ND }," not in js.split('id: "bat"')[1][:400]
+
+
+def test_actualizacion_47_cuotas_tiendanube_datos():
+    """Tiendanube sin cuotas dibujadas en la tarjeta (Quantum): se leen de installments_data; gana sin interés."""
+    from scrapers import tiendanube as tn
+    inst = {"Pagos Personalizados": {"1": {"installment_value": 1000, "interest": 0, "without_interests": True}},
+            "Mercado Pago": {"3": {"installment_value": 333.33, "interest": 0, "without_interests": True},
+                             "12": {"installment_value": 83.33, "interest": 0, "without_interests": True},
+                             "18": {"installment_value": 100.5, "interest": 0.8, "without_interests": False}}}
+    esc = json.dumps(inst).replace('"', '\\"')                       # así viene: JSON dentro de un texto JSON
+    chunk = '<div data-variants="[{&quot;installments_data&quot;:&quot;' + esc.replace('"', "&quot;") + '&quot;}]">'
+    assert tn.cuotas_of(chunk) == "12 cuotas sin interés de $ 83"
+    solo_con_interes = {"MP": {"6": {"installment_value": 200, "interest": 0.3, "without_interests": False}}}
+    esc = json.dumps(solo_con_interes).replace('"', '\\"').replace('"', "&quot;")
+    assert tn.cuotas_of('installments_data&quot;:&quot;' + esc + '&quot;') == "6 cuotas de $ 200"
+    assert tn.cuotas_of("<div>sin datos</div>") is None
