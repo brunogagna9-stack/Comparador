@@ -6,7 +6,7 @@
      LLM_KEY      (secreto)  clave del proveedor de IA
      LLM_URL      URL de un endpoint compatible con "chat/completions" (OpenAI, Groq, Gemini en modo compatible, etc.)
      LLM_MODEL    nombre del modelo
-     ALLOWED_ORIGIN  p. ej. https://brunogagna9-stack.github.io  (solo ese sitio puede llamar)
+     ALLOWED_ORIGIN  p. ej. https://kyranohard.com.ar  (solo ese sitio puede llamar)
    Costos: el Worker tiene nivel gratuito con límites; algunos proveedores de IA ofrecen un nivel gratuito con límites propios.
    Verificá las condiciones actuales de cada uno: si se superan, el proveedor puede cobrar o cortar el servicio. */
 

@@ -17,7 +17,7 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SITE_URL = os.environ.get("SITE_URL", "https://brunogagna9-stack.github.io/Comparador/")
+SITE_URL = os.environ.get("SITE_URL", "https://kyranohard.com.ar/")
 MIN_DROP = 5.0   # solo bajas de al menos 5 %
 
 

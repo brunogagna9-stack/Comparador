@@ -12,7 +12,7 @@ from pathlib import Path
 from urllib.parse import quote
 
 SITE = Path(__file__).resolve().parent.parent / "site"
-URL = "https://brunogagna9-stack.github.io/Comparador/"
+URL = "https://kyranohard.com.ar/"
 CATS = {"placas-de-video": ("Placas de video", "placas de video"), "procesadores": ("Procesadores", "procesadores"),
         "motherboards": ("Placas madre", "placas madre (motherboards)"), "memorias-ram": ("Memorias RAM", "memorias RAM"),
         "almacenamiento": ("SSD y discos", "discos SSD y rígidos"), "fuentes": ("Fuentes", "fuentes de alimentación"),

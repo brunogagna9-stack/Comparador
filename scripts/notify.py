@@ -215,7 +215,7 @@ def main(argv=sys.argv[1:], env=os.environ, call=http, products=None, cfg=None):
     if not re.match(r"^https://[a-z0-9-]+\.supabase\.co$", url):
         print("Avisos por mail: SUPABASE_URL no parece una dirección de Supabase. No se envía nada.")
         return 0
-    site = env.get("SITE_URL") or "https://brunogagna9-stack.github.io/Comparador/"
+    site = env.get("SITE_URL") or "https://kyranohard.com.ar/"
     site = site if site.endswith("/") else site + "/"
     cap = int(env.get("NOTIFY_MAX") or 50)
     sbh = {"apikey": key, "Authorization": "Bearer " + key, "content-type": "application/json", "accept": "application/json"}

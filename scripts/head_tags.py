@@ -6,7 +6,7 @@ import html
 import re
 from pathlib import Path
 
-SITE = "https://brunogagna9-stack.github.io/Comparador/"
+SITE = "https://kyranohard.com.ar/"
 SITE_DIR = Path(__file__).resolve().parent.parent / "site"
 START, END = "<!-- head:kyranohard -->", "<!-- /head:kyranohard -->"
 
