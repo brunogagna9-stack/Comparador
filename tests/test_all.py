@@ -1913,3 +1913,29 @@ def test_actualizacion_47_cuotas_tiendanube_datos():
     esc = json.dumps(solo_con_interes).replace('"', '\\"').replace('"', "&quot;")
     assert tn.cuotas_of('installments_data&quot;:&quot;' + esc + '&quot;') == "6 cuotas de $ 200"
     assert tn.cuotas_of("<div>sin datos</div>") is None
+
+
+def test_actualizacion_47_armytech_raiz():
+    """Armytech: se lee la categoría raíz (todo el catálogo); si da poco, se vuelve a los listados por categoría."""
+    from scrapers import armytech as at
+    pedidos = []
+    def falso(n_raiz):
+        def get(url):
+            pedidos.append(url)
+            return url
+        def parse(url):
+            if "/2-productos" in url:
+                pg = int(url.split("page=")[1]) if "page=" in url else 1
+                return [{"store_id": f"r{pg}-{i}"} for i in range(n_raiz)] if pg <= 2 else []
+            return [{"store_id": url}] if "page=" not in url else []
+        return get, parse
+    g0, p0 = at.get, at.parse
+    try:
+        at.get, at.parse = falso(60)
+        out = at.scrape()
+        assert len(out) == 120 and all("/2-productos" in u for u in pedidos), "con la raíz alcanza"
+        pedidos.clear(); at.get, at.parse = falso(5)
+        out = at.scrape()
+        assert len(out) == 10 + len(at.LISTINGS) and any("/405-hardware" in u for u in pedidos), "respaldo por categoría"
+    finally:
+        at.get, at.parse = g0, p0

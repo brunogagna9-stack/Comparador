@@ -56,19 +56,30 @@ def parse(html):
     return out
 
 
+ROOT = "2-productos"      # act. 47: la categoría raíz lista TODO el catálogo (527 vs. 264 con los listados de abajo)
+MAX_PAGES = 40
+
+
+def _leer(lst, seen, out, max_pages):
+    for page in range(1, max_pages + 1):
+        url = f"{BASE}/{lst}" + (f"?page={page}" if page > 1 else "")
+        try:
+            items = parse(get(url))
+        except Exception as e:
+            print(f"[Armytech] {url}: {e}")
+            break
+        new = [i for i in items if i["store_id"] not in seen]
+        if not new:
+            break
+        seen.update(i["store_id"] for i in new)
+        out += new
+
+
 def scrape():
     seen, out = set(), []
-    for lst in LISTINGS:
-        for page in range(1, 15):
-            url = f"{BASE}/{lst}" + (f"?page={page}" if page > 1 else "")
-            try:
-                items = parse(get(url))
-            except Exception as e:
-                print(f"[Armytech] {url}: {e}")
-                break
-            new = [i for i in items if i["store_id"] not in seen]
-            if not new:
-                break
-            seen.update(i["store_id"] for i in new)
-            out += new
+    _leer(ROOT, seen, out, MAX_PAGES)
+    if len(out) < 100:                         # si la raíz deja de listar todo, se vuelve a los listados de siempre
+        print(f"[Armytech] la raíz dio solo {len(out)}: se leen los listados por categoría")
+        for lst in LISTINGS:
+            _leer(lst, seen, out, 15)
     return out
