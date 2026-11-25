@@ -908,6 +908,23 @@
     "Todavía no se cargaron dirección, teléfono ni reputación verificados de la tienda."
    ],
    "reputation": []
+  },
+  "MyM Computación": {
+   "site": "https://mymcomputacion.com",
+   "integration": "completa",
+   "how": "Listados públicos de sus categorías de computación (?page=N), como los ve un visitante: nombre, precio, stock, foto y código de barras salen de la lista estructurada (JSON-LD) de cada página. Su robots.txt permite las categorías y la paginación; no se usan filtros, búsqueda ni orden.",
+   "checked": "2026-11-25",
+   "reputation": [],
+   "contact": {
+    "address": "Av. Rivadavia 5320, Local 20, Caballito, CABA",
+    "phone": "+54 9 11 2659-0526",
+    "email": "ventas@mymcomputacion.com"
+   },
+   "notes": [
+    "El precio publicado es el «precio especial» pagando en efectivo o transferencia; la tienda informa hasta 18 cuotas fijas, pero el precio en cuotas está en cada ficha y no se lee.",
+    "Sus listados muestran solo productos con stock (al 25/11/2026: 969 en las categorías de computación).",
+    "Todavía no se cargó una reputación verificada de la tienda."
+   ]
   }
  },
  "_ayuda_zone": "zone: provincia o zona del local que figura en contact.address (para el filtro «Zona de la tienda»). Solo se carga si hay una dirección verificada; sin dirección, la tienda no entra en ninguna zona. Tener local no garantiza retiro en el local: se aclara en la web."

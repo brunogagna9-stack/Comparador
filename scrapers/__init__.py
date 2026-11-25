@@ -1,4 +1,4 @@
-from . import compragamer, mexx, maximus, gezatek, fullh4rd, logg, goldentech, armytech, katech, venex, gamingcity, netgaming, woo, woohtml, tiendanube, cardeco, wiztech, xtpc, compufan
+from . import compragamer, mexx, maximus, gezatek, fullh4rd, logg, goldentech, armytech, katech, venex, gamingcity, netgaming, woo, woohtml, tiendanube, cardeco, wiztech, xtpc, compufan, mym
 
 SCRAPERS = {
     "Compragamer": compragamer.scrape,
@@ -20,5 +20,6 @@ SCRAPERS = {
     "WIZ TECH": wiztech.scrape,
     "XT-PC": xtpc.scrape,
     "Compufan Store": compufan.scrape,
+    "MyM Computación": mym.scrape,          # actualización 49
     # Mercado Libre: no se recolecta por scraping (ver README, requiere programa de afiliados / API oficial)
 }
