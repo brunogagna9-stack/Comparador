@@ -568,7 +568,7 @@ def write_categories(groups, hist, data_dir=None):
         (d / "_inicio.json").write_text(json.dumps(inicio_file(groups, hist, tot), ensure_ascii=False, separators=(",", ":")))
 
 
-SITE_URL = os.environ.get("SITE_URL", "https://brunogagna9-stack.github.io/Comparador/")
+SITE_URL = os.environ.get("SITE_URL", "https://kyranohard.com.ar/")
 
 
 def write_sitemap(groups, updated=None, site_dir=None):

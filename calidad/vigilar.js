@@ -9,7 +9,7 @@
    Uso: node vigilar.js [dirección de la web]   */
 const fs = require("fs");
 const { chromium, devices } = require("playwright");
-const BASE = (process.argv[2] || "https://brunogagna9-stack.github.io/Comparador/").replace(/\/?$/, "/");
+const BASE = (process.argv[2] || "https://kyranohard.com.ar/").replace(/\/?$/, "/");
 const PAGES = ["index.html", "productos.html", "productos.html?cat=placas-de-video", "comparar.html", "armado.html", "armar.html",
   "actualizar.html", "encontra.html", "tiendas.html", "preguntas.html", "contacto.html"];
 const MAX_HORAS = 14, MAX_DIAS_TIENDA = 2;

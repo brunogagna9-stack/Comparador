@@ -1617,7 +1617,7 @@ def test_actualizacion_43_guias_de_precios():
         assert ">Producto &lt;1&gt; &amp; co</a>" in h and "<1></a>" not in h and "</script><" not in h.split("ld+json")[1].split("</head>")[0][:-10].replace("</script>\n", ""), "nombres escapados"
         assert "arrancan en <b>$900</b>" in h and "▼ 10,5%" in h and 'href="producto.html?id=p52"' in h
         assert ">$1<" not in h and ">$2<" not in h, "sin stock o precio inusual no se muestran como mejor precio"
-        assert 'rel="canonical" href="https://brunogagna9-stack.github.io/Comparador/precios-fuentes.html"' in h and "application/ld+json" in h
+        assert 'rel="canonical" href="https://kyranohard.com.ar/precios-fuentes.html"' in h and "application/ld+json" in h
         sm = (site / "sitemap-guias.xml").read_text()
         assert sm.count("<url>") == 1 and "precios-fuentes.html" in sm and "<lastmod>2026-11-15</lastmod>" in sm
     assert "sitemap-guias.xml" in open("site/sitemap.xml").read() and "site/precios-*.html" in open(".gitignore").read()
