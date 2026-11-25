@@ -23,7 +23,9 @@ const serve = () => new Promise(res => {
 (async () => {
   const P = JSON.parse(fs.readFileSync(path.join(SITE, "data/products.json"), "utf8"));
   const gpus = P.filter(g => g.category === "placas-de-video" && g.offers.filter(o => o.stock !== false).length >= 2).slice(0, 3).map(g => g.id);
-  const srv = await serve(), B = `http://127.0.0.1:${srv.address().port}/`;
+  // act. 47: con BASE=<url> prueba el sitio publicado en vez de la copia local
+  const srv = process.env.BASE ? null : await serve();
+  const B = process.env.BASE ? process.env.BASE.replace(/\/?$/, "/") : `http://127.0.0.1:${srv.address().port}/`;
   const browser = await chromium.launch();
   const fails = [], rows = [];
   for (const [w, h, touch] of SIZES) {
@@ -87,7 +89,7 @@ const serve = () => new Promise(res => {
     rows.push([`${w}×${h}`, res]);
     await ctx.close();
   }
-  await browser.close(); srv.close();
+  await browser.close(); srv && srv.close();
   const names = Object.keys(rows[0][1]);
   console.log("## Paridad celular / computadora\n\n| Pantalla | " + names.join(" | ") + " |\n|---|" + names.map(() => "---").join("|") + "|");
   rows.forEach(([s, r]) => console.log(`| ${s} | ` + names.map(n => r[n] || "—").join(" | ") + " |"));
