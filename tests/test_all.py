@@ -1939,3 +1939,58 @@ def test_actualizacion_47_armytech_raiz():
         assert len(out) == 10 + len(at.LISTINGS) and any("/405-hardware" in u for u in pedidos), "respaldo por categoría"
     finally:
         at.get, at.parse = g0, p0
+
+
+def test_actualizacion_47_icecat_notebooks():
+    """Icecat también para notebooks: peso (kg) y batería (Wh) del fabricante; categoría de Icecat obligatoria."""
+    from scrapers import icecat as ic
+    def resp(cat, peso, peso_u, wh):
+        return {"data": {"GeneralInfo": {"Category": {"Name": {"Value": cat}}, "Title": "Lenovo ThinkPad E14 Gen 7",
+                                         "IcecatId": 1, "BrandPartCode": "21SY002UAC", "Brand": "Lenovo"},
+                         "FeaturesGroups": [{"Features": [
+                             {"Feature": {"ID": "94", "Measure": {"Signs": {"_": peso_u}}}, "Value": peso},
+                             {"Feature": {"ID": "8519", "Measure": {"Signs": {"_": "Wh"}}}, "Value": wh}]}]}}
+    f, info = ic.parse(resp("Ordenadores portátiles", "1.34", "kg", "48"), "notebooks")
+    assert f == {"peso": {"v": 1.34, "u": "kg"}, "bateria_wh": {"v": 48, "u": "Wh"}} and info["pn"] == "21SY002UAC"
+    f, _ = ic.parse(resp("Ordenadores portátiles", "1630", "g", "48"), "notebooks")
+    assert f["peso"] == {"v": 1.63, "u": "kg"}
+    f, _ = ic.parse(resp("Ordenadores portátiles", "40", "kg", "999"), "notebooks")
+    assert f == {}                                                    # fuera de rango: no se usa
+    assert ic.parse(resp("Monitores", "1.3", "kg", "48"), "notebooks")[0] is None   # otra categoría en Icecat
+    assert "21SY002UAC" in ic.codes("Notebook Lenovo Thinkpad E14 Gen 7 21SY002UAC 16 GB")
+    assert ic.WANTED["notebooks"] == ("peso", "bateria_wh")
+
+
+def test_actualizacion_47_icecat_corte_de_red():
+    """Un corte de red en Icecat termina la corrida de Icecat sin perder lo ya vinculado (antes rompía toda la etapa)."""
+    import tempfile
+    from scrapers import icecat as ic, common
+    class S:
+        def get(self, url, timeout):
+            raise TimeoutError("read timed out")
+    s0 = common._session
+    try:
+        common._session = S()
+        f = ic._http_fetch("u")
+        ic.DELAY, d0 = 0, ic.DELAY
+        try:
+            f("Lenovo", "21SY002UAC")
+            assert False, "debía cortar"
+        except ic._Stop as e:
+            assert "no respondió" in str(e)
+        finally:
+            ic.DELAY = d0
+    finally:
+        common._session = s0
+    calls = []
+    def fetch(brand, code):
+        calls.append(code)
+        if len(calls) == 1:
+            return "ok", {"data": {"GeneralInfo": {"Category": {"Name": {"Value": "Ordenadores portátiles"}}, "IcecatId": 7},
+                                   "FeaturesGroups": [{"Features": [{"Feature": {"ID": "94", "Measure": {"Signs": {"_": "kg"}}}, "Value": "1.5"}]}]}}
+        raise ic._Stop("Icecat no respondió: ReadTimeout")
+    gs = [{"name": "Notebook Lenovo 21SY002UAC", "category": "notebooks", "offers": [1, 2]},
+          {"name": "Notebook HP 9X8Y7Z6A", "category": "notebooks", "offers": [1]}]
+    with tempfile.TemporaryDirectory() as d:
+        items, st = ic.refresh(gs, d, fetch=fetch, today="2026-11-24")
+    assert gs[0]["spec"] == "ic:7" and items["ic:7"]["f"]["peso"]["v"] == 1.5 and st["ok"] is False

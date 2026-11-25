@@ -27,7 +27,7 @@ MAX_REQ = 400
 DELAY = 1.0
 TTL_OK, TTL_NO = 60, 20
 CATS = {"monitores": r"pantalla|monitor", "memorias-ram": r"memoria", "almacenamiento": r"estado s[oó]lido|discos? duros?|ssd",
-        "fuentes": r"fuente[s]? de alimentaci"}
+        "fuentes": r"fuente[s]? de alimentaci", "notebooks": r"port[aá]til|notebook"}
 BRANDS = ["Western Digital", "Kingston", "Seagate", "Samsung", "Crucial", "ADATA", "XPG", "Corsair", "Patriot", "Team", "Hiksemi",
           "Netac", "SanDisk", "Lexar", "PNY", "Toshiba", "LG", "ASUS", "MSI", "Gigabyte", "AOC", "ViewSonic", "Philips", "Acer",
           "BenQ", "Dell", "HP", "Lenovo", "Thermaltake", "Cooler Master", "Seasonic", "EVGA", "Antec", "be quiet", "DeepCool",
@@ -49,9 +49,12 @@ FEAT = {
                        "1644": ("mbs", "num"), "1645": ("mbs_w", "num"), "17534": ("tbw", "num"), "430": ("rpm", "num"), "37958": ("buffer", "num")},
     "fuentes": {"10713": ("w", "num"), "8110": ("cert", "str"), "8529": ("modular", "pres"), "8107": ("atx", "str"), "45531": ("pcie16", "num"),
                 "34322": ("formato", "str"), "5676": ("eficiencia", "num")},
+    # act. 47: solo peso y batería (procesador, memoria y disco salen del título). IDs medidos en la prueba de GitHub
+    # del 24/11/2026: 94 «Peso» (kg) y 8519 «Capacidad de batería» (Wh).
+    "notebooks": {"94": ("peso", "num"), "8519": ("bateria_wh", "num")},
 }
 WANTED = {"monitores": ("inch", "res", "hz", "panel", "ms"), "memorias-ram": ("gb", "ddr", "mhz", "cl"),
-          "almacenamiento": ("gb", "iface", "mbs"), "fuentes": ("w", "cert", "modular", "atx")}
+          "almacenamiento": ("gb", "iface", "mbs"), "fuentes": ("w", "cert", "modular", "atx"), "notebooks": ("peso", "bateria_wh")}
 
 
 def brand_of(name, group_brand=None):
@@ -155,6 +158,19 @@ def parse(resp, cat):
                 elif a not in f and f[b]["v"] is False:
                     f[a] = {"v": "No"}
                 f.pop(b)
+    if cat == "notebooks":                       # unidades fijas y rangos sanos; si no, el dato no se usa
+        pe = f.get("peso")
+        if pe and pe.get("u") == "g":
+            pe["v"], pe["u"] = round(pe["v"] / 1000, 2), "kg"
+        if pe and not (0.5 <= pe["v"] <= 6):
+            f.pop("peso")
+        elif pe:
+            pe["u"] = "kg"
+        b = f.get("bateria_wh")
+        if b and not (20 <= b["v"] <= 110):
+            f.pop("bateria_wh")
+        elif b:
+            b["u"] = "Wh"
     if cat == "fuentes" and "atx" in f and re.match(r"^\d", str(f["atx"]["v"])):
         f["atx"]["v"] = "ATX " + str(f["atx"]["v"])
     return f, {"title": gi.get("Title"), "id": gi.get("IcecatId"), "pn": gi.get("BrandPartCode"), "brand": gi.get("Brand")}
@@ -169,7 +185,10 @@ def _http_fetch(user):
     def fetch(brand, code):
         time.sleep(DELAY)
         url = f"{API}?lang=ES&shopname={quote(user)}&Brand={quote(brand)}&ProductCode={quote(code, safe='')}"
-        r = common._session.get(url, timeout=40)
+        try:
+            r = common._session.get(url, timeout=40)
+        except Exception as e:          # act. 47: un corte de red cortaba toda la etapa y se perdía lo ya vinculado
+            raise _Stop(f"Icecat no respondió: {type(e).__name__}")
         if r.status_code == 200:
             return "ok", r.json()
         try:
@@ -235,7 +254,7 @@ def refresh(groups, raw_dir, fetch=None, user=None, today=None, limit=MAX_REQ):
                 if res != "ok":
                     continue
                 f, info = parse(resp, cat)
-                if f is None or len(f) < 2 or not consistent(name, cat, f):
+                if f is None or len(f) < (1 if cat == "notebooks" else 2) or not consistent(name, cat, f):
                     st["rechazadas"] += 1
                     continue
                 key = "ic:" + str(info.get("id") or ck)
