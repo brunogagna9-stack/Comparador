@@ -3,7 +3,7 @@
      sitemap-productos.xml se genera en cada actualización de precios (build_data.py → write_sitemap);
      sitemap-guias.xml y las páginas precios-<categoría>.html, también (scripts/guias.py, actualización 43). -->
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <sitemap><loc>https://brunogagna9-stack.github.io/Comparador/sitemap-paginas.xml</loc></sitemap>
-  <sitemap><loc>https://brunogagna9-stack.github.io/Comparador/sitemap-productos.xml</loc></sitemap>
-  <sitemap><loc>https://brunogagna9-stack.github.io/Comparador/sitemap-guias.xml</loc></sitemap>
+  <sitemap><loc>https://kyranohard.com.ar/sitemap-paginas.xml</loc></sitemap>
+  <sitemap><loc>https://kyranohard.com.ar/sitemap-productos.xml</loc></sitemap>
+  <sitemap><loc>https://kyranohard.com.ar/sitemap-guias.xml</loc></sitemap>
 </sitemapindex>
