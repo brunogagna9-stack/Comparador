@@ -2015,3 +2015,45 @@ def test_actualizacion_49_mym():
     assert st["site"] == "https://mymcomputacion.com" and st["integration"] == "completa"
     prohib = ("?filter=", "?search=", "?orden=")
     assert not any(x in c for c in mym.CATS for x in prohib)
+
+
+def test_actualizacion_50_agrupacion():
+    """Jueces: DDR4 y DDR5 / 8 y 16 GB / variantes de mother no se mezclan; la misma placa de video no se reparte en fichas."""
+    import build_data as bd
+    def it(store, name, price, cat, pn=None):
+        return {"store": store, "name": name, "url": f"https://{store.lower().replace(' ', '')}.ar/{abs(hash(name)) % 10**8}",
+                "price_cash": price, "price_list": None, "stock": True, "sku": None, "pn": pn, "image": None, "category": cat,
+                "cuotas": None, "rating": None, "prev_cash": None}
+    items = [
+        it("A", "Motherboard Gigabyte B760M D3HP DDR4 LGA1700", 160000, "motherboards", "B760MD3HPDDR4X"),
+        it("B", "Mother Gigabyte B760M D3HP", 200000, "motherboards", "B760MD3HPDDR4X"),           # puente sin DDR
+        it("C", "Motherboard Gigabyte B760M D3HP DDR5 LGA1700", 230000, "motherboards", "B760MD3HPDDR4X"),
+        it("D", "MOTHER GIGABYTE (LGA1700) B760M D2H DDR4", 170000, "motherboards", "B760MD3HPDDR4X"),
+        it("A", "Memoria RAM Hiksemi Sword RGB 8GB DDR4 3200MHz", 30000, "memorias-ram", "HSCSWORD8"),
+        it("B", "Memoria RAM Hiksemi Sword RGB 16GB DDR4 3200MHz", 55000, "memorias-ram", "HSCSWORD8"),
+        it("A", "Placa de Video MSI GeForce RTX 5070 Ti 16G SHADOW 3X OC GDDR7", 2400000, "placas-de-video"),
+        it("B", "Placa de Video MSI RTX 5070 Ti Shadow 3X OC 16GB", 2350000, "placas-de-video"),
+        it("C", "MSI Shadow 3X OC GeForce RTX 5070 Ti 16 GB GDDR7 Placa de video", 2390000, "placas-de-video"),
+        it("D", "Placa de Video MSI RTX 5070 Ti Ventus 3X OC 16GB", 2300000, "placas-de-video"),      # otra línea: aparte
+        it("E", "Placa de Video MSI RTX 5070 Ti Shadow 3X 16GB", 2310000, "placas-de-video"),         # sin «OC»: aparte
+    ]
+    gs = bd.build(items)
+    def group_of(store, frag):
+        return next(g for g in gs if any(o["store"] == store and frag in o["url"] or False for o in g["offers"]) or
+                    any(o["store"] == store for o in g["offers"]) and frag.lower() in g["name"].lower())
+    mobos = [g for g in gs if g["category"] == "motherboards"]
+    for g in mobos:
+        stores = {o["store"] for o in g["offers"]}
+        assert not ({"A", "C"} <= stores), "DDR4 y DDR5 nunca en la misma ficha"
+        assert not ({"A", "D"} <= stores), "D3HP y D2H nunca en la misma ficha"
+    rams = [g for g in gs if g["category"] == "memorias-ram"]
+    assert len(rams) == 2 and all(len(g["offers"]) == 1 for g in rams), "8 GB y 16 GB separadas"
+    gpus = sorted((g for g in gs if g["category"] == "placas-de-video"), key=lambda g: -len(g["offers"]))
+    assert len(gpus[0]["offers"]) == 3 and {o["store"] for o in gpus[0]["offers"]} == {"A", "B", "C"}, [g["name"] for g in gpus]
+    assert len(gpus) == 3
+    assert bd.ddr_of("Motherboard LGA1700 Msi Pro H610M-G D5") == "ddr5" and bd.ram_total_gb("Kit 2x16GB DDR5") == 32
+    assert bd.mobo_variant("MOTHER ASUS (LGA1700) PRIME B760M-A D4") == bd.mobo_variant("Mother ASUS PRIME B760M-A DDR5") == "b760m|a"
+    # los ids viejos de las fichas unidas quedan como alias del nuevo
+    assert set(bd.ALIASES.values()) <= {g["id"] for g in gs} and not (set(bd.ALIASES) & {g["id"] for g in gs})
+    out, n = bd.merge_gpu_dupes([[items[6]], [items[7]], [items[9]]])
+    assert n == 1 and len(out) == 2 and len(out[0]) == 2, "dos fichas del mismo modelo exacto se unen; la Ventus no"

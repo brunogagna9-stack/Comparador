@@ -261,6 +261,139 @@ def clean_name(name):
     return " ".join(out)
 
 
+# ---- actualización 50 (juez de datos): grupos que mezclaban productos incompatibles ----
+# El cruce une por número de parte, título o modelo, y una oferta sin un dato (p. ej. «Mother Gigabyte B760M D3HP», sin
+# DDR) podía hacer de puente entre la versión DDR4 y la DDR5. Después de agrupar se revisa cada grupo: si sus ofertas
+# dicen cosas DISTINTAS sobre un dato que cambia el producto (tipo de memoria, capacidad de la memoria, variante de la
+# placa madre), el grupo se separa por ese dato; las ofertas que no lo dicen quedan aparte (mejor no comparar que
+# comparar mal).
+_DDR = re.compile(r"\bddr ?([345])\b|\b(?:ddr)?d([45])\b(?!\d)", re.I)
+
+
+def ddr_of(name):
+    m = _DDR.search(name or "")
+    return ("ddr" + (m.group(1) or m.group(2))) if m else None
+
+
+def ram_total_gb(name):
+    n = (name or "").lower()
+    kit = re.search(r"(\d)\s?x\s?(\d{1,3})\s?gb", n)
+    if kit:
+        return int(kit.group(1)) * int(kit.group(2))
+    m = re.search(r"\b(\d{1,3})\s?gb\b", n)
+    return int(m.group(1)) if m else None
+
+
+_MOBO_SUFFIX = {"a", "k", "g", "e", "p", "s", "f", "d2h", "d3h", "d3hp", "ds3h", "s2h", "hd3", "hd3p", "dh", "s3h", "ud", "uda", "ax", "v2", "v3", "ii"}
+_MOBO_NOISE = re.compile(r"\(.*?\)|\bddr ?[345]\b|\bd[45]\b|\blga ?\d{4}\b|\b(1700|1851|1200)\b|\bam[45]\b|micro ?atx|\bm?atx\b|\bgen ?\d\b|\d{1,2}(va|°)", re.I)
+
+
+def mobo_variant(name):
+    """«b760m|d3hp», «b760m|a», «h610m|k|v2»… o None si el título no trae chipset."""
+    s = _MOBO_NOISE.sub(" ", (name or "").lower())
+    m = re.search(r"\b([abhxzq]\d{3}[a-z]?m?)(?:[- ]?([a-z0-9]{1,4}))?(?:[- ]([a-z0-9]{1,4}))?(?:[- ]([a-z0-9]{1,4}))?", s)
+    if not m:
+        return None
+    suf = sorted(t for t in m.groups()[1:] if t and t in _MOBO_SUFFIX)
+    return "|".join([m.group(1)] + suf)
+
+
+def split_conflicts(groups_items):
+    """Separa los grupos (listas de ofertas) cuyas ofertas se contradicen. Devuelve la lista nueva y cuántos separó."""
+    out, n = [], 0
+    for offers in groups_items:
+        cat = offers[0].get("category") if offers else None
+        keyf = None
+        if cat == "memorias-ram":
+            keyf = lambda o: (ddr_of(o["name"]), ram_total_gb(o["name"]))
+        elif cat == "motherboards":
+            keyf = lambda o: (ddr_of(o["name"]), mobo_variant(o["name"]))
+        elif cat == "placas-de-video":
+            keyf = lambda o: (gpu_chip(o["name"]), (lambda m: int(m.group(1)) if m else None)(re.search(r"\b(\d{1,2})\s?gb?\b", o["name"].lower())))
+        if not keyf or len(offers) < 2:
+            out.append(offers)
+            continue
+        keys = [keyf(o) for o in offers]
+        # cada componente se compara solo entre las ofertas que lo informan
+        conflict = any(len({k[i] for k in keys if k[i] is not None}) > 1 for i in range(len(keys[0])))
+        if not conflict:
+            out.append(offers)
+            continue
+        n += 1
+        buckets = {}
+        for o, k in zip(offers, keys):
+            buckets.setdefault(k if all(x is not None for x in k) else ("?",) + tuple(x for x in k), []).append(o)
+        out.extend(buckets.values())
+    return out, n
+
+
+# ---- actualización 50 (juez de datos): la misma placa de video repartida en varias fichas ----
+# «MSI RTX 5070 Ti Shadow 3X OC 16GB» aparecía en 10 fichas porque cada tienda escribe el título distinto y sin número
+# de parte. Se unen las fichas de placas de video que coinciden EXACTAMENTE en: marca, chip (patrones de
+# hardware.json), memoria, palabras de línea del modelo (Shadow, Ventus, Windforce, Prime, Dual, TUF…), cantidad de
+# ventiladores, «OC» y color. Si a una le falta una palabra (p. ej. «OC»), no se une: mejor no comparar que comparar mal.
+GPU_LINE = {"shadow", "ventus", "gaming", "trio", "windforce", "eagle", "aero", "aorus", "elite", "master", "xtreme", "prime",
+            "dual", "tuf", "rog", "strix", "astral", "challenger", "legend", "steel", "phantom", "taichi", "pulse", "nitro",
+            "hellhound", "devil", "reaper", "twin", "amp", "solid", "inspire", "sakura", "ice", "expert", "suprim", "vanguard",
+            "mech", "fighter", "ichill", "frostbite", "gamerock", "jetstream", "infinity", "sff", "lp", "pro", "plus", "x2", "x3",
+            "2x", "3x", "ultra", "edge", "core", "speedster", "swift", "merc", "qick", "low", "profile", "itx", "mini", "max", "evo"}
+GPU_COLOR = {"white", "blanco", "blanca", "black", "negro", "negra", "pink", "rosa", "silver"}
+_GPU_CHIPS = None
+MERGED_FROM = {}   # id(lista de ofertas) → ids que tenían las fichas que se le unieron
+ALIASES = {}       # id viejo → id nuevo (se publica en data/alias.json: enlaces y avisos viejos siguen andando)
+
+
+def gpu_chip(name):
+    global _GPU_CHIPS
+    if _GPU_CHIPS is None:
+        try:
+            hw = json.loads((ROOT / "site" / "data" / "hardware.json").read_text(encoding="utf-8"))
+            _GPU_CHIPS = [(g["id"], re.compile(g["m"], re.I), re.compile(g["x"], re.I) if g.get("x") else None)
+                          for g in (hw.get("gpus") or []) + (hw.get("gpux") or []) if g.get("m")]
+        except Exception:
+            _GPU_CHIPS = []
+    n = (name or "").lower()
+    for gid_, m, x in _GPU_CHIPS:
+        if m.search(n) and not (x and x.search(n)):
+            return gid_
+    return None
+
+
+def gpu_key(name):
+    n = (name or "").lower()
+    chip, brand = gpu_chip(n), brand_of(name)
+    vram = re.search(r"\b(\d{1,2})\s?gb?\b", n)
+    if not chip or not brand or not vram:
+        return None
+    toks = set(re.split(r"[^a-z0-9]+", n.replace("x 2", "x2").replace("x 3", "x3")))
+    line = frozenset(toks & GPU_LINE)
+    if not line:
+        return None
+    return (brand, chip, int(vram.group(1)), line, "oc" in toks, frozenset(toks & GPU_COLOR), is_used(name))
+
+
+def merge_gpu_dupes(groups_items):
+    """Une fichas de placas de video del mismo modelo exacto. Devuelve la lista nueva y cuántas fichas se unieron."""
+    out, by_key, n = [], {}, 0
+    for offers in groups_items:
+        if not offers or offers[0].get("category") != "placas-de-video":
+            out.append(offers)
+            continue
+        keys = {gpu_key(o["name"]) for o in offers}
+        if len(keys) != 1 or None in keys:
+            out.append(offers)
+            continue
+        k = keys.pop()
+        if k in by_key:
+            MERGED_FROM.setdefault(id(by_key[k]), []).append(gid(offers))   # su id viejo pasa a ser un alias
+            by_key[k].extend(offers)
+            n += 1
+        else:
+            by_key[k] = list(offers)
+            out.append(by_key[k])
+    return out, n
+
+
 def build(all_items, extra_images=None):
     from scrapers.common import is_service, is_non_hardware, fix_category
     fixed = []
@@ -271,9 +404,14 @@ def build(all_items, extra_images=None):
         fixed.append(dict(i, category=cat) if cat != i["category"] else i)
     all_items = fixed
     groups = []
-    for offers in group([i for i in all_items if price_of(i) and not is_service(i["name"])
-                         and not is_non_hardware(i["name"], i["category"])]):
+    grouped, _ = split_conflicts(group([i for i in all_items if price_of(i) and not is_service(i["name"])
+                                         and not is_non_hardware(i["name"], i["category"])]))
+    grouped, _ = merge_gpu_dupes(grouped)
+    ALIASES.clear()
+    src_of = {}
+    for offers in grouped:
         offers_all = offers
+        src_of[len(groups)] = MERGED_FROM.pop(id(offers), [])
         best = {}  # una oferta por tienda: la más barata
         for o in offers:
             cur = best.get(o["store"])
@@ -296,6 +434,12 @@ def build(all_items, extra_images=None):
         used[g["id"]] = n + 1
         if n:
             g["id"] += f"-{n}"
+    ids = {g["id"] for g in groups}
+    for i, olds in src_of.items():
+        for o in olds:
+            if o and o != groups[i]["id"] and o not in ids:
+                ALIASES[o] = groups[i]["id"]
+    MERGED_FROM.clear()
     for g in groups:   # red de seguridad: si los precios difieren 3 veces o más, la web avisa que se verifique
         ps = [price_of(o) for o in g["offers"]]
         if len(ps) > 1 and max(ps) / min(ps) >= 3:
@@ -875,6 +1019,7 @@ def main(only):
     update_history(groups, hist, today)
     annotate_changes(groups, hist, today)
     (DATA / "products.json").write_text(json.dumps(groups, ensure_ascii=False, separators=(",", ":")))
+    (DATA / "alias.json").write_text(json.dumps(ALIASES, separators=(",", ":")))   # act. 50
     (DATA / "history.json").write_text(json.dumps(hist, separators=(",", ":")))
     (DATA / "armar.json").write_text(json.dumps(armar_catalog(groups), ensure_ascii=False, separators=(",", ":")))
     (DATA / "armar_per.json").write_text(json.dumps(armar_catalog(groups, ARMAR_PER_CATS), ensure_ascii=False, separators=(",", ":")))

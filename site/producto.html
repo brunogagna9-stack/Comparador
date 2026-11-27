@@ -123,6 +123,7 @@ function specs(g,HW,PR,META,SP){
   // existe (sitio sin regenerar) o no lo tiene, se usa el catálogo completo como antes.
   const [SH,META,CFG,STORES,HW,SP,DOL]=await Promise.all([id?j(`data/p/${String(shardOf(id)).padStart(2,"0")}.json`,null):null,j("data/meta.json",{}),j("data/config.json",{stores:{}}),j("data/stores.json",{stores:{}}),j("data/hardware.json",null),j("data/specs.json",null),j("data/dolar.json",null)]);
   let g=SH&&SH.g&&SH.g[id],HIST=(SH&&SH.h)||{};
+  if(!g&&id){const AL=await j("data/alias.json",{});if(AL&&typeof AL[id]==="string"&&AL[id]!==id){location.replace("producto.html?id="+encodeURIComponent(AL[id])+location.hash);return}}   // act. 50: ficha unida a otra
   if(!g){const [PR,H]=await Promise.all([j("data/products.json",[]),j("data/history.json",{})]);g=(Array.isArray(PR)?PR:[]).find(x=>x.id===id);HIST=H}
   const PR=g?[g]:[];
   REP.set(STORES);
