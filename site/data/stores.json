@@ -814,10 +814,10 @@
    "integration": "parcial",
    "how": "Listados de categoría (/cat/supra/…/N). Su robots.txt permite /cat/. El listado no informa stock: queda como «stock sin confirmar».",
    "contact": {},
-   "checked": "2026-10-26",
+   "checked": "2026-11-27",
    "reputation": [],
    "notes": [
-    "La tienda indica que su «Precio especial» es con débito, transferencia o efectivo: lo mostramos como contado; el otro es el de lista.",
+    "La tienda indica que su «Precio especial» es con débito, transferencia o efectivo: lo mostramos como contado. El precio de lista no se publica: el del listado (contado + 10 %) no coincide con el de la ficha (contado + 5 %).",
     "Su código de producto es interno: los productos se cruzan con otras tiendas por nombre y modelo.",
     "Hay una ficha «XT-PC» en Google Maps (Galería Jardín) pero no tiene sitio web cargado: no se pudo confirmar que sea la misma tienda, así que no mostramos puntaje."
    ]
@@ -829,7 +829,7 @@
    "contact": {
     "address": "Antonio Malaver 3283, Florida Oeste, Buenos Aires"
    },
-   "checked": "2026-10-26",
+   "checked": "2026-11-27",
    "reputation": [
     {
      "source": "Google Maps",
@@ -841,7 +841,7 @@
     }
    ],
    "notes": [
-    "El listado muestra un precio sin aclarar el medio de pago: lo mostramos como precio de lista, no como contado.",
+    "Su ficha aclara que el precio publicado es el especial para efectivo y transferencia: lo mostramos como contado. El de lista (con tarjeta, ~10 % más) está solo en la ficha y no se lee.",
     "Su código de producto es interno: los productos se cruzan con otras tiendas por nombre y modelo."
    ],
    "zone": "Gran Buenos Aires"

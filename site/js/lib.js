@@ -172,6 +172,9 @@
     const vr = nums.find(x => !x.used && x.gpu); if (vr) { o.vram = vr.val; vr.used = true; }
     const rm = nums.find(x => !x.used && x.val <= 128); if (rm) { o.ram = rm.val; rm.used = true; }
     if (o.ssd == null) { const bare = nums.find(x => !x.used && x.val >= 120); if (bare) o.ssd = bare.val; }
+    // act. 50: títulos abreviados («+SSD256G», «I3-1025G1/8G/256 Ssd»)
+    if (o.ssd == null) { const s2 = n.match(/(?:ssd|nvme|m\.2)\s*(\d{3,4})\s*(?:g|gb)?\b/i) || n.match(/\/\s*(\d{3,4})\s*(?:g|gb)?\s*ssd\b/i); if (s2 && +s2[1] >= 120 && +s2[1] <= 4096) o.ssd = +s2[1]; }
+    if (o.ram == null) { const r2 = n.match(/(?:[\/+]\s*|\s)(4|8|12|16|24|32|64)\s?g(?:b)?\b(?!\s*(?:ssd|hdd|emmc|nvme))/i); if (r2) o.ram = +r2[1]; }
     return o;
   }
   /* ---- periféricos: lo que dice el TÍTULO (la ficha de la tienda, si existe, tiene prioridad) ---- */
@@ -271,10 +274,14 @@
     C.updated = (meta && meta.updated) || null;
 
     /* ofertas: la más barata con stock (o stock sin confirmar); nunca sin stock confirmado */
+    /* act. 50 (jueces): primero las de stock CONFIRMADO, de una tienda al día y sin salto sospechoso; solo si no hay
+       ninguna así se cae a «stock sin confirmar», tienda que no responde o precio sospechoso (y se marca en la ficha).
+       Antes ganaba la más barata aunque la tienda no confirmara stock (296 productos) o no respondiera hace días. */
+    C.offerRank = o => (o.stock === true ? 0 : 2) + (C.staleStore(o.store) ? 4 : 0) + (o.anom ? 1 : 0);
     C.bestOffer = g => {
       const l = g.offers.filter(o => o.stock !== false && CT.price(o));
       if (!l.length) return null;
-      return l.sort((a, b) => CT.price(a) - CT.price(b))[0];
+      return l.sort((a, b) => C.offerRank(a) - C.offerRank(b) || CT.price(a) - CT.price(b))[0];
     };
     /* Para RECOMENDAR (armado, encontrá tu equipo) no se usa un precio que difiere 3 veces o más del resto de las tiendas
        (casi siempre es un error de publicación o un producto mal cruzado): con 3 o más tiendas se descarta el que se aleja

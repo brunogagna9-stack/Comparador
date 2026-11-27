@@ -141,7 +141,9 @@ def _notebook(t):
             m = re.search(r"(\d{2,3}(?:[.,]\d)?)\s*(?:wh|whr|w/h|w-h|vatios[ -]hora)\b", line)
             if m and "bateria_wh" not in f:
                 v = _num(m.group(1))
-                if v and 20 <= v <= 110:
+                # act. 50 (juez de datos): «99» / «99,9 Wh» aparece como texto genérico en descripciones de Max Tecno y
+                # Dinobyte (MSI dice 90 o 55,2 Wh para esos modelos): desde una descripción no se acepta
+                if v and 20 <= v <= 110 and not 98.5 <= v <= 100:
                     f["bateria_wh"] = {"v": round(v, 1) if v != int(v) else int(v), "u": "Wh"}
             m = re.search(r"\b([2-9])\s*(?:celdas|cell|cells)\b", line)
             if m and "bateria_celdas" not in f:

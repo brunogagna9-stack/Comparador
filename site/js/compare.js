@@ -44,7 +44,7 @@
 
     const perPrice = (v, p, k) => v != null && p ? v / p * k : null;
     const priceRow = {
-      id: "price", label: "Precio (efectivo/transferencia)", help: "Precio más bajo con stock entre las tiendas del comparador, en pesos argentinos. Se actualiza cada ~6 horas.", dir: "min", chart: "$",
+      id: "price", label: "Precio (efectivo/transferencia)", help: "Precio más bajo con stock entre las tiendas del comparador, en pesos argentinos. Se actualiza varias veces por día.", dir: "min", chart: "$",
       get: it => it.p ? mk(it.p, ARS(it.p), "ver") : ND
     };
     const storeRow = {

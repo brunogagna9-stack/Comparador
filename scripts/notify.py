@@ -55,6 +55,11 @@ def current(group, stores_cfg):
 def evaluate(rows, products, stores_cfg):
     """rows: salida de notify_targets(). → (por_mail {email: [cambios]}, actualizaciones [(user_id, product_id, last_price, last_cuotas)])."""
     by_id = {g["id"]: g for g in products}
+    try:   # act. 50: fichas unidas a otra (data/alias.json): el aviso sigue al producto
+        al = json.loads((Path(__file__).resolve().parent.parent / "site" / "data" / "alias.json").read_text(encoding="utf-8"))
+        by_id.update({old: by_id[new] for old, new in al.items() if new in by_id and old not in by_id})
+    except Exception:
+        pass
     mails, updates = {}, []
     for r in rows:
         g = by_id.get(r["product_id"])

@@ -47,6 +47,19 @@
     return n;
   };
 
+  /* act. 50: nivel aproximado del procesador de una notebook por su nombre (0 = muy básico … 4 = alto). Es una guía para
+     ordenar, no una medición: Celeron/Athlon 0; Ryzen 3000U, Core i3 de 10.ª, N100/N200/N305/N350 1; Ryzen 5000/7000U de
+     gama baja, Core i3 de 12.ª+, Core 3 1,5; Ryzen 5 5000+/i5 de 11.ª+/Core 5 2,5; Ryzen 7/i7/Core 7/Ultra 5-7 3,5; HX/Ryzen 9/i9/Ultra 9 4. */
+  CT.nbCpuTier = cpu => {
+    const t = String(cpu || "").toLowerCase().replace(/[-_]/g, " ");
+    if (/celeron|athlon|pentium|mediatek|n4\d{3}|n5\d{3}|\bn[0-9]{4}\b/.test(t) && !/\bn(100|150|200|250|300|305|350|355)\b/.test(t)) return 0;
+    if (/ryzen 9|\bi9\b|core i9|ultra 9|\d{4,5}hx\b/.test(t)) return 4;
+    if (/ryzen 7|\bi7\b|core i7|core 7|ultra 7|ultra 5|apple m\d/.test(t)) return 3.5;
+    if (/ryzen 5 ?[2-3]\d{3}u/.test(t) || /ryzen 3 ?[2-3]\d{3}u/.test(t) || /\bi3 ?10\d{2}|\bi3 ?1[01]\d{2}g/.test(t) || /\bn(100|150|200|250|300|305|350|355)\b|i3 ?n3/.test(t)) return 1;
+    if (/ryzen 3|\bi3\b|core i3|core 3/.test(t)) return 1.5;
+    if (/ryzen 5|\bi5\b|core i5|core 5/.test(t)) return 2.5;
+    return 1.5;
+  };
   CT.makeFinder = function (C) {
     CT.makeCompare(C);
     const HW = C.HW, gpuRank = n => { const m = /(rtx|gtx|rx|arc)\s?([a-z]?)(\d)(\d{2})/i.exec(n || ""); return m ? (+m[3]) * 10 + ({ 3: 1, 4: 2, 5: 3 }[Math.floor(+m[4] / 10)] || ({ 5: 1, 6: 2, 7: 3, 8: 4, 9: 5 })[+m[4][0]] || 1) : null; };
@@ -89,7 +102,9 @@
         const rank = gpuLine(s.gpu); if (n.gaming && !s.gpu) { excl.gpu++; return; }
         if (n.gpuReq.some(r => r.fps >= 60) && (rank == null || rank < 22 && !/rx|arc/i.test(s.gpu || ""))) { excl.gpu++; return; }
         const pw = a.portable === "si" ? C.sf(g, "peso") : null;   // si la va a llevar de un lado a otro, se prefiere la liviana (solo con peso publicado)
-        const score = s.ram / 16 + s.ssd / 512 + (s.gpu ? 1.5 + (rank || 20) / 20 : 0) + (s.hz ? s.hz / 240 : 0) + (pw ? Math.max(0, (2.4 - pw.v)) * 0.5 : 0);
+        const cpuT = CT.nbCpuTier(s.cpu || g.name);   // act. 50: el procesador pesa (antes ganaba un Ryzen 3 3200U de 2019 por tener más disco)
+        if (cpuT === 0 && !n.gaming && (n.ram.min >= 8)) { excl.cpu = (excl.cpu || 0) + 1; return; }   // Celeron / Athlon: demasiado lentos para uso general
+        const score = s.ram / 16 + s.ssd / 512 + cpuT * 0.9 + (s.gpu ? 1.5 + (rank || 20) / 20 : 0) + (s.hz ? s.hz / 240 : 0) + (pw ? Math.max(0, (2.4 - pw.v)) * 0.5 : 0);
         cands.push({ kind: "notebook", g, o, total: CT.price(o), score, s });
       });
       return { cands, excl };
@@ -222,7 +237,7 @@
         if (c.kind === "notebook") {
           const pw = C.sf(c.g, "peso"), amp = C.sf(c.g, "ram_ampliable"), gr = C.sf(c.g, "garantia"), pn = C.sf(c.g, "panel"), cpuF = C.sf(c.g, "cpu");
           const why = C.specMissing(c.g, "peso") === "sin ficha" ? "la tienda no publicó una ficha técnica de este modelo" : "la ficha de la tienda no lo informa";
-          const src = r => ` (${r.src}, SKU ${r.sku}, ${r.date})`;
+          const src = r => ` (${[r.src, r.sku ? "SKU " + r.sku : "", r.date].filter(Boolean).join(", ")})`;   // act. 50: sin «SKU undefined»
           if (pw) {
             specs.push(["Peso", pw.v.toString().replace(".", ",") + " kg" + src(pw), pw.tag]);
             if (a.portable === "si") { if (pw.v <= 1.7) pros.push(`Pesa ${pw.v.toString().replace(".", ",")} kg según la ficha de la tienda: cómoda para llevar.`); else if (pw.v >= 2.2) cons.push(`Pesa ${pw.v.toString().replace(".", ",")} kg: pesada para transportar todos los días.`); }
@@ -230,8 +245,12 @@
             specs.push(["Peso", "Sin datos (" + why + ")", "nd"]);
             limits.push("No pudimos obtener el peso: " + why + (a.portable === "si" ? ". Dijiste que la vas a transportar, así que confirmalo con la tienda o en la hoja técnica del fabricante." : "."));
           }
-          specs.push(["Batería", "Sin datos: ninguna tienda conectada publica la capacidad (Wh) ni la autonomía medida", "nd"]);
-          limits.push("Batería: la capacidad no figura en las fichas de las tiendas y no usamos la autonomía de marketing como si fuera real. Buscala en la hoja técnica del fabricante" + (a.portable === "si" ? " (dijiste que la vas a transportar)." : "."));
+          const bw = C.sf(c.g, "bateria_wh");   // act. 50: la batería ya puede venir de Icecat o de la descripción de una tienda
+          if (bw) specs.push(["Batería", String(bw.v).replace(".", ",") + " Wh" + src(bw), bw.tag]);
+          else {
+            specs.push(["Batería", "Sin datos: no la encontramos para este modelo (ni del fabricante ni de las tiendas)", "nd"]);
+            limits.push("Batería: no tenemos la capacidad de este modelo y no usamos la autonomía de marketing como si fuera real. Buscala en la hoja técnica del fabricante" + (a.portable === "si" ? " (dijiste que la vas a transportar)." : "."));
+          }
           if (amp) specs.push(["RAM ampliable", (amp.v ? "Sí" : "No") + " (" + amp.note + ")", amp.tag]);
           if (pn) specs.push(["Panel", pn.v, pn.tag]);
           if (gr) specs.push(["Garantía de la tienda", gr.v + " meses", gr.tag]);

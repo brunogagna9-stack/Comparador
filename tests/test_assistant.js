@@ -139,13 +139,46 @@ const t = async (name, fn) => { try { await fn(); n++; } catch (e) { console.err
     await X.ask("placa de video más barata", {}); assert.strictEqual(cargado, 0, "no baja el historial si no hace falta");
     const s = txt(await X.ask("¿bajó de precio?", { section: "precios", ids: [g.id] }));
     assert.strictEqual(cargado, 1);
-    assert(/01\/11\/2026/.test(s) && /bajó un 3%/.test(s) && /Mínimo registrado: \$280\.000/.test(s) && /No predecimos/.test(s), s);
+    // act. 50: el precio de hoy es el de la ficha (mejor oferta actual), no el último cambio registrado
+    assert(/01\/11\/2026/.test(s) && /hasta hoy/.test(s) && /Mínimo registrado/.test(s) && /No predecimos/.test(s), s);
     assert(/no tengo suficientes registros/.test(txt(await X.ask("historial de precio del Ryzen 5 5500", {}))));
   });
   await t("act. 49: sugerencias según la página", async () => {
     const g = PR.find(x => x.category === "procesadores");
     assert(A.suggestions({ section: "precios", ids: [g.id] }).includes("¿Bajó de precio?"));
     assert(A.suggestions({ section: "inicio" }).some(x => /más barata/.test(x)));
+  });
+  /* ---- actualización 50: correcciones de los jueces ---- */
+  await t("act. 50: historial con el último precio conocido de cada tienda (antes daba «subió» cuando había bajado)", async () => {
+    const P2 = JSON.parse(JSON.stringify(PR)), g = P2.find(x => /Ryzen 5 7600/.test(x.name));
+    g.offers = [{ store: "Compragamer", price_cash: 310000, stock: true, url: "u1", k: "k1" }, { store: "Gezatek", price_cash: 280000, stock: true, url: "u2", k: "k2" }];
+    const H = { k1: [["2026-11-01", 300000], ["2026-11-20", 310000]], k2: [["2026-11-05", 280000]] };
+    const X = CT.makeAssistant({ HW, PR: P2, META: { updated: "2026-11-27T19:00+00:00" }, SPECS, STORES, CFG: {} }, { loadHistory: async () => H });
+    const s = txt(await X.ask("¿bajó de precio?", { section: "precios", ids: [g.id] }));
+    assert(/hasta hoy \(\$280\.000\) bajó un 7%/.test(s) && /Hoy está en el precio más bajo/.test(s) && !/subió/.test(s), s);
+  });
+  await t("act. 50: mejor oferta = stock confirmado antes que «sin confirmar», aunque sea más cara", async () => {
+    const C2 = CT.create(HW, PR, META);
+    const g = { offers: [{ store: "XT-PC", price_cash: 100, stock: null }, { store: "Compragamer", price_cash: 120, stock: true }, { store: "Otra", price_cash: 90, stock: false }] };
+    assert.strictEqual(C2.bestOffer(g).store, "Compragamer");
+    assert.strictEqual(C2.bestOffer({ offers: [{ store: "XT-PC", price_cash: 100, stock: null }] }).store, "XT-PC", "si no hay otra, se usa la sin confirmar");
+    const C3 = CT.create(HW, PR, { stores: { Fullh4rd: { ok: false } } });
+    assert.strictEqual(C3.bestOffer({ offers: [{ store: "Fullh4rd", price_cash: 90, stock: true }, { store: "Gezatek", price_cash: 95, stock: true }] }).store, "Gezatek", "tienda que no responde va después");
+  });
+  await t("act. 50: placa de video según presupuesto responde con placas (no con una PC entera)", async () => {
+    const s = txt(await A.ask("qué placa de video me conviene para jugar en 1080p con 5 millones", {}));
+    assert(/placas de video más rápidas en 1080p que entran en \$5\.000\.000/.test(s) && !/PC armada/i.test(s), s);
+  });
+  await t("act. 50: «¿es compatible con DDR4?» y «¿trae cooler?» sobre el producto abierto", async () => {
+    const g = PR.find(x => /Ryzen 5 7600/.test(x.name) && x.category === "procesadores");
+    const s = txt(await A.ask("¿es compatible con DDR4?", { section: "precios", ids: [g.id] }));
+    assert(/No: según el fabricante/.test(s) && /DDR5/.test(s), s);
+    const c = txt(await A.ask("¿tiene cooler?", { section: "precios", ids: [g.id] }));
+    assert(/título de la tienda/.test(c) && !/Cable/.test(c), c);
+  });
+  await t("act. 50: «A vs B» con chips conocidos compara piezas de la misma categoría", async () => {
+    const r = await A.ask("Ryzen 5 7600 vs Ryzen 7 7800X3D", {});
+    assert(/comparar\.html#cat=procesadores/.test((r.links[0] || {}).href || ""), txt(r));
   });
   console.log(n + " pruebas del asistente OK");
 })();

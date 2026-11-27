@@ -2,8 +2,9 @@
 El sitemap.xml lista las subcategorías («/ARTICULOS/…/CAT_ID=…/SCAT_ID=…/…aspx», ~600) y cada listado se pagina con
 «A_PAGENUMBER=N» (30 productos por página), como los botones de la propia tienda.
 
-Precio: el listado muestra un precio y, a veces, uno anterior tachado; la tienda no aclara en el listado a qué medio
-de pago corresponde, así que se guarda como precio de LISTA (no se afirma que sea contado). Stock: no se informa.
+Precio: el listado muestra un precio y, a veces, uno anterior tachado. Act. 50 (juez de datos): la ficha de cada producto
+aclara que ese precio es el «Precio especial… únicamente para efectivo y transferencia» (y el de lista, con tarjeta, es
+~10 % más), así que se guarda como precio de CONTADO. El de lista solo está en la ficha y no se lee. Stock: no se informa.
 """
 import re
 from urllib.parse import urljoin
@@ -32,7 +33,7 @@ def parse(html, hint=""):
         if src and src.startswith("http://"):
             src = "https://" + src[len("http://"):]
         ean = box.select_one(".codigoEAN")
-        p = product(STORE, name, urljoin(BASE + "/", a["href"]), None, price, stock=None, image=src,
+        p = product(STORE, name, urljoin(BASE + "/", a["href"]), price, None, stock=None, image=src,
                     category=canon_category(name, hint))
         p["store_sku"] = ean.get_text(strip=True) if ean else None
         out.append(p)
