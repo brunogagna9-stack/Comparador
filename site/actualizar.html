@@ -206,7 +206,7 @@ function render(){
 }
 (async()=>{
   const j=async(u,d)=>{try{const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw 0;return await r.json()}catch{return d}};
-  let m;[HW,PR,m]=await Promise.all([j("data/hardware.json",null),j("data/products.json",[]),j("data/meta.json",{}),REP.load()]);META=m;
+  let m;[HW,PR,m]=await Promise.all([j("data/hardware.json",null),(async()=>{const r=await j("data/armar.json",null);return Array.isArray(r)&&r.length?r:j("data/products.json",[])})(),j("data/meta.json",{}),REP.load()]);META=m;
   if(!HW){$("#out").textContent="No se pudieron cargar los datos de hardware.";return}
   C=CT.makeFinder(CT.create(HW,PR,META));CT.makeUpgrade(C);
   $("#fps").innerHTML=CT.UPG_FPS.map(([v,l],i)=>`<button data-v="${v}" class="${i===0?"on":""}">${esc(l)}</button>`).join("");

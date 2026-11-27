@@ -13,6 +13,11 @@ CATEGORIES = {"Procesadores": "procesadores", "PlacasdeVideo": "placas de video"
               "Notebooks": "notebooks", "PCArmada": "pc armada", "CombosdeActualizacion": "kit de actualización"}
 
 
+def _peso(v):
+    """act. 50 (juez de datos): Logg publica precios con decimales sin sentido ($109.999,01045): se redondea al peso."""
+    return float(round(v)) if v else v
+
+
 def parse(html, hint=None):
     soup = BeautifulSoup(html, "lxml")
     out = []
@@ -25,7 +30,7 @@ def parse(html, hint=None):
         img = card.select_one("img")
         low = "quedan pocas" in card.get_text().lower()
         out.append(product(STORE, name, urljoin(BASE, card.get("href", "")),
-                           parse_ars(price.get_text()) if price else None, None,
+                           _peso(parse_ars(price.get_text())) if price else None, None,
                            stock=True if low else None,
                            image=urljoin(BASE, img["src"]) if img and img.get("src") else None,
                            category=canon_category(hint, name)))

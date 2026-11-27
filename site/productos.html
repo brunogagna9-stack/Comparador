@@ -180,7 +180,7 @@ aside details>*:not(summary){margin-top:6px}
   <aside id="side" class="sheet" aria-label="Filtros">
     <div class="shd"><b>Filtros</b><button type="button" id="fclose" aria-label="Cerrar filtros">✕</button></div>
     <div id="catbox"></div>
-    <h4>Precio (ARS)</h4><div class="rng"><input id="pmin" type="number" min="0" placeholder="Mín"><input id="pmax" type="number" min="0" placeholder="Máx"></div>
+    <h4>Precio (ARS)</h4><div class="rng"><input id="pmin" type="number" min="0" placeholder="Mín" aria-label="Precio mínimo en pesos"><input id="pmax" type="number" min="0" placeholder="Máx" aria-label="Precio máximo en pesos"></div>
     <div id="fxbox"></div>
     <details open id="brandbox" hidden><summary>Marca</summary><input id="bq" aria-label="Buscar marca" placeholder="Buscar marca…" style="width:100%;padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--tx);margin-bottom:4px"><div class="fl" id="brands"></div><button class="more" id="bmore"></button></details>
     <details open><summary>Tienda</summary><label class="zl" for="zone">Con local en</label><select id="zone" class="zs" title="Muestra solo tiendas con un local verificado en esa zona. Consultá con la tienda si se puede retirar ahí."><option value="">Todo el país</option></select><div class="fl" id="stores"></div></details>
@@ -203,6 +203,8 @@ aside details>*:not(summary){margin-top:6px}
 </div>
 <div class="live" id="live" role="status" aria-live="polite"></div>
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="Detalle"><div class="box" id="box"></div></div>
+<!-- act. 50: las librerías van ANTES del script de la página (antes, si los datos llegaban rápido, «REP is not defined» dejaba Productos vacía) -->
+<script src="js/lib.js"></script><script src="js/facets.js"></script><script src="js/icons.js"></script><script src="js/rep.js"></script><script src="js/detail.js"></script><script src="js/assistant.js" defer></script>
 <script>
 const $=s=>document.querySelector(s),ARS=n=>n==null?"—":"$"+Math.round(n).toLocaleString("es-AR");
 const CATS={procesadores:"Procesadores",motherboards:"Motherboards","placas-de-video":"Placas de video","memorias-ram":"Memorias RAM",almacenamiento:"Almacenamiento",refrigeracion:"Refrigeración",fuentes:"Fuentes",gabinetes:"Gabinetes",monitores:"Monitores",notebooks:"Notebooks","pcs-armadas":"PCs armadas",mouses:"Mouse",teclados:"Teclados",auriculares:"Auriculares",perifericos:"Otros periféricos",redes:"Redes",accesorios:"Cables y accesorios",otros:"Otros"};
@@ -343,17 +345,38 @@ function renderFx(){
     return `<details data-k="${esc(d.k)}" ${isOpen?"open":""}><summary>${esc(d.l)}${sel.size?` (${sel.size})`:""}</summary><div class="fl">${opts.map(([v,n])=>`<label class="${n?"":"zero"}${v===FX.NONE?" none":""}"><input type="checkbox" data-fx="${esc(d.k)}" value="${esc(v)}" ${sel.has(v)?"checked":""}> ${esc(v)}<span class="c">${n}</span></label>`).join("")}</div>${d.note?`<p class="fxn">${esc(d.note)}</p>`:""}</details>`}).join("")+
     `<p class="fxn">«${FX.NONE}»: la tienda no lo indica y no figura en las fichas que tenemos.</p>`;
 }
+/* act. 50 (juez 1): en el celular no se veía qué filtros estaban activos. Ahora TODOS los filtros activos aparecen como
+   chips (tocar uno lo quita) y el botón «Filtros» muestra cuántos hay. */
+function activeFilters(){
+  const a=[];
+  if(S.cat)a.push({k:"cat",l:"Categoría: "+(CATS[S.cat]||S.cat)});
+  if(S.pmin!=null)a.push({k:"pmin",l:"Desde "+ARS(S.pmin)});
+  if(S.pmax!=null)a.push({k:"pmax",l:"Hasta "+ARS(S.pmax)});
+  S.brands.forEach(b=>a.push({k:"brand",v:b,l:"Marca: "+b}));
+  S.stores.forEach(b=>a.push({k:"store",v:b,l:"Tienda: "+b}));
+  if(S.stock)a.push({k:"stock",l:"Solo con stock"});
+  if(S.multi)a.push({k:"multi",l:"En varias tiendas"});
+  if(S.lowonly)a.push({k:"lowonly",l:"Mínimo histórico"});
+  if(S.csi)a.push({k:"csi",l:"Cuotas sin interés"});
+  if(S.zone)a.push({k:"zone",l:"Zona: "+S.zone});
+  return a;
+}
 function renderChips(){
-  const el=$("#chips");if(!el)return;const out=[];
+  const el=$("#chips");if(!el)return;const out=activeFilters().map(f=>`<button class="chip" data-gchip="${esc(f.k)}" data-v="${esc(f.v||"")}" title="Quitar filtro">${esc(f.l)} ✕</button>`);
   if(S.cat&&window.FX)FX.defs(S.cat).forEach(d=>(S.fx[d.k]||new Set()).forEach(v=>out.push(`<button class="chip" data-chip="${esc(d.k)}" data-v="${esc(v)}" title="Quitar filtro">${esc(d.l)}: ${esc(v)} ✕</button>`)));
   el.innerHTML=out.join("");
+  el.querySelectorAll("[data-gchip]").forEach(b=>b.onclick=()=>{const k=b.dataset.gchip,v=b.dataset.v;
+    if(k==="cat"){S.cat="";S.fx={}}else if(k==="pmin"||k==="pmax"){S[k]=null;const i=$("#"+k);if(i)i.value=""}
+    else if(k==="brand")S.brands.delete(v);else if(k==="store")S.stores.delete(v);else if(k==="zone")S.zone="";
+    else{S[k]=false;const i=$("#"+k);if(i)i.checked=false}
+    S.page=1;render()});
 }
 function render(){
   if(INI&&!FULL&&!iniOk()){
     if(onlyCat()){location.assign("productos.html?cat="+encodeURIComponent(S.cat));return}
     $("#grid").setAttribute("aria-busy","true");$("#sum").textContent="Cargando el catálogo completo…";loadFull();return}
   const t=counts(),names={todos:"Todos",bajaron:"▼ Bajaron de precio",subieron:"▲ Subieron de precio",seguidos:"★ Seguidos"};
-  $("#tabs").innerHTML=Object.keys(names).map(k=>`<button class="tab ${S.tab===k?"on":""}" data-t="${k}">${names[k]}<span class="n">${t[k]}</span></button>`).join("")+`<button class="tab" id="fbtn" aria-expanded="${$("#side").classList.contains("show")}">☰ Filtros</button>`+
+  $("#tabs").innerHTML=Object.keys(names).map(k=>`<button class="tab ${S.tab===k?"on":""}" data-t="${k}">${names[k]}<span class="n">${t[k]}</span></button>`).join("")+`<button class="tab" id="fbtn" aria-expanded="${$("#side").classList.contains("show")}">☰ Filtros${(()=>{const n=activeFilters().length+(S.cat?Object.values(S.fx).reduce((a,x)=>a+x.size,0):0);return n?` <span class="n">${n}</span>`:""})()}</button>`+
    `<div class="sortw"><details class="vmenu" id="vmenu"><summary class="vbtn" aria-label="Cambiar la vista (ahora: ${VISTAS[S.vista].t})"><span aria-hidden="true">${VISTAS[S.vista].i}</span> Ver ▾</summary><div class="vopts" role="group" aria-label="Vista de los productos">${Object.entries(VISTAS).map(([k,v])=>`<button type="button" data-vista="${k}" class="${S.vista===k?"on":""}" aria-pressed="${S.vista===k}"><span class="vi" aria-hidden="true">${v.i}</span><span>${v.t}<small>${v.d}</small></span>${S.vista===k?'<b aria-hidden="true">•</b>':""}</button>`).join("")}</div></details><span class="sub">Ordenar</span><select id="sort" aria-label="Ordenar productos">${[["rel","Más relevante"],["price","Menor precio"],["priceDesc","Mayor precio"],["down","Mayor baja %"],["up","Mayor suba %"],["stores","Más tiendas"],["spread","Mayor diferencia entre tiendas"]].map(([v,l])=>`<option value="${v}" ${S.sort===v?"selected":""}>${l}</option>`).join("")}</select></div>`;
   $("#sort").onchange=e=>{S.sort=e.target.value;S.page=1;render()};
   fuzzyQ();const rows=filtered().sort(sorter());
@@ -381,6 +404,7 @@ function renderPager(pages,total,from){
 function syncUrl(){   // la página, la búsqueda y la categoría quedan en la dirección: se puede volver atrás o compartir
   try{const u=new URLSearchParams();if(S.q)u.set("q",S.q);if(S.cat)u.set("cat",S.cat);if(S.tab!=="todos")u.set("tab",S.tab);if(S.page>1)u.set("p",S.page);
     if(S.cat)Object.entries(S.fx).forEach(([k,set])=>{if(set.size)u.set("f_"+k,[...set].join("~"))});
+    if(S.pmin!=null)u.set("pmin",S.pmin);if(S.pmax!=null)u.set("pmax",S.pmax);if(S.stock)u.set("stock","1");   // act. 50
     history.replaceState(null,"",location.pathname+(u.toString()?"?"+u:""))}catch{}
 }
 function goPage(n){S.page=n;render();const t=$(".ptitle");if(t)window.scrollTo({top:t.getBoundingClientRect().top+scrollY-(document.querySelector("header.site")?document.querySelector("header.site").offsetHeight:0)-10,behavior:"auto"})}
@@ -560,6 +584,8 @@ function setupData(){
    if(u.get("q")){S.q=u.get("q").slice(0,120);$("#qh").value=S.q}
    if(u.get("cat")&&CATS[u.get("cat")])S.cat=u.get("cat");
    if(S.cat)for(const [k,v] of u)if(k.startsWith("f_")&&v)S.fx[k.slice(2)]=new Set(v.split("~").slice(0,20));
+   {const n=k=>{const v=parseInt(u.get(k),10);return v>0?v:null};S.pmin=n("pmin");S.pmax=n("pmax");if(S.pmin!=null)$("#pmin").value=S.pmin;if(S.pmax!=null)$("#pmax").value=S.pmax;
+    if(u.get("stock")==="1"){S.stock=true;const i=$("#stock");if(i)i.checked=true}}
    if(["bajaron","subieron","seguidos"].includes(u.get("tab"))){S.tab=u.get("tab");if(S.tab==="bajaron")S.sort="down";if(S.tab==="subieron")S.sort="up"}
    const p=parseInt(u.get("p"),10);if(p>0)S.page=p;
    bind();BOUND=true;alertBox();render();
@@ -571,7 +597,6 @@ function setupData(){
   if(!FULL&&(!TOT||Object.keys(FOLLOW).length||(INI&&pc)))(window.requestIdleCallback||(f=>setTimeout(f,400)))(()=>loadFull(),{timeout:3000});
 })();
 </script>
-<script src="js/lib.js"></script><script src="js/facets.js"></script><script src="js/icons.js"></script><script src="js/rep.js"></script><script src="js/detail.js"></script><script src="js/assistant.js" defer></script>
 <script>addEventListener("DOMContentLoaded",()=>{CT.CTAssistant.mount({section:"precios",context:()=>({query:S.q,cat:S.cat,ids:filtered().slice(0,3).map(g=>g.id)})})});</script>
 </body>
 </html>

@@ -55,6 +55,8 @@ let PR=[],META={},STORES=null;
 const fmt=n=>Number(n).toLocaleString("es-AR",{maximumFractionDigits:1});
 function card(name,s,meta,count){
   const st=meta&&meta.stores&&meta.stores[name], cls=s.integration==="completa"?"int-completa":s.integration==="parcial"?"int-parcial":"int-no";
+  // act. 50: «completa» describe cómo la leemos; si hoy no responde, se dice al lado (antes Katech decía «completa» sin productos)
+  const live=st&&!st.ok?` <span class="chip int-no" title="La última lectura falló: ${esc(st.error||"")}">sin datos ahora</span>`:"";
   const c=s.contact||{};
   const rows=[];
   rows.push(["Sitio",`<a href="${esc(s.site)}" target="_blank" rel="noopener nofollow">${esc(s.site.replace(/^https?:\/\//,""))}</a>`]);
@@ -72,12 +74,15 @@ function card(name,s,meta,count){
   if(s.payments)rows.push(["Pagos",esc(s.payments)]);
   if(s.about)rows.push(["Sobre la tienda",esc(s.about)]);
   const rep=(s.reputation&&s.reputation.length)?s.reputation.map(r=>`<div class="rep"><b>${fmt(r.score)} / 5</b><span>${fmt(r.count)} opiniones en <a href="${esc(r.url)}" target="_blank" rel="noopener nofollow">${esc(r.source)}</a> · ficha «${esc(r.listing)}» · consultado el ${esc(r.date)}</span></div>`).join(""):`<span class="note">Sin reputación pública verificada. No la inventamos.</span>`;
-  return `<div class="st mcol"><h3>${esc(name)} <span class="chip ${cls}">${esc(s.integration)}</span></h3><div class="meta">Verificado el ${esc(s.checked||"—")}</div><div>${rep}</div><div class="mhide"><dl>${rows.map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl>${(s.notes||[]).map(n=>`<p class="note">${esc(n)}</p>`).join("")}</div><button type="button" class="mmore-btn" data-mmore="Ver los datos de la tienda" aria-expanded="false">Ver los datos de la tienda</button></div>`;
+  return `<div class="st mcol"><h3>${esc(name)} <span class="chip ${cls}">${esc(s.integration)}</span>${live}</h3><div class="meta">Verificado el ${esc(s.checked||"—")}</div><div>${rep}</div><div class="mhide"><dl>${rows.map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl>${(s.notes||[]).map(n=>`<p class="note">${esc(n)}</p>`).join("")}</div><button type="button" class="mmore-btn" data-mmore="Ver los datos de la tienda" aria-expanded="false">Ver los datos de la tienda</button></div>`;
 }
 (async()=>{
-  [PR,META,STORES]=await Promise.all([j("data/products.json",[]),j("data/meta.json",{}),j("data/stores.json",null)]);
+  [META,STORES]=await Promise.all([j("data/meta.json",{}),j("data/stores.json",null)]);
   if(!STORES){$("#out").innerHTML='<div class="warn">No se pudo cargar la información de las tiendas.</div>';return}
-  const cnt={};PR.forEach(g=>g.offers.forEach(o=>{cnt[o.store]=(cnt[o.store]||0)+1}));
+  // act. 50: la cantidad por tienda viene en meta.json; solo un sitio sin regenerar baja el catálogo para contarla
+  const ms=META.stores||{},hasCnt=Object.values(ms).some(v=>v&&v.en_catalogo!=null),cnt={};
+  if(hasCnt)Object.entries(ms).forEach(([n,v])=>{if(v&&v.en_catalogo!=null)cnt[n]=v.en_catalogo});
+  else{PR=await j("data/products.json",[]);PR.forEach(g=>g.offers.forEach(o=>{cnt[o.store]=(cnt[o.store]||0)+1}))}
   $("#out").innerHTML=Object.entries(STORES.stores).filter(([n])=>!(META.stores&&META.stores[n]&&META.stores[n].hidden)).map(([n,s])=>card(n,s,META,cnt[n]==null&&META.stores&&META.stores[n]?null:(cnt[n]||0))).join("");
 })();
 </script>

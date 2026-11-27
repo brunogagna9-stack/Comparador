@@ -39,7 +39,10 @@ def parse(html, hint=""):
         src = img.get("src") if img else None
         name = re.sub(r"\s+", " ", h3.get_text(" ", strip=True))
         m = re.search(r"/prod/(\d+)/", a["href"])
-        p = product(STORE, name, urljoin(BASE + "/", a["href"]), cash, lst if lst and lst > cash else None, stock=None,
+        # act. 50 (juez de datos): el segundo precio del listado es el contado + 10 %, pero la ficha de la tienda muestra
+        # «Precio de lista» = contado + 5 % (25/11/2026, p. ej. $90.480 → $95.004). Como no coinciden, no se publica precio
+        # de lista (mejor «consultar» que un número que la tienda no cobra).
+        p = product(STORE, name, urljoin(BASE + "/", a["href"]), cash, None, stock=None,
                     image=urljoin(BASE + "/", src) if src and "noimage" not in src else None,
                     category=canon_category(name, hint.replace("-", " ")))
         p["store_sku"] = m.group(1) if m else None

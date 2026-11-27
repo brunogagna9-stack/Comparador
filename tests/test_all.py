@@ -480,11 +480,11 @@ def test_tiendas_nuevas_actualizacion_15():
     assert wz[1]["stock"] is None and wz[1]["category"] == "placas-de-video" and wz[1]["url"].startswith("https://wiztech.com.ar/catalogo/")
     # XT-PC: precio especial (débito/transferencia/efectivo) = contado; sin stock en el listado
     xt = xtpc.parse(open("tests/fixtures/xtpc.html").read(), "placas-de-video")
-    assert xt[0]["price_cash"] == 93477.6 and xt[0]["price_list"] == 102825.31 and xt[0]["stock"] is None
+    assert xt[0]["price_cash"] == 93477.6 and xt[0]["price_list"] is None and xt[0]["stock"] is None   # act. 50: el 2.º precio del listado no es el de lista
     assert xt[0]["url"] == "https://www.xt-pc.com.ar/prod/31476/placa-de-video-radeon-r5-230-2gb-ddr3-low-profile-akr230d3s2gl1"
-    # Compufan: precio sin medio de pago aclarado -> lista; imagen por https
+    # Compufan: act. 50: la ficha aclara que es el precio para efectivo y transferencia -> contado; imagen por https
     cf = compufan.parse(open("tests/fixtures/compufan.html").read(), "Con placa de video")
-    assert cf[0]["price_list"] == 888599 and cf[0]["price_cash"] is None and cf[0]["category"] == "pcs-armadas" and cf[0]["image"].startswith("https://")
+    assert cf[0]["price_cash"] == 888599 and cf[0]["price_list"] is None and cf[0]["category"] == "pcs-armadas" and cf[0]["image"].startswith("https://")
     assert compufan.page_url("https://www.compufanstore.com.ar/ARTICULOS/X/CAT_ID=63/SCAT_ID=3948/m=0/BUS=/compufanstore.aspx", 2) == \
         "https://www.compufanstore.com.ar/ARTICULOS/X;CAT_ID=63;SCAT_ID=3948;m=0;BUS=;A_PAGENUMBER=2;/compufanstore.aspx"
     # registro: cada tienda nueva tiene lector y ficha en stores.json. La entrada en config.json es opcional
@@ -1367,6 +1367,9 @@ def test_actualizacion_39_kyranohard():
     # 3) etiquetas del <head> en las 15 páginas (y el programa no duplica al volver a correrlo)
     for p in site.glob("*.html"):
         t = p.read_text(encoding="utf-8")
+        if p.name == "404.html":   # act. 50: página de error: sin canónica, noindex y rutas absolutas (sirve en cualquier carpeta)
+            assert '<meta name="robots" content="noindex">' in t and 'href="/css/layout.css"' in t and "canonical" not in t
+            continue
         assert t.count("<!-- head:kyranohard -->") == 1, p
         assert '<link rel="manifest" href="manifest.webmanifest">' in t and 'og:image" content="https://' in t and '<meta name="description"' in t, p
         assert ('<link rel="canonical"' in t) == (p.name != "producto.html"), p
@@ -1721,7 +1724,8 @@ def test_actualizacion_45_auditoria():
     st = {"ok": False, "count": 5}; assert bd.staleness(st, "2026-11-21T12:00+00:00", now) is None and st["dias"] == 1.0
     st = {"ok": False, "count": 5}; assert bd.staleness(st, "2026-11-18T19:36+00:00", now) == "vieja" and st["last_ok"] == "2026-11-18T19:36+00:00"
     st = {"ok": False, "count": 5}; assert bd.staleness(st, "2026-11-10T00:00+00:00", now) == "ocultar" and st["oculta_por_antiguedad"]
-    st = {"ok": False, "count": 0}; assert bd.staleness(st, None, now) is None and "last_ok" not in st
+    # act. 50: sin ninguna lectura buena registrada, el precio no cuenta como mejor precio (no se oculta: no hay fecha)
+    st = {"ok": False, "count": 0}; assert bd.staleness(st, None, now) == "vieja" and "last_ok" not in st and st["sin_fecha"]
     G = [{"offers": [{"store": "A", "price_cash": 50}, {"store": "B", "price_cash": 60}]},
          {"offers": [{"store": "A", "price_cash": 70}]}]
     assert bd.demote_stale(G, {"A"}) == 1
@@ -2014,3 +2018,66 @@ def test_actualizacion_49_mym():
     assert st["site"] == "https://mymcomputacion.com" and st["integration"] == "completa"
     prohib = ("?filter=", "?search=", "?orden=")
     assert not any(x in c for c in mym.CATS for x in prohib)
+
+
+def test_actualizacion_50_agrupacion():
+    """Jueces: DDR4 y DDR5 / 8 y 16 GB / variantes de mother no se mezclan; la misma placa de video no se reparte en fichas."""
+    import build_data as bd
+    def it(store, name, price, cat, pn=None):
+        return {"store": store, "name": name, "url": f"https://{store.lower().replace(' ', '')}.ar/{abs(hash(name)) % 10**8}",
+                "price_cash": price, "price_list": None, "stock": True, "sku": None, "pn": pn, "image": None, "category": cat,
+                "cuotas": None, "rating": None, "prev_cash": None}
+    items = [
+        it("A", "Motherboard Gigabyte B760M D3HP DDR4 LGA1700", 160000, "motherboards", "B760MD3HPDDR4X"),
+        it("B", "Mother Gigabyte B760M D3HP", 200000, "motherboards", "B760MD3HPDDR4X"),           # puente sin DDR
+        it("C", "Motherboard Gigabyte B760M D3HP DDR5 LGA1700", 230000, "motherboards", "B760MD3HPDDR4X"),
+        it("D", "MOTHER GIGABYTE (LGA1700) B760M D2H DDR4", 170000, "motherboards", "B760MD3HPDDR4X"),
+        it("A", "Memoria RAM Hiksemi Sword RGB 8GB DDR4 3200MHz", 30000, "memorias-ram", "HSCSWORD8"),
+        it("B", "Memoria RAM Hiksemi Sword RGB 16GB DDR4 3200MHz", 55000, "memorias-ram", "HSCSWORD8"),
+        it("A", "Placa de Video MSI GeForce RTX 5070 Ti 16G SHADOW 3X OC GDDR7", 2400000, "placas-de-video"),
+        it("B", "Placa de Video MSI RTX 5070 Ti Shadow 3X OC 16GB", 2350000, "placas-de-video"),
+        it("C", "MSI Shadow 3X OC GeForce RTX 5070 Ti 16 GB GDDR7 Placa de video", 2390000, "placas-de-video"),
+        it("D", "Placa de Video MSI RTX 5070 Ti Ventus 3X OC 16GB", 2300000, "placas-de-video"),      # otra línea: aparte
+        it("E", "Placa de Video MSI RTX 5070 Ti Shadow 3X 16GB", 2310000, "placas-de-video"),         # sin «OC»: aparte
+    ]
+    gs = bd.build(items)
+    def group_of(store, frag):
+        return next(g for g in gs if any(o["store"] == store and frag in o["url"] or False for o in g["offers"]) or
+                    any(o["store"] == store for o in g["offers"]) and frag.lower() in g["name"].lower())
+    mobos = [g for g in gs if g["category"] == "motherboards"]
+    for g in mobos:
+        stores = {o["store"] for o in g["offers"]}
+        assert not ({"A", "C"} <= stores), "DDR4 y DDR5 nunca en la misma ficha"
+        assert not ({"A", "D"} <= stores), "D3HP y D2H nunca en la misma ficha"
+    rams = [g for g in gs if g["category"] == "memorias-ram"]
+    assert len(rams) == 2 and all(len(g["offers"]) == 1 for g in rams), "8 GB y 16 GB separadas"
+    gpus = sorted((g for g in gs if g["category"] == "placas-de-video"), key=lambda g: -len(g["offers"]))
+    assert len(gpus[0]["offers"]) == 3 and {o["store"] for o in gpus[0]["offers"]} == {"A", "B", "C"}, [g["name"] for g in gpus]
+    assert len(gpus) == 3
+    assert bd.ddr_of("Motherboard LGA1700 Msi Pro H610M-G D5") == "ddr5" and bd.ram_total_gb("Kit 2x16GB DDR5") == 32
+    assert bd.mobo_variant("MOTHER ASUS (LGA1700) PRIME B760M-A D4") == bd.mobo_variant("Mother ASUS PRIME B760M-A DDR5") == "b760m|a"
+    # los ids viejos de las fichas unidas quedan como alias del nuevo
+    assert set(bd.ALIASES.values()) <= {g["id"] for g in gs} and not (set(bd.ALIASES) & {g["id"] for g in gs})
+    out, n = bd.merge_gpu_dupes([[items[6]], [items[7]], [items[9]]])
+    assert n == 1 and len(out) == 2 and len(out[0]) == 2, "dos fichas del mismo modelo exacto se unen; la Ventus no"
+
+
+def test_actualizacion_50_datos():
+    """Jueces: batería genérica 99,9 Wh, accesorios fuera de notebooks/monitores/procesadores, Logg al peso,
+    cambios < 1 % no se anuncian, tienda sin fecha de lectura deja de ser mejor precio, orden por stock confirmado."""
+    import build_data as bd
+    from scrapers import descspecs as ds, logg
+    from scrapers.common import fix_category as fc
+    assert "bateria_wh" not in ds.parse_desc("Batería: 4 celdas 99,9 Wh", "notebooks")
+    assert ds.parse_desc("Batería: 4 celdas 90 Wh", "notebooks")["bateria_wh"]["v"] == 90
+    assert fc("BASE COOLER TRUST CYCLONE STAND NOTEBOOK", "notebooks") == "accesorios"
+    assert fc("Grasa Siliconada Pastermax Para CPU", "procesadores") == "accesorios"
+    assert fc("Soporte Monitor Brazo Gas 17-32", "monitores") == "accesorios"
+    assert fc("Notebook Lenovo IdeaPad Slim 3 Ryzen 5 7520U 8GB 512GB", "notebooks") == "notebooks"
+    assert fc("Funda para Macbook Air 13", "perifericos") == "perifericos"
+    assert logg._peso(109999.01045) == 109999.0
+    g = {"offers": [{"k": "a", "store": "A", "price_cash": 1000, "stock": True}, {"k": "b", "store": "B", "price_cash": 900, "stock": None}]}
+    hist = {"a": [["2026-11-20", 1003], ["2026-11-26", 1000]], "b": [["2026-11-20", 1000], ["2026-11-26", 900]]}
+    bd.annotate_changes([g], hist, "2026-11-27")
+    assert g["offers"][0]["store"] == "A", "primero la de stock confirmado aunque sea más cara"
+    assert "chg" not in g["offers"][0] and g["offers"][1]["chg"]["pct"] == -10.0, "0,3 % no se anuncia; 10 % sí"
