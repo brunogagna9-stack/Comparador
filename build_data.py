@@ -188,6 +188,11 @@ def price_of(o):
     return o.get("price_cash") or o.get("price_list")
 
 
+def offer_rank(o):
+    """Orden de las ofertas de un producto: stock confirmado, después sin salto sospechoso, después precio."""
+    return (0 if o.get("stock") is True else 1 if o.get("stock") is None else 2, 1 if o.get("anom") else 0, price_of(o) or float("inf"))
+
+
 def gid(offers):
     pns = sorted(set().union(*[pn_tokens(o) for o in offers])) if offers else []
     base = pns[0] if pns else re.sub(r"[^a-z0-9]+", "-", offers[0]["name"].lower())[:60]
@@ -378,6 +383,10 @@ def annotate_changes(groups, hist, today):
                     o["anom"] = True   # salto sospechoso (posible error de la tienda): la web avisa que se confirme
             vals = [x[1] for x in s]
             o["low"] = len(vals) >= 3 and vals[-1] <= min(vals)
+        # act. 50 (jueces): la primera oferta (el «mejor precio» de la ficha, del listado y de las guías) es la más barata
+        # CON STOCK CONFIRMADO y sin salto sospechoso; las de stock sin confirmar o sospechosas van después aunque sean más
+        # baratas (antes ganaba un monitor a $196.550 de una tienda que en su página decía «sin stock»).
+        g["offers"].sort(key=offer_rank)
         top = g["offers"][0]
         g["chg"] = top.get("chg")
         g["low"] = top.get("low", False)
@@ -443,7 +452,7 @@ def search_index(groups):
         offs = [o for o in g.get("offers") or [] if price(o) and not o.get("anom")]
         if not offs:
             continue
-        live = [o for o in offs if o.get("stock") is not False] or offs
+        live = [o for o in offs if o.get("stock") is True] or [o for o in offs if o.get("stock") is not False] or offs   # act. 50
         img = g.get("image") or ""
         if not img.startswith("https://"):
             img = g.get("image_fb") or ""
@@ -732,7 +741,10 @@ def staleness(st, last, now):
         st["last_ok"] = now.isoformat(timespec="minutes")
         return None
     if not last:
-        return None
+        # act. 50: falla y nunca registramos una lectura buena (Fullh4rd): no se puede afirmar que el precio esté al día,
+        # así que deja de contar como mejor precio (no se oculta: sin fecha no se sabe cuánto tiempo pasó)
+        st["sin_fecha"] = True
+        return "vieja"
     st["last_ok"] = last
     age = stale_days(last, now)
     if age is None:

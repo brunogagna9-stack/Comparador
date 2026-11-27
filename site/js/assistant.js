@@ -310,23 +310,39 @@
       if (!gs.length) return reply([P("¿De qué producto? Abrí uno o escribí el modelo y te digo qué tiendas lo ofrecen en cuotas.")], { basis: "none" });
       const blocks = [];
       gs.forEach(g => {
-        const os = g.offers.filter(o => o.cuotas && CT.price(o)).sort((a, b) => (/sin inter/.test(b.cuotas) - /sin inter/.test(a.cuotas)) || CT.price(a) - CT.price(b));
-        blocks.push(P(g.name), os.length ? UL(os.slice(0, 5).map(o => `${o.store}: ${o.cuotas} (contado ${CT.ARS(CT.price(o))})`)) : P("Ninguna tienda informa cuotas para este producto en nuestros datos (puede que igual las tenga: confirmalo en la tienda)."));
+        const os = g.offers.filter(o => o.cuotas && CT.price(o) && o.stock !== false).sort((a, b) => (o => o.stock === true ? 0 : 1)(a) - (o => o.stock === true ? 0 : 1)(b) || (/sin inter/.test(b.cuotas) - /sin inter/.test(a.cuotas)) || CT.price(a) - CT.price(b));   // act. 50: sin las que no tienen stock
+        blocks.push(P(g.name), os.length ? UL(os.slice(0, 5).map(o => `${o.store}: ${o.cuotas} (contado ${CT.ARS(CT.price(o))})${o.stock === true ? "" : " · stock sin confirmar"}`)) : P("Ninguna tienda informa cuotas para este producto en nuestros datos (puede que igual las tenga: confirmalo en la tienda)."));
       });
       blocks.push(P("Las cuotas son las que publica cada tienda; el banco o la tarjeta pueden cambiar las condiciones. " + stale()));
       return reply(blocks, { basis: "cat", links: gs.slice(0, 1).map(prodLink) });
     }
 
     A.priceHistory = (g, H) => {
-      // el historial se guarda por oferta (o.k): se toma el mejor precio de cada día entre las tiendas
-      const day = {};
-      g.offers.filter(o => o.k && !o.anom).forEach(o => ((H || {})[o.k] || []).forEach(p => { if (Array.isArray(p) && p[0] && p[1] > 0 && (!day[p[0]] || p[1] < day[p[0]])) day[p[0]] = p[1]; }));
+      /* act. 50 (juez 1): el historial guarda SOLO los días en que cambió el precio de cada tienda. Antes se tomaba el
+         mínimo entre las tiendas que cambiaron ese día y daba resultados falsos («subió 11%» cuando había bajado). Ahora
+         cada día usa el último precio conocido de CADA tienda (que sigue vendiendo el producto) y el de hoy es el mismo
+         que muestra la ficha. Se descartan puntos absurdos (5 veces arriba o abajo de la mediana de esa tienda). */
+      const offs = g.offers.filter(o => o.k && o.stock !== false && !o.anom && CT.price(o) && !C.staleStore(o.store));
+      const series = offs.map(o => {
+        const pts = ((H || {})[o.k] || []).filter(p => Array.isArray(p) && typeof p[0] === "string" && p[1] > 0);
+        const med = pts.map(p => p[1]).sort((a, b) => a - b)[Math.floor(pts.length / 2)];
+        return pts.filter(p => p[1] <= med * 5 && p[1] >= med / 5).sort((a, b) => a[0] < b[0] ? -1 : 1);
+      }).filter(x => x.length);
+      if (!series.length) return null;
+      const dates = [...new Set(series.flat().map(p => p[0]))].sort();
+      const pts = dates.map(d => {
+        let best = null;
+        series.forEach(sr => { let v = null; for (const p of sr) { if (p[0] <= d) v = p[1]; else break; } if (v != null && (best == null || v < best)) best = v; });
+        return [d, best];
+      }).filter(p => p[1] != null);
+      const now = priceOf(g), today = (C.updated || "").slice(0, 10) || dates[dates.length - 1];
+      if (now) { if (pts.length && pts[pts.length - 1][0] === today) pts[pts.length - 1][1] = now; else pts.push([today, now]); }
+      const comp = pts.filter((p, k) => k === 0 || p[1] !== pts[k - 1][1]);        // solo los días con cambio
+      if (comp.length < 2) return null;
       const fd = d => d.split("-").reverse().join("/");
-      const pts = Object.keys(day).sort().map(d => [fd(d), day[d]]);
-      if (pts.length < 2) return null;
-      const vals = pts.map(p => p[1]), lo = Math.min(...vals), hi = Math.max(...vals), first = pts[0], last = pts[pts.length - 1];
-      const atLo = pts.find(p => p[1] === lo)[0], d = (last[1] - first[1]) / first[1];
-      return { first, last, lo, hi, atLo, d, n: pts.length };
+      const vals = comp.map(p => p[1]), lo = Math.min(...vals), hi = Math.max(...vals), first = comp[0], last = comp[comp.length - 1];
+      const atLo = fd(comp.slice().reverse().find(p => p[1] === lo)[0]), d = (last[1] - first[1]) / first[1];
+      return { first: [fd(first[0]), first[1]], last: [fd(last[0]), last[1]], lo, hi, atLo, d, n: comp.length };
     };
     function history(q, raw, ctx) {
       const gs = pickProducts(q, raw, ctx, 1);
@@ -335,8 +351,10 @@
       if (!A.HIST) return reply([P("No pude cargar el historial de precios en este momento.")], { basis: "none", links: [prodLink(g)] });
       if (!h) return reply([P(`${g.name}: todavía no tengo suficientes registros de precio para mostrar una evolución.`)], { basis: "cat", links: [prodLink(g)] });
       const pct = Math.round(Math.abs(h.d) * 100), trend = Math.abs(h.d) < 0.02 ? "se mantuvo casi igual" : h.d < 0 ? `bajó un ${pct}%` : `subió un ${pct}%`;
-      const nowVsLo = h.last[1] <= h.lo * 1.01 ? "Hoy está en el precio más bajo que registramos." : `Hoy está un ${Math.round((h.last[1] / h.lo - 1) * 100)}% arriba del mínimo que registramos (${CT.ARS(h.lo)}, el ${h.atLo}).`;
-      return reply([P(g.name), UL([`Desde el ${h.first[0]} (${CT.ARS(h.first[1])}) hasta el ${h.last[0]} (${CT.ARS(h.last[1])}) ${trend}.`, `Mínimo registrado: ${CT.ARS(h.lo)} · máximo: ${CT.ARS(h.hi)}.`, nowVsLo]),
+      const up = (h.last[1] / h.lo - 1) * 100;
+      const nowVsLo = up <= 0.05 ? "Hoy está en el precio más bajo que registramos." : up < 1 ? `Hoy está prácticamente en el mínimo que registramos (${CT.ARS(h.lo)}, el ${h.atLo}; ${up.toFixed(1).replace(".", ",")}% arriba).`
+        : `Hoy está un ${Math.round(up)}% arriba del mínimo que registramos (${CT.ARS(h.lo)}, el ${h.atLo}).`;
+      return reply([P(g.name), UL([`Desde el ${h.first[0]} (${CT.ARS(h.first[1])}) hasta hoy (${CT.ARS(h.last[1])}) ${trend}.`, `Mínimo registrado: ${CT.ARS(h.lo)} · máximo: ${CT.ARS(h.hi)}.`, nowVsLo]),
         P("Es el mejor precio de contado entre las tiendas conectadas, día por día. No predecimos si va a bajar: si querés esperar, activá un aviso de «precio objetivo» en la ficha del producto.")],
         { basis: "cat", links: [prodLink(g)] });
     }
@@ -344,16 +362,109 @@
     function versus(raw) {
       const parts = norm(raw).replace(/^(compar\w*|diferencias? entre|que conviene( mas)?|cual es mejor)\s*/, "").split(/\s+(?:vs\.?|versus|contra|o el|o la|con el|con la|y el|y la)\s+/);
       if (parts.length !== 2) return null;
-      const pick = t => { const r = A.findProducts(t, 6); return r.find(g => !CT.isUsed(g)) || r[0]; };
-      const a = pick(parts[0]), b = pick(parts[1]);
+      // act. 50: «rtx 4060 vs rx 7600» comparaba una PC armada con una placa. Se prefiere la categoría que nombra el texto
+      // (o la de pieza suelta) y, si se puede, la misma para los dos.
+      const VAR = ["ti", "super", "xt", "xtx", "gre", "x3d"];   // «rtx 4060» no es «rtx 4060 ti»
+      const pick = (t, cat) => { const nt = norm(t); let r = A.findProducts(t, 12).filter(g => !CT.isUsed(g));
+        const vre = v => new RegExp("(?:\\b|\\d)" + v + "\\b");     // «4060 ti» y «4060ti»
+        const r2 = r.filter(g => VAR.every(v => vre(v).test(nt) || !vre(v).test(norm(g.name)))); if (r2.length) r = r2;
+        r = r.slice().sort((a, b) => !!C.bestOffer(b) - !!C.bestOffer(a));   // primero las que tienen stock
+        const want = cat || A.catOf(nt);
+        const sueltas = r.filter(g => !["pcs-armadas", "notebooks"].includes(g.category) || /\b(pc|notebook|laptop|computadora)\b/.test(norm(t)));
+        return (want && sueltas.find(g => g.category === want)) || sueltas[0] || r[0]; };
+      // si el texto nombra un chip conocido (RTX 4060, Ryzen 5 7600…), se busca la placa/procesador suelto de ese chip,
+      // el más barato con stock: es lo que la persona quiere comparar
+      const byChip = t => { if (/\b(pc|notebook|laptop|computadora)\b/.test(norm(t))) return null;
+        const hg = C.hwGpu(t) || (/\d\s*gb/.test(norm(t)) ? null : C.hwGpu(t + " 8gb") || C.hwGpu(t + " 16gb")), hc = hg ? null : C.hwCpu(t);
+        const cat = hg ? "placas-de-video" : hc ? "procesadores" : null; if (!cat) return null;
+        const id = (hg || hc).id, f = hg ? x => C.hwGpu(x.name) : x => C.hwCpu(x.name);
+        const all = C.inCat(cat).filter(g => (f(g) || {}).id === id), px = g => { const o = C.bestOffer(g); return o ? CT.price(o) : 9e15; };
+        const pref = [all.filter(g => okPiece(g) && C.bestOffer(g)), all.filter(okPiece), all].find(l => l.length) || [];   // con stock, sin stock, usado
+        return pref.sort((x, y) => px(x) - px(y))[0] || null; };
+      let a = byChip(parts[0]) || pick(parts[0]), b = a ? (byChip(parts[1]) || pick(parts[1], a.category)) : null;
+      if (a && b && a.category !== b.category) { const a2 = pick(parts[0], b.category); if (a2 && a2.category === b.category) a = a2; }
       if (!a || !b || a.id === b.id) return null;
-      const lines = [a, b].map(g => { const o = C.bestOffer(g); return `${g.name}: ${o ? CT.ARS(CT.price(o)) + " en " + o.store : "sin stock con precio"}`; });
+      const lines = [a, b].map(g => { const o = C.bestOffer(g); return `${g.name}: ${o ? CT.ARS(CT.price(o)) + " en " + o.store : "sin stock nuevo en las tiendas conectadas"}`; });
       const pa = priceOf(a), pb = priceOf(b);
       if (pa && pb) { const pc = Math.abs(pa - pb) / Math.min(pa, pb) * 100;
         lines.push(pc < 1 ? "Cuestan prácticamente lo mismo." : `Diferencia de precio: ${CT.ARS(Math.abs(pa - pb))} (el ${pa > pb ? "primero" : "segundo"} cuesta ${Math.round(pc)}% más).`); }
       const link = cmpLink([a, b]);
       return reply([P("Esto es lo que encontré de cada uno:"), UL(lines), P(link ? "En el comparador ves la tabla técnica completa y cuál conviene según el uso." : "Son de categorías distintas, así que solo puedo comparar precio y tienda.")],
         { basis: "cat", links: [link, prodLink(a), prodLink(b)].filter(Boolean) });
+    }
+
+    /* ---- actualización 50 (jueces): preguntas que se respondían mal ---- */
+    const PIECE = ["placas-de-video", "procesadores", "motherboards", "memorias-ram", "almacenamiento", "fuentes", "gabinetes", "monitores", "refrigeracion"];
+    const wholePc = q => has(q, /\b(pc|computadora|equipo|armad[oa]|armar|gabinete completo)\b/) && !has(q, /placa de video|procesador|fuente|monitor/);
+    const resOf = q => has(q, /4k|2160/) ? 2 : has(q, /1440|2k|qhd/) ? 1 : 0;
+    const okPiece = g => !CT.isUsed(g) && !/grasa|pasta termica|contact frame|soporte|bracket|cable|adaptador|kit|combo|\bpc\b|notebook/.test(norm(g.name));
+
+    // «qué placa de video me conviene para 1080p con 800 mil»: la pieza, no una PC entera
+    function pieceAdvice(q, raw) {
+      const cat = A.catOf(q); if (!PIECE.includes(cat) || wholePc(q)) return null;
+      const budget = parseBudget(raw); if (!budget) return null;
+      const res = resOf(q), RN = ["1080p", "1440p", "4K"][res];
+      let list = C.inCat(cat).filter(okPiece).map(g => ({ g, o: C.bestOffer(g) })).filter(x => x.o && CT.price(x.o) <= budget);
+      if (!list.length) return reply([P(`No encontré ${CT.catName(cat).toLowerCase()} con stock por ${CT.ARS(budget)} o menos.`)], { basis: "cat", links: [{ label: "Ver " + CT.catName(cat), href: "productos.html?cat=" + cat }] });
+      let lines, intro, foot;
+      if (cat === "placas-de-video") {
+        list = list.map(x => Object.assign(x, { hw: C.hwGpu(x.g.name) })).filter(x => x.hw && x.hw.p);
+        const best = new Map();   // la más barata de cada modelo de GPU
+        list.forEach(x => { const b = best.get(x.hw.id); if (!b || CT.price(x.o) < CT.price(b.o)) best.set(x.hw.id, x); });
+        const top = [...best.values()].sort((a, b) => b.hw.p[res] - a.hw.p[res] || CT.price(a.o) - CT.price(b.o)).slice(0, 5);
+        if (!top.length) return null;
+        const ref = top[0].hw.p[res];
+        intro = `Las placas de video más rápidas en ${RN} que entran en ${CT.ARS(budget)}, con stock (la más barata de cada modelo):`;
+        lines = top.map(x => `${x.hw.name} (${x.hw.vram} GB) — ${CT.ARS(CT.price(x.o))} en ${x.o.store}${x.hw === top[0].hw ? " · la más rápida de la lista" : ` · ~${Math.round(x.hw.p[res] / ref * 100)}% del rendimiento de la primera`} · fuente recomendada ${x.hw.psu} W`);
+        foot = "El rendimiento relativo sale de pruebas publicadas (no de las tiendas) y es un promedio de juegos: confirmá el modelo exacto en la tienda.";
+        return reply([P(intro), UL(lines), P(foot + " " + stale())], { basis: "cat", links: [prodLink(top[0].g), cmpLink(top.slice(0, 4).map(x => x.g))].filter(Boolean) });
+      }
+      if (cat === "procesadores") {
+        list = list.map(x => Object.assign(x, { hw: C.hwCpu(x.g.name) })).filter(x => x.hw && x.hw.s);
+        const best = new Map(); list.forEach(x => { const b = best.get(x.hw.id); if (!b || CT.price(x.o) < CT.price(b.o)) best.set(x.hw.id, x); });
+        const top = [...best.values()].sort((a, b) => b.hw.s - a.hw.s || CT.price(a.o) - CT.price(b.o)).slice(0, 5);
+        if (!top.length) return null;
+        lines = top.map(x => `${x.hw.name} (${x.hw.socket}, ${x.hw.mem}${x.hw.spec && x.hw.spec.igpu === false ? ", sin video integrado" : ""}) — ${CT.ARS(CT.price(x.o))} en ${x.o.store}`);
+        return reply([P(`Los procesadores con mejor rendimiento para juegos que entran en ${CT.ARS(budget)}, con stock:`), UL(lines), P("Acordate de sumar placa madre del mismo socket y memoria del tipo indicado. " + stale())], { basis: "cat", links: [prodLink(top[0].g), cmpLink(top.slice(0, 4).map(x => x.g))].filter(Boolean) });
+      }
+      return null;   // otras piezas: «más barato» o el recomendador
+    }
+
+    // «¿qué fuente necesito para una RTX 5070?»
+    function psuForGpu(q, raw) {
+      if (!has(q, /\bfuente/) || has(q, /que es|para que sirve/)) return null;
+      const hw = C.hwGpu(raw) || C.hwGpuX(raw); if (!hw || !hw.psu) return null;
+      const list = C.inCat("fuentes").filter(okPiece).map(g => ({ g, o: C.bestOffer(g), sp: CT.parse(g.name, "fuentes") }))
+        .filter(x => x.o && x.sp.w && x.sp.w >= hw.psu && x.sp.w <= hw.psu + 300 && /80 ?\+|80 ?plus/i.test(x.g.name)).sort((a, b) => CT.price(a.o) - CT.price(b.o)).slice(0, 4);
+      return reply([P(`${hw.vendor === "NVIDIA" ? "NVIDIA" : hw.vendor} recomienda una fuente de al menos ${hw.psu} W para la ${hw.name} (consumo de la placa: ${hw.tgp} W). Si el procesador es de alto consumo, sumá margen.`),
+        list.length ? UL(list.map(x => `${x.g.name} — ${CT.ARS(CT.price(x.o))} en ${x.o.store}`)) : P("No encontré fuentes certificadas 80 Plus de esa potencia con stock."),
+        P("Las de la lista son las más baratas con certificación 80 Plus y esa potencia; para placas nuevas conviene que traiga el conector 12V-2x6 (12VHPWR) o los cables que pida la placa. " + stale())],
+        { basis: "cat", links: list.length ? [prodLink(list[0].g), { label: "Ver fuentes", href: "productos.html?cat=fuentes" }] : [{ label: "Ver fuentes", href: "productos.html?cat=fuentes" }] });
+    }
+
+    // preguntas sobre el producto abierto o nombrado: «¿trae cooler?», «¿es compatible con DDR4?»
+    function productFacts(q, raw, ctx) {
+      const askCooler = has(q, /(trae|tiene|viene con|incluye|incluido|con) (el )?(cooler|disipador)|cooler (incluido|de fabrica)/);
+      const ddr = (q.match(/\bddr ?([345])\b/) || [])[1];
+      const askDdr = ddr && has(q, /compatib|sirve|usa|soporta|acepta|funciona|va con|anda con/);
+      if (!askCooler && !askDdr) return null;
+      const cg = A.ctxGroups(ctx); let gs = cg.length === 1 ? cg : A.findProducts(raw, 1); if (!gs.length) gs = cg.slice(0, 1);   // en una ficha, manda el producto abierto
+      const g = gs[0]; if (!g) return null;
+      const n = norm(g.name), links = [prodLink(g)];
+      if (askCooler && g.category === "procesadores") {
+        const no = /sin cooler|s\/ ?cooler|\btray\b|\boem\b|no incluye cooler/.test(n), si = !no && /\bcooler\b|wraith|c\/ ?cooler|con cooler|\bbox\b/.test(n);
+        return reply([P(g.name), P(no ? "No: según el título de la tienda viene SIN cooler (versión sin disipador/OEM). Tenés que comprar uno aparte." : si ? "Sí: según el título de la tienda incluye el cooler de fábrica." : "El título de la tienda no lo aclara. Consultalo en la tienda antes de comprar."),
+          P("Es lo que dice la publicación de la tienda, no una verificación nuestra.")], { basis: "cat", links });
+      }
+      if (askDdr) {
+        const want = "DDR" + ddr; let have = null, why = "";
+        if (g.category === "procesadores") { const c = C.hwCpu(g.name); if (c && c.mem) { have = c.mem; why = `según el fabricante, el ${c.name} (${c.socket}) usa ${c.mem}`; } }
+        else if (["motherboards", "memorias-ram"].includes(g.category)) { const sp = CT.parse(g.name, g.category); if (sp.ddr) { have = sp.ddr; why = `según el título, es ${sp.ddr}`; } }
+        if (!have) return reply([P(g.name), P(`No tengo un dato confiable para responder si es compatible con ${want}. Revisalo en la ficha del fabricante.`)], { basis: "cat", links });
+        const ok = have.split("/").includes(want) || have.includes(want);
+        return reply([P(g.name), P(ok ? `Sí, ${why}.` : `No: ${why}, no ${want}.`), P(g.category === "procesadores" ? "Lo que define la memoria en la práctica es la placa madre: elegí una del mismo socket y del tipo de memoria que vas a usar." : "Confirmalo en la ficha del fabricante antes de comprar.")], { basis: "cat", links });
+      }
+      return null;
     }
 
     /* ---- punto de entrada local ---- */
@@ -378,6 +489,9 @@
       if (ctx.section === "encontra" && has(q, /por que|como funciona|que respond|mis respuestas|que me falta/)) {
         const an = ctx.answers || {}; return reply([P("Las recomendaciones salen de lo que respondiste:"), UL([`Usos: ${(an.usos || []).join(", ") || "sin elegir"}`, `Tipo: ${an.tipo || "sin definir"}`, `Presupuesto: ${an.budget ? CT.ARS(an.budget) : "sin definir"}`]), P("Cuanto más completes, más ajustadas son las opciones. Cada una indica qué datos faltan.")], { basis: "app" });
       }
+      { const pf = productFacts(q, question, ctx); if (pf) return pf; }
+      { const ps = psuForGpu(q, question); if (ps) return ps; }
+      if (!A.state.rec) { const pa = pieceAdvice(q, question); if (pa) return pa; }
       if (has(q, /\bcuotas?\b|sin interes|financ/)) return installments(q, question, ctx);
       if (has(q, /bajo (de )?precio|subio|historial|evolucion|minimo historico|conviene (comprar|esperar)|esperar (a|que)|va a bajar|precio (anterior|historico)/)) return history(q, question, ctx);
       if (has(q, /\bvs\.?\b|versus|\bcontra\b/) || has(q, /^(compar\w*|diferencias? entre|cual es mejor|que conviene)\b.+\b(con|y|o)\b/)) { const v = versus(question); if (v) return v; }

@@ -1721,7 +1721,8 @@ def test_actualizacion_45_auditoria():
     st = {"ok": False, "count": 5}; assert bd.staleness(st, "2026-11-21T12:00+00:00", now) is None and st["dias"] == 1.0
     st = {"ok": False, "count": 5}; assert bd.staleness(st, "2026-11-18T19:36+00:00", now) == "vieja" and st["last_ok"] == "2026-11-18T19:36+00:00"
     st = {"ok": False, "count": 5}; assert bd.staleness(st, "2026-11-10T00:00+00:00", now) == "ocultar" and st["oculta_por_antiguedad"]
-    st = {"ok": False, "count": 0}; assert bd.staleness(st, None, now) is None and "last_ok" not in st
+    # act. 50: sin ninguna lectura buena registrada, el precio no cuenta como mejor precio (no se oculta: no hay fecha)
+    st = {"ok": False, "count": 0}; assert bd.staleness(st, None, now) == "vieja" and "last_ok" not in st and st["sin_fecha"]
     G = [{"offers": [{"store": "A", "price_cash": 50}, {"store": "B", "price_cash": 60}]},
          {"offers": [{"store": "A", "price_cash": 70}]}]
     assert bd.demote_stale(G, {"A"}) == 1

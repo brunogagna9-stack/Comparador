@@ -29,7 +29,8 @@ price = lambda o: o.get("price_cash") or o.get("price_list")
 def best(g):
     """Mejor oferta con stock y sin precio inusual (o None)."""
     ok = [o for o in g.get("offers", []) if o.get("stock") is not False and not o.get("anom") and price(o)]
-    return min(ok, key=price) if ok else None
+    # act. 50: primero las de stock confirmado (igual que la ficha)
+    return min(ok, key=lambda o: (o.get("stock") is not True, price(o))) if ok else None
 
 
 def fecha(iso):
