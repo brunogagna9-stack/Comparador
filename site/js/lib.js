@@ -172,6 +172,9 @@
     const vr = nums.find(x => !x.used && x.gpu); if (vr) { o.vram = vr.val; vr.used = true; }
     const rm = nums.find(x => !x.used && x.val <= 128); if (rm) { o.ram = rm.val; rm.used = true; }
     if (o.ssd == null) { const bare = nums.find(x => !x.used && x.val >= 120); if (bare) o.ssd = bare.val; }
+    // act. 50: títulos abreviados («+SSD256G», «I3-1025G1/8G/256 Ssd»)
+    if (o.ssd == null) { const s2 = n.match(/(?:ssd|nvme|m\.2)\s*(\d{3,4})\s*(?:g|gb)?\b/i) || n.match(/\/\s*(\d{3,4})\s*(?:g|gb)?\s*ssd\b/i); if (s2 && +s2[1] >= 120 && +s2[1] <= 4096) o.ssd = +s2[1]; }
+    if (o.ram == null) { const r2 = n.match(/(?:[\/+]\s*|\s)(4|8|12|16|24|32|64)\s?g(?:b)?\b(?!\s*(?:ssd|hdd|emmc|nvme))/i); if (r2) o.ram = +r2[1]; }
     return o;
   }
   /* ---- periféricos: lo que dice el TÍTULO (la ficha de la tienda, si existe, tiene prioridad) ---- */
