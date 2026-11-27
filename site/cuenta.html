@@ -144,7 +144,8 @@ document.addEventListener("click",async e=>{const t=e.target.closest("[data-tab]
 addEventListener("acc:synced",e=>{const el=$("#sy");if(!el)return;if(e.detail.ok){if(e.detail.changed){loggedIn();return}el.textContent="✓ Sincronizado con tu cuenta."}else el.textContent="No se pudo sincronizar ahora ("+e.detail.error+"). Se reintenta al próximo cambio."});
 addEventListener("acc:auth",e=>{const ev=e.detail.event;if(ev==="PASSWORD_RECOVERY")return newPassword();if(ev==="SIGNED_IN"||ev==="SIGNED_OUT"||ev==="USER_DELETED"){if(ACC.user())loggedIn();else loggedOut()}});
 ACC.ready.then(A=>{if(!A.enabled)return off(A.status);const H0=ACC.initialHash||"";if(/type=recovery/.test(H0))return newPassword();
-  if(H0.includes("error_description")){const d=new URLSearchParams(H0.slice(1)).get("error_description");MSG={t:"El enlace no es válido o ya venció"+(d?" ("+d+")":"")+". Pedí uno nuevo.",k:"bad"}}
+  // act. 50: no se muestra el texto que viene en la dirección (alguien podría armar un enlace con un mensaje falso); solo el código conocido
+  if(H0.includes("error_description")){const c=new URLSearchParams(H0.slice(1)).get("error_code")||"";const known={otp_expired:"venció"};MSG={t:"El enlace no es válido o ya "+(known[c]||"no se puede usar")+". Pedí uno nuevo.",k:"bad"}}
   if(A.user()){if(H0.includes("type=signup"))MSG={t:"¡Mail confirmado! Tu cuenta está lista.",k:"ok"};loggedIn()}else loggedOut()});
 </script>
 <script src="js/assistant.js" defer></script>
