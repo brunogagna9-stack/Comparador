@@ -372,6 +372,54 @@ def gpu_key(name):
     return (brand, chip, int(vram.group(1)), line, "oc" in toks, frozenset(toks & GPU_COLOR), is_used(name))
 
 
+_CPU_CHIPS = None
+
+
+def cpu_key(name):
+    """(chip, modelo exacto con sufijo, caja/tray) de un procesador, o None si falta algo. «14100» y «14100F» no se unen."""
+    global _CPU_CHIPS
+    if _CPU_CHIPS is None:
+        try:
+            hw = json.loads((ROOT / "site" / "data" / "hardware.json").read_text(encoding="utf-8"))
+            _CPU_CHIPS = [(c["id"], re.compile(c["m"], re.I)) for c in hw.get("cpus") or [] if c.get("m")]
+        except Exception:
+            _CPU_CHIPS = []
+    n = (name or "").lower()
+    chip = next((cid for cid, m in _CPU_CHIPS if m.search(n)), None)
+    tok = re.search(r"\b(?:i[3579][ -]?)?(\d{4,5})([a-z]{0,2}\d?[a-z]?)\b", n)
+    if re.search(r"\btray\b|\boem\b|\bbulk\b|sin cooler|s/ ?cooler|\bmpk\b", n):
+        pack = "tray"
+    elif re.search(r"\bbox\b|wraith|con cooler|c/ ?cooler|\bcooler\b", n):
+        pack = "box"
+    else:
+        pack = None
+    if not chip or not tok or not pack or is_used(name):
+        return None
+    return (chip, tok.group(1) + tok.group(2), pack)
+
+
+def merge_cpu_dupes(groups_items):
+    """Como merge_gpu_dupes, para procesadores (mismo chip, mismo sufijo y misma presentación caja/tray)."""
+    out, by_key, n = [], {}, 0
+    for offers in groups_items:
+        if not offers or offers[0].get("category") != "procesadores":
+            out.append(offers)
+            continue
+        keys = {cpu_key(o["name"]) for o in offers}
+        if len(keys) != 1 or None in keys:
+            out.append(offers)
+            continue
+        k = keys.pop()
+        if k in by_key:
+            MERGED_FROM.setdefault(id(by_key[k]), []).append(gid(offers))
+            by_key[k].extend(offers)
+            n += 1
+        else:
+            by_key[k] = list(offers)
+            out.append(by_key[k])
+    return out, n
+
+
 def merge_gpu_dupes(groups_items):
     """Une fichas de placas de video del mismo modelo exacto. Devuelve la lista nueva y cuántas fichas se unieron."""
     out, by_key, n = [], {}, 0
@@ -407,6 +455,7 @@ def build(all_items, extra_images=None):
     grouped, _ = split_conflicts(group([i for i in all_items if price_of(i) and not is_service(i["name"])
                                          and not is_non_hardware(i["name"], i["category"])]))
     grouped, _ = merge_gpu_dupes(grouped)
+    grouped, _ = merge_cpu_dupes(grouped)
     ALIASES.clear()
     src_of = {}
     for offers in grouped:
