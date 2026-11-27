@@ -203,6 +203,8 @@ aside details>*:not(summary){margin-top:6px}
 </div>
 <div class="live" id="live" role="status" aria-live="polite"></div>
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="Detalle"><div class="box" id="box"></div></div>
+<!-- act. 50: las librerías van ANTES del script de la página (antes, si los datos llegaban rápido, «REP is not defined» dejaba Productos vacía) -->
+<script src="js/lib.js"></script><script src="js/facets.js"></script><script src="js/icons.js"></script><script src="js/rep.js"></script><script src="js/detail.js"></script><script src="js/assistant.js" defer></script>
 <script>
 const $=s=>document.querySelector(s),ARS=n=>n==null?"—":"$"+Math.round(n).toLocaleString("es-AR");
 const CATS={procesadores:"Procesadores",motherboards:"Motherboards","placas-de-video":"Placas de video","memorias-ram":"Memorias RAM",almacenamiento:"Almacenamiento",refrigeracion:"Refrigeración",fuentes:"Fuentes",gabinetes:"Gabinetes",monitores:"Monitores",notebooks:"Notebooks","pcs-armadas":"PCs armadas",mouses:"Mouse",teclados:"Teclados",auriculares:"Auriculares",perifericos:"Otros periféricos",redes:"Redes",accesorios:"Cables y accesorios",otros:"Otros"};
@@ -571,7 +573,6 @@ function setupData(){
   if(!FULL&&(!TOT||Object.keys(FOLLOW).length||(INI&&pc)))(window.requestIdleCallback||(f=>setTimeout(f,400)))(()=>loadFull(),{timeout:3000});
 })();
 </script>
-<script src="js/lib.js"></script><script src="js/facets.js"></script><script src="js/icons.js"></script><script src="js/rep.js"></script><script src="js/detail.js"></script><script src="js/assistant.js" defer></script>
 <script>addEventListener("DOMContentLoaded",()=>{CT.CTAssistant.mount({section:"precios",context:()=>({query:S.q,cat:S.cat,ids:filtered().slice(0,3).map(g=>g.id)})})});</script>
 </body>
 </html>

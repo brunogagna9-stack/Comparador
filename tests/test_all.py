@@ -1367,6 +1367,9 @@ def test_actualizacion_39_kyranohard():
     # 3) etiquetas del <head> en las 15 páginas (y el programa no duplica al volver a correrlo)
     for p in site.glob("*.html"):
         t = p.read_text(encoding="utf-8")
+        if p.name == "404.html":   # act. 50: página de error: sin canónica, noindex y rutas absolutas (sirve en cualquier carpeta)
+            assert '<meta name="robots" content="noindex">' in t and 'href="/css/layout.css"' in t and "canonical" not in t
+            continue
         assert t.count("<!-- head:kyranohard -->") == 1, p
         assert '<link rel="manifest" href="manifest.webmanifest">' in t and 'og:image" content="https://' in t and '<meta name="description"' in t, p
         assert ('<link rel="canonical"' in t) == (p.name != "producto.html"), p

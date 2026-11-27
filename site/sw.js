@@ -4,7 +4,7 @@
    - Tipografía, logo e íconos (no cambian): se sirven desde lo guardado.
    - Nada de otros sitios (fotos de las tiendas, cuentas de Supabase) pasa por acá. */
 "use strict";
-const VER = "kyra-v3";
+const VER = "kyra-v4";
 const STATIC = ["fonts/inter-latin.woff2", "img/logo.svg", "img/icon-192.png", "favicon.ico"];
 const OFFLINE_SHELL = ["./", "index.html", "productos.html", "css/layout.css", "css/shared.css", "js/layout.js", "js/icons.js", "manifest.webmanifest"];
 
@@ -16,12 +16,15 @@ self.addEventListener("activate", e => {
 });
 
 const isStatic = p => /\/(fonts|img)\/|favicon\.ico$/.test(p);
+// act. 50: los archivos de datos grandes (catálogo entero e historial, más de 30 MB descomprimidos) no se guardan en el
+// teléfono: ocupaban mucho espacio y sin conexión tampoco sirven (los precios estarían viejos).
+const NO_CACHE = /\/data\/(products|history)\.json$/;
 
 async function networkFirst(req) {
   const c = await caches.open(VER);
   try {
     const r = await fetch(req);
-    if (r.ok && r.type === "basic") c.put(req, r.clone()).catch(() => null);
+    if (r.ok && r.type === "basic" && !NO_CACHE.test(new URL(req.url).pathname)) c.put(req, r.clone()).catch(() => null);
     return r;
   } catch (err) {
     const hit = await c.match(req, { ignoreSearch: req.mode === "navigate" });

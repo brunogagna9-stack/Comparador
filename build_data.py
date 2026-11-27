@@ -787,7 +787,9 @@ def write_sitemap(groups, updated=None, site_dir=None):
     return len(rows)
 
 
-ARMAR_PER_CATS = ("mouses", "teclados", "auriculares")   # actualización 35: se descargan aparte, solo al elegir un periférico
+ARMAR_PER_CATS = ("mouses", "teclados", "auriculares")
+ENCONTRA_CATS = ("procesadores", "refrigeracion", "motherboards", "memorias-ram", "almacenamiento", "placas-de-video", "gabinetes",
+                 "fuentes", "notebooks", "pcs-armadas")   # act. 50: Encontrá ya no baja el catálogo entero (3,3 MB comprimido)   # actualización 35: se descargan aparte, solo al elegir un periférico
 ARMAR_OFFER = ("store", "url", "price_cash", "price_list", "stock", "cuotas", "anom")
 
 
@@ -802,7 +804,7 @@ def armar_catalog(groups, cats=ARMAR_CATS):
         offs = [{k: o[k] for k in ARMAR_OFFER if o.get(k) is not None} for o in g.get("offers") or []]
         if not offs:
             continue
-        e = {k: g[k] for k in ("id", "name", "category", "brand", "image", "image_fb", "chg", "low", "dif") if g.get(k) is not None}
+        e = {k: g[k] for k in ("id", "name", "category", "brand", "image", "image_fb", "chg", "low", "dif", "spec") if g.get(k) is not None}
         e["offers"] = offs
         out.append(e)
     return out
@@ -1072,11 +1074,19 @@ def main(only):
     (DATA / "history.json").write_text(json.dumps(hist, separators=(",", ":")))
     (DATA / "armar.json").write_text(json.dumps(armar_catalog(groups), ensure_ascii=False, separators=(",", ":")))
     (DATA / "armar_per.json").write_text(json.dumps(armar_catalog(groups, ARMAR_PER_CATS), ensure_ascii=False, separators=(",", ":")))
+    (DATA / "encontra.json").write_text(json.dumps(armar_catalog(groups, ENCONTRA_CATS), ensure_ascii=False, separators=(",", ":")))
     (DATA / "home.json").write_text(json.dumps(home_summary(groups), ensure_ascii=False, separators=(",", ":")))
     (DATA / "buscar.json").write_text(json.dumps(search_index(groups), ensure_ascii=False, separators=(",", ":")))
     write_shards(groups, hist)
     write_categories(groups, hist)
     write_sitemap(groups, dt.datetime.now(dt.timezone.utc).isoformat())
+    pub = {}   # act. 50: ofertas publicadas por tienda (Tiendas ya no baja el catálogo entero, 3,3 MB, para contarlas)
+    for g in groups:
+        for o in g["offers"] + g.get("old_offers", []):
+            pub[o["store"]] = pub.get(o["store"], 0) + 1
+    for name, st in status.items():
+        if isinstance(st, dict):
+            st["en_catalogo"] = pub.get(name, 0)
     (DATA / "meta.json").write_text(json.dumps({
         "updated": dt.datetime.now(dt.timezone.utc).isoformat(timespec="minutes"),
         "stores": status, "specs": spec_status, "groups": len(groups), "demo": False}, ensure_ascii=False))

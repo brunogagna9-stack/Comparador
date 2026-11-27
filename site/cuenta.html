@@ -118,7 +118,7 @@ async function loggedIn(){
   const H=HIST.KINDS.map(k=>HIST.list(k).length);
   box(`<div class="card2"><h2>Tu cuenta</h2><p>Ingresaste como <b>${esc(u.email)}</b>.</p><p class="note" id="sy">Sincronizando…</p>
     <div class="row"><button type="button" class="btn2" id="out1">Cerrar sesión</button><button type="button" class="btn2" id="out2">Cerrar sesión y borrar datos de este navegador</button></div></div>
-  <div class="card2" id="avisos"><h2>Avisos por mail</h2><p class="note">Te escribimos como máximo una vez por cada lectura de precios (cada 6 horas aprox.), con un resumen de los productos que seguís.</p>
+  <div class="card2" id="avisos"><h2>Avisos por mail</h2><p class="note">Te escribimos como máximo una vez por cada lectura de precios (varias veces por día), con un resumen de los productos que seguís.</p>
     <form id="pf"><label class="chk"><input type="checkbox" name="notify_down"><span>Cuando <b>baja</b> el precio (2 % o más)</span></label>
     <label class="chk"><input type="checkbox" name="notify_up"><span>Cuando <b>sube</b> el precio (2 % o más)</span></label>
     <label class="chk"><input type="checkbox" name="notify_cuotas"><span>Cuando alguna tienda lo ofrece en <b>cuotas sin interés</b> (según lo que publica la tienda; no incluye promociones de bancos que la tienda no muestre)</span></label>
