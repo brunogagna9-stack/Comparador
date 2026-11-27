@@ -237,7 +237,7 @@
         if (c.kind === "notebook") {
           const pw = C.sf(c.g, "peso"), amp = C.sf(c.g, "ram_ampliable"), gr = C.sf(c.g, "garantia"), pn = C.sf(c.g, "panel"), cpuF = C.sf(c.g, "cpu");
           const why = C.specMissing(c.g, "peso") === "sin ficha" ? "la tienda no publicó una ficha técnica de este modelo" : "la ficha de la tienda no lo informa";
-          const src = r => ` (${r.src}, SKU ${r.sku}, ${r.date})`;
+          const src = r => ` (${[r.src, r.sku ? "SKU " + r.sku : "", r.date].filter(Boolean).join(", ")})`;   // act. 50: sin «SKU undefined»
           if (pw) {
             specs.push(["Peso", pw.v.toString().replace(".", ",") + " kg" + src(pw), pw.tag]);
             if (a.portable === "si") { if (pw.v <= 1.7) pros.push(`Pesa ${pw.v.toString().replace(".", ",")} kg según la ficha de la tienda: cómoda para llevar.`); else if (pw.v >= 2.2) cons.push(`Pesa ${pw.v.toString().replace(".", ",")} kg: pesada para transportar todos los días.`); }
@@ -245,8 +245,12 @@
             specs.push(["Peso", "Sin datos (" + why + ")", "nd"]);
             limits.push("No pudimos obtener el peso: " + why + (a.portable === "si" ? ". Dijiste que la vas a transportar, así que confirmalo con la tienda o en la hoja técnica del fabricante." : "."));
           }
-          specs.push(["Batería", "Sin datos: ninguna tienda conectada publica la capacidad (Wh) ni la autonomía medida", "nd"]);
-          limits.push("Batería: la capacidad no figura en las fichas de las tiendas y no usamos la autonomía de marketing como si fuera real. Buscala en la hoja técnica del fabricante" + (a.portable === "si" ? " (dijiste que la vas a transportar)." : "."));
+          const bw = C.sf(c.g, "bateria_wh");   // act. 50: la batería ya puede venir de Icecat o de la descripción de una tienda
+          if (bw) specs.push(["Batería", String(bw.v).replace(".", ",") + " Wh" + src(bw), bw.tag]);
+          else {
+            specs.push(["Batería", "Sin datos: no la encontramos para este modelo (ni del fabricante ni de las tiendas)", "nd"]);
+            limits.push("Batería: no tenemos la capacidad de este modelo y no usamos la autonomía de marketing como si fuera real. Buscala en la hoja técnica del fabricante" + (a.portable === "si" ? " (dijiste que la vas a transportar)." : "."));
+          }
           if (amp) specs.push(["RAM ampliable", (amp.v ? "Sí" : "No") + " (" + amp.note + ")", amp.tag]);
           if (pn) specs.push(["Panel", pn.v, pn.tag]);
           if (gr) specs.push(["Garantía de la tienda", gr.v + " meses", gr.tag]);
