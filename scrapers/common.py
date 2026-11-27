@@ -227,9 +227,18 @@ _NOT_SINGLE = re.compile(r"\bcombo\b|\bkit\b|\bpack\b|\+|\by\s+(mouse|teclado|au
                          r"pad\b|mouse ?pad|alfombrilla|keycaps?|switch(es)? para|bungee|limpiador|teclado num[eé]rico", re.I)
 
 
+# act. 50 (jueces): accesorios publicados como notebook, monitor o procesador (bases cooler, soportes, maletines, brazos
+# para monitor, pasta térmica, contact frame). Solo se corrigen dentro de esas categorías.
+_ACC_IN = re.compile(r"^(base|stand|soporte|porta|bolso|malet[ií]n|mochila|funda|sleeve|brazo|protector de tensi[oó]n)\b"
+                     r"(?!.*\b(ryzen|core ?i[3579]|intel ?i[3579]|celeron)\b)|^(grasa|pasta)( t[eé]rmica| siliconada)?\b|"
+                     r"^contact ?frame\b|^(thermal|termal) (paste|grizzly)", re.I)
+
+
 def fix_category(name, category):
     """Devuelve la categoría corregida, o None si el producto no es hardware de PC (se descarta)."""
     n = (name or "").strip()
+    if category in ("notebooks", "monitores", "procesadores") and _ACC_IN.search(n):
+        return "accesorios"
     lead = re.match(r"^(mouse|teclado|auricular(es)?|headset)\b", n, re.I)
     for rx, cat in _FIX:
         if rx.search(n):

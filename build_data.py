@@ -563,13 +563,19 @@ def days_ago(date_str, today):
     return (dt.date.fromisoformat(today) - dt.date.fromisoformat(date_str)).days
 
 
+# act. 50 (juez 1): el 26/11 casi 10.000 productos «bajaron» 0,3 % (ajuste chico de muchas tiendas a la vez) y el filtro
+# «Bajaron de precio» quedó lleno de ruido. Un cambio de menos de 1 % no se anuncia como baja ni como suba (sigue en el historial).
+MIN_CHG_PCT = 1.0
+
+
 def annotate_changes(groups, hist, today):
     """Agrega a cada oferta y producto el último cambio de precio (bajó/subió) y si está en mínimo histórico."""
     for g in groups:
         for o in g["offers"]:
             s = hist.get(o["k"], [])
             o.pop("prev_cash", None)
-            if len(s) >= 2 and days_ago(s[-1][0], today) <= RECENT_DAYS:
+            if len(s) >= 2 and days_ago(s[-1][0], today) <= RECENT_DAYS and \
+                    abs(s[-1][1] - s[-2][1]) / s[-2][1] * 100 >= MIN_CHG_PCT:
                 prev, now = s[-2][1], s[-1][1]
                 o["chg"] = {"prev": prev, "pct": round((now - prev) / prev * 100, 1), "date": s[-1][0]}
                 if o["chg"]["pct"] <= ANOM_DOWN or o["chg"]["pct"] >= ANOM_UP:

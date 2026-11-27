@@ -480,11 +480,11 @@ def test_tiendas_nuevas_actualizacion_15():
     assert wz[1]["stock"] is None and wz[1]["category"] == "placas-de-video" and wz[1]["url"].startswith("https://wiztech.com.ar/catalogo/")
     # XT-PC: precio especial (débito/transferencia/efectivo) = contado; sin stock en el listado
     xt = xtpc.parse(open("tests/fixtures/xtpc.html").read(), "placas-de-video")
-    assert xt[0]["price_cash"] == 93477.6 and xt[0]["price_list"] == 102825.31 and xt[0]["stock"] is None
+    assert xt[0]["price_cash"] == 93477.6 and xt[0]["price_list"] is None and xt[0]["stock"] is None   # act. 50: el 2.º precio del listado no es el de lista
     assert xt[0]["url"] == "https://www.xt-pc.com.ar/prod/31476/placa-de-video-radeon-r5-230-2gb-ddr3-low-profile-akr230d3s2gl1"
-    # Compufan: precio sin medio de pago aclarado -> lista; imagen por https
+    # Compufan: act. 50: la ficha aclara que es el precio para efectivo y transferencia -> contado; imagen por https
     cf = compufan.parse(open("tests/fixtures/compufan.html").read(), "Con placa de video")
-    assert cf[0]["price_list"] == 888599 and cf[0]["price_cash"] is None and cf[0]["category"] == "pcs-armadas" and cf[0]["image"].startswith("https://")
+    assert cf[0]["price_cash"] == 888599 and cf[0]["price_list"] is None and cf[0]["category"] == "pcs-armadas" and cf[0]["image"].startswith("https://")
     assert compufan.page_url("https://www.compufanstore.com.ar/ARTICULOS/X/CAT_ID=63/SCAT_ID=3948/m=0/BUS=/compufanstore.aspx", 2) == \
         "https://www.compufanstore.com.ar/ARTICULOS/X;CAT_ID=63;SCAT_ID=3948;m=0;BUS=;A_PAGENUMBER=2;/compufanstore.aspx"
     # registro: cada tienda nueva tiene lector y ficha en stores.json. La entrada en config.json es opcional
@@ -2060,3 +2060,24 @@ def test_actualizacion_50_agrupacion():
     assert set(bd.ALIASES.values()) <= {g["id"] for g in gs} and not (set(bd.ALIASES) & {g["id"] for g in gs})
     out, n = bd.merge_gpu_dupes([[items[6]], [items[7]], [items[9]]])
     assert n == 1 and len(out) == 2 and len(out[0]) == 2, "dos fichas del mismo modelo exacto se unen; la Ventus no"
+
+
+def test_actualizacion_50_datos():
+    """Jueces: batería genérica 99,9 Wh, accesorios fuera de notebooks/monitores/procesadores, Logg al peso,
+    cambios < 1 % no se anuncian, tienda sin fecha de lectura deja de ser mejor precio, orden por stock confirmado."""
+    import build_data as bd
+    from scrapers import descspecs as ds, logg
+    from scrapers.common import fix_category as fc
+    assert "bateria_wh" not in ds.parse_desc("Batería: 4 celdas 99,9 Wh", "notebooks")
+    assert ds.parse_desc("Batería: 4 celdas 90 Wh", "notebooks")["bateria_wh"]["v"] == 90
+    assert fc("BASE COOLER TRUST CYCLONE STAND NOTEBOOK", "notebooks") == "accesorios"
+    assert fc("Grasa Siliconada Pastermax Para CPU", "procesadores") == "accesorios"
+    assert fc("Soporte Monitor Brazo Gas 17-32", "monitores") == "accesorios"
+    assert fc("Notebook Lenovo IdeaPad Slim 3 Ryzen 5 7520U 8GB 512GB", "notebooks") == "notebooks"
+    assert fc("Funda para Macbook Air 13", "perifericos") == "perifericos"
+    assert logg._peso(109999.01045) == 109999.0
+    g = {"offers": [{"k": "a", "store": "A", "price_cash": 1000, "stock": True}, {"k": "b", "store": "B", "price_cash": 900, "stock": None}]}
+    hist = {"a": [["2026-11-20", 1003], ["2026-11-26", 1000]], "b": [["2026-11-20", 1000], ["2026-11-26", 900]]}
+    bd.annotate_changes([g], hist, "2026-11-27")
+    assert g["offers"][0]["store"] == "A", "primero la de stock confirmado aunque sea más cara"
+    assert "chg" not in g["offers"][0] and g["offers"][1]["chg"]["pct"] == -10.0, "0,3 % no se anuncia; 10 % sí"
